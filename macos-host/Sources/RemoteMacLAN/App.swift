@@ -10,7 +10,17 @@ struct RemoteMacLANApp: App {
 }
 final class AppDelegate: NSObject, NSApplicationDelegate {
     let model = HostModel()
-    func applicationDidFinishLaunching(_ notification: Notification) { model.start() }
+    func applicationDidFinishLaunching(_ notification: Notification) {
+        // A LaunchAgent starts the executable directly, independently of Finder.
+        // Resolve duplicate GUI instances before either one accesses Keychain.
+        let current = ProcessInfo.processInfo.processIdentifier
+        if let first = NSRunningApplication.runningApplications(withBundleIdentifier: "com.remotemaclan.host")
+            .filter({ !$0.isTerminated }).min(by: { $0.processIdentifier < $1.processIdentifier }), first.processIdentifier < current {
+            first.activate(options: [.activateIgnoringOtherApps])
+            NSApplication.shared.terminate(nil); return
+        }
+        model.start()
+    }
     func applicationWillTerminate(_ notification: Notification) { model.stop() }
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool { false }
 }
@@ -24,16 +34,23 @@ final class HostModel: ObservableObject {
     @Published var revealSecret = false
     private var host: Host?
     private var pairingKey: Data?
+    private var pairingAttempted = false
     private var startup: Task<Void, Never>?
     private let inputSelfTest = InputSelfTest()
     @Published var inputTestResult = ""
     func testInput() { inputSelfTest.run { [weak self] result in self?.inputTestResult = result } }
-    init() { loadPairingKey() }
+    init() {}
     private func loadPairingKey() {
+        guard !pairingAttempted else { return }
+        pairingAttempted = true
         do {
             let key = try Pairing.load(); pairingKey = key
             secret = key.map { String(format:"%02x", $0) }.joined()
-        } catch { status = "无法读取 Keychain 配对密钥：\(error.localizedDescription)" }
+        } catch { status = "无法读取 Keychain 配对密钥：\(error.localizedDescription)。不会自动重复请求；需要时点击重试读取密钥。" }
+    }
+    func retryPairing() {
+        guard host == nil, !starting, pairingKey == nil else { return }
+        pairingAttempted = false; start(requestPermission: true)
     }
     func start(requestPermission: Bool = false) {
         guard host == nil, !starting else { return }
@@ -78,6 +95,8 @@ final class HostModel: ObservableObject {
         Accessibility: \(AXIsProcessTrusted())
         Listening: \(active)
         Starting: \(starting)
+        KeychainReadAttempts: \(Pairing.readAttempts)
+        KeychainCreateAttempts: \(Pairing.createAttempts)
         Status: \(status)
         """
         NSPasteboard.general.clearContents(); NSPasteboard.general.setString(text, forType: .string)
@@ -87,7 +106,7 @@ struct HostView: View {
     @ObservedObject var model: HostModel
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
-            Text("Remote Mac LAN 0.2.1").font(.title)
+            Text("Remote Mac LAN 0.2.2").font(.title)
             Text(model.status).textSelection(.enabled).frame(width: 450, alignment: .leading).fixedSize(horizontal: false, vertical: true)
             Text("在 Windows 填写此 Mac 的局域网 IP 和配对密钥。当前桌面会被共享；停止共享即可收回控制。").frame(width: 450, alignment: .leading)
             Toggle("显示配对密钥（仅交给自己的 Windows）", isOn: $model.revealSecret)
@@ -96,6 +115,7 @@ struct HostView: View {
                     .font(.system(.caption, design: .monospaced)).textSelection(.enabled).frame(width: 450)
                 Button("复制配对密钥") { NSPasteboard.general.clearContents(); NSPasteboard.general.setString(model.secret, forType: .string) }.disabled(model.secret.isEmpty)
             }
+            if model.secret.isEmpty { Button("重试读取密钥") { model.retryPairing() } }
             HStack {
                 Button(model.starting ? "正在检查…" : model.active ? "停止共享" : "开始共享") { if model.active { model.stop() } else { model.start(requestPermission: true) } }.disabled(model.starting)
                 Button("打开权限设置") { NSWorkspace.shared.open(URL(string:"x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture")!) }

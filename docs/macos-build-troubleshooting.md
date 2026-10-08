@@ -46,3 +46,11 @@ Windows 上已执行 Bash 语法检查及隔离的安装流程测试（模拟 ma
 0.2.1 保留正常安装时的授权，并在主动点击开始共享时异步调用 SCShareableContent，成功后才监听 TCP 47980。不会绕过系统授权。界面显示检查中、等待 Windows 或系统 NSError 域/码；新增“复制启动诊断”，提供系统版本、预检查、实际 SCK 检查、辅助功能状态和监听状态，不含密钥、序列号或用户目录。补充 NSScreenCaptureUsageDescription，参见 [Apple ScreenCaptureKit](https://developer.apple.com/documentation/screencapturekit)。
 
 Windows 上 Bash 语法及 5 组隔离模拟安装测试通过，包括默认不重置与显式重置。Swift 静态语法解析通过；没有 macOS SDK 编译或 macOS 27 实机验证，不宣称兼容性或此故障已全部解决。
+
+## 0.2.2 钥匙串重复请求
+
+旧 HostModel 在初始化时读取密钥，若失败，applicationDidFinishLaunching 的 start 会立即再次尝试。这是可确认的重复请求路径，不等于证明用户的两个系统弹窗一定来源于它。已有密钥读取成功时直接返回，仅 errSecItemNotFound 才创建；不存在每次启动都重写已有密钥的逻辑。
+
+现在首次访问移到应用启动完成后，先检查同 bundle ID 的 GUI 实例；较高 PID 的重复实例激活已有实例后退出，不访问钥匙串。单一进程中失败不自动重试，只有用户主动点“重试读取密钥”才再请求；成功的密钥在内存中复用。复制启动诊断新增 KeychainReadAttempts/KeychainCreateAttempts 计数，不含密钥或密码。无效长度不再报告错误码 0，且不会删除或覆盖旧钥匙串项目。
+
+这没有放宽钥匙串访问控制，也不保证只出现一个系统弹窗：钥匙串解锁、项目访问授权和 ad-hoc 更新导致的身份变化仍需系统处理。Swift 静态语法检查通过；本环境没有原生 macOS 编译和系统弹窗验证。
