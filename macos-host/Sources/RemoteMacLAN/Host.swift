@@ -60,7 +60,9 @@ final class Host {
                 if message["op"] as? String == "heartbeat" {
                     lastHeartbeat = Date()
                     let currentTrust = AXIsProcessTrusted()
-                    try wire.json(["op":"heartbeat","accessibility":currentTrust])
+                    var reply = input.diagnostics
+                    reply["op"] = "heartbeat"; reply["accessibility"] = currentTrust
+                    try wire.json(reply)
                     if currentTrust != trusted {
                         trusted = currentTrust
                         status(trusted ? "正在共享当前桌面 · 可控制" : "正在共享当前桌面 · 辅助功能未授权，只能查看")

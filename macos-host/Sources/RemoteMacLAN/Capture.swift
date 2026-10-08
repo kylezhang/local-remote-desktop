@@ -11,6 +11,8 @@ final class Capture: NSObject, SCStreamOutput, SCStreamDelegate {
     private let wire: Wire
     private let failure: () -> Void
     private let outputLock = NSLock()
+    private let flightLock = NSLock()
+    private var inFlight = 0, skipped = 0
     private var encodingTotal = 0.0, encoded = 0
     init(wire: Wire, failure: @escaping () -> Void) { self.wire = wire; self.failure = failure }
     func start(quality: Int) async throws {
@@ -28,6 +30,7 @@ final class Capture: NSObject, SCStreamOutput, SCStreamDelegate {
                 if let timing { let p = timing.assumingMemoryBound(to: Double.self); milliseconds = (CFAbsoluteTimeGetCurrent()-p.pointee)*1000; p.deinitialize(count: 1); p.deallocate() }
                 guard let ref else { return }
                 let owner = Unmanaged<Capture>.fromOpaque(ref).takeUnretainedValue()
+                defer { owner.flightLock.lock(); owner.inFlight -= 1; owner.flightLock.unlock() }
                 guard status == noErr else { owner.failure(); return }
                 if let sample { owner.output(sample, milliseconds: milliseconds) }
             }, refcon: Unmanaged.passUnretained(self).toOpaque(), compressionSessionOut: &encoder)
@@ -60,9 +63,14 @@ final class Capture: NSObject, SCStreamOutput, SCStreamDelegate {
               let attachments = CMSampleBufferGetSampleAttachmentsArray(sampleBuffer, createIfNecessary: false) as? [[SCStreamFrameInfo: Any]],
               let raw = attachments.first?[.status] as? Int, SCFrameStatus(rawValue: raw) == .complete else { return }
         // Capture callback and encoder callbacks may differ; timing is attached to sourceFrameRefCon instead of shared dictionaries.
+        // Drop raw capture frames before encoding, never encoded reference frames.
+        // A slow socket/encoder must not accumulate an unbounded video backlog.
+        flightLock.lock()
+        guard inFlight < 2 else { skipped += 1; flightLock.unlock(); return }
+        inFlight += 1; flightLock.unlock()
         let time = UnsafeMutablePointer<Double>.allocate(capacity: 1); time.initialize(to: CFAbsoluteTimeGetCurrent())
         let status = VTCompressionSessionEncodeFrame(encoder, imageBuffer: pixel, presentationTimeStamp: sampleBuffer.presentationTimeStamp, duration: sampleBuffer.duration, frameProperties: nil, sourceFrameRefcon: time, infoFlagsOut: nil)
-        if status != noErr { time.deinitialize(count: 1); time.deallocate(); failure() }
+        if status != noErr { flightLock.lock(); inFlight -= 1; flightLock.unlock(); time.deinitialize(count: 1); time.deallocate(); failure() }
     }
     private func output(_ sample: CMSampleBuffer, milliseconds: Double) {
         outputLock.lock(); defer { outputLock.unlock() }
@@ -90,7 +98,10 @@ final class Capture: NSObject, SCStreamOutput, SCStreamDelegate {
         do {
             try wire.send(type: 2, payload: result)
             encodingTotal += milliseconds; encoded += 1
-            if encoded >= 30 { try wire.json(["op":"metrics","encodeMs":encodingTotal/Double(encoded)]); encodingTotal = 0; encoded = 0 }
+            if encoded >= 30 {
+                flightLock.lock(); let dropped = skipped; flightLock.unlock()
+                try wire.json(["op":"metrics","encodeMs":encodingTotal/Double(encoded),"captureSkipped":dropped]); encodingTotal = 0; encoded = 0
+            }
         } catch { failure() }
     }
 }

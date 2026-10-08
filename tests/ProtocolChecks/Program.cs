@@ -61,3 +61,25 @@ var fake="test-"+Guid.NewGuid().ToString("N"); var secret=Convert.ToHexString(Ra
 SecretStore.Save(fake,secret); Assert(SecretStore.Load(fake)==secret,"DPAPI roundtrip");
 var store=Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),"RemoteMacLAN",Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(fake)))+".dpapi"); File.Delete(store);
 Console.WriteLine("PASS Windows current-user DPAPI roundtrip");
+
+// Input floods must not drop button/key transitions or move across them.
+var queue=new InputQueue(4);
+for(int i=0;i<10000;i++) Assert(queue.TryWrite(new {op="mouse_move",x=i/10000.0,y=0.5}),"move flood filled queue");
+Assert(queue.TryWrite(new {op="mouse_button",button=0,down=true}),"button rejected");
+Assert(queue.TryWrite(new {op="mouse_move",x=1.0,y=1.0}),"drag rejected");
+Assert(queue.TryWrite(new {op="key_event",vk=49,down=true}),"key rejected");
+Assert(!queue.TryWrite(new {op="key_event",vk=49,down=false}),"overflow should be reported");
+queue.Complete(); var collected=new List<System.Text.Json.JsonElement>();
+await foreach(var item in queue.ReadAllAsync(CancellationToken.None)) collected.Add(System.Text.Json.JsonSerializer.SerializeToElement(item));
+Assert(collected.Count==4 && collected[0].GetProperty("x").GetDouble()==0.9999,"move coalescing");
+Assert(collected[1].GetProperty("op").GetString()=="mouse_button" && collected[2].GetProperty("op").GetString()=="mouse_move","drag order");
+queue=new InputQueue(1); queue.TryWrite(new {op="key_event",vk=17,down=true});
+Assert(queue.TryWrite(new {op="release_all"}),"release must bypass overload"); queue.Complete();
+await foreach(var item in queue.ReadAllAsync(CancellationToken.None)) Assert(System.Text.Json.JsonSerializer.SerializeToElement(item).GetProperty("op").GetString()=="release_all","stale key survived release");
+Assert(!queue.TryWrite(new {op="mouse_move",x=0,y=0}),"closed queue accepts input");
+Console.WriteLine("PASS 10,000 mouse moves, ordered click/drag/key, overload and release safety");
+Assert(RemoteCoordinates.Map(100,50,200,100,1920,1080) is {x:0.5,y:0.5},"center coordinate");
+Assert(RemoteCoordinates.Map(100,0,200,200,1920,1080)==null,"letterbox click should be ignored");
+Assert(RemoteCoordinates.Map(-10,300,200,200,1920,1080,true) is {x:0,y:1},"drag should clamp beyond viewport");
+Assert(RemoteCoordinates.Map(0,0,0,0,1920,1080)==null && RemoteCoordinates.Map(double.NaN,0,200,200,1920,1080)==null,"invalid coordinates accepted");
+Console.WriteLine("PASS letterbox coordinate conversion, outside drag clamping, invalid size/NaN safety");

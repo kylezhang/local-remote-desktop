@@ -1,0 +1,6 @@
+PASS real WPF client authenticates, receives H264 and creates displayed bitmap
+PASS routed letter, top-row/keypad digits, Enter, Ctrl/Alt/Win → authenticated mock host, in order
+PASS client pointer conversion, left drag beyond viewport, right click and routed wheel → mock host
+PASS focus loss sends release_all
+PASS Mac permission denial/recovery is reflected by real client
+PASS disconnect cleans video/transport and restores controls

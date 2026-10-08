@@ -1,0 +1,26 @@
+{
+  "test": "synthetic-paced-decoder-comparison",
+  "note": "not desktop end-to-end latency; no actual Mac involved",
+  "results": [
+    {
+      "path": "previous-auto-frame-threads",
+      "width": 1280,
+      "height": 720,
+      "sourceFps": 30,
+      "decodedFrames": 133,
+      "samples": 123,
+      "medianFeedToBgraMs": 569.4883999999997,
+      "p95FeedToBgraMs": 583.8415
+    },
+    {
+      "path": "single-thread-low-delay",
+      "width": 1280,
+      "height": 720,
+      "sourceFps": 30,
+      "decodedFrames": 148,
+      "samples": 138,
+      "medianFeedToBgraMs": 70.83619999999996,
+      "p95FeedToBgraMs": 87.41179999999986
+    }
+  ]
+}

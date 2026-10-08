@@ -1,6 +1,21 @@
 import AppKit
 import ApplicationServices
+import Darwin
 final class InputInjector {
+    private let targetPID: pid_t?
+    init(targetPID: pid_t? = nil) { self.targetPID = targetPID }
+    private(set) var received: Int64 = 0, posted: Int64 = 0, blocked: Int64 = 0, rejected: Int64 = 0
+    private(set) var lastError = ""
+    var diagnostics: [String: Any] {
+        ["inputReceived":received, "inputPosted":posted, "inputBlocked":blocked,
+         "inputRejected":rejected, "inputError":lastError]
+    }
+    private func post(_ event: CGEvent?) {
+        guard let event else { rejected += 1; lastError = "event_creation_failed"; return }
+        if let targetPID { event.postToPid(targetPID) } else { event.post(tap: .cghidEventTap) }
+        posted += 1; lastError = ""
+    }
+    private func reject() { rejected += 1; lastError = "invalid_or_unsupported_input" }
     static var bounds = CGRect.zero
     private var keys = Set<CGKeyCode>(), buttons = Set<Int>()
     private var point = CGPoint.zero
@@ -15,16 +30,19 @@ final class InputInjector {
         36:115,33:116,46:117,35:119,34:121,37:123,39:124,40:125,38:126,
         96:82,97:83,98:84,99:85,100:86,101:87,102:88,103:89,104:91,105:92,110:65,106:67,107:69,111:75,109:78]
     func handle(_ m: [String: Any]) {
-        guard AXIsProcessTrusted(), let op = m["op"] as? String else { return }
+        guard let op = m["op"] as? String,
+              ["mouse_move","mouse_button","scroll","key_event","release_all"].contains(op) else { return }
+        received += 1
+        guard AXIsProcessTrusted() else { blocked += 1; lastError = "accessibility_denied"; return }
         if let x = m["x"] as? Double, let y = m["y"] as? Double, x.isFinite, y.isFinite {
             point = CGPoint(x: Self.bounds.minX + min(max(x,0),1)*max(0,Self.bounds.width-1), y: Self.bounds.minY + min(max(y,0),1)*max(0,Self.bounds.height-1))
         }
         switch op {
         case "mouse_move":
             let type: CGEventType = buttons.contains(0) ? .leftMouseDragged : buttons.contains(1) ? .rightMouseDragged : buttons.contains(2) ? .otherMouseDragged : .mouseMoved
-            CGEvent(mouseEventSource: source, mouseType: type, mouseCursorPosition: point, mouseButton: buttons.contains(1) ? .right : buttons.contains(2) ? .center : .left)?.post(tap: .cghidEventTap)
+            post(CGEvent(mouseEventSource: source, mouseType: type, mouseCursorPosition: point, mouseButton: buttons.contains(1) ? .right : buttons.contains(2) ? .center : .left))
         case "mouse_button":
-            guard let b = m["button"] as? Int, (0...2).contains(b), let down = m["down"] as? Bool else { return }
+            guard let b = m["button"] as? Int, (0...2).contains(b), let down = m["down"] as? Bool else { reject(); return }
             if down {
                 let now = Date()
                 let nearby = hypot(point.x-lastClickPoint.x, point.y-lastClickPoint.y) < 5
@@ -33,12 +51,12 @@ final class InputInjector {
             } else { buttons.remove(b) }
             let type: CGEventType = b == 0 ? (down ? .leftMouseDown : .leftMouseUp) : b == 1 ? (down ? .rightMouseDown : .rightMouseUp) : (down ? .otherMouseDown : .otherMouseUp)
             let event = CGEvent(mouseEventSource: source, mouseType: type, mouseCursorPosition: point, mouseButton: b == 0 ? .left : b == 1 ? .right : .center)
-            event?.setIntegerValueField(.mouseEventClickState, value: Int64(clickCount)); event?.post(tap: .cghidEventTap)
+            event?.setIntegerValueField(.mouseEventClickState, value: Int64(clickCount)); post(event)
         case "scroll":
-            guard let delta = m["delta"] as? Int else { return }
-            CGEvent(scrollWheelEvent2Source: source, units: .pixel, wheelCount: 1, wheel1: Int32(min(max(delta,-1200),1200)), wheel2: 0, wheel3: 0)?.post(tap: .cghidEventTap)
+            guard let delta = m["delta"] as? Int else { reject(); return }
+            post(CGEvent(scrollWheelEvent2Source: source, units: .pixel, wheelCount: 1, wheel1: Int32(min(max(delta,-1200),1200)), wheel2: 0, wheel3: 0))
         case "key_event":
-            guard let vk = m["vk"] as? Int, let code = map[vk], let down = m["down"] as? Bool else { return }
+            guard let vk = m["vk"] as? Int, let code = map[vk], let down = m["down"] as? Bool else { reject(); return }
             let repeated = down && keys.contains(code)
             if down { keys.insert(code) } else { keys.remove(code) }
             let e = CGEvent(keyboardEventSource: source, virtualKey: code, keyDown: down)
@@ -48,13 +66,16 @@ final class InputInjector {
             // Preserve keypad identity when replacing the CGEvent's default flags.
             // Without this flag a keypad key code is not a complete keypad event.
             if (96...111).contains(vk) { flags.insert(.maskNumericPad) }
-            e?.flags = flags; e?.post(tap: .cghidEventTap)
+            e?.flags = flags; post(e)
         case "release_all": release()
         default: break
         }
     }
     func release() {
-        for key in keys { let e = CGEvent(keyboardEventSource: source, virtualKey: key, keyDown: false); e?.flags = []; e?.post(tap: .cghidEventTap) }; keys.removeAll()
-        for b in Array(buttons) { handle(["op":"mouse_button","button":b,"down":false]) }; buttons.removeAll()
+        for key in keys { let e = CGEvent(keyboardEventSource: source, virtualKey: key, keyDown: false); e?.flags = []; post(e) }; keys.removeAll()
+        for b in buttons {
+            let type: CGEventType = b == 0 ? .leftMouseUp : b == 1 ? .rightMouseUp : .otherMouseUp
+            post(CGEvent(mouseEventSource: source, mouseType: type, mouseCursorPosition: point, mouseButton: b == 0 ? .left : b == 1 ? .right : .center))
+        }; buttons.removeAll()
     }
 }

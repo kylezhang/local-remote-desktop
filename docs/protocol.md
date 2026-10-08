@@ -15,17 +15,19 @@ Type 1 = UTF-8 JSON，Type 2 = 一个 Annex B H.264 access unit，无额外时�
 |---|---|---|
 | handshake | C→H，第一个加密消息 | version=1，quality=0/1/2 |
 | video_header | H→C，在视频前 | width,height,fps,codec="h264-annexb" |
-| metrics | H→C | encodeMs（回调耗时均值） |
+| metrics | H→C | encodeMs（回调耗时均值），captureSkipped（可选，因编码/发送背压而跳过的原始帧累计数） |
 | mouse_move | C→H | x,y（0..1 主显示器归一化） |
 | mouse_button | C→H | button=0左/1右/2中，down bool，x,y |
 | scroll | C→H | delta，Windows 120 单位映射像素，限制 ±1200 |
 | key_event | C→H | vk Windows virtual key，down bool，flags bitmask |
 | release_all | C→H | 无，失焦时释放按键 |
-| heartbeat | 双向 | Client 每 3 秒发送，Host 回复；15 秒超时断线 |
+| heartbeat | 双向 | Client 每 3 秒发送，Host 回复；15 秒超时断线；新版 Host 可选携带 inputReceived/inputPosted/inputBlocked/inputRejected/inputError |
 | capabilities | H→C | accessibility bool，当前是否允许输入注入；新 Host 心跳亦带此字段 |
 | disconnect | C→H | 正常关闭；客户端也可 EOF 关闭 |
 
 flags：1 Shift、2 Control、4 Option、8 Command。vk 映射包含 Windows 左右修饰键；不支持 Unicode 文本/IME。未知 op 忽略，畸形 JSON 或加密报文断开。鼠标 x/y NaN/Infinity 不接受。
+
+输入诊断均为当前连接累计：inputReceived 是已识别控制消息数，inputPosted 是调用 CGEvent.post 的事件数（一次 release_all 可产生多个事件），inputBlocked 是权限拒绝的消息数，inputRejected 是无效/不支持消息或事件创建失败数；inputError 为不含输入内容的最近错误代号。调用 post 不等于目标应用确认执行。物理按键可由 Mac 本机输入法处理中文；协议本身不传 Windows IME 的 Unicode 组合文本。
 
 Host 根据 vk=96..111 自动添加 CGEvent 的 numeric-pad 标记，不占用协议修饰键位。Windows Num Lock 关闭时可能发送导航键，Host 不把导航键强制转换为数字。参见 [Apple maskNumericPad](https://developer.apple.com/documentation/coregraphics/cgeventflags/masknumericpad)。
 

@@ -22,6 +22,9 @@ final class HostModel: ObservableObject {
     private var host: Host?
     private var pairingKey: Data?
     private var requestedScreenPermission = false
+    private let inputSelfTest = InputSelfTest()
+    @Published var inputTestResult = ""
+    func testInput() { inputSelfTest.run { [weak self] result in self?.inputTestResult = result } }
     init() { loadPairingKey() }
     private func loadPairingKey() {
         do {
@@ -70,6 +73,8 @@ struct HostView: View {
                 Button("打开权限设置") { NSWorkspace.shared.open(URL(string:"x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture")!) }
                 Button("退出") { NSApplication.shared.terminate(nil) }
             }
+            Button("本机键盘自检") { model.testInput() }
+            if !model.inputTestResult.isEmpty { Text(model.inputTestResult).font(.caption).frame(width: 450, alignment: .leading).textSelection(.enabled) }
             Text("仅支持正常登录后的用户会话；不支持 FileVault 预启动解锁。\n端口 47980；不传输音频、不写录像文件。").font(.caption).foregroundStyle(.secondary)
         }.padding(24)
     }

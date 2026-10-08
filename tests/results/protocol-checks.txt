@@ -1,0 +1,9 @@
+PASS authenticated transport: valid
+PASS authenticated transport: tamper
+PASS authenticated transport: replay
+PASS authenticated transport: wrong-key
+PASS authenticated transport: oversize
+PASS actual H.264 → BGRA decoding: at least 85 frames, 320x180
+PASS Windows current-user DPAPI roundtrip
+PASS 10,000 mouse moves, ordered click/drag/key, overload and release safety
+PASS letterbox coordinate conversion, outside drag clamping, invalid size/NaN safety

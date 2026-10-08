@@ -12,50 +12,57 @@ public partial class MainWindow : Window
 {
     CancellationTokenSource? session;
     Task? runner;
-    Channel<object>? inputs;
+    InputQueue? inputs;
     WriteableBitmap? bitmap;
     byte[]? latest;
     int width,height; long frames,bytes; double encodeMs;
     readonly Stopwatch stats=Stopwatch.StartNew(), mouseClock=Stopwatch.StartNew();
     bool full, connected;
     volatile bool inputAllowed = true;
+    volatile bool hostReportsInput;
+    long inputsQueued, inputsSent, hostReceived, hostPosted, hostBlocked, hostRejected;
+    string hostInputError = "";
+    readonly bool rememberConnection;
     WindowState previousState;
     readonly DispatcherTimer render = new() { Interval=TimeSpan.FromMilliseconds(16) };
-    public MainWindow() {
-        InitializeComponent(); var savedHost=SecretStore.LastHost(); Address.Text=savedHost.Length>0?savedHost:LocalAddress.Find(); Secret.Password=SecretStore.Load(Address.Text);
-        Address.LostFocus+=(_,_)=> { var s=SecretStore.Load(Address.Text.Trim()); if(s.Length>0) Secret.Password=s; };
+    public MainWindow():this(true) {}
+    internal MainWindow(bool remember) {
+        rememberConnection=remember;
+        InitializeComponent(); var savedHost=remember?SecretStore.LastHost():""; Address.Text=savedHost.Length>0?savedHost:LocalAddress.Find(); Secret.Password=remember?SecretStore.Load(Address.Text):"";
+        Address.LostFocus+=(_,_)=> { if(!rememberConnection) return; var s=SecretStore.Load(Address.Text.Trim()); if(s.Length>0) Secret.Password=s; };
         render.Tick+=(_,_)=>Render(); render.Start();
-        Surface.MouseMove+=(_,e)=> { if(mouseClock.ElapsedMilliseconds<8) return; mouseClock.Restart(); if(Position(e.GetPosition(Surface)) is {} p) Input(new {op="mouse_move",p.x,p.y}); };
-        Surface.MouseDown+=(_,e)=> { Surface.Focus(); Surface.CaptureMouse(); if(Position(e.GetPosition(Surface)) is {} p) Input(new {op="mouse_button",button=Button(e.ChangedButton),down=true,p.x,p.y}); e.Handled=true; };
-        Surface.MouseUp+=(_,e)=> { if(Position(e.GetPosition(Surface),true) is {} p) Input(new {op="mouse_button",button=Button(e.ChangedButton),down=false,p.x,p.y}); if(e.LeftButton==MouseButtonState.Released && e.RightButton==MouseButtonState.Released && e.MiddleButton==MouseButtonState.Released) Surface.ReleaseMouseCapture(); e.Handled=true; };
+        Surface.MouseMove+=(_,e)=> { if(mouseClock.ElapsedMilliseconds<8) return; mouseClock.Restart(); SendPointerMove(e.GetPosition(Surface),Surface.IsMouseCaptured); };
+        Surface.MouseDown+=(_,e)=> { Keyboard.Focus(Surface); Surface.CaptureMouse(); SendPointerButton(e.GetPosition(Surface),e.ChangedButton,true); e.Handled=true; };
+        Surface.MouseUp+=(_,e)=> { SendPointerButton(e.GetPosition(Surface),e.ChangedButton,false); if(e.LeftButton==MouseButtonState.Released && e.RightButton==MouseButtonState.Released && e.MiddleButton==MouseButtonState.Released) Surface.ReleaseMouseCapture(); e.Handled=true; };
         Surface.MouseWheel+=(_,e)=> { Input(new {op="scroll",delta=e.Delta}); e.Handled=true; };
         Surface.PreviewKeyDown+=(_,e)=>Key(e,true); Surface.PreviewKeyUp+=(_,e)=>Key(e,false);
         Surface.LostKeyboardFocus+=(_,_)=>Input(new {op="release_all"}); Deactivated+=(_,_)=>Input(new {op="release_all"});
+        Surface.LostMouseCapture+=(_,_)=> { if(Mouse.LeftButton==MouseButtonState.Pressed || Mouse.RightButton==MouseButtonState.Pressed || Mouse.MiddleButton==MouseButtonState.Pressed) Input(new {op="release_all"}); };
         PreviewKeyDown+=(_,e)=> { if(e.Key==System.Windows.Input.Key.F11) { ToggleFull(); e.Handled=true; } };
         Closing+=(_,_)=>session?.Cancel();
     }
     static int Button(MouseButton b)=>b==MouseButton.Right?1:b==MouseButton.Middle?2:0;
-    (double x,double y)? Position(Point p,bool clamp=false) {
-        if(width==0 || height==0) return null;
-        double scale=Math.Min(Surface.ActualWidth/width,Surface.ActualHeight/height);
-        double x=(p.X-(Surface.ActualWidth-width*scale)/2)/(width*scale), y=(p.Y-(Surface.ActualHeight-height*scale)/2)/(height*scale);
-        if(!clamp && (x<0 || x>1 || y<0 || y>1)) return null;
-        return (Math.Clamp(x,0,1),Math.Clamp(y,0,1));
-    }
+    internal void SendPointerMove(Point point,bool captured) { if(Position(point,captured) is {} p) Input(new {op="mouse_move",p.x,p.y}); }
+    internal void SendPointerButton(Point point,MouseButton button,bool down) { if(Position(point,!down) is {} p) Input(new {op="mouse_button",button=Button(button),down,p.x,p.y}); }
+    (double x,double y)? Position(Point p,bool clamp=false) => RemoteCoordinates.Map(p.X,p.Y,Surface.ActualWidth,Surface.ActualHeight,width,height,clamp);
     void Key(KeyEventArgs e,bool down) {
-        var key=e.Key==System.Windows.Input.Key.System?e.SystemKey:e.Key;
+        var key=e.Key==System.Windows.Input.Key.System?e.SystemKey:e.Key==System.Windows.Input.Key.ImeProcessed?e.ImeProcessedKey:e.Key==System.Windows.Input.Key.DeadCharProcessed?e.DeadCharProcessedKey:e.Key;
         if(key==System.Windows.Input.Key.F11) { e.Handled=true; return; }
         if(down && key==System.Windows.Input.Key.Escape && Keyboard.Modifiers.HasFlag(ModifierKeys.Control) && Keyboard.Modifiers.HasFlag(ModifierKeys.Alt)) { Input(new {op="release_all"}); ConnectButton.Focus(); e.Handled=true; return; }
         int flags=(Keyboard.Modifiers.HasFlag(ModifierKeys.Shift)?1:0)|(Keyboard.Modifiers.HasFlag(ModifierKeys.Control)?2:0)|(Keyboard.Modifiers.HasFlag(ModifierKeys.Alt)?4:0)|(Keyboard.Modifiers.HasFlag(ModifierKeys.Windows)?8:0);
         Input(new {op="key_event",vk=KeyInterop.VirtualKeyFromKey(key),down,flags}); e.Handled=true;
     }
-    void Input(object message) { if(connected && inputs?.Writer.TryWrite(message)==false) session?.Cancel(); }
+    void Input(object message) {
+        if(!connected || inputs==null) return;
+        if(inputs.TryWrite(message)) Interlocked.Increment(ref inputsQueued);
+        else { Status.Text="输入队列拥堵，已断开以避免按键卡住"; session?.Cancel(); }
+    }
     async void ConnectClick(object sender,RoutedEventArgs e) {
         if(session!=null) { session.Cancel(); return; }
         var ip=Address.Text.Trim(); var secret=Secret.Password.Trim(); int quality=Quality.SelectedIndex;
         try {
             if(ip.Length==0 || Convert.FromHexString(secret).Length!=32) throw new ArgumentException("请填写 Mac IP 和 64 个十六进制字符的配对密钥。");
-            SecretStore.Remember(ip,secret);
+            if(rememberConnection) SecretStore.Remember(ip,secret);
         } catch(Exception ex) { Status.Text=$"无法记住连接：{ex.Message}"; return; }
         session=new(); ConnectButton.Content="断开"; Address.IsEnabled=Secret.IsEnabled=Quality.IsEnabled=ForgetButton.IsEnabled=false;
         runner=Run(ip,secret,quality,session.Token);
@@ -70,11 +77,15 @@ public partial class MainWindow : Window
             try {
                 Status.Text="连接和验证 Mac…";
                 using(var timeout=CancellationTokenSource.CreateLinkedTokenSource(ct)) { timeout.CancelAfter(TimeSpan.FromSeconds(8)); await wire.Connect(ip,secret,timeout.Token); }
-                paired=true; SecretStore.Save(ip,secret);
-                inputs=Channel.CreateBounded<object>(256); connected=true;
+                paired=true; if(rememberConnection) SecretStore.Save(ip,secret);
+                inputs=new InputQueue(); connected=true;
+                Interlocked.Exchange(ref inputsQueued,0); Interlocked.Exchange(ref inputsSent,0);
+                Interlocked.Exchange(ref hostReceived,0); Interlocked.Exchange(ref hostPosted,0);
+                Interlocked.Exchange(ref hostBlocked,0); Interlocked.Exchange(ref hostRejected,0); hostInputError="";
+                hostReportsInput=false;
                 await wire.Json(new {op="handshake",version=1,quality},attempt.Token);
                 heartbeat=Task.Run(async()=> { try { while(true) { await Task.Delay(3000,attempt.Token); await wire.Json(new {op="heartbeat"},attempt.Token); } } catch { attempt.Cancel(); } });
-                controls=Task.Run(async()=> { try { await foreach(var m in inputs.Reader.ReadAllAsync(attempt.Token)) await wire.Json(m,attempt.Token); } catch { attempt.Cancel(); } });
+                controls=Task.Run(async()=> { try { await foreach(var m in inputs.ReadAllAsync(attempt.Token)) { await wire.Json(m,attempt.Token); Interlocked.Increment(ref inputsSent); } } catch { attempt.Cancel(); } });
                 Surface.Focus(); Status.Text="已配对，等待画面…";
                 inputAllowed=true;
                 // Receive, authenticate/decrypt and feed FFmpeg away from the UI
@@ -98,12 +109,17 @@ public partial class MainWindow : Window
                             });
                         } else if(root.GetProperty("op").GetString()=="metrics") Interlocked.Exchange(ref encodeMs,root.GetProperty("encodeMs").GetDouble());
                         if(root.TryGetProperty("accessibility",out var permission)) inputAllowed=permission.GetBoolean();
+                        if(root.TryGetProperty("inputReceived",out var received)) { Interlocked.Exchange(ref hostReceived,received.GetInt64()); hostReportsInput=true; }
+                        if(root.TryGetProperty("inputPosted",out var posted)) Interlocked.Exchange(ref hostPosted,posted.GetInt64());
+                        if(root.TryGetProperty("inputBlocked",out var blocked)) Interlocked.Exchange(ref hostBlocked,blocked.GetInt64());
+                        if(root.TryGetProperty("inputRejected",out var rejected)) Interlocked.Exchange(ref hostRejected,rejected.GetInt64());
+                        if(root.TryGetProperty("inputError",out var error)) hostInputError=error.GetString()??"";
                     } else if(packet.type==2 && decoder!=null) { Interlocked.Add(ref bytes,packet.data.Length); await decoder.Feed(packet.data,attempt.Token); }
                 }
                 },attempt.Token);
             } catch(Exception ex) { Status.Text=ct.IsCancellationRequested?"已断开":$"连接中断：{ex.Message}"; }
             finally {
-                connected=false; inputs?.Writer.TryComplete(); attempt.Cancel(); wire.Dispose(); decoder?.Dispose(); Interlocked.Exchange(ref latest,null);
+                connected=false; inputs?.Complete(); attempt.Cancel(); wire.Dispose(); decoder?.Dispose(); Interlocked.Exchange(ref latest,null);
                 if(heartbeat!=null) await heartbeat; if(controls!=null) await controls;
             }
             if(ct.IsCancellationRequested || !paired || Reconnect.IsChecked!=true) break;
@@ -116,10 +132,15 @@ public partial class MainWindow : Window
         if(pixels!=null && bitmap!=null && pixels.Length==width*height*4) bitmap.WritePixels(new Int32Rect(0,0,width,height),pixels,width*4,0);
         if(connected && bitmap!=null && stats.ElapsedMilliseconds>=1000) {
             string inputStatus=!inputAllowed?"Mac 辅助功能未授权：只能查看":Surface.IsKeyboardFocusWithin?"键盘已启用；Ctrl+Alt+Esc 释放":"点击画面启用键盘";
-            double sec=stats.Elapsed.TotalSeconds; Status.Text=$"{width}×{height} | 解码 {Interlocked.Exchange(ref frames,0)/sec:F1} fps | 接收 {Interlocked.Exchange(ref bytes,0)*8/sec/1e6:F2} Mbps | Mac 编码 {Volatile.Read(ref encodeMs):F1} ms | {inputStatus}"; stats.Restart();
+            string feedback=hostReportsInput?$"Mac 收到 {Interlocked.Read(ref hostReceived)} / 已提交 {Interlocked.Read(ref hostPosted)}":"Mac 当前版本未回报输入诊断";
+            double sec=stats.Elapsed.TotalSeconds; Status.Text=$"{width}×{height} | 解码 {Interlocked.Exchange(ref frames,0)/sec:F1} fps | 接收 {Interlocked.Exchange(ref bytes,0)*8/sec/1e6:F2} Mbps | Mac 编码 {Volatile.Read(ref encodeMs):F1} ms | {inputStatus} | 输入 已发 {Interlocked.Read(ref inputsSent)} / {feedback}"; stats.Restart();
         }
     }
     void FullscreenClick(object sender,RoutedEventArgs e)=>ToggleFull();
+    void DiagnosticsClick(object sender,RoutedEventArgs e) {
+        Clipboard.SetText($"Remote Mac LAN input diagnostics\nConnected: {connected}\nKeyboardFocus: {Surface.IsKeyboardFocusWithin}\nAccessibility: {inputAllowed}\nHostReportsInput: {hostReportsInput}\nQueued: {Interlocked.Read(ref inputsQueued)}\nSent: {Interlocked.Read(ref inputsSent)}\nHostReceived: {Interlocked.Read(ref hostReceived)}\nHostPosted: {Interlocked.Read(ref hostPosted)}\nHostBlocked: {Interlocked.Read(ref hostBlocked)}\nHostRejected: {Interlocked.Read(ref hostRejected)}\nHostError: {hostInputError}\nPosted means submitted to CGEvent, not confirmed application acceptance.");
+        Status.Text="诊断已复制（不包含密钥、IP 或输入内容）";
+    }
     void ForgetClick(object sender,RoutedEventArgs e) {
         try { SecretStore.Forget(Address.Text.Trim()); Secret.Password=""; Address.Text=LocalAddress.Find(); Status.Text="已清除当前 Mac 的 IP 和配对密钥记忆。"; }
         catch(Exception ex) { Status.Text=$"清除失败：{ex.Message}"; }
