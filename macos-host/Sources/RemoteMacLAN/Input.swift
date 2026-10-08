@@ -45,6 +45,9 @@ final class InputInjector {
             e?.setIntegerValueField(.keyboardEventAutorepeat, value: repeated ? 1 : 0)
             let f = m["flags"] as? Int ?? 0; var flags: CGEventFlags = []
             if f&1 != 0 { flags.insert(.maskShift) }; if f&2 != 0 { flags.insert(.maskControl) }; if f&4 != 0 { flags.insert(.maskAlternate) }; if f&8 != 0 { flags.insert(.maskCommand) }
+            // Preserve keypad identity when replacing the CGEvent's default flags.
+            // Without this flag a keypad key code is not a complete keypad event.
+            if (96...111).contains(vk) { flags.insert(.maskNumericPad) }
             e?.flags = flags; e?.post(tap: .cghidEventTap)
         case "release_all": release()
         default: break

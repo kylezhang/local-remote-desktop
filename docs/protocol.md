@@ -26,4 +26,6 @@ Type 1 = UTF-8 JSON，Type 2 = 一个 Annex B H.264 access unit，无额外时�
 
 flags：1 Shift、2 Control、4 Option、8 Command。vk 映射包含 Windows 左右修饰键；不支持 Unicode 文本/IME。未知 op 忽略，畸形 JSON 或加密报文断开。鼠标 x/y NaN/Infinity 不接受。
 
+Host 根据 vk=96..111 自动添加 CGEvent 的 numeric-pad 标记，不占用协议修饰键位。Windows Num Lock 关闭时可能发送导航键，Host 不把导航键强制转换为数字。参见 [Apple maskNumericPad](https://developer.apple.com/documentation/coregraphics/cgeventflags/masknumericpad)。
+
 质量 0：最多1280×720/30fps/4Mbps；1：最多1920×1080/60fps/10Mbps；2：同尺寸频率/18Mbps。保持屏幕比例、偶数尺寸，不放大低分辨率。切档需重新连接。编码设置是请求值，码率与帧率不是保证值。
