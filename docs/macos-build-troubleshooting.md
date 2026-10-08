@@ -32,6 +32,6 @@ bash macos-host/build-app.sh
 bash macos-host/install-app.sh
 ```
 
-安装脚本正常退出正在运行的 /Applications Host，复制新包、验证签名并打开，避免覆盖运行中的旧进程。不会重置隐私数据库或删除配对密钥。
+安装脚本先在 /Applications 的临时目录完整复制并验证新版，再正常退出正在运行的 Host，删除旧 `/Applications/RemoteMacLAN.app`，将已验证新版移到该位置并打开。旧目标必须是本应用的 bundle ID，且不能是符号链接。不会重置隐私数据库或删除 Keychain 配对密钥；完整替换并不保证更新签名后保留权限。
 
 若权限仍无法通过：运行 `bash macos-host/diagnose-permissions.sh`，检查安装包签名要求及可用签名身份。该脚本不读取配对密钥；不能在 Windows 环境代替实际 Mac 诊断。不要提供真实密码或配对密钥。
