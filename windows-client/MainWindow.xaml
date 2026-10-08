@@ -3,7 +3,7 @@
   <StackPanel x:Name="Toolbar" DockPanel.Dock="Top" Orientation="Horizontal" Margin="8">
    <TextBox x:Name="Address" Width="155" ToolTip="优先填入上次记住的 Mac IP；首次使用填入本机局域网 IPv4"/>
    <PasswordBox x:Name="Secret" Width="200" Margin="8,0" ToolTip="Paste the 64-character pairing key shown on Mac"/>
-   <ComboBox x:Name="Quality" SelectedIndex="1" Width="85"><ComboBoxItem>流畅</ComboBoxItem><ComboBoxItem>标准</ComboBoxItem><ComboBoxItem>高清</ComboBoxItem></ComboBox>
+   <ComboBox x:Name="Quality" SelectedIndex="0" Width="85"><ComboBoxItem>流畅</ComboBoxItem><ComboBoxItem>标准</ComboBoxItem><ComboBoxItem>高清</ComboBoxItem></ComboBox>
    <Button x:Name="ConnectButton" Content="连接" Click="ConnectClick" Margin="8,0" Padding="12,4"/>
    <Button x:Name="ForgetButton" Content="忘记连接" Click="ForgetClick" Margin="0,0,8,0" Padding="8,4"/>
    <Button Content="全屏 F11" Click="FullscreenClick" Padding="8,4"/>

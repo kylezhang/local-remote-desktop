@@ -18,6 +18,7 @@ public partial class MainWindow : Window
     int width,height; long frames,bytes; double encodeMs;
     readonly Stopwatch stats=Stopwatch.StartNew(), mouseClock=Stopwatch.StartNew();
     bool full, connected;
+    volatile bool inputAllowed = true;
     WindowState previousState;
     readonly DispatcherTimer render = new() { Interval=TimeSpan.FromMilliseconds(16) };
     public MainWindow() {
@@ -75,20 +76,31 @@ public partial class MainWindow : Window
                 heartbeat=Task.Run(async()=> { try { while(true) { await Task.Delay(3000,attempt.Token); await wire.Json(new {op="heartbeat"},attempt.Token); } } catch { attempt.Cancel(); } });
                 controls=Task.Run(async()=> { try { await foreach(var m in inputs.Reader.ReadAllAsync(attempt.Token)) await wire.Json(m,attempt.Token); } catch { attempt.Cancel(); } });
                 Surface.Focus(); Status.Text="已配对，等待画面…";
+                inputAllowed=true;
+                // Receive, authenticate/decrypt and feed FFmpeg away from the UI
+                // thread; only creation of the displayed bitmap uses Dispatcher.
+                await Task.Run(async()=> {
                 while(true) {
                     using var timeout=CancellationTokenSource.CreateLinkedTokenSource(attempt.Token); timeout.CancelAfter(TimeSpan.FromSeconds(15));
                     var packet=await wire.Read(timeout.Token);
                     if(packet.type==1) {
                         using var json=JsonDocument.Parse(packet.data); var root=json.RootElement;
                         if(root.GetProperty("op").GetString()=="video_header") {
-                            width=root.GetProperty("width").GetInt32(); height=root.GetProperty("height").GetInt32();
-                            if(width<2 || height<2 || width>3840 || height>2160) throw new IOException("Invalid video dimensions");
-                            decoder?.Dispose(); decoder=new FfmpegDecoder(width,height); decoder.Frame+=p=> { Interlocked.Exchange(ref latest,p); Interlocked.Increment(ref frames); };
+                            int videoWidth=root.GetProperty("width").GetInt32(), videoHeight=root.GetProperty("height").GetInt32();
+                            if(videoWidth<2 || videoHeight<2 || videoWidth>3840 || videoHeight>2160) throw new IOException("Invalid video dimensions");
+                            decoder?.Dispose(); Interlocked.Exchange(ref latest,null);
+                            decoder=new FfmpegDecoder(videoWidth,videoHeight); decoder.Frame+=p=> { Interlocked.Exchange(ref latest,p); Interlocked.Increment(ref frames); };
                             _=decoder.Completion.ContinueWith(_=> { try { attempt.Cancel(); } catch(ObjectDisposedException) {} },TaskScheduler.Default);
-                            bitmap=new WriteableBitmap(width,height,96,96,PixelFormats.Bgra32,null); Desktop.Source=bitmap; stats.Restart(); frames=bytes=0;
-                        } else if(root.GetProperty("op").GetString()=="metrics") encodeMs=root.GetProperty("encodeMs").GetDouble();
+                            await Dispatcher.InvokeAsync(()=> {
+                                width=videoWidth; height=videoHeight;
+                                bitmap=new WriteableBitmap(width,height,96,96,PixelFormats.Bgra32,null); Desktop.Source=bitmap;
+                                stats.Restart(); Interlocked.Exchange(ref frames,0); Interlocked.Exchange(ref bytes,0);
+                            });
+                        } else if(root.GetProperty("op").GetString()=="metrics") Interlocked.Exchange(ref encodeMs,root.GetProperty("encodeMs").GetDouble());
+                        if(root.TryGetProperty("accessibility",out var permission)) inputAllowed=permission.GetBoolean();
                     } else if(packet.type==2 && decoder!=null) { Interlocked.Add(ref bytes,packet.data.Length); await decoder.Feed(packet.data,attempt.Token); }
                 }
+                },attempt.Token);
             } catch(Exception ex) { Status.Text=ct.IsCancellationRequested?"已断开":$"连接中断：{ex.Message}"; }
             finally {
                 connected=false; inputs?.Writer.TryComplete(); attempt.Cancel(); wire.Dispose(); decoder?.Dispose(); Interlocked.Exchange(ref latest,null);
@@ -103,7 +115,8 @@ public partial class MainWindow : Window
         var pixels=Interlocked.Exchange(ref latest,null);
         if(pixels!=null && bitmap!=null && pixels.Length==width*height*4) bitmap.WritePixels(new Int32Rect(0,0,width,height),pixels,width*4,0);
         if(connected && bitmap!=null && stats.ElapsedMilliseconds>=1000) {
-            double sec=stats.Elapsed.TotalSeconds; Status.Text=$"{width}×{height} | 解码 {Interlocked.Exchange(ref frames,0)/sec:F1} fps | 接收 {Interlocked.Exchange(ref bytes,0)*8/sec/1e6:F2} Mbps | Mac 编码 {encodeMs:F1} ms | Ctrl+Alt+Esc 释放输入"; stats.Restart();
+            string inputStatus=!inputAllowed?"Mac 辅助功能未授权：只能查看":Surface.IsKeyboardFocusWithin?"键盘已启用；Ctrl+Alt+Esc 释放":"点击画面启用键盘";
+            double sec=stats.Elapsed.TotalSeconds; Status.Text=$"{width}×{height} | 解码 {Interlocked.Exchange(ref frames,0)/sec:F1} fps | 接收 {Interlocked.Exchange(ref bytes,0)*8/sec/1e6:F2} Mbps | Mac 编码 {Volatile.Read(ref encodeMs):F1} ms | {inputStatus}"; stats.Restart();
         }
     }
     void FullscreenClick(object sender,RoutedEventArgs e)=>ToggleFull();

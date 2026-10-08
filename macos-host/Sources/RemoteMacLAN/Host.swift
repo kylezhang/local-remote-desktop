@@ -1,5 +1,6 @@
 import Foundation
 import Darwin
+import ApplicationServices
 final class Host {
     private let lock = NSLock()
     private var listener: Int32 = -1, current: Wire?
@@ -50,11 +51,21 @@ final class Host {
             var startupError: Error?
             wait { do { try await c.start(quality: quality) } catch { startupError = error } }
             if let startupError { throw startupError }
-            status("正在共享当前桌面 · 单一控制端")
+            var trusted = AXIsProcessTrusted()
+            try wire.json(["op":"capabilities","accessibility":trusted])
+            status(trusted ? "正在共享当前桌面 · 可控制" : "正在共享当前桌面 · 辅助功能未授权，只能查看")
             var lastHeartbeat = Date()
             while true {
                 let message = try wire.receive()
-                if message["op"] as? String == "heartbeat" { lastHeartbeat = Date(); try wire.json(["op":"heartbeat"]) }
+                if message["op"] as? String == "heartbeat" {
+                    lastHeartbeat = Date()
+                    let currentTrust = AXIsProcessTrusted()
+                    try wire.json(["op":"heartbeat","accessibility":currentTrust])
+                    if currentTrust != trusted {
+                        trusted = currentTrust
+                        status(trusted ? "正在共享当前桌面 · 可控制" : "正在共享当前桌面 · 辅助功能未授权，只能查看")
+                    }
+                }
                 if Date().timeIntervalSince(lastHeartbeat) > 15 { throw WireError.closed }
                 if message["op"] as? String == "disconnect" { break }
                 input.handle(message)

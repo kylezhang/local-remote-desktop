@@ -22,6 +22,7 @@ Type 1 = UTF-8 JSON，Type 2 = 一个 Annex B H.264 access unit，无额外时�
 | key_event | C→H | vk Windows virtual key，down bool，flags bitmask |
 | release_all | C→H | 无，失焦时释放按键 |
 | heartbeat | 双向 | Client 每 3 秒发送，Host 回复；15 秒超时断线 |
+| capabilities | H→C | accessibility bool，当前是否允许输入注入；新 Host 心跳亦带此字段 |
 | disconnect | C→H | 正常关闭；客户端也可 EOF 关闭 |
 
 flags：1 Shift、2 Control、4 Option、8 Command。vk 映射包含 Windows 左右修饰键；不支持 Unicode 文本/IME。未知 op 忽略，畸形 JSON 或加密报文断开。鼠标 x/y NaN/Infinity 不接受。
