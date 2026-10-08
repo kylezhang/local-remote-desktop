@@ -1,0 +1,10 @@
+**/bin/
+**/obj/
+**/.build/
+**/.DS_Store
+**/build/
+*.user
+*.pfx
+*.key
+ffmpeg.exe
+*.log
