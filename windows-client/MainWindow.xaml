@@ -1,0 +1,14 @@
+<Window x:Class="RemoteMacLAN.MainWindow" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" Title="Remote Mac LAN" Width="1100" Height="760" Background="#181818" Foreground="White">
+ <DockPanel>
+  <StackPanel x:Name="Toolbar" DockPanel.Dock="Top" Orientation="Horizontal" Margin="8">
+   <TextBox x:Name="Address" Width="155" Text="192.168.1.100" ToolTip="Mac IP"/>
+   <PasswordBox x:Name="Secret" Width="200" Margin="8,0" ToolTip="Paste the 64-character pairing key shown on Mac"/>
+   <ComboBox x:Name="Quality" SelectedIndex="1" Width="85"><ComboBoxItem>流畅</ComboBoxItem><ComboBoxItem>标准</ComboBoxItem><ComboBoxItem>高清</ComboBoxItem></ComboBox>
+   <Button x:Name="ConnectButton" Content="连接" Click="ConnectClick" Margin="8,0" Padding="12,4"/>
+   <Button Content="全屏 F11" Click="FullscreenClick" Padding="8,4"/>
+   <CheckBox x:Name="Reconnect" Content="自动重连" IsChecked="True" VerticalAlignment="Center" Margin="8,0"/>
+  </StackPanel>
+  <TextBlock x:Name="Status" DockPanel.Dock="Bottom" Text="填写 Mac IP 和配对密钥。Ctrl+Alt+Esc 释放输入；F11 切换全屏。" Margin="8"/>
+  <Border x:Name="Surface" Background="Black" Focusable="True" ClipToBounds="True"><Image x:Name="Desktop" Stretch="Uniform"/></Border>
+ </DockPanel>
+</Window>
