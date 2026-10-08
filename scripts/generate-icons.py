@@ -1,6 +1,6 @@
 """Regenerate platform icons from assets/brand/icon.svg (requires Pillow).
 
-Small renderer for the checked-in rounded-rectangle and orthogonal-path design.
+Small renderer for the checked-in rectangle, polygon and orthogonal-path design.
 SVG geometry is the source of truth; no external service or downloaded artwork.
 """
 from pathlib import Path
@@ -26,6 +26,9 @@ def render(element, inherited):
         draw.rounded_rectangle((x-outset,y-outset,x+w+outset,y+h+outset), radius=float(style.get('rx',0))*scale+outset,
                               fill=None if style.get('fill')=='none' else style.get('fill'),
                               outline=stroke, width=width)
+    elif kind == 'polygon':
+        numbers=[float(n)*scale for n in re.findall(r'-?\d+(?:\.\d+)?',style['points'])]
+        draw.polygon(list(zip(numbers[::2],numbers[1::2])),fill=style.get('fill'),outline=stroke,width=width)
     elif kind == 'path':
         tokens = re.findall(r'[MmHhVv]|-?\d+(?:\.\d+)?', style['d'])
         paths, points, current = [], [], (0.0,0.0)

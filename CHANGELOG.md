@@ -2,6 +2,12 @@
 
 [简体中文](CHANGELOG.zh-CN.md)
 
+## Unreleased
+
+- Redesigned the icon around desktop/mobile devices and remote interaction.
+- Rewrote the English-first README and Chinese counterpart for users; moved detailed controls, quality settings and diagnostics to a dedicated user guide.
+- Added English UI/localization to the near-term roadmap. Existing release tags and archives remain unchanged.
+
 ## 0.1.0 — 2026-10-08
 
 First named LocalRemote product release. Earlier 0.2.x versions were development iterations; this release starts the product version at 0.1.0 without removing features or rewriting history.

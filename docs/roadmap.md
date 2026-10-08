@@ -10,7 +10,7 @@ Windows→Apple Silicon Mac current-session control, paired/encrypted transport,
 
 ## Next — reliable daily use
 
-Prioritize reproducible macOS native build/testing, stable signing and packaging, TCC/Keychain update behavior, keyboard layouts and release-on-disconnect, sleep/wake recovery, and measured input/video latency. Replace FFmpeg/WPF with hardware decode/render only when evidence supports the change. Add device discovery and an explicit pairing/revocation interface after the manual-IP path is stable. Evaluate bounded, opt-in text clipboard synchronization. Exit criterion: repeatable two-device validation, documented update behavior and no reliance on repeated permission resets.
+Prioritize reproducible macOS native build/testing, stable signing and packaging, TCC/Keychain update behavior, keyboard layouts and release-on-disconnect, sleep/wake recovery, and measured input/video latency. Add an English interface with Chinese localization, keeping labels consistent with the English-first documentation, before broader international distribution. Replace FFmpeg/WPF with hardware decode/render only when evidence supports the change. Add device discovery and an explicit pairing/revocation interface after the manual-IP path is stable. Evaluate bounded, opt-in text clipboard synchronization. Exit criterion: repeatable two-device validation, documented update behavior and no reliance on repeated permission resets.
 
 ## Then — Windows ↔ Mac
 
