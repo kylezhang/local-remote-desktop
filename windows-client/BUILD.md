@@ -16,3 +16,5 @@ dotnet publish windows-client/RemoteMacLAN.csproj -c Release -r win-x64 --self-c
 本次附带的 Windows ZIP 是实际 Release 编译产物，**依赖 .NET 8 Desktop Runtime**，不是 self-contained 包。安装 .NET 8 SDK 也提供所需桌面运行时。FFmpeg 在 PATH 或 exe 同目录；不把 ffmpeg.exe、密钥或用户配置提交到仓库。不安装 .NET Desktop Runtime 时 exe 可能在启动前退出并显示运行时缺失提示。
 
 界面填写 Mac IPv4、64 字符配对密钥，选择质量后连接。Mac 端必须已运行且授权。Ctrl+Alt+Esc 释放输入，F11 全屏。硬件解码/D3D11 尚未实现。
+
+启动时地址框自动填入 Windows 当前的局域网 IPv4，方便改成同网段 Mac 的地址；优先选有 IPv4 网关的已连接以太网/Wi-Fi 网卡，排除回环和链路本地地址。无法确定时留空，不保留固定示例 IP。此默认地址不是自动发现的 Mac 地址。

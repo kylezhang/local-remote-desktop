@@ -21,7 +21,7 @@ public partial class MainWindow : Window
     WindowState previousState;
     readonly DispatcherTimer render = new() { Interval=TimeSpan.FromMilliseconds(16) };
     public MainWindow() {
-        InitializeComponent(); Secret.Password=SecretStore.Load(Address.Text);
+        InitializeComponent(); Address.Text=LocalAddress.Find(); Secret.Password=SecretStore.Load(Address.Text);
         Address.LostFocus+=(_,_)=> { var s=SecretStore.Load(Address.Text.Trim()); if(s.Length>0) Secret.Password=s; };
         render.Tick+=(_,_)=>Render(); render.Start();
         Surface.MouseMove+=(_,e)=> { if(mouseClock.ElapsedMilliseconds<8) return; mouseClock.Restart(); if(Position(e.GetPosition(Surface)) is {} p) Input(new {op="mouse_move",p.x,p.y}); };
