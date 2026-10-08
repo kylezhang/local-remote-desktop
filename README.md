@@ -21,7 +21,7 @@ Windows 台式机通过局域网查看并操作 Apple Silicon MacBook 的**当�
 5. 在仓库根目录运行 `dotnet build windows-client/RemoteMacLAN.csproj -c Release`；运行 `windows-client/bin/Release/net8.0-windows/RemoteMacLAN.exe`。也可 `dotnet run --project windows-client/RemoteMacLAN.csproj -c Release`。
 6. Mac 勾选显示配对密钥，把 **64 位十六进制密钥**安全复制到 Windows 配对框，填写 IP，选“流畅”，连接。先验证画面，再点击画面用鼠标及英文键盘操作 TextEdit。再试标准档、断线重连及 Mac 本地继续工作。
 
-无需另行生成证书或配置服务器。密钥等同控制权限，不放聊天群、截图或仓库。首次需人工从可信 Mac 界面取密钥；输入错误不会保存且不会自动重试。
+无需另行生成证书或配置服务器。密钥等同控制权限，不放聊天群、截图或仓库。首次需人工从可信 Mac 界面取密钥；点击连接会加密记住 IP 和格式有效的密钥，下次自动填入，点击“忘记连接”可清除。错误密钥不会通过认证或自动重试。
 
 ## 操作与权限
 

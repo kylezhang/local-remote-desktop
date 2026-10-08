@@ -17,10 +17,20 @@ static class SecretStore
             var result=new byte[output.Length]; Marshal.Copy(output.Data, result, 0, result.Length); return result;
         } finally { Marshal.FreeHGlobal(input.Data); if(output.Data!=IntPtr.Zero) LocalFree(output.Data); }
     }
-    static string PathFor(string host) {
+    static string DirectoryPath() {
         var dir=Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),"RemoteMacLAN"); Directory.CreateDirectory(dir);
-        return Path.Combine(dir,Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(host)))+".dpapi");
+        return dir;
     }
+    static string PathFor(string host) => Path.Combine(DirectoryPath(),Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(host)))+".dpapi");
     public static void Save(string host,string secret) => File.WriteAllBytes(PathFor(host), Transform(System.Text.Encoding.UTF8.GetBytes(secret),true));
     public static string Load(string host) { try { return System.Text.Encoding.UTF8.GetString(Transform(File.ReadAllBytes(PathFor(host)),false)); } catch { return ""; } }
+    public static void Remember(string host,string secret) {
+        Save(host,secret);
+        File.WriteAllBytes(Path.Combine(DirectoryPath(),"last-host.dpapi"),Transform(System.Text.Encoding.UTF8.GetBytes(host),true));
+    }
+    public static string LastHost() { try { return System.Text.Encoding.UTF8.GetString(Transform(File.ReadAllBytes(Path.Combine(DirectoryPath(),"last-host.dpapi")),false)); } catch { return ""; } }
+    public static void Forget(string host) {
+        File.Delete(PathFor(host));
+        if (LastHost()==host) File.Delete(Path.Combine(DirectoryPath(),"last-host.dpapi"));
+    }
 }

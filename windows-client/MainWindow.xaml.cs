@@ -21,7 +21,7 @@ public partial class MainWindow : Window
     WindowState previousState;
     readonly DispatcherTimer render = new() { Interval=TimeSpan.FromMilliseconds(16) };
     public MainWindow() {
-        InitializeComponent(); Address.Text=LocalAddress.Find(); Secret.Password=SecretStore.Load(Address.Text);
+        InitializeComponent(); var savedHost=SecretStore.LastHost(); Address.Text=savedHost.Length>0?savedHost:LocalAddress.Find(); Secret.Password=SecretStore.Load(Address.Text);
         Address.LostFocus+=(_,_)=> { var s=SecretStore.Load(Address.Text.Trim()); if(s.Length>0) Secret.Password=s; };
         render.Tick+=(_,_)=>Render(); render.Start();
         Surface.MouseMove+=(_,e)=> { if(mouseClock.ElapsedMilliseconds<8) return; mouseClock.Restart(); if(Position(e.GetPosition(Surface)) is {} p) Input(new {op="mouse_move",p.x,p.y}); };
@@ -52,9 +52,13 @@ public partial class MainWindow : Window
     async void ConnectClick(object sender,RoutedEventArgs e) {
         if(session!=null) { session.Cancel(); return; }
         var ip=Address.Text.Trim(); var secret=Secret.Password.Trim(); int quality=Quality.SelectedIndex;
-        session=new(); ConnectButton.Content="断开"; Address.IsEnabled=Secret.IsEnabled=Quality.IsEnabled=false;
+        try {
+            if(ip.Length==0 || Convert.FromHexString(secret).Length!=32) throw new ArgumentException("请填写 Mac IP 和 64 个十六进制字符的配对密钥。");
+            SecretStore.Remember(ip,secret);
+        } catch(Exception ex) { Status.Text=$"无法记住连接：{ex.Message}"; return; }
+        session=new(); ConnectButton.Content="断开"; Address.IsEnabled=Secret.IsEnabled=Quality.IsEnabled=ForgetButton.IsEnabled=false;
         runner=Run(ip,secret,quality,session.Token);
-        try { await runner; } finally { connected=false; session.Dispose(); session=null; ConnectButton.Content="连接"; Address.IsEnabled=Secret.IsEnabled=Quality.IsEnabled=true; Desktop.Source=null; bitmap=null; width=height=0; }
+        try { await runner; } finally { connected=false; session.Dispose(); session=null; ConnectButton.Content="连接"; Address.IsEnabled=Secret.IsEnabled=Quality.IsEnabled=ForgetButton.IsEnabled=true; Desktop.Source=null; bitmap=null; width=height=0; }
     }
     async Task Run(string ip,string secret,int quality,CancellationToken ct) {
         bool paired=false;
@@ -103,5 +107,9 @@ public partial class MainWindow : Window
         }
     }
     void FullscreenClick(object sender,RoutedEventArgs e)=>ToggleFull();
+    void ForgetClick(object sender,RoutedEventArgs e) {
+        try { SecretStore.Forget(Address.Text.Trim()); Secret.Password=""; Address.Text=LocalAddress.Find(); Status.Text="已清除当前 Mac 的 IP 和配对密钥记忆。"; }
+        catch(Exception ex) { Status.Text=$"清除失败：{ex.Message}"; }
+    }
     void ToggleFull() { full=!full; if(full) { previousState=WindowState; WindowState=WindowState.Normal; WindowStyle=WindowStyle.None; WindowState=WindowState.Maximized; Toolbar.Visibility=Visibility.Collapsed; Surface.Focus(); } else { WindowState=WindowState.Normal; WindowStyle=WindowStyle.SingleBorderWindow; WindowState=previousState; Toolbar.Visibility=Visibility.Visible; } }
 }
