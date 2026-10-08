@@ -12,6 +12,9 @@ public partial class MainWindow : Window
 {
     CancellationTokenSource? session;
     Task? runner;
+    CancellationTokenSource? activeAttempt;
+    int requestedQuality;
+    bool qualityChangePending;
     InputQueue? inputs;
     WriteableBitmap? bitmap;
     byte[]? latest;
@@ -30,6 +33,12 @@ public partial class MainWindow : Window
         rememberConnection=remember;
         InitializeComponent(); var savedHost=remember?SecretStore.LastHost():""; Address.Text=savedHost.Length>0?savedHost:LocalAddress.Find(); Secret.Password=remember?SecretStore.Load(Address.Text):"";
         Address.LostFocus+=(_,_)=> { if(!rememberConnection) return; var s=SecretStore.Load(Address.Text.Trim()); if(s.Length>0) Secret.Password=s; };
+        Quality.SelectionChanged+=(_,_)=> {
+            if(session==null) return;
+            requestedQuality=Quality.SelectedIndex; qualityChangePending=true;
+            Input(new {op="release_all"}); activeAttempt?.Cancel();
+            Status.Text="正在切换画质，将自动重新连接…";
+        };
         render.Tick+=(_,_)=>Render(); render.Start();
         Surface.MouseMove+=(_,e)=> { if(mouseClock.ElapsedMilliseconds<8) return; mouseClock.Restart(); SendPointerMove(e.GetPosition(Surface),Surface.IsMouseCaptured); };
         Surface.MouseDown+=(_,e)=> { Keyboard.Focus(Surface); Surface.CaptureMouse(); SendPointerButton(e.GetPosition(Surface),e.ChangedButton,true); e.Handled=true; };
@@ -64,15 +73,18 @@ public partial class MainWindow : Window
             if(ip.Length==0 || Convert.FromHexString(secret).Length!=32) throw new ArgumentException("请填写 Mac IP 和 64 个十六进制字符的配对密钥。");
             if(rememberConnection) SecretStore.Remember(ip,secret);
         } catch(Exception ex) { Status.Text=$"无法记住连接：{ex.Message}"; return; }
-        session=new(); ConnectButton.Content="断开"; Address.IsEnabled=Secret.IsEnabled=Quality.IsEnabled=ForgetButton.IsEnabled=false;
-        runner=Run(ip,secret,quality,session.Token);
+        requestedQuality=quality; qualityChangePending=false;
+        session=new(); ConnectButton.Content="断开"; Address.IsEnabled=Secret.IsEnabled=ForgetButton.IsEnabled=false;
+        runner=Run(ip,secret,session.Token);
         try { await runner; } finally { connected=false; session.Dispose(); session=null; ConnectButton.Content="连接"; Address.IsEnabled=Secret.IsEnabled=Quality.IsEnabled=ForgetButton.IsEnabled=true; Desktop.Source=null; bitmap=null; width=height=0; }
     }
-    async Task Run(string ip,string secret,int quality,CancellationToken ct) {
+    async Task Run(string ip,string secret,CancellationToken ct) {
         bool paired=false;
         do {
             using var wire=new Wire(); IVideoDecoder? decoder=null;
             using var attempt=CancellationTokenSource.CreateLinkedTokenSource(ct);
+            activeAttempt=attempt; qualityChangePending=false;
+            int quality=requestedQuality;
             Task? heartbeat=null, controls=null;
             try {
                 Status.Text="连接和验证 Mac…";
@@ -117,12 +129,15 @@ public partial class MainWindow : Window
                     } else if(packet.type==2 && decoder!=null) { Interlocked.Add(ref bytes,packet.data.Length); await decoder.Feed(packet.data,attempt.Token); }
                 }
                 },attempt.Token);
-            } catch(Exception ex) { Status.Text=ct.IsCancellationRequested?"已断开":$"连接中断：{ex.Message}"; }
+            } catch(Exception ex) { Status.Text=ct.IsCancellationRequested?"已断开":qualityChangePending?"正在切换画质":$"连接中断：{ex.Message}"; }
             finally {
                 connected=false; inputs?.Complete(); attempt.Cancel(); wire.Dispose(); decoder?.Dispose(); Interlocked.Exchange(ref latest,null);
                 if(heartbeat!=null) await heartbeat; if(controls!=null) await controls;
+                activeAttempt=null;
+                if(Surface.IsMouseCaptured) Surface.ReleaseMouseCapture();
+                Desktop.Source=null; bitmap=null; width=height=0;
             }
-            if(ct.IsCancellationRequested || !paired || Reconnect.IsChecked!=true) break;
+            if(ct.IsCancellationRequested || (!qualityChangePending && (!paired || Reconnect.IsChecked!=true))) break;
             Status.Text+="；3 秒后重连";
             try { await Task.Delay(3000,ct); } catch(OperationCanceledException) { break; }
         } while(!ct.IsCancellationRequested);

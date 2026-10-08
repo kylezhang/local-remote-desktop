@@ -9,4 +9,6 @@
 *.key
 ffmpeg.exe
 **/.signing-identity
+**/.require-stable-signature
+**/.signing-probe.*/
 *.log

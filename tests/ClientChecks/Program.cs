@@ -74,6 +74,17 @@ static class Program {
                 await host.Permission(true);
                 await Until(()=>!((TextBlock)window.FindName("Status")).Text.Contains("只能查看"),"permission recovery not shown");
                 Console.WriteLine("PASS Mac permission denial/recovery is reflected by real client");
+                var quality=(ComboBox)window.FindName("Quality");
+                Assert(quality.IsEnabled,"quality selector disabled while connected");
+                var firstImage=((Image)window.FindName("Desktop")).Source;
+                quality.SelectedIndex=1;
+                await Until(()=>host.Qualities.Count>=2 && ((Image)window.FindName("Desktop")).Source!=null && !ReferenceEquals(firstImage,((Image)window.FindName("Desktop")).Source),"quality did not reconnect with a fresh image",15000);
+                Assert(host.Qualities.ToArray().SequenceEqual(new[]{0,1}),"new quality not sent in handshake");
+                firstImage=((Image)window.FindName("Desktop")).Source;
+                quality.SelectedIndex=2; quality.SelectedIndex=0;
+                await Until(()=>host.Qualities.Count>=3 && ((Image)window.FindName("Desktop")).Source!=null && !ReferenceEquals(firstImage,((Image)window.FindName("Desktop")).Source),"rapid quality changes did not use latest selection",15000);
+                Assert(host.Qualities.ToArray().SequenceEqual(new[]{0,1,0}),"stale quality selected on rapid change");
+                Console.WriteLine("PASS connected quality changes reauthenticate and refresh decoder; latest rapid selection wins with auto-reconnect unchecked");
                 connect.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
                 await Until(()=>Equals(connect.Content,"连接"),"disconnect did not complete");
                 Assert(((Image)window.FindName("Desktop")).Source==null,"stale desktop after disconnect");
@@ -92,6 +103,7 @@ sealed class MockHost:IDisposable {
     NetworkStream stream=null!; byte[] tx=[],rx=[]; ulong sent,received; TcpClient? peer;
     public byte[] Key {get;}=RandomNumberGenerator.GetBytes(32);
     public ConcurrentQueue<JsonElement> Inputs {get;}=new();
+    public ConcurrentQueue<int> Qualities {get;}=new();
     public MockHost(byte[] video) { this.video=video; listener.Start(); }
     static byte[] Join(params byte[][] arrays)=>arrays.SelectMany(x=>x).ToArray();
     static byte[] H(byte[] key,string label,byte[] transcript)=>HMACSHA256.HashData(key,Join(Encoding.ASCII.GetBytes(label),transcript));
@@ -103,12 +115,21 @@ sealed class MockHost:IDisposable {
         try { var plain=Join([type],data); var header=new byte[4]; BinaryPrimitives.WriteUInt32BigEndian(header,(uint)(plain.Length+16)); var cipher=new byte[plain.Length]; var tag=new byte[16]; using var aes=new AesGcm(tx,16); aes.Encrypt(Nonce(sent++),plain,cipher,tag,header); await stream.WriteAsync(Join(header,cipher,tag),stop.Token); } finally { writes.Release(); }
     }
     public async Task Run() {
+        while(!stop.IsCancellationRequested) {
+            try { await Session(); }
+            catch(Exception ex) when(ex is IOException or SocketException or ObjectDisposedException) { if(stop.IsCancellationRequested) throw; }
+            finally { peer?.Dispose(); }
+        }
+    }
+    async Task Session() {
+        sent=received=0;
         peer=await listener.AcceptTcpClientAsync(stop.Token); peer.NoDelay=true; stream=peer.GetStream(); var nonce=RandomNumberGenerator.GetBytes(32);
         await stream.WriteAsync(Join("RML1"u8.ToArray(),nonce),stop.Token); var response=new byte[64]; await stream.ReadExactlyAsync(response,stop.Token);
         var transcript=Join(nonce,response[..32]);
         if(!CryptographicOperations.FixedTimeEquals(response[32..],H(Key,"client",transcript))) throw new CryptographicException("invalid test client proof");
         await stream.WriteAsync(H(Key,"server",transcript),stop.Token); tx=H(Key,"h2c",transcript); rx=H(Key,"c2h",transcript);
         using var hello=JsonDocument.Parse(await Read()); if(hello.RootElement.GetProperty("op").GetString()!="handshake") throw new IOException("no handshake");
+        Qualities.Enqueue(hello.RootElement.GetProperty("quality").GetInt32());
         await Json(new {op="video_header",width=320,height=180,fps=30,codec="h264-annexb"}); await Permission(true); await Send(2,video);
         while(true) { using var message=JsonDocument.Parse(await Read()); if(message.RootElement.GetProperty("op").GetString()=="heartbeat") await Permission(true); else Inputs.Enqueue(message.RootElement.Clone()); }
     }

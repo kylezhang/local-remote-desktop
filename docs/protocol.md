@@ -31,4 +31,4 @@ flags：1 Shift、2 Control、4 Option、8 Command。vk 映射包含 Windows 左
 
 Host 根据 vk=96..111 自动添加 CGEvent 的 numeric-pad 标记，不占用协议修饰键位。Windows Num Lock 关闭时可能发送导航键，Host 不把导航键强制转换为数字。参见 [Apple maskNumericPad](https://developer.apple.com/documentation/coregraphics/cgeventflags/masknumericpad)。
 
-质量 0：最多1280×720/30fps/4Mbps；1：最多1920×1080/60fps/10Mbps；2：同尺寸频率/18Mbps。保持屏幕比例、偶数尺寸，不放大低分辨率。切档需重新连接。编码设置是请求值，码率与帧率不是保证值。
+质量 0：最多1280×720/30fps/4Mbps；1：最多1920×1080/60fps/10Mbps；2：同尺寸频率/18Mbps。保持屏幕比例、偶数尺寸，不放大低分辨率。Windows 0.2.3 在连接中选档后释放输入，关闭旧连接和解码器，等待约三秒，再自动认证并以新档位握手；不依赖“自动重连”选项。快速连续选择以最后一次为准。编码设置是请求值，码率与帧率不是保证值。

@@ -13,7 +13,9 @@ dotnet run --project windows-client/RemoteMacLAN.csproj -c Release
 dotnet publish windows-client/RemoteMacLAN.csproj -c Release -r win-x64 --self-contained true -o build/windows
 ```
 
-0.2.0 原生修复候选 ZIP 是实际 Release **self-contained** 产物，包含 .NET Desktop Runtime，不需要额外安装运行时。FFmpeg 仍需在 PATH 或 exe 同目录，本机已有 FFmpeg 的用户无需重复配置；不把 ffmpeg.exe、密钥或用户配置提交到仓库。仅通过普通 `dotnet build` 生成的开发 exe 仍依赖 .NET 8 Desktop Runtime。
+0.2.3 Windows ZIP 是实际 Release **self-contained** 产物，包含 .NET Desktop Runtime，不需要额外安装运行时。FFmpeg 仍需在 PATH 或 exe 同目录，本机已有 FFmpeg 的用户无需重复配置；不把 ffmpeg.exe、密钥或用户配置提交到仓库。仅通过普通 `dotnet build` 生成的开发 exe 仍依赖 .NET 8 Desktop Runtime。
+
+连接中可以直接选择画质，客户端释放按键并短暂断开，约三秒后按新档位自动连接；这不是无中断的实时编码器重配置。快速连续切换采用最后一个档位，即使关闭自动重连也可切换。Mac Host 无需为此更新。
 
 界面填写 Mac IPv4、64 字符配对密钥，选择质量后连接。Mac 端必须已运行且授权。Ctrl+Alt+Esc 释放输入，F11 全屏。硬件解码/D3D11 尚未实现。
 

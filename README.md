@@ -59,7 +59,7 @@ dotnet run --project tests/ProtocolChecks/ProtocolChecks.csproj -c Release
 
 测试要求 FFmpeg 在 PATH。它是合成协议端，不替代 Mac 联调。Mac Swift/Apple SDK 无法在本 Windows 环境原生构建，进行了源码静态检查，尚未确认 SDK 类型检查、TCC 授权、真实捕获、硬件编码、CGEvent、LaunchAgent。源码包含真实 API 调用，仍可能需要在目标 Mac 修正 SDK 差异。请按 [验收清单](docs/validation.md) 联调。
 
-重新构建时临时 ad-hoc 签名可能使 macOS 权限需要重授；稳定使用建议设 `SIGN_IDENTITY` 为本人的 Apple 开发签名身份后构建。不承诺免授权/免重授。
+重新构建时临时 ad-hoc 签名可能使 macOS 权限需要重授。具备有效 Apple 签名证书后，运行 `bash macos-host/configure-signing.sh` 固定签名身份；后续构建拒绝退回 ad-hoc。首次签名身份迁移仍需授权，不承诺系统永不再询问。正常安装不重置权限。详见 [签名与画质更新说明](docs/quality-and-signing.md)。
 
 架构见 [architecture](docs/architecture.md)，线路协议见 [protocol](docs/protocol.md)，后续工作见 [roadmap](docs/roadmap.md)。
 
