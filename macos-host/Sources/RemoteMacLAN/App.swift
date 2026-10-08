@@ -13,7 +13,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool { false }
 }
 final class HostModel: ObservableObject {
-    @Published var status = "准备启动", secret = "", active = false
+    @Published var status = "准备启动"
+    @Published var secret = ""
+    @Published var active = false
     private var host: Host?
     func start() {
         guard host == nil else { return }

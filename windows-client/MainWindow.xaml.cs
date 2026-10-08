@@ -80,7 +80,7 @@ public partial class MainWindow : Window
                             width=root.GetProperty("width").GetInt32(); height=root.GetProperty("height").GetInt32();
                             if(width<2 || height<2 || width>3840 || height>2160) throw new IOException("Invalid video dimensions");
                             decoder?.Dispose(); decoder=new FfmpegDecoder(width,height); decoder.Frame+=p=> { Interlocked.Exchange(ref latest,p); Interlocked.Increment(ref frames); };
-                            _=decoder.Completion.ContinueWith(_=>attempt.Cancel(),TaskScheduler.Default);
+                            _=decoder.Completion.ContinueWith(_=> { try { attempt.Cancel(); } catch(ObjectDisposedException) {} },TaskScheduler.Default);
                             bitmap=new WriteableBitmap(width,height,96,96,PixelFormats.Bgra32,null); Desktop.Source=bitmap; stats.Restart(); frames=bytes=0;
                         } else if(root.GetProperty("op").GetString()=="metrics") encodeMs=root.GetProperty("encodeMs").GetDouble();
                     } else if(packet.type==2 && decoder!=null) { Interlocked.Add(ref bytes,packet.data.Length); await decoder.Feed(packet.data,attempt.Token); }

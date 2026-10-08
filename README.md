@@ -27,7 +27,7 @@ Windows 台式机通过局域网查看并操作 Apple Silicon MacBook 的**当�
 
 - F11 切换全屏；Ctrl+Alt+Esc 释放远端输入并把焦点移回本地按钮。只有画面获焦时发送键盘输入；按钮和密钥框里的按键不发送。
 - Windows Ctrl → Mac Control，Alt → Option，Win → Command，Shift → Shift。Mac 的复制是 Win+C。系统保留的 Win 快捷键/Alt+Tab/Ctrl+Alt+Del 不保证送达；本原型没有全局键盘钩子。支持常用字母、数字、标点、方向键、功能键、数字键盘；IME/中文组合输入未实现。
-- 鼠标按视频实际显示区域映射，忽略黑边；支持左右键、中键、拖动、垂直滚轮。失焦、断开时释放按住的键和按钮。双击尚未显式设置 CGEvent clickState，行为需实测。
+- 鼠标按视频实际显示区域映射，忽略黑边；支持左右键、中键、拖动、垂直滚轮，按系统双击间隔设置 clickState。失焦、断开时释放按住的键和按钮。真实点击/双击行为仍需 Mac 实测。
 - 停止共享或退出 Mac Host 可收回控制。窗口关闭不会退出 Host；重新打开应用可用菜单显示窗口。
 - 一个控制端、主显示器、IPv4 私有/链路本地/回环地址，固定端口；不支持 IPv6、音频、多显示器、文件传输、摄像头、录屏、移动端、公网穿透、TURN/STUN。
 
@@ -47,7 +47,7 @@ Mac Keychain 生成并保存 256 位随机共享密钥；Windows 使用当前用
 
 ## 验证
 
-本次 Windows x64 使用 .NET SDK 8.0.425 实际 Release 构建，零警告零错误。测试程序覆盖双向认证、碎片化 TCP、篡改/重放/错误密钥/超长报文拒绝、实际 H.264→BGRA 解码、DPAPI 存储。运行：
+本次 Windows x64 使用 .NET SDK 8.0.425 实际 Release 构建，零警告零错误。测试程序已通过双向认证、碎片化 TCP、篡改/重放/错误密钥/超长报文拒绝、实际 H.264→BGRA 解码、DPAPI 存储。详见 [构建记录](docs/build-report.md)。运行：
 
 ```powershell
 dotnet run --project tests/ProtocolChecks/ProtocolChecks.csproj -c Release

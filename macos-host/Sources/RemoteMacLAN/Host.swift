@@ -18,6 +18,8 @@ final class Host {
     }
     private func acceptLoop(_ socket: Int32) {
         while true {
+            lock.lock(); let active = running && listener == socket; lock.unlock()
+            if !active { break }
             var peer = sockaddr_in(), length = socklen_t(MemoryLayout<sockaddr_in>.size)
             let fd = withUnsafeMutablePointer(to: &peer) { $0.withMemoryRebound(to: sockaddr.self, capacity: 1) { accept(socket, $0, &length) } }
             if fd < 0 { break }
