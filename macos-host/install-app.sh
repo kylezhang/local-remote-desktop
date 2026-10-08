@@ -3,7 +3,9 @@ set -euo pipefail
 cd "$(dirname "$0")"
 [[ "$(uname -s)" == Darwin ]] || { echo '此安装脚本只能在 macOS 运行。' >&2; exit 1; }
 [[ "$EUID" != 0 ]] || { echo '请以正常登录用户运行，不要使用 sudo。' >&2; exit 1; }
-[[ $# == 0 ]] || { echo '用法：bash macos-host/install-app.sh（自动构建并完整替换）' >&2; exit 1; }
+reset_screen=false
+if [[ $# == 1 && "$1" == --reset-screen-permission ]]; then reset_screen=true
+elif [[ $# != 0 ]]; then echo '用法：bash macos-host/install-app.sh [--reset-screen-permission]' >&2; exit 1; fi
 
 target=/Applications/RemoteMacLAN.app
 user_target="$HOME/Applications/RemoteMacLAN.app"
@@ -66,11 +68,15 @@ done
 if pgrep -x RemoteMacLAN >/dev/null; then stop_hosts KILL; sleep 0.2; fi
 if pgrep -x RemoteMacLAN >/dev/null; then echo '旧 Host 无法停止，安装已中止。' >&2; exit 1; fi
 
-echo '[3/6] 清除本应用旧的屏幕录制授权。'
+echo '[3/6] 处理屏幕录制授权。'
 # Explicitly scoped to this application's identity; do not reset other apps or
 # Accessibility, and never delete the user's Keychain pairing key.
-if ! tccutil reset ScreenCapture com.remotemaclan.host; then
-  echo '屏幕授权重置失败，安装已中止；没有删除旧应用。' >&2; exit 1
+if [[ "$reset_screen" == true ]]; then
+  if ! tccutil reset ScreenCapture com.remotemaclan.host; then
+    echo '屏幕授权重置失败，安装已中止；没有删除旧应用。' >&2; exit 1
+  fi
+else
+  echo '保留屏幕录制授权；仅显式传入 --reset-screen-permission 时清除。'
 fi
 
 echo '[4/6] 完整删除旧应用包（包括其内部全部文件）。'
@@ -92,5 +98,9 @@ else
   open "$target"
 fi
 echo "安装完成：Remote Mac LAN $version，位置 $target"
-echo '配对密钥和辅助功能授权记录保留；本应用的屏幕录制授权已重置。'
-echo '首次点击开始共享后重新授予屏幕录制权限，再退出并重新打开 /Applications/RemoteMacLAN.app。'
+echo '配对密钥和辅助功能授权记录保留。'
+if [[ "$reset_screen" == true ]]; then
+  echo '屏幕录制授权已重置；重新授权后退出并重开应用，不要再次运行安装脚本。'
+else
+  echo '安装没有重置屏幕录制授权；如需授权，授权后仅退出重开应用。'
+fi

@@ -31,10 +31,18 @@ git pull
 bash macos-host/install-app.sh
 ```
 
-安装脚本自动执行 build-app.sh，先在 /Applications 临时目录复制并验证新版，再停止已加载的登录自启动与所有同名 Host（包括从构建目录启动的副本），必要时强制结束。然后执行 `tccutil reset ScreenCapture com.remotemaclan.host`，完整删除 `/Applications/RemoteMacLAN.app` 和 `~/Applications/RemoteMacLAN.app` 旧包，安装并验证新版，启动一次。旧目标必须是本应用的 bundle ID，且不能是符号链接。构建、签名验证、进程停止或权限重置失败时，会在删除旧包之前中止。
+安装脚本自动执行 build-app.sh，先在 /Applications 临时目录复制并验证新版，再停止已加载的登录自启动与所有同名 Host（包括从构建目录启动的副本），必要时强制结束。仅在显式传入 `--reset-screen-permission` 时执行 `tccutil reset ScreenCapture com.remotemaclan.host`，再完整删除 `/Applications/RemoteMacLAN.app` 和 `~/Applications/RemoteMacLAN.app` 旧包，安装并验证新版，启动一次。旧目标必须是本应用的 bundle ID，且不能是符号链接。构建、签名验证、进程停止或权限重置失败时，会在删除旧包之前中止。
 
-本次按用户要求主动重置屏幕录制授权，因此安装后点击开始共享，授予屏幕录制权限，退出并重新打开 `/Applications/RemoteMacLAN.app`。平时打开应用不执行重置；辅助功能授权记录及 Keychain 配对密钥不清除。没有保证重置后所有采集问题都会消失。仅共享问题不需要删除密钥。
+普通安装保留屏幕录制授权；此前每次安装都重置会把刚授予的权限再次清掉，现已修正为按需操作。显式重置后，授予权限，再退出并重新打开 `/Applications/RemoteMacLAN.app`，不要再次安装。辅助功能授权记录及 Keychain 配对密钥不清除。没有保证重置后所有采集问题都会消失。仅共享问题不需要删除密钥。
 
 Windows 上已执行 Bash 语法检查及隔离的安装流程测试（模拟 macOS 命令）：覆盖旧包全部文件及用户目录副本删除、强制停止、登录自启动恢复且不重复 open、指定 TCC 命令，以及构建/签名/身份/进程/权限重置失败时保留旧包。测试不会运行真实 tccutil 或 launchctl；实际 macOS 行为仍未在本开发环境验证。测试入口为 `tests/InstallerChecks/check.py`，需 Python 3.10+ 和 Bash。
 
 若权限仍无法通过：运行 `bash macos-host/diagnose-permissions.sh`，检查安装包签名要求及可用签名身份。该脚本不读取配对密钥；不能在 Windows 环境代替实际 Mac 诊断。不要提供真实密码或配对密钥。
+
+## 0.2.1 启动检查修正
+
+根据用户提供的日志，安装执行两次，两次均明确重置了 ScreenCapture 授权；日志只能证明安装和签名验证通过，不能证明当前进程的屏幕访问被允许。旧程序还在 CGPreflightScreenCaptureAccess 为 false 时直接退出启动流程，无法区分旧预检查和 ScreenCaptureKit 实际结果。
+
+0.2.1 保留正常安装时的授权，并在主动点击开始共享时异步调用 SCShareableContent，成功后才监听 TCP 47980。不会绕过系统授权。界面显示检查中、等待 Windows 或系统 NSError 域/码；新增“复制启动诊断”，提供系统版本、预检查、实际 SCK 检查、辅助功能状态和监听状态，不含密钥、序列号或用户目录。补充 NSScreenCaptureUsageDescription，参见 [Apple ScreenCaptureKit](https://developer.apple.com/documentation/screencapturekit)。
+
+Windows 上 Bash 语法及 5 组隔离模拟安装测试通过，包括默认不重置与显式重置。Swift 静态语法解析通过；没有 macOS SDK 编译或 macOS 27 实机验证，不宣称兼容性或此故障已全部解决。

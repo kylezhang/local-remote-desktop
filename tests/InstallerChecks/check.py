@@ -17,7 +17,7 @@ work = Path(options.work_dir).resolve()
 work.mkdir(parents=True, exist_ok=True)
 
 class InstallerChecks(unittest.TestCase):
-    def run_case(self, mode='normal', loaded=False, duplicate=False):
+    def run_case(self, mode='normal', loaded=False, duplicate=False, reset=False):
         temporary = tempfile.TemporaryDirectory(prefix='installer-', dir=work)
         root = Path(temporary.name).resolve()
         self.assertTrue(root.is_relative_to(work))
@@ -80,7 +80,9 @@ open() { echo "open $*" >> "$_test_root/actions"; }
         fixture = ''.join(lines[:2]) + prefix + ''.join(lines[2:])
         script = project/'install-app.sh'
         script.write_text(fixture, encoding='utf-8', newline='\n')
-        result = subprocess.run([options.bash, str(script)], capture_output=True, text=True, encoding='utf-8', timeout=30)
+        command = [options.bash, str(script)]
+        if reset or mode=='reset-fail': command.append('--reset-screen-permission')
+        result = subprocess.run(command, capture_output=True, text=True, encoding='utf-8', timeout=30)
         actions = (root/'actions').read_text() if (root/'actions').exists() else ''
         return root, result, actions
 
@@ -90,8 +92,7 @@ open() { echo "open $*" >> "$_test_root/actions"; }
         self.assertFalse((root/'apps/RemoteMacLAN.app/Contents/obsolete-resource').exists())
         self.assertFalse((root/'personal-apps/RemoteMacLAN.app').exists())
         self.assertEqual((root/'apps/RemoteMacLAN.app/Contents/MacOS/RemoteMacLAN').read_text(), '#!/bin/sh\n# new executable\n')
-        self.assertIn('tccutil reset ScreenCapture com.remotemaclan.host', actions)
-        self.assertLess(actions.index('kill -TERM'), actions.index('tccutil reset'))
+        self.assertNotIn('tccutil reset', actions)
         self.assertEqual(actions.count('open '), 1)
         self.assertFalse(list((root/'apps').glob('.remote-mac-lan-install.*')))
 
@@ -102,6 +103,13 @@ open() { echo "open $*" >> "$_test_root/actions"; }
         self.assertIn('launchctl bootout', actions)
         self.assertIn('launchctl bootstrap', actions)
         self.assertNotIn('open ', actions)
+
+    def test_screen_reset_is_explicit_and_scoped(self):
+        _, result, actions = self.run_case(reset=True)
+        self.assertEqual(result.returncode, 0, result.stdout+result.stderr)
+        self.assertIn('tccutil reset ScreenCapture com.remotemaclan.host', actions)
+        self.assertLess(actions.index('kill -TERM'), actions.index('tccutil reset'))
+        self.assertNotIn('reset Accessibility', actions)
 
     def test_force_stop_of_stale_host(self):
         _, result, actions = self.run_case('force')
