@@ -8,4 +8,5 @@
 *.pfx
 *.key
 ffmpeg.exe
+**/.signing-identity
 *.log

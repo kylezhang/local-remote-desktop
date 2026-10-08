@@ -60,3 +60,5 @@ dotnet run --project tests/ProtocolChecks/ProtocolChecks.csproj -c Release
 架构见 [architecture](docs/architecture.md)，线路协议见 [protocol](docs/protocol.md)，后续工作见 [roadmap](docs/roadmap.md)。
 
 如 Command Line Tools 构建遇到 `SwiftUIMacros.StateMacro` 缺失，请更新源码；修正版已移除这处宏依赖并使用原生构建后端，见 [macOS 构建说明](docs/macos-build-troubleshooting.md)。
+
+后续更新 Mac 推荐 `git pull` → `bash macos-host/build-app.sh` → `bash macos-host/install-app.sh`。安装脚本退出旧应用后替换并重开；构建优先复用已有开发签名证书。无开发证书的 ad-hoc 构建不能保证更新后保留隐私权限。配对密钥现已独立于屏幕权限加载，并支持复制。
