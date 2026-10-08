@@ -58,3 +58,5 @@ dotnet run --project tests/ProtocolChecks/ProtocolChecks.csproj -c Release
 重新构建时临时 ad-hoc 签名可能使 macOS 权限需要重授；稳定使用建议设 `SIGN_IDENTITY` 为本人的 Apple 开发签名身份后构建。不承诺免授权/免重授。
 
 架构见 [architecture](docs/architecture.md)，线路协议见 [protocol](docs/protocol.md)，后续工作见 [roadmap](docs/roadmap.md)。
+
+如 Command Line Tools 构建遇到 `SwiftUIMacros.StateMacro` 缺失，请更新源码；修正版已移除这处宏依赖并使用原生构建后端，见 [macOS 构建说明](docs/macos-build-troubleshooting.md)。

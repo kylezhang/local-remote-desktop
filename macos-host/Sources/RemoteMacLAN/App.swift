@@ -1,4 +1,5 @@
 import SwiftUI
+import Combine
 import AppKit
 import ApplicationServices
 @main
@@ -16,6 +17,8 @@ final class HostModel: ObservableObject {
     @Published var status = "准备启动"
     @Published var secret = ""
     @Published var active = false
+    // Avoid SwiftUI.State's SDK macro dependency in Command Line Tools builds.
+    @Published var revealSecret = false
     private var host: Host?
     func start() {
         guard host == nil else { return }
@@ -33,14 +36,13 @@ final class HostModel: ObservableObject {
 }
 struct HostView: View {
     @ObservedObject var model: HostModel
-    @State private var reveal = false
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
             Text("Remote Mac LAN").font(.title)
             Text(model.status).textSelection(.enabled)
             Text("在 Windows 填写此 Mac 的局域网 IP 和配对密钥。当前桌面会被共享；停止共享即可收回控制。").frame(width: 450, alignment: .leading)
-            Toggle("显示配对密钥（仅交给自己的 Windows）", isOn: $reveal)
-            if reveal { Text(model.secret).font(.system(.caption, design: .monospaced)).textSelection(.enabled).frame(width: 450) }
+            Toggle("显示配对密钥（仅交给自己的 Windows）", isOn: $model.revealSecret)
+            if model.revealSecret { Text(model.secret).font(.system(.caption, design: .monospaced)).textSelection(.enabled).frame(width: 450) }
             HStack {
                 Button(model.active ? "停止共享" : "开始共享") { if model.active { model.stop() } else { model.start() } }
                 Button("打开权限设置") { NSWorkspace.shared.open(URL(string:"x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture")!) }

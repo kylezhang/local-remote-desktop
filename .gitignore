@@ -1,6 +1,7 @@
 **/bin/
 **/obj/
 **/.build/
+**/.build-native/
 **/.DS_Store
 **/build/
 *.user
