@@ -28,10 +28,13 @@ bash macos-host/build-app.sh
 
 ```bash
 git pull
-bash macos-host/build-app.sh
 bash macos-host/install-app.sh
 ```
 
-安装脚本先在 /Applications 的临时目录完整复制并验证新版，再正常退出正在运行的 Host，删除旧 `/Applications/RemoteMacLAN.app`，将已验证新版移到该位置并打开。旧目标必须是本应用的 bundle ID，且不能是符号链接。不会重置隐私数据库或删除 Keychain 配对密钥；完整替换并不保证更新签名后保留权限。
+安装脚本自动执行 build-app.sh，先在 /Applications 临时目录复制并验证新版，再停止已加载的登录自启动与所有同名 Host（包括从构建目录启动的副本），必要时强制结束。然后执行 `tccutil reset ScreenCapture com.remotemaclan.host`，完整删除 `/Applications/RemoteMacLAN.app` 和 `~/Applications/RemoteMacLAN.app` 旧包，安装并验证新版，启动一次。旧目标必须是本应用的 bundle ID，且不能是符号链接。构建、签名验证、进程停止或权限重置失败时，会在删除旧包之前中止。
+
+本次按用户要求主动重置屏幕录制授权，因此安装后点击开始共享，授予屏幕录制权限，退出并重新打开 `/Applications/RemoteMacLAN.app`。平时打开应用不执行重置；辅助功能授权记录及 Keychain 配对密钥不清除。没有保证重置后所有采集问题都会消失。仅共享问题不需要删除密钥。
+
+Windows 上已执行 Bash 语法检查及隔离的安装流程测试（模拟 macOS 命令）：覆盖旧包全部文件及用户目录副本删除、强制停止、登录自启动恢复且不重复 open、指定 TCC 命令，以及构建/签名/身份/进程/权限重置失败时保留旧包。测试不会运行真实 tccutil 或 launchctl；实际 macOS 行为仍未在本开发环境验证。测试入口为 `tests/InstallerChecks/check.py`，需 Python 3.10+ 和 Bash。
 
 若权限仍无法通过：运行 `bash macos-host/diagnose-permissions.sh`，检查安装包签名要求及可用签名身份。该脚本不读取配对密钥；不能在 Windows 环境代替实际 Mac 诊断。不要提供真实密码或配对密钥。

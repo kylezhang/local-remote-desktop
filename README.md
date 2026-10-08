@@ -18,7 +18,7 @@ Windows 台式机通过局域网查看并操作 Apple Silicon MacBook 的**当�
 
 ## 最短首次测试
 
-1. Mac 安装 Xcode Command Line Tools（`xcode-select --install`），macOS 13+，Apple Silicon。在 `macos-host` 执行 `bash build-app.sh`，把生成的 `build/RemoteMacLAN.app` 复制到 `/Applications/RemoteMacLAN.app`，用 Finder 打开。
+1. Mac 安装 Xcode Command Line Tools（`xcode-select --install`），macOS 13+，Apple Silicon。在仓库根目录执行 `bash macos-host/install-app.sh`，自动构建、停止旧 Host、重置本应用屏幕录制授权、删除旧应用包、安装并打开新版。不使用 sudo。
 2. 系统设置 → 隐私与安全性：授予 Host **屏幕录制 / 屏幕与系统音频录制**（名称因系统版本变化）和**辅助功能**权限。退出并重新打开 Host，点击开始共享。没有辅助功能权限时只能查看；本程序不采集音频、不写录像文件。
 3. Mac 系统设置 → 网络查看局域网 IPv4 地址；允许 Host 的 macOS 防火墙入站连接。两机需处于互通局域网，TCP 47980；访客 Wi-Fi 的客户端隔离会阻断连接。
 4. Windows 安装 .NET 8 SDK，准备包含 H.264 解码器的 `ffmpeg.exe`（[FFmpeg 官方下载入口](https://ffmpeg.org/download.html)链接的 Windows 构建）；把 FFmpeg 放 PATH 或客户端 exe 同目录。仓库不分发第三方二进制，遵守所选构建许可证。
@@ -65,4 +65,4 @@ dotnet run --project tests/ProtocolChecks/ProtocolChecks.csproj -c Release
 
 如 Command Line Tools 构建遇到 `SwiftUIMacros.StateMacro` 缺失，请更新源码；修正版已移除这处宏依赖并使用原生构建后端，见 [macOS 构建说明](docs/macos-build-troubleshooting.md)。
 
-后续更新 Mac 推荐 `git pull` → `bash macos-host/build-app.sh` → `bash macos-host/install-app.sh`。安装脚本退出旧应用后替换并重开；构建优先复用已有开发签名证书。无开发证书的 ad-hoc 构建不能保证更新后保留隐私权限。配对密钥现已独立于屏幕权限加载，并支持复制。
+后续清理重装只需 `git pull` → `bash macos-host/install-app.sh`。安装脚本自动构建，停止所有同名 Host 及已加载的登录自启动，完整删除 `/Applications/RemoteMacLAN.app` 与 `~/Applications/RemoteMacLAN.app` 的旧包后安装新版；已启用的登录自启动会恢复，不重复打开第二实例。按用户要求，每次执行此安装脚本都会运行 `tccutil reset ScreenCapture com.remotemaclan.host`；需重新授予本应用屏幕录制权限并退出重开。平时仅打开应用不会重置。配对密钥和辅助功能授权记录保留。清理应用与重置权限均不能保证解决所有开始共享故障。
