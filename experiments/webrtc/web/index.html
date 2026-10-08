@@ -1,0 +1,7 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Remote Mac LAN · WebRTC 画面对比</title><link rel="stylesheet" href="style.css"></head>
+<body><main><h1>WebRTC 画面对比</h1><p>独立的只读实验，不发送键盘鼠标。Mac 需启动实验桥接程序。</p>
+<form id="connect"><label>Mac IP <input id="host" placeholder="192.168.1.100" required autocomplete="off"></label><label>配对密钥 <input id="key" type="password" minlength="64" maxlength="64" required autocomplete="off"></label><button id="start">连接</button><button id="stop" type="button">断开</button></form>
+<p id="status" role="status">未连接 · 无公网 STUN/TURN · 视频直接跨局域网</p><video id="desktop" autoplay playsinline muted></video>
+<pre id="stats">等待视频指标…</pre><p>FPS、码率、丢包、平均解码时间、抖动缓冲等待及连接 RTT 来自浏览器统计；这些数值不等于真实桌面端到端延迟。可打开 Chromium 的任务管理器观察 CPU。</p><button id="export" type="button">导出本次指标 JSON</button>
+</main><script src="app.js"></script></body></html>

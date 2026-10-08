@@ -4,6 +4,8 @@ Windows 台式机通过局域网查看并操作 Apple Silicon MacBook 的**当�
 
 ## 当前状态（2026-10-08）
 
+新增独立的 [WebRTC 只读画面对比实验](experiments/webrtc/README.md)，用于实测是否值得迁移视频链路。原客户端保留；实验不能解决输入权限问题。
+
 这是待 Mac 实机联调的 0.1 原型，不能把生成代码等同于已经验证可用的远控产品。
 
 - Phase 0：完整 Swift macOS Host、.NET 8 WPF Windows Client、协议及文档。
