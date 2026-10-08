@@ -3,6 +3,12 @@
     <OutputType>WinExe</OutputType><TargetFramework>net8.0-windows</TargetFramework>
     <UseWPF>true</UseWPF><Nullable>enable</Nullable><ImplicitUsings>enable</ImplicitUsings>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks><PlatformTarget>x64</PlatformTarget>
-    <Version>0.2.3</Version>
+    <Version>0.1.0</Version>
+    <Product>LocalRemote</Product>
+    <Description>Local-first remote desktop</Description>
+    <ApplicationIcon>../assets/brand/LocalRemote.ico</ApplicationIcon>
   </PropertyGroup>
+  <ItemGroup>
+    <Resource Include="../assets/brand/LocalRemote.ico" Link="LocalRemote.ico" />
+  </ItemGroup>
 </Project>

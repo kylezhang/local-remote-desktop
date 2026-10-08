@@ -50,7 +50,7 @@ _test_root='ROOT'
 _mode='MODE'
 uname() { echo Darwin; }
 sleep() { :; }
-plist_read() { if [[ "$*" == *CFBundleShortVersionString* ]]; then echo 0.2.0; else cat "${@: -1}"; fi; }
+plist_read() { if [[ "$*" == *CFBundleShortVersionString* ]]; then echo 0.1.0; else cat "${@: -1}"; fi; }
 codesign() { [[ "$_mode" != bad-signature ]]; }
 ditto() { cp -R "$1" "$2"; }
 pgrep() { [[ -f "$_test_root/process" ]] || return 1; cat "$_test_root/process"; }

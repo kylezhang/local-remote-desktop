@@ -1,26 +1,28 @@
-# Windows 构建和分发
+# Windows build and usage
 
-开发：.NET 8 SDK，Windows 10/11 x64，FFmpeg H.264 decoder。无 NuGet 依赖。
+[简体中文](BUILD.zh-CN.md)
+
+Windows 10/11 x64, .NET 8 SDK for development, and FFmpeg with an H.264 decoder. No third-party NuGet packages. Run from the repository root:
 
 ```powershell
 dotnet build windows-client/RemoteMacLAN.csproj -c Release
 dotnet run --project windows-client/RemoteMacLAN.csproj -c Release
 ```
 
-发布独立包（在联网开发机器下载微软 runtime pack 后）：
+For a release package that includes the .NET Desktop Runtime:
 
 ```powershell
-dotnet publish windows-client/RemoteMacLAN.csproj -c Release -r win-x64 --self-contained true -o build/windows
+dotnet publish windows-client/RemoteMacLAN.csproj -c Release -r win-x64 --self-contained true -o dist/windows
 ```
 
-0.2.3 Windows ZIP 是实际 Release **self-contained** 产物，包含 .NET Desktop Runtime，不需要额外安装运行时。FFmpeg 仍需在 PATH 或 exe 同目录，本机已有 FFmpeg 的用户无需重复配置；不把 ffmpeg.exe、密钥或用户配置提交到仓库。仅通过普通 `dotnet build` 生成的开发 exe 仍依赖 .NET 8 Desktop Runtime。
+Runtime packs must be available during restore. See [Microsoft deployment documentation](https://learn.microsoft.com/en-us/dotnet/core/deploying/). Keep the complete output directory together. `RemoteMacLAN.exe` is the compatibility executable name; the product/window/icon are LocalRemote 0.1.0. A normal build, unlike the release ZIP, needs .NET Desktop Runtime installed.
 
-连接中可以直接选择画质，客户端释放按键并短暂断开，约三秒后按新档位自动连接；这不是无中断的实时编码器重配置。快速连续切换采用最后一个档位，即使关闭自动重连也可切换。Mac Host 无需为此更新。
+FFmpeg is not bundled. Use the [official download entry point](https://ffmpeg.org/download.html), install its complete required files and expose ffmpeg.exe on PATH or beside this executable. Respect the chosen FFmpeg build's license. Media Foundation/hardware decode and D3D11 rendering are not implemented.
 
-界面填写 Mac IPv4、64 字符配对密钥，选择质量后连接。Mac 端必须已运行且授权。Ctrl+Alt+Esc 释放输入，F11 全屏。硬件解码/D3D11 尚未实现。
+First start defaults the address to the Windows machine's LAN IPv4 to make editing the subnet easier; this does not discover the Mac. Saved address/key take precedence. Connect saves valid-format credentials using current-user DPAPI under `%LOCALAPPDATA%/RemoteMacLAN`; wrong keys still fail authentication. Forget Connection clears the selected entry.
 
-启动时地址框自动填入 Windows 当前的局域网 IPv4，方便改成同网段 Mac 的地址；优先选有 IPv4 网关的已连接以太网/Wi-Fi 网卡，排除回环和链路本地地址。无法确定时留空，不保留固定示例 IP。此默认地址不是自动发现的 Mac 地址。
+Click the picture for keyboard focus. F11 toggles full screen; Ctrl+Alt+Esc releases input. UI/diagnostic-button focus means KeyboardFocus=false is expected. InputPosted reports CGEvent submission, not target-app acceptance. Windows IME is disabled on the picture so physical key events reach the Mac; Mac input methods can handle them.
 
-点击连接时自动记住填写的 IP 和格式有效的配对密钥，即使 Mac 暂时离线也可保留；下次启动优先恢复这组参数。两项均用当前 Windows 用户的 DPAPI 加密存储，不保存明文。格式校验不等于配对验证，错密钥仍会被 Host 拒绝。首次无记忆时才使用本机局域网 IPv4。点击“忘记连接”清除当前地址对应的密钥及匹配的上次地址记录。
+Quality remains selectable during a connection. Choosing a setting causes a brief disconnect and automatic reauthentication after about three seconds; the latest rapid selection wins even when Auto Reconnect is unchecked. No Mac protocol update is needed solely for this behavior.
 
-默认画质为流畅。点击远程画面后才向 Mac 发送键盘；底部显示键盘焦点提示。新版 Mac Host 报告辅助功能权限时，客户端显示“只能查看”提示。网络接收与解密已从 UI 线程移至后台；软件解码路径仍可能在高画质下卡顿。
+The existing local deployment path `windows-client/bin/Release/net8.0-windows/win-x64` remains supported. Close that running instance before publishing over its files. Never delete remembered credentials as part of deployment.

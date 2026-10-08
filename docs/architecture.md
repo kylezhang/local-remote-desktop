@@ -1,17 +1,15 @@
-# 架构
+# Architecture
 
-Mac SwiftUI 应用在用户登录会话运行；ScreenCaptureKit 捕获主显示器的当前桌面，不创建新会话。VideoToolbox 强制硬件 H.264，Baseline、无 B 帧、实时编码、每秒关键帧。AVCC NAL 转 Annex B，关键帧前附 SPS/PPS。采集不写文件。
+[简体中文](zh-CN/architecture.md)
 
-一条 IPv4 TCP 全双工连接复用视频及 JSON 控制。实现最短验证路径，暂不拆第二端口；视频发送会竞争 Host 发出的心跳/指标，所以慢网络可能增加延迟。TCP_NODELAY、3 秒发送超时、15 秒读取/心跳超时；不积累无限视频队列，编码输出直接施加背压，超时断开重新建流。编码不应阻塞太久，仍需真实网络性能测试。新连接重建 encoder，先发送尺寸与 SPS/PPS。
+The native Mac application runs in the logged-in user session. ScreenCaptureKit captures the primary display's real desktop. VideoToolbox requests hardware H.264, Baseline, real-time, no B frames and periodic keyframes. AVCC NAL units become Annex B; keyframes include SPS/PPS. No audio capture or recording file.
 
-Windows 先验证 Host 身份，再启动 FFmpeg，无 shell 拼接、无录像文件。输入队列有界，拥塞超过 256 条断开释放按键。鼠标移动限流；不会为了丢鼠标移动而丢 key-up。FFmpeg 连续 Annex B 输入，输出 BGRA，最新帧覆盖前帧，每 16ms UI 定时器显示，避免 UI 排队。独立 `IVideoDecoder` 是迁移 Media Foundation/D3D11 的边界。当前逐帧分配/复制以及 FFmpeg 软件解码会消耗 CPU，并不是最终性能实现。
+One full-duplex IPv4 TCP connection multiplexes encrypted video and JSON control. TCP_NODELAY, bounded work, timeouts and reconnect favor a small implementation. Slow sends can compete with heartbeat/metrics and increase latency. Capture bounds outstanding raw frames and skips raw frames under pressure rather than dropping encoded reference frames. Each connection constructs a fresh encoder/decoder stream. This is not a measured end-to-end latency guarantee.
 
-画面接收、GCM 解密、FFmpeg 启动与管道输入在后台任务执行；仅位图初始化和显示回到 UI 线程。默认流畅档，以降低软件解码与像素拷贝负担。改动已通过 Windows 编译，但尚无真实两机延迟改善测量，不承诺特定帧率或延迟。
+Windows verifies the peer before launching FFmpeg. The decoder takes Annex B stdin and outputs BGRA to a replaceable IVideoDecoder adapter. One software decoder thread and low_delay reduce buffering; a latest-frame slot and WPF WriteableBitmap avoid a growing UI queue. Receiving/decryption runs off the UI thread. Pixel allocation/copy and software decode still cost CPU; Media Foundation/Direct3D are not implemented.
 
-Host 握手后和心跳报告辅助功能权限状态，Windows 状态栏区分只能查看、点击画面启用键盘、键盘已获焦。此状态是权限诊断，不证明锁屏安全输入或某个键必然送达。旧 Host 未报告能力时仍兼容，但无法显示其权限诊断。
+The bounded input queue coalesces only consecutive pending mouse moves, preserving button/key transitions. Overload disconnects rather than silently losing key-up. Focus loss and disconnect release held input. Normalized pointer coordinates exclude letterbox bars; active drags clamp outside the picture. Mac injects CGEvent into the primary display's logical bounds only with Accessibility permission. Windows system-reserved shortcuts are not universally intercepted.
 
-指标：Windows 已解码 FPS、接收 H.264 码率；Mac 编码回调耗时平均值（包含编码器排队，不含网络）。未报告单帧解码耗时或端到端延迟，因为子进程流水线无法可靠对应输入输出帧。不会把接收耗时冒充解码耗时。
+Metrics are decoded FPS and incoming H.264 Mbps on Windows, plus mean Mac encoding callback time. Encoding time includes encoder queuing and excludes network time. There is no trustworthy per-frame decoder or total input-to-display latency metric in this subprocess pipeline.
 
-CGEvent 在主显示器逻辑坐标注入，使用捕获显示器 bounds 而非编码像素。仅获辅助功能权限时注入。连接结束释放 keys/buttons。Windows 系统键未使用低层 hook，不能保证所有系统快捷键转发。Host 不修改用户键盘布局。
-
-安全存储、认证和加密参见协议；没有未认证控制路径。没有云组件或第三方账号。唯一外部运行依赖为 Windows 的 FFmpeg，本身可以离线使用。
+PSK stored in Keychain/DPAPI authenticates each connection; independent direction keys protect video and input. Protocol limits and diagnostics are documented separately. Brand changes retain the legacy bundle ID, application path and protocol to avoid unnecessary credential/TCC migration.

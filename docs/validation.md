@@ -1,17 +1,31 @@
-# 验收清单
+# v0.1.0 validation
 
-已验证（Windows 开发环境）：Release 编译、协议安全检查、实际 H.264 解码及 DPAPI。详见 [构建记录](build-report.md)；不把测试代码存在当成通过。
+[简体中文](zh-CN/validation.md)
 
-待 Apple Silicon 两机验证：
+Release environment: Windows x64, .NET SDK 8.0.425 and Desktop/Core runtime 8.0.31. Date: 2026-10-08. Results are captured in `tests/results/` after the final release build.
 
-- `bash macos-host/build-app.sh` 编译成功，复制 `/Applications`，权限正确归属该应用；拒绝屏幕录制不共享，拒绝辅助功能只查看。
-- 错密钥不能看到桌面/控制；正确密钥查看 Mac 当前桌面；用第二客户端连接时拒绝占用。
-- 流畅、标准、高清均有连续画面；拖动窗口观察 FPS/编码耗时/码率，记录 CPU 和延迟；静态桌面 FPS 降低不应被当作连接断开。
-- TextEdit 输入英文、数字、标点，方向键、删除、Control/Option/Command 快捷键；鼠标拖动、左右键、滚轮、双击需真实验证。
-- 黑边不点击；高 DPI 和 Mac 缩放坐标正确；只捕获主屏。
-- 按住 Shift/鼠标时切换本地窗口、断网、停止 Host，Mac 不残留按键状态；连接结束释放输入。
-- 恢复网络/重启 Host 后重连有关键帧，画面不过期；主动断开不继续重试。
-- 开启 LaunchAgent 后退出并重新登录、重启后正常解锁并登录才可连接；不宣称支持 FileVault Preboot。
-- 不产生录像或音频文件，无密钥出现在日志/仓库；Windows DPAPI 文件无法给另一个账户明文读取。
+## Automated coverage
 
-已知架构限制：单 TCP 可能造成视频与指标队头阻塞；FFmpeg 软件解码和逐帧复制尚未性能优化；没有中文组合输入、全局系统快捷键转发、mDNS、剪贴板、屏幕热插拔恢复逻辑。桌面切换/分辨率变化异常时需重连。
+- ProtocolChecks: mutual authentication, fragmented TCP, wrong-key/tamper/replay/oversize rejection, actual H.264→BGRA decode, synthetic-key DPAPI round-trip, 10,000-move queue coalescing, ordered input/release and letterbox/clamp/NaN coordinates.
+- ClientChecks: real WPF window and FFmpeg against an encrypted simulated peer; displayed bitmap, routed letter/top-row/keypad/modifier input, pointer/drag/wheel, focus-release, permission status, disconnect cleanup and connected quality changes including rapid selection with Auto Reconnect off. The window is off-screen and non-activated, and credentials are not loaded/saved.
+- InstallerChecks: mocked Mac tools in a disposable directory, complete replacement/duplicate cleanup, loaded agent behavior, force-stop, build/signature failure preservation and targeted opt-in reset. Signing checks cover missing/pinned/invalid/certificate/ad-hoc identities and temporary probe cleanup. No actual TCC, launchd or certificate operations.
+- Swift syntax parsing only; plist XML/icon formats/link consistency and release contents are also inspected. These do not substitute for Apple SDK type checking or native execution.
+- ReleaseChecks validates aligned versions, compatibility identity, icon containers, local documentation links and basic tracked-file/secret hygiene. It is a release sanity check, not a comprehensive security scan.
+
+Run on Windows with .NET SDK and FFmpeg:
+
+```powershell
+dotnet run --project tests/ProtocolChecks/ProtocolChecks.csproj -c Release
+dotnet run --project tests/ClientChecks/ClientChecks.csproj -c Release
+python tests/InstallerChecks/check.py --bash "C:/Program Files/Git/bin/bash.exe" --work-dir work/installer-checks
+python tests/InstallerChecks/signing.py --bash "C:/Program Files/Git/bin/bash.exe" --work-dir work/signing-checks
+python tests/ReleaseChecks/check.py
+```
+
+## What these results do not prove
+
+The user reports that the real Windows→Mac workflow now meets most needs. This is user feedback, not a reproducible two-machine lab measurement. The release environment cannot build/run macOS; final branding/icon bundle changes are unverified natively, and there is no Mac binary release asset. TCC, Keychain prompts, real display capture, hardware encoding, secure/lock-screen input, sleep/wake, long sessions and end-to-end 1080p60 remain hardware acceptance items.
+
+An earlier controlled FFmpeg buffering comparison is retained as `decoder-latency-comparison.json`. It is a synthetic decoder-path observation, not LAN input-to-display latency or a performance promise.
+
+For future Mac acceptance: build/install normally, authorize once, test ordinary text/keypad/modifiers/click/drag/scroll, change quality, disconnect and resume locally, test login auto-start after normal FileVault unlock, then test updates with a stable signing identity. Record failures and platform versions without publishing pairing keys or typed content.

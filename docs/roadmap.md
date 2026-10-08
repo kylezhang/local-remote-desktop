@@ -1,12 +1,25 @@
-# 后续与边界
+# Roadmap
 
-已实现 Phase 0、Phase 1/2 的完整代码路径及 Phase 3 部分；Windows 构建与合成链路测试不代表真实 Mac 联调完成。
+[简体中文](zh-CN/roadmap.md) · [README](../README.md)
 
-优先级：
-1. 在 Apple Silicon macOS 13+ 编译、修正 SDK 差异，验证 TCC、Keychain、ScreenCaptureKit、VideoToolbox、CGEvent；按验证清单完成两机验收。
-2. 修复实测问题，测试鼠标双击 clickState、中文 IME、系统快捷键、分辨率变化、休眠唤醒、断线释放按键。
-3. Windows Media Foundation 硬解与 D3D11 渲染替换 FFmpeg/WPF 像素路径；测 1080p60 CPU、带宽和输入延迟。再根据证据决定独立视频通道/编码背压优化。
-4. 文本剪贴板双向同步（限制大小、去重防回环），Bonjour/mDNS（发现不等于信任，仍须配对）。当前均未实现。
-5. 稳定签名与打包、密钥轮换 UI、限速与拒绝服务抵抗、独立安全审计。
+LocalRemote aims to become a single familiar LAN remote-control application on each supported platform. An installation may initiate or accept control; accepting requires explicit authorization. Discovery never implies trust. This is a direction, not a delivery-date promise.
 
-始终不做：账号、公网穿透、服务器、TURN/STUN、FileVault 预启动控制、新远程登录 session、移动端。V1 不增加文件传输、多显示器、摄像头、录屏和组织管理。
+## v0.1.0 — first product release
+
+Windows→Apple Silicon Mac current-session control, paired/encrypted transport, remembered connection, full screen, reconnect, connected quality selection and Mac permission diagnostics. Product name/icon, bilingual documentation, cleaned native codebase and versioned release artifacts. Earlier development version numbers are superseded without rewriting Git history.
+
+## Next — reliable daily use
+
+Prioritize reproducible macOS native build/testing, stable signing and packaging, TCC/Keychain update behavior, keyboard layouts and release-on-disconnect, sleep/wake recovery, and measured input/video latency. Replace FFmpeg/WPF with hardware decode/render only when evidence supports the change. Add device discovery and an explicit pairing/revocation interface after the manual-IP path is stable. Evaluate bounded, opt-in text clipboard synchronization. Exit criterion: repeatable two-device validation, documented update behavior and no reliance on repeated permission resets.
+
+## Then — Windows ↔ Mac
+
+Implement Windows desktop capture/input reception and a Mac viewing/control UI. Reuse the tested protocol boundaries where appropriate. Present “Connect to a device” and “Allow connections” in one application per platform; retain separation of privileges internally. Exit criterion: both directions verified on real hardware, including authorization, disconnect release and local-session continuity.
+
+## Later — mobile controllers and other desktops
+
+Start mobile support as a controller for authorized desktop sessions, adapting touch, keyboard entry and small-screen navigation. Evaluate Linux based on desktop-session permissions and available test hardware. Do not assume that iOS/Android can accept unattended remote control; platform constraints require separate assessment.
+
+## Boundaries
+
+LAN-first. No accounts, public traversal/relay, central cloud service or FileVault bypass. The current release does not add file transfer, multiple displays, audio, recording, camera or organization administration. Reconsider additions only when they serve the focused workflow and can be tested. Security and reliability take priority over claiming broad platform support.

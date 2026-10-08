@@ -22,9 +22,10 @@ fi
 xcrun swift build --build-system native --scratch-path .build-native -c release
 bin_dir="$(xcrun swift build --build-system native --scratch-path .build-native -c release --show-bin-path)"
 app="$PWD/build/RemoteMacLAN.app"
-mkdir -p "$app/Contents/MacOS"
+mkdir -p "$app/Contents/MacOS" "$app/Contents/Resources"
 cp "$bin_dir/RemoteMacLAN" "$app/Contents/MacOS/RemoteMacLAN"
 cp Info.plist "$app/Contents/Info.plist"
+cp ../assets/brand/LocalRemote.icns "$app/Contents/Resources/LocalRemote.icns"
 codesign --force --sign "$identity" --identifier com.remotemaclan.host "$app"
 codesign --verify --strict "$app"
 if [[ "$identity" != "-" ]]; then

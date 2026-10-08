@@ -1,68 +1,88 @@
-# Remote Mac LAN
+<img src="assets/brand/icon.png" alt="LocalRemote icon" width="96" />
 
-Windows 台式机通过局域网查看并操作 Apple Silicon MacBook 的**当前真实桌面**。无账号、无公网、无中间服务器。断开后 Mac 保持同一个工作现场。
+# LocalRemote
 
-## 当前状态（2026-10-08）
+**Local-first remote desktop. Your devices, your network, your current workspace.**
 
-新增独立的 [WebRTC 只读画面对比实验](experiments/webrtc/README.md)，用于实测是否值得迁移视频链路。原客户端保留；实验不能解决输入权限问题。
+[简体中文](README.zh-CN.md) · [Roadmap](docs/roadmap.md) · [Release notes](CHANGELOG.md) · [Releases](https://atomgit.com/zkxw2008/LocalRemote/releases)
 
-现主线继续原生 TCP 客户端，WebRTC 迁移暂停。新增输入诊断、Mac 本机键盘自检和解码延迟优化；Windows 客户端联调与量化比较见 [修复候选验证记录](docs/validation-2026-10-08.md)。Mac 新增代码尚未原生编译或运行，不能称输入故障已彻底解决。
+## Why this exists
 
-这是待 Mac 实机联调的 0.1 原型，不能把生成代码等同于已经验证可用的远控产品。
+I wanted to use a Windows desktop to work on a Mac on the same office network. The tools I tried did not quite fit: some felt awkward, some clients were dated, and some required payment. I wanted a small tool that handled this one everyday problem without adding accounts or cloud infrastructure.
 
-- Phase 0：完整 Swift macOS Host、.NET 8 WPF Windows Client、协议及文档。
-- Phase 1/2：已实现 ScreenCaptureKit → VideoToolbox 硬件 H.264 → 加密 TCP → FFmpeg → WPF 图像，以及鼠标、滚轮、键盘输入注入。**Windows 编译通过；Mac 编译和两机真实桌面链路尚未验证。**
-- Phase 3 部分：全屏、认证成功后的自动重连、登录后 LaunchAgent、三档画质。未实现剪贴板及 mDNS。
-- Windows 使用 WPF 是为减少部署与工程复杂度；首版解码使用独立 FFmpeg 子进程，BGRA 显示到 WriteableBitmap。**没有实现 Media Foundation、D3D11 或 Windows 硬件解码**。这是明确的原型性能妥协，`IVideoDecoder` 可替换。
-- 标准/高清请求最多 1920×1080、60fps；流畅最多 1280×720、30fps，保持比例。实际采集受桌面变化、设备与网络影响；没有证据表明两机达到 1080p60。
+With AI-assisted development making it practical to build and iterate on a focused application, I started LocalRemote. The first goal is simple: see and control the Mac's actual desktop from Windows, then pick up the Mac and continue the same work.
 
-## 最短首次测试
+## Available today: v0.1.0
 
-1. Mac 安装 Xcode Command Line Tools（`xcode-select --install`），macOS 13+，Apple Silicon。在仓库根目录执行 `bash macos-host/install-app.sh`，自动构建、停止旧 Host、保留屏幕录制授权、删除旧应用包、安装并打开新版。不使用 sudo。
-2. 系统设置 → 隐私与安全性：授予 Host **屏幕录制 / 屏幕与系统音频录制**（名称因系统版本变化）和**辅助功能**权限。退出并重新打开 Host，点击开始共享。没有辅助功能权限时只能查看；本程序不采集音频、不写录像文件。
-3. Mac 系统设置 → 网络查看局域网 IPv4 地址；允许 Host 的 macOS 防火墙入站连接。两机需处于互通局域网，TCP 47980；访客 Wi-Fi 的客户端隔离会阻断连接。
-4. Windows 安装 .NET 8 SDK，准备包含 H.264 解码器的 `ffmpeg.exe`（[FFmpeg 官方下载入口](https://ffmpeg.org/download.html)链接的 Windows 构建）；把 FFmpeg 放 PATH 或客户端 exe 同目录。仓库不分发第三方二进制，遵守所选构建许可证。
-5. 在仓库根目录运行 `dotnet build windows-client/RemoteMacLAN.csproj -c Release`；运行 `windows-client/bin/Release/net8.0-windows/RemoteMacLAN.exe`。也可 `dotnet run --project windows-client/RemoteMacLAN.csproj -c Release`。
-6. Mac 勾选显示配对密钥，把 **64 位十六进制密钥**安全复制到 Windows 配对框，填写 IP，选“流畅”，连接。先验证画面，再点击画面用鼠标及英文键盘操作 TextEdit。再试标准档、断线重连及 Mac 本地继续工作。
+**Windows 10/11 x64 → Apple Silicon macOS 13+.** This is the first named product release; the earlier 0.2.x numbers were development iterations. Both applications now report 0.1.0. This numbering reset does not remove the existing features.
 
-无需另行生成证书或配置服务器。密钥等同控制权限，不放聊天群、截图或仓库。首次需人工从可信 Mac 界面取密钥；点击连接会加密记住 IP 和格式有效的密钥，下次自动填入，点击“忘记连接”可清除。错误密钥不会通过认证或自动重试。
+- Current-session desktop sharing, mouse movement/buttons/dragging, scrolling and physical keyboard input.
+- Direct LAN connection using a manually entered Mac IPv4 address; no account, public relay or central server.
+- Shared-key pairing, mutual authentication and encrypted video/control; remembered Windows address and key protected with DPAPI.
+- Full screen, focus-loss input release, reconnect after an authenticated connection, and quality changes while connected (a brief reconnect applies the new setting).
+- Mac login auto-start via an optional user LaunchAgent, permission diagnostics and a local keyboard self-test.
 
-## 操作与权限
+| Quality | Requested maximum | Requested bitrate |
+|---|---|---|
+| Smooth / 流畅 | 1280×720, 30 fps | 4 Mbps |
+| Standard / 标准 | 1920×1080, 60 fps | 10 Mbps |
+| High / 高清 | 1920×1080, 60 fps | 18 Mbps |
 
-- F11 切换全屏；Ctrl+Alt+Esc 释放远端输入并把焦点移回本地按钮。只有画面获焦时发送键盘输入；按钮和密钥框里的按键不发送。
-- Windows Ctrl → Mac Control，Alt → Option，Win → Command，Shift → Shift。Mac 的复制是 Win+C。系统保留的 Win 快捷键/Alt+Tab/Ctrl+Alt+Del 不保证送达；本原型没有全局键盘钩子。支持常用字母、数字、标点、方向键、功能键、数字键盘；IME/中文组合输入未实现。
-- 鼠标按视频实际显示区域映射，忽略黑边；支持左右键、中键、拖动、垂直滚轮，按系统双击间隔设置 clickState。失焦、断开时释放按住的键和按钮。真实点击/双击行为仍需 Mac 实测。
-- 停止共享或退出 Mac Host 可收回控制。窗口关闭不会退出 Host；重新打开应用可用菜单显示窗口。
-- 一个控制端、主显示器、IPv4 私有/链路本地/回环地址，固定端口；不支持 IPv6、音频、多显示器、文件传输、摄像头、录屏、移动端、公网穿透、TURN/STUN。
+These are encoder requests, not measured end-to-end guarantees. Start with Smooth. Windows currently uses FFmpeg software decoding and WPF rendering; hardware decoding and Direct3D rendering are future work.
 
-## 登录后自动启动
+## Get started
 
-先完成 `/Applications` 下应用的授权和手动测试，再执行 `bash macos-host/install-launch-agent.sh`。用户 LaunchAgent 在 Aqua 用户会话登录后启动 Host；退出用户/休眠/网络中断会断线。Windows 已成功配对后每 3 秒尝试重连，可取消。
+### 1. Prepare the Mac
 
-**不能绕过 FileVault Preboot，不能保证用户未登录时控制系统登录界面。**重启后需正常解锁并进入用户桌面才可连接。合盖导致 Mac 休眠时不能连接；不修改系统电源策略。
+Install Xcode Command Line Tools if necessary (`xcode-select --install`). Clone the repository and run, as your normal logged-in user:
 
-卸载自启动：`launchctl bootout gui/$(id -u) ~/Library/LaunchAgents/com.remotemaclan.host.plist`，再删除该 plist。脚本仅设置 RunAtLoad，不会在用户主动退出后强制重启。
-
-## 安全
-
-Mac Keychain 生成并保存 256 位随机共享密钥；Windows 使用当前用户 DPAPI 按 IP 保存。每连接双方随机 nonce，HMAC-SHA256 双向认证并派生方向独立密钥；AES-256-GCM 加密画面和控制，长度头作为 AAD，隐式递增计数器防重放。认证前不启动捕获或接受输入，无未认证开发模式。首次取密钥需要可信的带外渠道。
-
-密钥轮换：停止并退出 Host，执行 `security delete-generic-password -s com.remotemaclan.host -a pairing-v1`，重新打开后生成新密钥，Windows 重新填写。旧密钥失效。Windows 保存位于 `%LOCALAPPDATA%/RemoteMacLAN/*.dpapi`；删除可清除配对。安全协议未经独立审计，没有前向保密；获知长期密钥并录到握手的人可解密历史流量。未认证连接最多等待 15 秒，会暂时占用单连接槽，仍存在局域网拒绝服务风险。
-
-## 验证
-
-本次 Windows x64 使用 .NET SDK 8.0.425 实际 Release 构建，零警告零错误。测试程序已通过双向认证、碎片化 TCP、篡改/重放/错误密钥/超长报文拒绝、实际 H.264→BGRA 解码、DPAPI 存储。详见 [构建记录](docs/build-report.md)。运行：
-
-```powershell
-dotnet run --project tests/ProtocolChecks/ProtocolChecks.csproj -c Release
+```sh
+git clone https://atomgit.com/zkxw2008/LocalRemote.git
+cd LocalRemote
+bash macos-host/install-app.sh
 ```
 
-测试要求 FFmpeg 在 PATH。它是合成协议端，不替代 Mac 联调。Mac Swift/Apple SDK 无法在本 Windows 环境原生构建，进行了源码静态检查，尚未确认 SDK 类型检查、TCC 授权、真实捕获、硬件编码、CGEvent、LaunchAgent。源码包含真实 API 调用，仍可能需要在目标 Mac 修正 SDK 差异。请按 [验收清单](docs/validation.md) 联调。
+The installer builds first, replaces the complete old application bundle and opens the installed app. It preserves the pairing key and does **not** reset screen permissions by default.
 
-重新构建时临时 ad-hoc 签名可能使 macOS 权限需要重授。具备有效 Apple 签名证书后，运行 `bash macos-host/configure-signing.sh` 固定签名身份；后续构建拒绝退回 ad-hoc。首次签名身份迁移仍需授权，不承诺系统永不再询问。正常安装不重置权限。详见 [签名与画质更新说明](docs/quality-and-signing.md)。
+Allow **Screen Recording / Screen & System Audio Recording** and **Accessibility** in System Settings → Privacy & Security. The wording varies by macOS version. After granting access, quit and reopen the app; do not reinstall merely to reopen it. Click **开始共享** (Start Sharing), then reveal/copy the pairing key. Audio is not captured and no recording file is written.
 
-架构见 [architecture](docs/architecture.md)，线路协议见 [protocol](docs/protocol.md)，后续工作见 [roadmap](docs/roadmap.md)。
+### 2. Open the Windows app
 
-如 Command Line Tools 构建遇到 `SwiftUIMacros.StateMacro` 缺失，请更新源码；修正版已移除这处宏依赖并使用原生构建后端，见 [macOS 构建说明](docs/macos-build-troubleshooting.md)。
+Download and extract the Windows x64 ZIP from [Releases](https://atomgit.com/zkxw2008/LocalRemote/releases), then run `RemoteMacLAN.exe`. The ZIP includes the .NET Desktop Runtime. **FFmpeg remains a separate dependency**: install a build with an H.264 decoder via the [official download entry point](https://ffmpeg.org/download.html), and put the complete installation on PATH, or beside the executable with any DLLs it needs. Existing users with working FFmpeg need not reinstall it.
 
-后续清理重装只需 `git pull` → `bash macos-host/install-app.sh`。安装脚本自动构建，停止所有同名 Host 及已加载的登录自启动，完整删除 `/Applications/RemoteMacLAN.app` 与 `~/Applications/RemoteMacLAN.app` 的旧包后安装新版；已启用的登录自启动会恢复，不重复打开第二实例。普通安装不会重置屏幕录制授权。仅在明确需要修复旧授权记录时，执行 `bash macos-host/install-app.sh --reset-screen-permission`，才会运行 `tccutil reset ScreenCapture com.remotemaclan.host`。重置后重新授权并退出重开应用，不要为了重开而再次安装。配对密钥和辅助功能授权记录保留。清理应用与重置权限均不能保证解决所有开始共享故障。
+Source builds require .NET 8 SDK; see [Windows build instructions](windows-client/BUILD.md). Only the release ZIP is self-contained; a normal development build still needs the .NET Desktop Runtime.
+
+### 3. Connect
+
+Find the Mac's LAN IPv4 address in its network settings. Both devices must be on a mutually reachable LAN, with TCP **47980** allowed to the Mac. Guest Wi-Fi device isolation can prevent connectivity.
+
+Enter the Mac address and its 64-character hexadecimal pairing key on Windows, select Smooth and connect. Click the remote picture to send keyboard input. Test with a normal text editor first. The key grants control of the Mac: share it only with trusted devices.
+
+- **F11**: full screen. **Ctrl+Alt+Esc**: release remote input and return local focus.
+- Ctrl → Mac Control, Alt → Option, Win → Command. For example, Win+C maps to Mac Command+C. Windows-reserved shortcuts may stay on Windows.
+- IP and key are remembered using current-user DPAPI. **忘记连接** (Forget Connection) clears the selected saved connection.
+- Change quality while connected; the picture briefly disconnects and automatically reconnects in about three seconds. Rapid changes use the last selection.
+
+## Limits and trust
+
+One controller, one primary display, IPv4 only. No audio, file transfer, recording, clipboard sync, automatic discovery or mobile application in v0.1.0. Windows IME composition is not transmitted; physical key events can use the Mac's own input method.
+
+This shares an existing logged-in desktop. It does **not** create another login session, bypass FileVault Preboot, or promise control before user login. Lock-screen and secure-field input depend on macOS permissions and system behavior and are not guaranteed. Sleeping or closed-lid Macs may be unreachable.
+
+Mac keys use Keychain; Windows keys use DPAPI. The connection uses HMAC authentication and AES-GCM encryption, but the protocol has not had an independent security audit and does not provide forward secrecy. Do not expose the port to the internet. See [protocol and threat limits](docs/protocol.md).
+
+Ad-hoc Mac signing can invalidate permission/Keychain trust after code changes. A fixed valid Apple signing identity reduces update-related identity changes; it cannot guarantee that macOS never asks again. See [Mac installation and troubleshooting](docs/macos.md).
+
+## Where we are heading
+
+The vision is one familiar application on each supported device: choose a nearby device, pair, connect and work. A device may initiate control or accept control, subject to permission. Windows ↔ Mac comes next; phones as controllers and more desktop platforms come later. **Those capabilities are a roadmap, not current support.** The product remains focused on local networks. See the [roadmap](docs/roadmap.md).
+
+## Development and validation
+
+[Architecture](docs/architecture.md) · [Protocol](docs/protocol.md) · [Validation](docs/validation.md) · [Contributing](CONTRIBUTING.md) · [Release process](docs/releasing.md)
+
+Windows is built and tested with real WPF/FFmpeg against synthetic encrypted peers. The user has reported successful real Windows→Mac use. The release environment is Windows: it cannot independently compile or run the final Mac bundle. The Mac branding/resource changes remain unverified on an actual Mac; native Mac binaries are not attached to this release. This is an early 0.x product, not a claim of universal compatibility or measured 1080p60 performance.
+
+Compatibility note: the internal `RemoteMacLAN` executable/project names, `/Applications/RemoteMacLAN.app`, `com.remotemaclan.host`, RML1 wire format and saved credential locations are deliberately retained to avoid unnecessary permission and pairing migration. The product and repository are LocalRemote.
+
+The repository remains private; no open-source license has been selected. Third-party runtime notices are retained in release packages; FFmpeg is not bundled. See [NOTICE](NOTICE.md).

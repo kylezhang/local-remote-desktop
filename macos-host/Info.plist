@@ -3,9 +3,11 @@
 <plist version="1.0"><dict>
 <key>CFBundleExecutable</key><string>RemoteMacLAN</string>
 <key>CFBundleIdentifier</key><string>com.remotemaclan.host</string>
-<key>CFBundleName</key><string>Remote Mac LAN</string>
-<key>CFBundleVersion</key><string>4</string>
-<key>CFBundleShortVersionString</key><string>0.2.2</string>
+<key>CFBundleName</key><string>LocalRemote</string>
+<key>CFBundleDisplayName</key><string>LocalRemote</string>
+<key>CFBundleIconFile</key><string>LocalRemote</string>
+<key>CFBundleVersion</key><string>5</string>
+<key>CFBundleShortVersionString</key><string>0.1.0</string>
 <key>CFBundlePackageType</key><string>APPL</string>
 <key>LSMinimumSystemVersion</key><string>13.0</string>
 <key>NSHighResolutionCapable</key><true/>

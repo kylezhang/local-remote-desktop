@@ -17,7 +17,7 @@ final class InputSelfTest: NSObject, NSWindowDelegate {
         guard AXIsProcessTrusted() else { completion("自检未执行：系统尚未认可本应用的辅助功能权限。"); return }
         finish = completion
         let w = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 460, height: 130), styleMask: [.titled, .closable], backing: .buffered, defer: false)
-        w.title = "Remote Mac LAN · 本机键盘自检"; w.isReleasedWhenClosed = false; w.delegate = self
+        w.title = "LocalRemote · 本机键盘自检"; w.isReleasedWhenClosed = false; w.delegate = self
         let label = NSTextField(labelWithString: "将在下面的测试框注入字母和两组数字；不会输入到其他应用。")
         label.frame = NSRect(x: 16, y: 85, width: 428, height: 28)
         let f = NSTextField(frame: NSRect(x: 16, y: 34, width: 428, height: 30))

@@ -6,7 +6,7 @@ import ScreenCaptureKit
 @main
 struct RemoteMacLANApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) var delegate
-    var body: some Scene { WindowGroup("Remote Mac LAN") { HostView(model: delegate.model) }.windowResizability(.contentSize) }
+    var body: some Scene { WindowGroup("LocalRemote") { HostView(model: delegate.model) }.windowResizability(.contentSize) }
 }
 final class AppDelegate: NSObject, NSApplicationDelegate {
     let model = HostModel()
@@ -87,7 +87,7 @@ final class HostModel: ObservableObject {
     func stop() { startup?.cancel(); host?.stop(); host = nil; active = false; status = "已停止" }
     func copyDiagnostics() {
         let text = """
-        Remote Mac LAN \(Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "unknown")
+        LocalRemote \(Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "unknown")
         macOS: \(ProcessInfo.processInfo.operatingSystemVersionString)
         InstalledAtApplications: \(Bundle.main.bundlePath == "/Applications/RemoteMacLAN.app")
         LegacyScreenPreflight: \(CGPreflightScreenCaptureAccess())
@@ -106,7 +106,7 @@ struct HostView: View {
     @ObservedObject var model: HostModel
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
-            Text("Remote Mac LAN 0.2.2").font(.title)
+            Text("LocalRemote 0.1.0").font(.title)
             Text(model.status).textSelection(.enabled).frame(width: 450, alignment: .leading).fixedSize(horizontal: false, vertical: true)
             Text("在 Windows 填写此 Mac 的局域网 IP 和配对密钥。当前桌面会被共享；停止共享即可收回控制。").frame(width: 450, alignment: .leading)
             Toggle("显示配对密钥（仅交给自己的 Windows）", isOn: $model.revealSecret)

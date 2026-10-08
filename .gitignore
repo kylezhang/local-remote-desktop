@@ -12,3 +12,35 @@ ffmpeg.exe
 **/.require-stable-signature
 **/.signing-probe.*/
 *.log
+
+# Editor and operating-system state
+.vs/
+.idea/
+.vscode/
+Thumbs.db
+Desktop.ini
+*.suo
+*.userosscache
+*.sln.docstates
+__pycache__/
+*.py[cod]
+.venv/
+
+# Local credentials and pairing data (never publish)
+.env
+.env.*
+!.env.example
+*.p12
+*.pem
+*.cer
+*.mobileprovision
+*.dpapi
+*.token
+
+# Release artifacts are uploaded to Releases, not committed
+/dist/
+/work/
+/release-artifacts/
+*.zip
+*.dmg
+*.msix

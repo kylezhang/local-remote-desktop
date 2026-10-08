@@ -1,34 +1,40 @@
-# RML1 协议
+# RML1 protocol
 
-固定 TCP 47980，IPv4，单一控制端。整数为大端。安全密钥是 32 字节随机 PSK，UI 64 字符 hex。以下字符串均 ASCII，连接前没有 JSON。最大 Host→Client 报文 8MiB，Client→Host 64KiB。
+[简体中文](zh-CN/protocol.md)
 
-1. Host → Client：`RML1` (4 bytes) + S (32 random bytes)。
-2. Client → Host：C (32 random bytes) + HMAC-SHA256(PSK, `client` || S || C)。
-3. Host 验证后 → Client：HMAC-SHA256(PSK, `server` || S || C)。Client 固定时间比较。
-4. c2h key = HMAC-SHA256(PSK, `c2h` || S || C)，h2c key 同理 `h2c`。每条连接双方随机数都重新生成。
+TCP 47980, IPv4, one controller. Integers are big-endian. A PSK is 32 random bytes shown as 64 hex characters. Maximum encrypted body: Host→Client 8 MiB, Client→Host 64 KiB. LAN/private, link-local and loopback IPv4 are supported; not public internet traversal.
 
-后续每条报文：长度 u32（不含长度头，含 GCM tag）+ ciphertext + 16 字节 tag。明文 = type u8 + payload。AES-256-GCM nonce = 四个 0 字节 + 方向计数器 u64（从 0 开始）；长度头作为 AAD。两个方向有独立 key/counter；单发送锁保证密文次序。鉴权失败、计数器错序、长度错误或 EOF 立即断开。计数器在连接重建时归零，密钥随随机 transcript 改变。
+## Authentication and framing
 
-Type 1 = UTF-8 JSON，Type 2 = 一个 Annex B H.264 access unit，无额外时间戳。无 B 帧；按接收次序显示。视频头是 JSON。没有 UDP 分片。
+1. Host sends ASCII `RML1` and random 32-byte S.
+2. Client sends random 32-byte C and HMAC-SHA256(PSK, `client` || S || C).
+3. Host verifies and sends HMAC-SHA256(PSK, `server` || S || C); Client verifies with a fixed-time comparison.
+4. Derive c2h = HMAC-SHA256(PSK, `c2h` || S || C), h2c similarly with `h2c`.
 
-| op | 方向 | 字段 |
+Each encrypted record is u32 body length + ciphertext + 16-byte GCM tag. Plaintext is one type byte plus payload. AES-256-GCM nonce: four zero bytes + direction counter u64, starting at zero. The length header is AAD. Separate direction keys/counters and a serialized writer preserve nonce/order. Fresh handshake nonces create new keys on reconnect. Invalid authentication, lengths, tags, unexpected counter/order or EOF terminate the connection. There is no unauthenticated development-control mode.
+
+Type 1 is UTF-8 JSON. Type 2 is one Annex B H.264 access unit, without timestamps or B frames; decode in receive order. No UDP fragmentation.
+
+| Operation | Direction | Fields |
 |---|---|---|
-| handshake | C→H，第一个加密消息 | version=1，quality=0/1/2 |
-| video_header | H→C，在视频前 | width,height,fps,codec="h264-annexb" |
-| metrics | H→C | encodeMs（回调耗时均值），captureSkipped（可选，因编码/发送背压而跳过的原始帧累计数） |
-| mouse_move | C→H | x,y（0..1 主显示器归一化） |
-| mouse_button | C→H | button=0左/1右/2中，down bool，x,y |
-| scroll | C→H | delta，Windows 120 单位映射像素，限制 ±1200 |
-| key_event | C→H | vk Windows virtual key，down bool，flags bitmask |
-| release_all | C→H | 无，失焦时释放按键 |
-| heartbeat | 双向 | Client 每 3 秒发送，Host 回复；15 秒超时断线；新版 Host 可选携带 inputReceived/inputPosted/inputBlocked/inputRejected/inputError |
-| capabilities | H→C | accessibility bool，当前是否允许输入注入；新 Host 心跳亦带此字段 |
-| disconnect | C→H | 正常关闭；客户端也可 EOF 关闭 |
+| handshake | C→H, first encrypted record | version=1, quality=0/1/2 |
+| video_header | H→C, before frames | width, height, fps, codec=h264-annexb |
+| metrics | H→C | encodeMs; optional cumulative captureSkipped |
+| mouse_move | C→H | x,y normalized 0..1 |
+| mouse_button | C→H | button=0/1/2 left/right/middle, down, x,y |
+| scroll | C→H | delta, Windows 120 units mapped to pixels, bounded ±1200 |
+| key_event | C→H | Windows virtual key vk, down, flags |
+| release_all | C→H | release held keys/buttons |
+| heartbeat | both | Client every 3 seconds, Host responds; 15-second timeout |
+| capabilities | H→C | accessibility bool; also reported in newer heartbeats |
+| disconnect | C→H | normal disconnect; EOF also closes |
 
-flags：1 Shift、2 Control、4 Option、8 Command。vk 映射包含 Windows 左右修饰键；不支持 Unicode 文本/IME。未知 op 忽略，畸形 JSON 或加密报文断开。鼠标 x/y NaN/Infinity 不接受。
+Flags: Shift=1, Control=2, Option=4, Command=8. Includes left/right modifier VK mapping and numeric-pad VK 96..111 with CGEvent numeric-pad flag. Num Lock-off navigation is not converted into digits. No Windows Unicode IME composition; Mac input methods can process physical events. Unknown operations are ignored; malformed JSON closes; non-finite coordinates are rejected.
 
-输入诊断均为当前连接累计：inputReceived 是已识别控制消息数，inputPosted 是调用 CGEvent.post 的事件数（一次 release_all 可产生多个事件），inputBlocked 是权限拒绝的消息数，inputRejected 是无效/不支持消息或事件创建失败数；inputError 为不含输入内容的最近错误代号。调用 post 不等于目标应用确认执行。物理按键可由 Mac 本机输入法处理中文；协议本身不传 Windows IME 的 Unicode 组合文本。
+Heartbeat input diagnostics are cumulative for the current connection: inputReceived (recognized messages), inputPosted (CGEvent post calls), inputBlocked (permission denied), inputRejected (invalid/unsupported or event creation failure), inputError (latest non-content error code). Release-all may post multiple events. Posted is not confirmation of application acceptance. Diagnostics omit key content and pairing secrets.
 
-Host 根据 vk=96..111 自动添加 CGEvent 的 numeric-pad 标记，不占用协议修饰键位。Windows Num Lock 关闭时可能发送导航键，Host 不把导航键强制转换为数字。参见 [Apple maskNumericPad](https://developer.apple.com/documentation/coregraphics/cgeventflags/masknumericpad)。
+Quality 0 requests up to 1280×720/30fps/4Mbps; 1 up to 1920×1080/60fps/10Mbps; 2 same size/fps at 18Mbps. Preserve aspect ratio, even dimensions, no upscaling. Changing quality releases input, closes stream/decoder and reauthenticates after roughly three seconds with the latest selected quality, independently of Auto Reconnect. Settings are requests, not guarantees.
 
-质量 0：最多1280×720/30fps/4Mbps；1：最多1920×1080/60fps/10Mbps；2：同尺寸频率/18Mbps。保持屏幕比例、偶数尺寸，不放大低分辨率。Windows 0.2.3 在连接中选档后释放输入，关闭旧连接和解码器，等待约三秒，再自动认证并以新档位握手；不依赖“自动重连”选项。快速连续选择以最后一次为准。编码设置是请求值，码率与帧率不是保证值。
+## Threat limits
+
+Initial key transfer needs a trusted out-of-band path. Mac Keychain and current-user Windows DPAPI store the long-term key. No independent audit, forward secrecy, certificate PKI, key-revocation UI or comprehensive denial-of-service protection. A known PSK plus a recorded handshake can decrypt historical sessions. An unauthenticated peer may occupy the single slot until the 15-second timeout. Use only on a trusted LAN; do not expose the port publicly.

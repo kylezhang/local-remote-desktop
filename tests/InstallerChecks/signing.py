@@ -26,6 +26,7 @@ for mode, script_name, success in [
         (root/'bin').mkdir()
         (root/'bin/RemoteMacLAN').write_text('mock executable')
         (root/'Info.plist').write_text('mock bundle metadata')
+        (root/'LocalRemote.icns').write_text('mock icon')
         if mode == 'stable-missing': (root/'.require-stable-signature').touch()
         if mode == 'invalid-saved': (root/'.signing-identity').write_text('INVALID')
         prefix = '''
@@ -40,6 +41,7 @@ xcrun() { echo 'build' >> "$PWD/actions"; if [[ "$*" == *--show-bin-path* ]]; th
         fixture = ''.join(lines[:2]) + prefix + ''.join(lines[2:])
         # Probe source is disposable fixture data, not any installed executable.
         fixture = fixture.replace('/usr/bin/true', '"$PWD/bin/RemoteMacLAN"')
+        fixture = fixture.replace('../assets/brand/LocalRemote.icns', 'LocalRemote.icns')
         path = root/script_name
         path.write_text(fixture, encoding='utf-8', newline='\n')
         result = subprocess.run([args.bash, str(path)], capture_output=True, text=True, encoding='utf-8', timeout=20)

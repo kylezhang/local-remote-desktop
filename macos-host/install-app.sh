@@ -41,7 +41,7 @@ for old in "$target" "$user_target"; do
   [[ ! -L "$old" ]] || { echo "拒绝删除符号链接：$old" >&2; exit 1; }
   if [[ -e "$old" ]]; then
     bundle_id="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "$old/Contents/Info.plist")"
-    [[ "$bundle_id" == com.remotemaclan.host ]] || { echo "此位置不是 Remote Mac LAN：$old" >&2; exit 1; }
+    [[ "$bundle_id" == com.remotemaclan.host ]] || { echo "此位置不是 LocalRemote：$old" >&2; exit 1; }
   fi
 done
 
@@ -97,7 +97,7 @@ if [[ "$agent_was_loaded" == true ]]; then
 else
   open "$target"
 fi
-echo "安装完成：Remote Mac LAN $version，位置 $target"
+echo "安装完成：LocalRemote $version，位置 $target"
 echo '配对密钥和辅助功能授权记录保留。'
 if [[ "$reset_screen" == true ]]; then
   echo '屏幕录制授权已重置；重新授权后退出并重开应用，不要再次运行安装脚本。'

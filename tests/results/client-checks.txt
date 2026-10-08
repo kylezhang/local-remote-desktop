@@ -3,4 +3,5 @@ PASS routed letter, top-row/keypad digits, Enter, Ctrl/Alt/Win → authenticated
 PASS client pointer conversion, left drag beyond viewport, right click and routed wheel → mock host
 PASS focus loss sends release_all
 PASS Mac permission denial/recovery is reflected by real client
+PASS connected quality changes reauthenticate and refresh decoder; latest rapid selection wins with auto-reconnect unchecked
 PASS disconnect cleans video/transport and restores controls
