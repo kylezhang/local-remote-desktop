@@ -35,11 +35,17 @@ bash macos-host/install-app.sh
 
 ## 排障
 
-临时签名或未标记签名模式的开发构建，启动时不访问钥匙串，等待点击“开始共享”或“读取密钥并开始共享”。证书签名构建可以尝试一次禁止交互的后台读取；不可用时等待用户操作，不自动转为允许弹窗的读取。包内签名模式只用于启动策略，不代表证书信任验证。诊断加入模式及读取/创建次数，不输出密钥。
+临时签名或未标记构建启动不访问钥匙串。“开始共享”先检查屏幕访问，失败时不读取密钥；证书构建自动启动也先检查屏幕。后台读取失败等待用户操作，不自动转为允许弹窗的读取。包内签名模式只用于启动策略，不代表证书信任验证。诊断加入模式、内部构建号、后端及读取/创建次数，不输出密钥。
+
+需要在屏幕未授权时单独查看密钥，可勾选“显示配对密钥”，再点“读取配对密钥”。此显式操作可能要求认证，但不启动共享；之后共享复用本次运行已成功读取的密钥。
 
 显式点击才允许系统认证及首次创建，失败不自动重试；成功后本次运行复用密钥。因此开发构建登录后仅打开，不自动开始共享；证书构建只有无需交互读取密钥且屏幕授权有效时才可自动共享。
 
-保留现有登录钥匙串项目及访问控制。证书构建的静默读取同时使用查询级禁止认证 UI 策略、临时禁用旧式交互，并在结束后恢复原设置。参见 [Apple 交互控制说明](https://developer.apple.com/documentation/security/seckeychainsetuserinteractionallowed(_:)) 与 [读取接口的后台执行说明](https://developer.apple.com/documentation/security/secitemcopymatching(_:_:))。这些兼容接口已弃用。用户反馈上一实现仍反复要求密码；连续两次弹窗的具体来源、新实现的系统行为均未在真实 Mac 复现，不能算已解决。不引入明文存储、自动换密钥或放宽访问控制。
+查询明确选择原文件式钥匙串（`kSecUseDataProtectionKeychain=false`），保留服务名、账户及访问控制。[Apple 桥接源码](https://github.com/apple-oss-distributions/Security/blob/main/OSX/libsecurity_keychain/lib/SecItem.cpp) 显示，未指定后端可能查询两种存储，兼容旧式存储的新增优先进入文件式后端。此处消除路由歧义，不能据此断言两次弹窗的原因；不迁移存储、不回退到现代后端。
+
+证书构建静默读取临时禁用旧式交互并恢复原设置，不依赖现代查询级 UI 参数控制文件式后端。参见 [Apple 交互控制说明](https://developer.apple.com/documentation/security/seckeychainsetuserinteractionallowed(_:)) 与 [后台执行说明](https://developer.apple.com/documentation/security/secitemcopymatching(_:_:))。这些兼容接口已弃用；连续两次弹窗来源、新实现系统行为未在真实 Mac 复现，不能算已解决。不引入明文存储、自动换密钥或放宽访问控制。
+
+产品使用的启动顺序、缓存和取消逻辑由 [MacStartupChecks](../../tests/MacStartupChecks/check.sh) 实际编译执行。Linux 测试不验证 Apple 框架或系统弹窗。长期更新路径见[签名与分发计划](macos-signing.md)。
 
 ```sh
 bash macos-host/diagnose-permissions.sh

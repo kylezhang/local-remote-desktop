@@ -15,7 +15,10 @@ enum Pairing {
     private static var creates = 0
     static var readAttempts: Int { counterLock.lock(); defer { counterLock.unlock() }; return reads }
     static var createAttempts: Int { counterLock.lock(); defer { counterLock.unlock() }; return creates }
-    static let query: [String: Any] = [kSecClass as String: kSecClassGenericPassword, kSecAttrService as String: "com.remotemaclan.host", kSecAttrAccount as String: "pairing-v1"]
+    // Previous versions created this item in the file-based login Keychain.
+    // Explicit routing avoids the bridge querying a second storage backend.
+    // Keep the original service/account and item ACL; do not migrate or rotate.
+    static let query: [String: Any] = [kSecClass as String: kSecClassGenericPassword, kSecAttrService as String: "com.remotemaclan.host", kSecAttrAccount as String: "pairing-v1", kSecUseDataProtectionKeychain as String: false]
     static func load(allowInteraction: Bool) async throws -> Data {
         // A second guard protects future startup callers too. Ad-hoc and
         // unmarked builds never call a credential API until a deliberate click.
@@ -42,9 +45,8 @@ enum Pairing {
         guard status == errSecSuccess else { throw keychainError(status) }
         defer { _ = SecKeychainSetUserInteractionAllowed(previous.boolValue) }
         var q = query; q[kSecReturnData as String] = true; var result: CFTypeRef?
-        // Per-query UI policy complements the legacy file-Keychain switch.
-        // Neither a denied nor an unavailable silent read falls back to UI.
-        if !allowInteraction { q[kSecUseAuthenticationUI as String] = kSecUseAuthenticationUIFail }
+        // This explicitly file-based backend uses the scoped legacy switch.
+        // Modern authentication-UI keys are not a substitute for that control.
         counterLock.lock(); reads += 1; counterLock.unlock()
         status = SecItemCopyMatching(q as CFDictionary, &result)
         if status == errSecSuccess {

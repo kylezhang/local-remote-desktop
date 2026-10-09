@@ -1,0 +1,23 @@
+LocalRemote v0.1.1 development; Mac internal build 11. Not released.
+Environment: existing WSL Ubuntu 22.04 x86_64, official Swift 5.9.2 toolchain.
+
+Production SharingPreparation.swift compiled and executed, not a syntax-only test.
+PASS screen denial: zero credential reads.
+PASS permission first, process-cache reuse and permission recheck on sharing retry.
+PASS independent pairing-key read reused by sharing.
+PASS denied credential read: no automatic retry; deliberate retry succeeds.
+PASS cancelled before startup: zero screen/credential calls.
+PASS cancelled after permission: zero credential reads.
+PASS cancelled after credential read: no prepared key/listener continuation.
+Async mutations and callbacks run on the UI actor; no tasks created by the helper.
+
+No real credential store, desktop, input, network or clipboard touched by these tests.
+The tests execute the production sequencing/cache helper with controlled closures.
+They do not exercise actual ScreenCaptureKit, SecItem or system dialogs.
+
+PASS full Mac source tree syntax parsing (nine files including package manifest).
+SKIP full Apple SDK compilation: macOS required; test runner performs it on Mac.
+UNVERIFIED file-based Keychain routing, existing-key ACL behavior, exact system
+prompt count, TCC retention, capture and fixed-signature upgrade on a real Mac.
+No pairing migration/rotation, plaintext fallback or relaxed ACL introduced.
+This does not establish that repeated password prompts have been eliminated.
