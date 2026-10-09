@@ -14,7 +14,9 @@ bash macos-host/install-app.sh
 
 使用“屏幕权限”和“辅助功能权限”按钮打开对应设置；辅助功能按钮还会请求本应用访问权限。允许后退出重开，不要为重开再次 install，否则默认安装又会重置两项授权。点击开始共享；辅助功能 false 表示只能查看。显式点击会检查实际 ScreenCaptureKit，即使旧式屏幕预检查为 false。复制启动诊断可查看错误域及代码；构建成功不代表权限成功。
 
-若两项权限已经正常，日常更新可用 `bash macos-host/install-app.sh --keep-permissions` 保留授权。重置只针对 `com.remotemaclan.host`，不影响其他应用，不删除配对密钥。macOS 决定设置列表如何显示，清理授权不保证旧行立即消失，也不能替用户自动授权。参见 [Apple 权限重置说明](https://developer.apple.com/documentation/xcode/resetting-access-to-protected-resources-in-macos)。
+签名要求兼容的更新可用 `bash macos-host/install-app.sh --keep-permissions`。停止旧程序、改变权限之前，脚本比较新包与每份已安装应用的 designated requirement，并按相应要求验证双方签名。要求不同、无法读取或验签失败即中止，现有运行程序、应用包及权限均不改动。临时签名更新通常无法通过；这个选项不能解决签名身份不稳定。签名要求相同也不保证 macOS 永久保留所有权限。
+
+重置只针对 `com.remotemaclan.host`，不影响其他应用，不删除配对密钥。macOS 决定设置列表如何显示，清理授权不保证旧行立即消失，也不能替用户自动授权。参见 [Apple 权限重置说明](https://developer.apple.com/documentation/xcode/resetting-access-to-protected-resources-in-macos)。
 
 ## 程序坞图标
 
@@ -33,9 +35,11 @@ bash macos-host/install-app.sh
 
 ## 排障
 
-不要反复重装和重置。确认系统权限对应已安装应用，退出重开，使用启动诊断与本机键盘自检。启动时在串行后台队列静默读取一次钥匙串；如果现有密钥需要授权、或首次使用尚无密钥，等待点击“开始共享”或“读取密钥并开始共享”。显式点击后才允许系统认证和首次创建；失败不自动重试。读成功后本次运行复用内存中的密钥。诊断只输出状态和读/创建次数，不输出密钥。
+临时签名或未标记签名模式的开发构建，启动时不访问钥匙串，等待点击“开始共享”或“读取密钥并开始共享”。证书签名构建可以尝试一次禁止交互的后台读取；不可用时等待用户操作，不自动转为允许弹窗的读取。包内签名模式只用于启动策略，不代表证书信任验证。诊断加入模式及读取/创建次数，不输出密钥。
 
-保留现有登录钥匙串项目及访问控制，静默读取时临时禁用交互并在结束后恢复之前设置。参见 [Apple 交互控制说明](https://developer.apple.com/documentation/security/seckeychainsetuserinteractionallowed(_:)) 与 [读取接口的后台执行说明](https://developer.apple.com/documentation/security/secitemcopymatching(_:_:))。文件式钥匙串兼容接口已弃用；此处避免迁移存储，原生 SDK 和系统行为仍需发版验收。临时签名升级依然可能触发信任询问，不能保证以后完全不弹窗或只弹一次。
+显式点击才允许系统认证及首次创建，失败不自动重试；成功后本次运行复用密钥。因此开发构建登录后仅打开，不自动开始共享；证书构建只有无需交互读取密钥且屏幕授权有效时才可自动共享。
+
+保留现有登录钥匙串项目及访问控制。证书构建的静默读取同时使用查询级禁止认证 UI 策略、临时禁用旧式交互，并在结束后恢复原设置。参见 [Apple 交互控制说明](https://developer.apple.com/documentation/security/seckeychainsetuserinteractionallowed(_:)) 与 [读取接口的后台执行说明](https://developer.apple.com/documentation/security/secitemcopymatching(_:_:))。这些兼容接口已弃用。用户反馈上一实现仍反复要求密码；连续两次弹窗的具体来源、新实现的系统行为均未在真实 Mac 复现，不能算已解决。不引入明文存储、自动换密钥或放宽访问控制。
 
 ```sh
 bash macos-host/diagnose-permissions.sh
@@ -47,7 +51,7 @@ bash macos-host/diagnose-permissions.sh
 bash macos-host/install-app.sh --reset-screen-permission
 ```
 
-它只重置本应用 ScreenCapture 授权，保留辅助功能。`--reset-permissions` 明确执行默认的两项重置；`--keep-permissions` 两项都保留。重置失败会在删除旧应用前停止，之前成功的重置可能已清除某项授权。本机键盘自检仅向自身临时窗口注入，不证明其他应用或安全输入框接受远程事件。
+它只重置本应用 ScreenCapture 授权，保留辅助功能。`--reset-permissions` 明确执行默认的两项重置；`--keep-permissions` 通过签名兼容检查后才跳过两项重置。重置失败会在删除旧应用前停止，之前成功的重置可能已清除某项授权。本机键盘自检仅向自身临时窗口注入，不证明其他应用或安全输入框接受远程事件。
 
 ## 登录后启动与边界
 

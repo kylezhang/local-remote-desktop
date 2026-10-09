@@ -1,0 +1,35 @@
+LocalRemote unreleased v0.1.1 development, Mac internal build 10
+Environment: Windows x64, Python 3.13, Git Bash. Date: 2026-10-09.
+
+PASS InstallerChecks: 15 test methods (including subcases).
+New coverage: changed ad-hoc requirement, incompatible duplicate user copy,
+unreadable requirement and requirement verification rejection with the working
+Host, login agent, old bundles and permissions left untouched. Equal requirements
+are verified in both directions. Unchanged ad-hoc rebuild allowed; explicit reset
+remains scoped to two services and the existing app identifier.
+Existing replacement, rollback, staged resources and launch-failure coverage pass.
+All deployment paths and macOS commands are mocked in disposable directories;
+this is control-flow testing, not real codesign, TCC or launchd validation.
+
+PASS SigningChecks: six simulated configure/build scenarios.
+Certificate/ad-hoc startup-policy resources emitted before signing; pinned
+identity behavior and probe cleanup preserved. No real certificate or key access.
+
+PASS Swift tree-sitter syntax parsing of eight source files (including manifest).
+Manual source review: development/unmarked builds return before credential APIs
+at startup, with a second guard in Pairing.load; certificate startup reads specify
+query-level UI failure policy plus scoped legacy interaction control. Credential
+creation still requires user action, and read errors do not rotate existing keys.
+This is not Apple SDK type checking or runtime validation.
+
+PASS ReleaseChecks: versions, compatibility identity, local documentation links,
+icon containers and basic tracked-file hygiene. PASS git diff --check.
+
+UNRESOLVED: user reports multiple groups of two Keychain password prompts and
+manual removal/re-authorization of Screen Recording and Accessibility after an
+update. The previous silent-read/preserve-permissions workflow failed acceptance.
+No independently reproduced cause of the two dialogs, no native Mac build or
+verification of revised startup/Keychain/TCC behavior in this environment.
+Development builds now wait for a sharing click after login; certificate builds
+may auto-share only when key/screen access succeeds without UI.
+Not a release; do not claim permanent permission retention or eliminated prompts.

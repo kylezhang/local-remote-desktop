@@ -54,7 +54,11 @@ xcrun() { echo 'build' >> "$PWD/actions"; if [[ "$*" == *--show-bin-path* ]]; th
         if mode == 'certificate':
             assert (root/'.signing-identity').read_text().strip() == 'ABCDEF'
             assert (root/'.require-stable-signature').exists()
+            if script_name == 'build-app.sh':
+                assert (root/'build/RemoteMacLAN.app/Contents/Resources/signing-mode.txt').read_text().strip() == 'certificate'
         if mode == 'none': assert not (root/'.signing-identity').exists()
-        if mode == 'adhoc': assert not (root/'.require-stable-signature').exists()
+        if mode == 'adhoc':
+            assert not (root/'.require-stable-signature').exists()
+            assert (root/'build/RemoteMacLAN.app/Contents/Resources/signing-mode.txt').read_text().strip() == 'ad-hoc'
         assert not list(root.glob('.signing-probe.*'))
         print(f'PASS {script_name}: {mode}')

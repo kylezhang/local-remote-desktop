@@ -100,6 +100,33 @@ for old in "$target" "$user_target"; do
   fi
 done
 
+# Skipping tccutil cannot preserve trust when an update changes the designated
+# requirement. Check BEFORE stopping the working Host or changing any decision.
+if [[ "$reset_screen" == false && "$reset_accessibility" == false ]]; then
+  designated_requirement() {
+    codesign -d -r- "$1" 2>&1 | sed -n 's/^designated => //p'
+  }
+  if ! new_requirement="$(designated_requirement "$app")"; then
+    echo '无法读取新版本签名要求；保留旧应用，安装中止。' >&2; exit 1
+  fi
+  [[ -n "$new_requirement" ]] || { echo '无法读取新版本签名要求；保留旧应用，安装中止。' >&2; exit 1; }
+  for old in "$target" "$user_target"; do
+    [[ -e "$old" ]] || continue
+    old_requirement="$(designated_requirement "$old")" || old_requirement=""
+    if [[ -z "$old_requirement" || "$old_requirement" != "$new_requirement" ]]; then
+      echo '--keep-permissions 无法保留本次更新的签名信任：新旧签名要求不同。旧应用和权限均未改动。' >&2
+      echo '临时签名的代码更新不能保证沿用授权；长期更新需要固定签名身份。显式清理安装可用 --reset-permissions，但仍须重新授权。' >&2
+      exit 1
+    fi
+    # Also verify the sealed bundles against each other's requirement. Equality
+    # alone does not establish that either sealed bundle actually verifies.
+    if ! codesign --verify --strict -R "=$old_requirement" "$app" ||
+       ! codesign --verify --strict -R "=$new_requirement" "$old"; then
+      echo '签名兼容性验证失败；旧应用和权限均未改动，安装中止。' >&2; exit 1
+    fi
+  done
+fi
+
 echo '[2/6] 停止旧 Host 和已加载的登录自启动。'
 if launchctl print "$domain/com.remotemaclan.host" >/dev/null 2>&1; then
   agent_was_loaded=true
@@ -175,5 +202,5 @@ if [[ "$reset_screen" == true || "$reset_accessibility" == true ]]; then
   echo '已按选项重置本应用授权；需要重新允许相应权限，然后退出并重开，不要再次 install。'
   echo 'tccutil 清理授权记录；系统设置列表是否立即移除旧行由 macOS 决定。'
 else
-  echo '本次 --keep-permissions 保留两项授权；若系统要求重授，授权后仅退出重开。'
+  echo '新旧签名要求已核验兼容；本次跳过两项授权重置。系统仍决定授权是否有效。'
 fi

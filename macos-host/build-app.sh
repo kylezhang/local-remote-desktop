@@ -30,6 +30,10 @@ cp ../assets/brand/icon.png "$app/Contents/Resources/LocalRemote.png"
 [[ -s "$app/Contents/Resources/LocalRemote.icns" && -s "$app/Contents/Resources/LocalRemote.png" ]] || {
   echo '图标资源缺失，构建中止。' >&2; exit 1
 }
+# This signed resource is a startup policy hint, not proof of certificate trust.
+# Development builds must not attempt Keychain authentication at application launch.
+if [[ "$identity" == "-" ]]; then signing_mode=ad-hoc; else signing_mode=certificate; fi
+printf '%s\n' "$signing_mode" > "$app/Contents/Resources/signing-mode.txt"
 codesign --force --sign "$identity" --identifier com.remotemaclan.host "$app"
 codesign --verify --strict "$app"
 if [[ "$identity" != "-" ]]; then

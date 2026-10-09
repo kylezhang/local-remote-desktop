@@ -2,6 +2,13 @@ import Foundation
 import Security
 import Darwin
 enum Pairing {
+    static let buildSigningMode: String = {
+        guard let url = Bundle.main.url(forResource: "signing-mode", withExtension: "txt"),
+              let text = try? String(contentsOf: url, encoding: .utf8) else { return "unknown" }
+        let mode = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        return mode == "certificate" || mode == "ad-hoc" ? mode : "unknown"
+    }()
+    static var permitsAutomaticRead: Bool { buildSigningMode == "certificate" }
     private static let queue = DispatchQueue(label: "com.remotemaclan.host.keychain", qos: .userInitiated)
     private static let counterLock = NSLock()
     private static var reads = 0
@@ -10,9 +17,14 @@ enum Pairing {
     static var createAttempts: Int { counterLock.lock(); defer { counterLock.unlock() }; return creates }
     static let query: [String: Any] = [kSecClass as String: kSecClassGenericPassword, kSecAttrService as String: "com.remotemaclan.host", kSecAttrAccount as String: "pairing-v1"]
     static func load(allowInteraction: Bool) async throws -> Data {
+        // A second guard protects future startup callers too. Ad-hoc and
+        // unmarked builds never call a credential API until a deliberate click.
+        guard allowInteraction || permitsAutomaticRead else {
+            throw keychainError(errSecInteractionNotAllowed)
+        }
         // Serial background access keeps authentication off the UI thread and
         // scopes the file-based Keychain interaction setting to one operation.
-        try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Data, Error>) in
+        return try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Data, Error>) in
             queue.async {
                 do { continuation.resume(returning: try loadSynchronously(allowInteraction: allowInteraction)) }
                 catch { continuation.resume(throwing: error) }
@@ -30,6 +42,9 @@ enum Pairing {
         guard status == errSecSuccess else { throw keychainError(status) }
         defer { _ = SecKeychainSetUserInteractionAllowed(previous.boolValue) }
         var q = query; q[kSecReturnData as String] = true; var result: CFTypeRef?
+        // Per-query UI policy complements the legacy file-Keychain switch.
+        // Neither a denied nor an unavailable silent read falls back to UI.
+        if !allowInteraction { q[kSecUseAuthenticationUI as String] = kSecUseAuthenticationUIFail }
         counterLock.lock(); reads += 1; counterLock.unlock()
         status = SecItemCopyMatching(q as CFDictionary, &result)
         if status == errSecSuccess {

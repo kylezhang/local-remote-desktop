@@ -5,10 +5,11 @@
 ## Unreleased
 
 - Hardened Mac installation with full-bundle rollback on replacement/verification failure or interruption, retained recovery backups if rollback fails, and explicit launch-failure messages.
-- Moved Keychain reads to a serial background queue; startup attempts a silent read, user actions allow authentication/first-time creation, and loaded keys are reused for the process. Native Mac acceptance is pending.
+- Moved Keychain reads to a serial background queue; development builds now defer credential access until a sharing action, while certificate builds attempt a UI-disabled startup read. User actions allow authentication/first-time creation and loaded keys are reused for the process. Repeated system prompts remain unverified on Mac.
+- Preserve-permissions installation now aborts before stopping the old Host or touching permissions if designated requirements differ, cannot be read or fail verification. This prevents changed ad-hoc updates from being presented as permission-preserving.
 - Adopted the user-approved blueberry identity (#5265EC → #643AC2): white screen/arrows with a balanced interior pointer. Updated both apps' brand accents, Windows selection/checked states and Mac light/dark brand text; regenerated all platform icons from the editable SVG.
 - macOS validates bundled PNG/ICNS and explicitly sets its running Dock icon, including direct LaunchAgent starts.
-- Clean macOS installation now resets only this app's Screen Recording and Accessibility decisions by default; `--keep-permissions` preserves both for routine updates. Added separate permission settings actions.
+- Clean macOS installation now resets only this app's Screen Recording and Accessibility decisions by default; `--keep-permissions` skips resets only for compatible signatures. Added separate permission settings actions.
 
 - Applied the selected icon to both app headers; the Windows toolbar wraps on smaller windows and remains hidden in full screen.
 - Rewrote the English-first README and Chinese counterpart for users; moved detailed controls, quality settings and diagnostics to a dedicated user guide.

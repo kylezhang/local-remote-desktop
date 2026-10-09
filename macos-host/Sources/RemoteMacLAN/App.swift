@@ -66,6 +66,11 @@ final class HostModel: ObservableObject {
     }
     func start(requestPermission: Bool = false) {
         guard host == nil, !starting else { return }
+        if !requestPermission && pairingKey == nil && !Pairing.permitsAutomaticRead {
+            keychainCheck = "等待用户操作（启动未访问钥匙串）"
+            status = "当前为开发签名或未标记构建。点击开始共享后读取配对密钥；更新可能需要重新授权。"
+            return
+        }
         starting = true; status = "正在读取配对密钥…"
         startup = Task { @MainActor [weak self] in
           guard let self else { return }
@@ -84,7 +89,7 @@ final class HostModel: ObservableObject {
               self.keychainCheck = "\(e.domain) / \(e.code)"
               self.status = requestPermission
                 ? "无法读取 Keychain 配对密钥：\(e.localizedDescription)。不会自动重复请求；需要时点击读取密钥并开始共享。"
-                : "配对密钥需要用户操作：点击开始共享或读取配对密钥。自动启动不会请求钥匙串密码。"
+                : "静默读取未成功：点击开始共享后允许钥匙串认证；不会自动重试。"
               return
             }
           }
@@ -121,6 +126,7 @@ final class HostModel: ObservableObject {
         macOS: \(ProcessInfo.processInfo.operatingSystemVersionString)
         InstalledAtApplications: \(Bundle.main.bundlePath == "/Applications/RemoteMacLAN.app")
         AppIconLoaded: \(AppBrand.icon != nil)
+        BuildSigningMode: \(Pairing.buildSigningMode)
         LegacyScreenPreflight: \(CGPreflightScreenCaptureAccess())
         ScreenCaptureKit: \(screenCheck)
         Accessibility: \(AXIsProcessTrusted())

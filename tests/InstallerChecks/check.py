@@ -65,6 +65,26 @@ plist_read() {
 }
 codesign() {
   [[ "$_mode" != bad-signature ]] || return 1
+  if [[ "$1" == -d ]]; then
+    [[ "$_mode" != unreadable-requirement ]] || return 1
+    if [[ "$_mode" == changed-adhoc && "${@: -1}" == */build/RemoteMacLAN.app ]]; then
+      echo 'designated => cdhash H"new"'
+    elif [[ "$_mode" == changed-adhoc ]]; then
+      echo 'designated => cdhash H"old"'
+    elif [[ "$_mode" == changed-user-identity && "${@: -1}" == */personal-apps/RemoteMacLAN.app ]]; then
+      echo 'designated => identifier "com.remotemaclan.host" and anchor other'
+    elif [[ "$_mode" == unchanged-adhoc ]]; then
+      echo 'designated => cdhash H"same"'
+    else
+      echo 'designated => identifier "com.remotemaclan.host" and anchor fixture'
+    fi
+    return 0
+  fi
+  if [[ "$*" == *' -R '* ]]; then
+    echo "requirement-verify ${@: -1}" >> "$_test_root/actions"
+    [[ "$_mode" != requirement-rejected ]] || return 1
+    return 0
+  fi
   if [[ "${@: -1}" == "$_test_root/apps/RemoteMacLAN.app" ]]; then
     case "$_mode" in
       installed-signature-fail|restore-fail|first-install-verification-fail) return 1;;
@@ -150,6 +170,28 @@ open() { echo "open $*" >> "$_test_root/actions"; [[ "$_mode" != launch-fail ]];
         _, result, actions = self.run_case(option='--keep-permissions')
         self.assertEqual(result.returncode, 0, result.stdout+result.stderr)
         self.assertNotIn('tccutil ', actions)
+        self.assertEqual(actions.count('requirement-verify '), 2)
+
+    def test_incompatible_preservation_leaves_working_host_and_permissions_untouched(self):
+        for mode in ('changed-adhoc', 'changed-user-identity', 'unreadable-requirement', 'requirement-rejected'):
+            with self.subTest(mode=mode):
+                root, result, actions = self.run_case(mode, loaded=True, duplicate=True, option='--keep-permissions')
+                self.assertNotEqual(result.returncode, 0, result.stdout+result.stderr)
+                for folder in ('apps', 'personal-apps'):
+                    self.assertTrue((root/folder/'RemoteMacLAN.app/Contents/obsolete-resource').exists())
+                self.assertTrue((root/'process').exists())
+                self.assertTrue((root/'loaded').exists())
+                for forbidden in ('kill ', 'launchctl ', 'tccutil ', 'open '):
+                    self.assertNotIn(forbidden, actions)
+                self.assertFalse(list((root/'apps').glob('.remote-mac-lan-install.*')))
+
+    def test_unchanged_adhoc_can_preserve_but_changed_reset_is_explicit(self):
+        _, result, actions = self.run_case('unchanged-adhoc', option='--keep-permissions')
+        self.assertEqual(result.returncode, 0, result.stdout+result.stderr)
+        self.assertNotIn('tccutil ', actions)
+        _, result, actions = self.run_case('changed-adhoc', option='--reset-permissions')
+        self.assertEqual(result.returncode, 0, result.stdout+result.stderr)
+        self.assertEqual(actions.count('tccutil '), 2)
 
     def test_explicit_reset_alias(self):
         _, result, actions = self.run_case(option='--reset-permissions')
