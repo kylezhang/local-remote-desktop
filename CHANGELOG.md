@@ -4,7 +4,7 @@
 
 ## Unreleased
 
-- Redesigned the icon around desktop/mobile devices and remote interaction.
+- Finalized the screen-and-bidirectional-connection identity in luminous cherry red; retired black/navy alternatives and regenerated Windows/macOS icons from the approved transparent master.
 - Rewrote the English-first README and Chinese counterpart for users; moved detailed controls, quality settings and diagnostics to a dedicated user guide.
 - Added English UI/localization to the near-term roadmap. Existing release tags and archives remain unchanged.
 

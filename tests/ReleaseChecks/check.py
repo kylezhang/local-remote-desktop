@@ -35,9 +35,12 @@ assert (reserved,kind)==(0,1) and count>=6
 assert b'\x00\x00' in ico[6:6+16*count]
 icns = (root/'assets/brand/LocalRemote.icns').read_bytes()
 assert icns[:4]==b'icns' and struct.unpack('>I',icns[4:8])[0]==len(icns)
-ET.parse(root/'assets/brand/icon.svg')
+master = (root/'assets/brand/icon-master.png').read_bytes()
+assert master.startswith(b'\x89PNG\r\n\x1a\n')
+width, height, depth, color_type = struct.unpack('>IIBB', master[16:26])
+assert width == height and width >= 1024 and depth == 8 and color_type == 6
 assert (root/'assets/brand/icon.png').read_bytes().startswith(b'\x89PNG\r\n\x1a\n')
-print('PASS SVG/PNG/multi-size ICO/ICNS containers')
+print('PASS square RGBA master/PNG/multi-size ICO/ICNS containers')
 
 tracked = subprocess.check_output(['git','ls-files','-z'],cwd=root).decode().split('\0')
 for relative in filter(None,tracked):

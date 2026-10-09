@@ -1,7 +1,31 @@
-# LocalRemote icon
+# LocalRemote identity
 
-Original vector design: a desktop display, a portrait mobile device and an input pointer on a dark blue rounded tile. Pale outlines identify the desktop, mint identifies the mobile device and remote interaction. The mixed device shapes express the cross-device product vision without relying on platform logos or a desktop-only connection diagram. Mobile support remains planned; the current application supports Windows→Mac.
+[简体中文](README.zh-CN.md)
 
-`icon.svg` is editable source. `icon.png` is the 1024px preview. `LocalRemote.ico` contains Windows sizes from 16px through 256px; `LocalRemote.icns` contains Mac icon representations. Run `python scripts/generate-icons.py` with Pillow installed to regenerate them. The generator reads a restricted rectangle/polygon/orthogonal-path vocabulary; adding other SVG primitives requires extending that renderer.
+The selected identity combines a universal screen outline with two opposing arrows. Its cherry-red gradient, edge highlights and soft glow express reciprocal connection across devices. The application icon uses the white symbol on a luminous cherry-red tile. Black and navy alternatives have been retired.
 
-中文：原创图标结合桌面屏幕、移动设备与操作指针，表达跨设备远控，避免只像 PC 互连。手机是产品愿景，当前尚未提供移动端。SVG 为源，PNG 为预览，ICO/ICNS 接入两端；使用 Pillow 生成，扩展 SVG 类型时同步扩展渲染器。
+![LocalRemote cherry-red identity](identity-board.png)
+
+## Assets
+
+- `identity-board.png`: the selected logo, wordmark and app icon presentation.
+- `icon-master.png`: the approved square RGBA raster master, including transparent margins and glow.
+- `icon.png`: 1024px app icon used by the repository README.
+- `LocalRemote.ico`: Windows sizes from 16px through 256px.
+- `LocalRemote.icns`: macOS icon representations.
+
+The artwork was developed with user direction and the built-in image_gen tool. The PNG master is the source of truth; it is not editable vector artwork. The obsolete desktop/mobile SVG and its limited renderer were removed.
+
+The nominal base color is **#A10035**, with dark cherry shadows and bright ruby highlights. It is a screen-color interpretation of a user-supplied paint swatch, not an official paint specification. The icon gradient is embedded in the approved artwork.
+
+## Regeneration
+
+With Python and Pillow installed, run from the repository root:
+
+```sh
+python scripts/generate-icons.py
+```
+
+The script performs size and format conversion only. Preserve the master alpha channel; do not flatten transparent margins onto a black or white background. Windows and macOS builds already consume the generated ICO/ICNS files.
+
+Brand imagery expresses the product vision. The current application supports Windows → Mac; reverse control and mobile support remain planned.
