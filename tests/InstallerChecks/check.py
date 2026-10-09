@@ -17,7 +17,7 @@ work = Path(options.work_dir).resolve()
 work.mkdir(parents=True, exist_ok=True)
 
 class InstallerChecks(unittest.TestCase):
-    def run_case(self, mode='normal', loaded=False, duplicate=False, reset=False):
+    def run_case(self, mode='normal', loaded=False, duplicate=False, option=None):
         temporary = tempfile.TemporaryDirectory(prefix='installer-', dir=work)
         root = Path(temporary.name).resolve()
         self.assertTrue(root.is_relative_to(work))
@@ -27,11 +27,15 @@ class InstallerChecks(unittest.TestCase):
         def bundle(path, old=False, identifier='com.remotemaclan.host'):
             (path/'Contents/MacOS').mkdir(parents=True)
             (path/'Contents/Info.plist').write_text(identifier, encoding='utf-8')
+            (path/'Contents/Resources').mkdir()
+            for name in ('LocalRemote.icns', 'LocalRemote.png'):
+                (path/'Contents/Resources'/name).write_text('new icon' if not old else 'old icon')
             executable = path/'Contents/MacOS/RemoteMacLAN'
             executable.write_text('#!/bin/sh\n# new executable\n' if not old else '#!/bin/sh\n# old executable\n', encoding='utf-8')
             executable.chmod(0o755)
             if old: (path/'Contents/obsolete-resource').write_text('must disappear')
         bundle(project/'build/RemoteMacLAN.app')
+        if mode=='missing-icon': (project/'build/RemoteMacLAN.app/Contents/Resources/LocalRemote.png').unlink()
         bundle(apps/'RemoteMacLAN.app', old=True, identifier='other.app' if mode=='wrong-id' else 'com.remotemaclan.host')
         if duplicate: bundle(personal/'RemoteMacLAN.app', old=True)
         (root/'process').write_text('12345\n', newline='\n')
@@ -50,9 +54,17 @@ _test_root='ROOT'
 _mode='MODE'
 uname() { echo Darwin; }
 sleep() { :; }
-plist_read() { if [[ "$*" == *CFBundleShortVersionString* ]]; then echo 0.1.0; else cat "${@: -1}"; fi; }
+plist_read() {
+  if [[ "$*" == *CFBundleShortVersionString* ]]; then echo 0.1.0
+  elif [[ "$*" == *CFBundleIconFile* ]]; then
+    if [[ "$_mode" == bad-icon-metadata ]]; then echo wrong.icns; else echo LocalRemote.icns; fi
+  else cat "${@: -1}"; fi
+}
 codesign() { [[ "$_mode" != bad-signature ]]; }
-ditto() { cp -R "$1" "$2"; }
+ditto() {
+  cp -R "$1" "$2"
+  if [[ "$_mode" == bad-stage-icon ]]; then echo tampered > "$2/Contents/Resources/LocalRemote.png"; fi
+}
 pgrep() { [[ -f "$_test_root/process" ]] || return 1; cat "$_test_root/process"; }
 kill() {
   echo "kill $*" >> "$_test_root/actions"
@@ -71,8 +83,11 @@ launchctl() {
 }
 tccutil() {
   echo "tccutil $*" >> "$_test_root/actions"
-  [[ "$*" == 'reset ScreenCapture com.remotemaclan.host' ]] || return 2
-  [[ "$_mode" != reset-fail ]]
+  case "$*" in
+    'reset ScreenCapture com.remotemaclan.host') [[ "$_mode" != reset-fail ]] ;;
+    'reset Accessibility com.remotemaclan.host') [[ "$_mode" != accessibility-reset-fail ]] ;;
+    *) return 2 ;;
+  esac
 }
 open() { echo "open $*" >> "$_test_root/actions"; }
 '''.replace('ROOT', root.as_posix()).replace('MODE', mode)
@@ -81,7 +96,7 @@ open() { echo "open $*" >> "$_test_root/actions"; }
         script = project/'install-app.sh'
         script.write_text(fixture, encoding='utf-8', newline='\n')
         command = [options.bash, str(script)]
-        if reset or mode=='reset-fail': command.append('--reset-screen-permission')
+        if option: command.append(option)
         result = subprocess.run(command, capture_output=True, text=True, encoding='utf-8', timeout=30)
         actions = (root/'actions').read_text() if (root/'actions').exists() else ''
         return root, result, actions
@@ -92,7 +107,9 @@ open() { echo "open $*" >> "$_test_root/actions"; }
         self.assertFalse((root/'apps/RemoteMacLAN.app/Contents/obsolete-resource').exists())
         self.assertFalse((root/'personal-apps/RemoteMacLAN.app').exists())
         self.assertEqual((root/'apps/RemoteMacLAN.app/Contents/MacOS/RemoteMacLAN').read_text(), '#!/bin/sh\n# new executable\n')
-        self.assertNotIn('tccutil reset', actions)
+        self.assertIn('tccutil reset ScreenCapture com.remotemaclan.host', actions)
+        self.assertIn('tccutil reset Accessibility com.remotemaclan.host', actions)
+        self.assertEqual((root/'apps/RemoteMacLAN.app/Contents/Resources/LocalRemote.png').read_text(), 'new icon')
         self.assertEqual(actions.count('open '), 1)
         self.assertFalse(list((root/'apps').glob('.remote-mac-lan-install.*')))
 
@@ -104,8 +121,26 @@ open() { echo "open $*" >> "$_test_root/actions"; }
         self.assertIn('launchctl bootstrap', actions)
         self.assertNotIn('open ', actions)
 
-    def test_screen_reset_is_explicit_and_scoped(self):
-        _, result, actions = self.run_case(reset=True)
+    def test_default_resets_both_services_only_for_our_bundle(self):
+        _, result, actions = self.run_case()
+        self.assertEqual(result.returncode, 0, result.stdout+result.stderr)
+        resets=[line for line in actions.splitlines() if line.startswith('tccutil ')]
+        self.assertEqual(resets, ['tccutil reset ScreenCapture com.remotemaclan.host', 'tccutil reset Accessibility com.remotemaclan.host'])
+        self.assertLess(actions.index('kill -TERM'), actions.index('tccutil reset'))
+        self.assertLess(actions.index('tccutil reset Accessibility'), actions.index('open '))
+
+    def test_permission_preservation_is_available(self):
+        _, result, actions = self.run_case(option='--keep-permissions')
+        self.assertEqual(result.returncode, 0, result.stdout+result.stderr)
+        self.assertNotIn('tccutil ', actions)
+
+    def test_explicit_reset_alias(self):
+        _, result, actions = self.run_case(option='--reset-permissions')
+        self.assertEqual(result.returncode, 0, result.stdout+result.stderr)
+        self.assertIn('tccutil reset Accessibility com.remotemaclan.host', actions)
+
+    def test_legacy_screen_only_option_is_scoped(self):
+        _, result, actions = self.run_case(option='--reset-screen-permission')
         self.assertEqual(result.returncode, 0, result.stdout+result.stderr)
         self.assertIn('tccutil reset ScreenCapture com.remotemaclan.host', actions)
         self.assertLess(actions.index('kill -TERM'), actions.index('tccutil reset'))
@@ -117,13 +152,13 @@ open() { echo "open $*" >> "$_test_root/actions"; }
         self.assertIn('kill -KILL', actions)
 
     def test_failures_preserve_old_application(self):
-        for mode in ('build-fail', 'bad-signature', 'wrong-id', 'stuck', 'reset-fail'):
+        for mode in ('build-fail', 'bad-signature', 'wrong-id', 'stuck', 'reset-fail', 'accessibility-reset-fail', 'missing-icon', 'bad-stage-icon', 'bad-icon-metadata'):
             with self.subTest(mode=mode):
                 root, result, actions = self.run_case(mode)
                 self.assertNotEqual(result.returncode, 0, result.stdout+result.stderr)
                 self.assertTrue((root/'apps/RemoteMacLAN.app/Contents/obsolete-resource').exists())
                 self.assertNotIn('open ', actions)
-                if mode!='reset-fail': self.assertNotIn('tccutil reset', actions)
+                if mode not in ('reset-fail','accessibility-reset-fail'): self.assertNotIn('tccutil reset', actions)
                 self.assertFalse(list((root/'apps').glob('.remote-mac-lan-install.*')))
 
 if __name__ == '__main__':

@@ -16,7 +16,7 @@ The selected identity combines a universal screen outline with two opposing arro
 
 The artwork was developed with user direction and the built-in image_gen tool. The PNG master is the source of truth; it is not editable vector artwork. The obsolete desktop/mobile SVG and its limited renderer were removed.
 
-The nominal base color is **#A10035**, with dark cherry shadows and bright ruby highlights. It is a screen-color interpretation of a user-supplied paint swatch, not an official paint specification. The icon gradient is embedded in the approved artwork.
+The current artwork softens the original cherry red into a muted palette around **#B9677A**, with gentler shadows, pale highlights and reduced glow. Interface actions use **#A4546B** to retain text contrast. This is a screen-color interpretation of a user-supplied paint swatch, not an official paint specification. The icon gradient is embedded in the approved artwork.
 
 ## Regeneration
 
@@ -28,6 +28,6 @@ python scripts/generate-icons.py
 
 The script performs size and format conversion only. Preserve the master alpha channel; do not flatten transparent margins onto a black or white background. Windows and macOS builds already consume the generated ICO/ICNS files.
 
-Both application headers display the selected artwork. Windows embeds the PNG as a WPF resource, keeps the whole header inside the full-screen toolbar, and uses a cherry-red connection action. The Mac header loads the packaged ICNS and uses a matching sharing action.
+Both application headers display the selected artwork. Windows embeds the PNG as a WPF resource, keeps the whole header inside the full-screen toolbar, and uses a cherry-red connection action. macOS packages PNG and ICNS, explicitly sets the running Dock icon from the PNG (ICNS fallback), and uses the same image in its header.
 
 Brand imagery expresses the product vision. The current application supports Windows → Mac; reverse control and mobile support remain planned.

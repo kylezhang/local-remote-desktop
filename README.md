@@ -53,6 +53,8 @@ bash macos-host/install-app.sh
 
 Grant **Screen Recording** and **Accessibility** in System Settings → Privacy & Security. Quit and reopen the application after granting access, then start sharing. Run the installer as your normal user, without `sudo`.
 
+The default installer resets this app's two permission decisions for a clean installation. For an update that preserves working permissions, add `--keep-permissions`.
+
 macOS is currently distributed as source. See the [Mac guide](docs/macos.md) for signing, updates, permissions and troubleshooting.
 
 ## Usage

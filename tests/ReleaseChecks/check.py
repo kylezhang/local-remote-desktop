@@ -14,7 +14,7 @@ assert re.fullmatch(r'\d+\.\d+\.\d+', version)
 plist = plistlib.loads((root/'macos-host/Info.plist').read_bytes())
 assert plist['CFBundleShortVersionString'] == version
 assert plist['CFBundleIdentifier'] == 'com.remotemaclan.host'
-assert plist['CFBundleIconFile'] == 'LocalRemote'
+assert plist['CFBundleIconFile'] == 'LocalRemote.icns'
 assert f'LocalRemote · {version}' in (root/'windows-client/MainWindow.xaml').read_text(encoding='utf-8')
 assert f'LocalRemote {version}' in (root/'macos-host/Sources/RemoteMacLAN/App.swift').read_text(encoding='utf-8')
 assert not (root/'experiments').exists()

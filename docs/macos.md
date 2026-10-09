@@ -8,9 +8,15 @@ Requirements: Apple Silicon, macOS 13+, normal logged-in GUI session, Xcode Comm
 bash macos-host/install-app.sh
 ```
 
-This builds first, verifies the staged signature, stops existing Host instances and a loaded login agent, deletes only the two verified old application bundles at `/Applications/RemoteMacLAN.app` and `~/Applications/RemoteMacLAN.app`, installs the full bundle, then starts one instance. Build failure leaves the installed app intact. Pairing data is not deleted; screen permission reset is opt-in. Changing code under ad-hoc signing can still require new authorization.
+This builds first, verifies the staged signature and icon resources, stops existing Host instances and a loaded login agent, resets this app's Screen Recording and Accessibility authorization, deletes only the two verified old application bundles at `/Applications/RemoteMacLAN.app` and `~/Applications/RemoteMacLAN.app`, installs the full bundle, then starts one instance. Build or resource failure leaves the installed app intact. The pairing key is retained. Default installation is a clean permission installation: grant both permissions again afterward.
 
-Grant Screen Recording / Screen & System Audio Recording and Accessibility to the installed application. Quit and reopen it after granting; do not run install again simply to reopen. Click Start Sharing (开始共享). Accessibility false means view-only. If legacy screen preflight is false, an explicit sharing click checks the actual ScreenCaptureKit API; startup failures expose domain/code in Copy Startup Diagnostic (复制启动诊断). A successful build does not prove TCC approval.
+Grant Screen Recording / Screen & System Audio Recording and Accessibility to the installed application. The Screen Permission (屏幕权限) and Accessibility Permission (辅助功能权限) buttons open the corresponding settings; the latter also requests Accessibility access. Quit and reopen after granting; do not run install again simply to reopen, because default installation resets both decisions again. Click Start Sharing (开始共享). Accessibility false means view-only. If legacy screen preflight is false, an explicit sharing click checks the actual ScreenCaptureKit API; startup failures expose domain/code in Copy Startup Diagnostic (复制启动诊断). A successful build does not prove TCC approval.
+
+For routine updates when authorization already works, preserve both decisions with `bash macos-host/install-app.sh --keep-permissions`. The default reset is scoped to `com.remotemaclan.host`; it never resets other apps or deletes the pairing key. macOS controls the settings list: resetting authorization does not guarantee an old row immediately disappears, and it does not grant permission automatically. See [Apple's authorization reset documentation](https://developer.apple.com/documentation/xcode/resetting-access-to-protected-resources-in-macos).
+
+## Dock icon
+
+The bundle includes both PNG and ICNS resources with an explicit `LocalRemote.icns` declaration. At launch, the app loads the packaged PNG (ICNS fallback) and assigns it to [NSApplication.applicationIconImage](https://developer.apple.com/documentation/appkit/nsapplication/applicationiconimage), including when a LaunchAgent starts the executable directly. The installer verifies staged icon files and updates the bundle timestamp without deleting global icon caches or restarting the Dock. Startup diagnostics include `AppIconLoaded`; the diagnosis script reports the installed icon declaration and resource checksums.
 
 ## Stable signing
 
@@ -33,13 +39,13 @@ Do not repeatedly reinstall/reset when the app is already authorized. Verify the
 bash macos-host/diagnose-permissions.sh
 ```
 
-Only when repairing a confirmed stale screen permission entry:
+The default clean installation resets both entries. The legacy screen-only option remains available:
 
 ```sh
 bash macos-host/install-app.sh --reset-screen-permission
 ```
 
-That option runs targeted `tccutil reset ScreenCapture com.remotemaclan.host`, not a global reset or Accessibility reset. You must grant screen access again afterward. The keyboard self-test posts only into its own temporary window; success does not prove another application or secure field accepts remote input.
+That option resets only this app's Screen Recording decision and preserves Accessibility. `--reset-permissions` explicitly requests the default two-service reset. `--keep-permissions` skips both. If a reset fails, installation stops before deleting the old app; earlier successful reset operations may already have revoked a decision. The keyboard self-test posts only into its own temporary window; success does not prove another application or secure field accepts remote input.
 
 ## Login auto-start and limits
 

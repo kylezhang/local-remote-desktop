@@ -1,0 +1,23 @@
+Mac icon / clean-install maintenance validation — 2026-10-09
+
+Installer checks (mocked macOS commands, disposable directories): 8 passed.
+- full replacement, duplicate bundle removal, and packaged PNG replacement
+- default reset of only ScreenCapture and Accessibility for com.remotemaclan.host
+- --keep-permissions skips both; --reset-permissions and legacy screen-only work
+- stop old process before reset; launch exactly once or restore loaded agent
+- old bundle retained on build/signature/identity/process/reset failure
+- old bundle retained on missing icon, incorrect metadata, or tampered staging
+
+Signing checks: six scenarios passed, including valid certificate, ad-hoc,
+missing pinned identity and invalid saved identity; PNG/ICNS packaging exercised.
+
+Swift syntax parsing passed. ReleaseChecks passed for metadata, versions,
+documentation links, square RGBA master and PNG/ICO/ICNS containers.
+
+Windows: actual WPF image-resource rendering and 1280/720px layouts passed;
+full-screen toolbar hide/restore passed. Windows self-contained x64 published.
+
+Limitations: no native Mac SDK compilation or Dock/TCC/settings-list verification.
+Permission reset clears authorization; it does not guarantee removal of a visible
+settings-list row or provide automatic approval. A second reset may fail after
+the first has already cleared a decision; installation reports this and stops.

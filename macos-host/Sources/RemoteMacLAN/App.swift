@@ -3,6 +3,18 @@ import Combine
 import AppKit
 import ApplicationServices
 import ScreenCaptureKit
+private enum AppBrand {
+    static let icon: NSImage? = {
+        for ext in ["png", "icns"] {
+            if let url = Bundle.main.url(forResource: "LocalRemote", withExtension: ext),
+               let image = NSImage(contentsOf: url), image.isValid { return image }
+        }
+        return nil
+    }()
+    static func applyDockIcon() {
+        if let icon { NSApplication.shared.applicationIconImage = icon }
+    }
+}
 @main
 struct RemoteMacLANApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) var delegate
@@ -19,6 +31,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             first.activate(options: [.activateIgnoringOtherApps])
             NSApplication.shared.terminate(nil); return
         }
+        // LaunchAgents run the executable directly. Set the running Dock icon
+        // explicitly as well as supplying CFBundleIconFile for Finder.
+        AppBrand.applyDockIcon()
         model.start()
     }
     func applicationWillTerminate(_ notification: Notification) { model.stop() }
@@ -39,6 +54,11 @@ final class HostModel: ObservableObject {
     private let inputSelfTest = InputSelfTest()
     @Published var inputTestResult = ""
     func testInput() { inputSelfTest.run { [weak self] result in self?.inputTestResult = result } }
+    func openAccessibilitySettings() {
+        let options = [kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String: true] as CFDictionary
+        _ = AXIsProcessTrustedWithOptions(options)
+        NSWorkspace.shared.open(URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility")!)
+    }
     init() {}
     private func loadPairingKey() {
         guard !pairingAttempted else { return }
@@ -90,6 +110,7 @@ final class HostModel: ObservableObject {
         LocalRemote \(Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "unknown")
         macOS: \(ProcessInfo.processInfo.operatingSystemVersionString)
         InstalledAtApplications: \(Bundle.main.bundlePath == "/Applications/RemoteMacLAN.app")
+        AppIconLoaded: \(AppBrand.icon != nil)
         LegacyScreenPreflight: \(CGPreflightScreenCaptureAccess())
         ScreenCaptureKit: \(screenCheck)
         Accessibility: \(AXIsProcessTrusted())
@@ -104,11 +125,8 @@ final class HostModel: ObservableObject {
 }
 struct HostView: View {
     @ObservedObject var model: HostModel
-    private let cherry = Color(red: 161.0 / 255.0, green: 0, blue: 53.0 / 255.0)
-    private var brandIcon: NSImage? {
-        guard let url = Bundle.main.url(forResource: "LocalRemote", withExtension: "icns") else { return nil }
-        return NSImage(contentsOf: url)
-    }
+    private let cherry = Color(red: 164.0 / 255.0, green: 84.0 / 255.0, blue: 107.0 / 255.0)
+    private var brandIcon: NSImage? { AppBrand.icon }
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
             HStack(spacing: 12) {
@@ -117,7 +135,7 @@ struct HostView: View {
                         .frame(width: 60, height: 60).accessibilityHidden(true)
                 }
                 Text("LocalRemote 0.1.0").font(.title)
-                    .foregroundStyle(Color(red: 75.0 / 255.0, green: 8.0 / 255.0, blue: 36.0 / 255.0))
+                    .foregroundStyle(Color(red: 104.0 / 255.0, green: 50.0 / 255.0, blue: 71.0 / 255.0))
             }
             Text(model.status).textSelection(.enabled).frame(width: 450, alignment: .leading).fixedSize(horizontal: false, vertical: true)
             Text("在 Windows 填写此 Mac 的局域网 IP 和配对密钥。当前桌面会被共享；停止共享即可收回控制。").frame(width: 450, alignment: .leading)
@@ -130,7 +148,8 @@ struct HostView: View {
             if model.secret.isEmpty { Button("重试读取密钥") { model.retryPairing() } }
             HStack {
                 Button(model.starting ? "正在检查…" : model.active ? "停止共享" : "开始共享") { if model.active { model.stop() } else { model.start(requestPermission: true) } }.buttonStyle(.borderedProminent).disabled(model.starting)
-                Button("打开权限设置") { NSWorkspace.shared.open(URL(string:"x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture")!) }
+                Button("屏幕权限") { NSWorkspace.shared.open(URL(string:"x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture")!) }
+                Button("辅助功能权限") { model.openAccessibilitySettings() }
                 Button("退出") { NSApplication.shared.terminate(nil) }
             }
             Button("本机键盘自检") { model.testInput() }

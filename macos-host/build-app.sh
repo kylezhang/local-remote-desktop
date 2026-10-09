@@ -26,6 +26,10 @@ mkdir -p "$app/Contents/MacOS" "$app/Contents/Resources"
 cp "$bin_dir/RemoteMacLAN" "$app/Contents/MacOS/RemoteMacLAN"
 cp Info.plist "$app/Contents/Info.plist"
 cp ../assets/brand/LocalRemote.icns "$app/Contents/Resources/LocalRemote.icns"
+cp ../assets/brand/icon.png "$app/Contents/Resources/LocalRemote.png"
+[[ -s "$app/Contents/Resources/LocalRemote.icns" && -s "$app/Contents/Resources/LocalRemote.png" ]] || {
+  echo '图标资源缺失，构建中止。' >&2; exit 1
+}
 codesign --force --sign "$identity" --identifier com.remotemaclan.host "$app"
 codesign --verify --strict "$app"
 if [[ "$identity" != "-" ]]; then

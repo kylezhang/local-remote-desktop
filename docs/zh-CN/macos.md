@@ -8,9 +8,15 @@
 bash macos-host/install-app.sh
 ```
 
-脚本先构建和验证新包，再停止旧进程及已加载自启动，完整删除固定位置中已核验的旧应用包，安装并仅启动一个实例。构建失败保留已安装应用。保留配对密钥，默认不重置权限；临时签名代码变化仍可能要求重新授权。
+脚本先构建、验证签名和暂存图标，再停止旧进程及已加载自启动，默认清理本应用屏幕录制和辅助功能授权，完整删除固定位置中已核验的旧应用包，安装并仅启动一个实例。构建或图标验证失败会保留旧应用。配对密钥保留；默认安装之后需要重新允许两项权限。
 
-在隐私与安全性中授权屏幕录制和辅助功能。授权后退出重开，不要为重开再次 install。点击开始共享；辅助功能 false 表示只能查看。显式点击会检查实际 ScreenCaptureKit，即使旧式屏幕预检查为 false。复制启动诊断可查看错误域及代码；构建成功不代表权限成功。
+使用“屏幕权限”和“辅助功能权限”按钮打开对应设置；辅助功能按钮还会请求本应用访问权限。允许后退出重开，不要为重开再次 install，否则默认安装又会重置两项授权。点击开始共享；辅助功能 false 表示只能查看。显式点击会检查实际 ScreenCaptureKit，即使旧式屏幕预检查为 false。复制启动诊断可查看错误域及代码；构建成功不代表权限成功。
+
+若两项权限已经正常，日常更新可用 `bash macos-host/install-app.sh --keep-permissions` 保留授权。重置只针对 `com.remotemaclan.host`，不影响其他应用，不删除配对密钥。macOS 决定设置列表如何显示，清理授权不保证旧行立即消失，也不能替用户自动授权。参见 [Apple 权限重置说明](https://developer.apple.com/documentation/xcode/resetting-access-to-protected-resources-in-macos)。
+
+## 程序坞图标
+
+应用包同时包含 PNG 和 ICNS，图标声明明确为 `LocalRemote.icns`。启动时主动加载 PNG（ICNS 后备），设置运行中的程序坞图标，登录自启动直接运行内部程序也使用这一路径。安装会验证暂存图标并更新应用目录时间戳，不删除全局图标缓存、不重启程序坞。启动诊断加入 `AppIconLoaded`；诊断脚本输出已安装的图标声明和文件校验值。
 
 ## 固定签名
 
@@ -31,13 +37,13 @@ bash macos-host/install-app.sh
 bash macos-host/diagnose-permissions.sh
 ```
 
-仅确认旧屏幕权限记录失效时使用：
+默认安装已经重置两项；仍保留兼容的仅屏幕重置选项：
 
 ```sh
 bash macos-host/install-app.sh --reset-screen-permission
 ```
 
-它只重置本应用 ScreenCapture 授权，不重置其他应用或辅助功能；之后必须重新授权。本机键盘自检仅向自身临时窗口注入，不证明其他应用或安全输入框接受远程事件。
+它只重置本应用 ScreenCapture 授权，保留辅助功能。`--reset-permissions` 明确执行默认的两项重置；`--keep-permissions` 两项都保留。重置失败会在删除旧应用前停止，之前成功的重置可能已清除某项授权。本机键盘自检仅向自身临时窗口注入，不证明其他应用或安全输入框接受远程事件。
 
 ## 登录后启动与边界
 
