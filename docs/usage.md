@@ -9,9 +9,9 @@ The current UI is Chinese. English localization is planned. These labels help ma
 | Label | Meaning |
 |---|---|
 | 开始共享 / 停止共享 | Start Sharing / Stop Sharing (Mac) |
-| 配对密码 / 收起配对密码 | Show / Hide Pairing Password (Mac, development) |
+| 当前密码 · 查看 / 隐藏 / 复制 | Current Password · View / Hide / Copy (Mac, development) |
+| 修改密码… | Change Password in a separate editor (Mac, development) |
 | 自动生成 / 保存密码 | Generate / Save Password (Mac, development) |
-| 复制配对密码 | Copy Pairing Password (Mac, development) |
 | 设置 → 权限 | Permission Settings (Mac) |
 | 连接 / 断开 | Connect / Disconnect (Windows) |
 | 忘记此连接 | Forget Connection (Windows) |
@@ -27,8 +27,10 @@ Settings. The title bar carries the app name/icon; the toolbar does not repeat t
 address label. Settings groups clipboard, keyboard/connection and diagnostic
 options; performance counters are hidden until enabled. Transfer progress and
 errors appear only when needed, including in full screen. Completed notices can
-be dismissed. Mac keeps sharing and pairing controls visible; clipboard,
-permissions and diagnostics are in Settings.
+be dismissed. Mac separates sharing status/actions from the current password. Passwords are
+hidden by default; legacy keys are labeled and wrap when revealed. Change Password
+opens a separate editor with local validation and Save/Cancel. Clipboard, permissions
+and diagnostics are in Settings. Viewing/copying a password does not start sharing.
 
 ## Connect and control
 
@@ -42,8 +44,9 @@ F11 toggles full screen. Ctrl+Alt+Esc releases remote input and restores local f
 
 ## Pairing password (development)
 
-Update both apps from main. On Mac, open **配对密码** (Pairing Password),
-type a new password or click **自动生成** (Generate), then **保存密码** (Save).
+Update both apps from main. On Mac, click **修改密码…** (Change Password) beside
+**当前密码** (Current Password). In the editor, type a new password or click
+**自动生成** (Generate), then **保存密码** (Save).
 Generating only fills the edit field; it takes effect when saved. Manual passwords
 accept 8–64 English letters, digits or printable symbols, without spaces, and are
 case-sensitive. Generated passwords use 12 random uppercase letters/digits,
@@ -53,8 +56,11 @@ Saving replaces the existing Keychain item and disconnects current controllers.
 If sharing was running, the Host restarts it with the new password. On Windows,
 disconnect to reveal the connection fields, enter the same password and reconnect.
 Windows remembers it using current-user DPAPI. Restarting or reinstalling the Mac
-app does not intentionally change the saved password. Failed saves leave the
-previous credential intact; macOS may request Keychain authorization.
+app does not intentionally change the saved password. Cancel clears the unsaved draft without changing the password or session. Empty,
+invalid or unchanged passwords cannot be saved. Failed saves keep the current
+session/password and retain the draft with an inline error. Editing clears that
+error; saving cannot be dismissed halfway through. Stop/quit during persistence
+does not restart sharing. macOS may request Keychain authorization.
 
 Existing 64-character keys keep working until you explicitly save a password.
 The new Windows client supports both formats. An older Windows client cannot

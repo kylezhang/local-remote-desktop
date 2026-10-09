@@ -6,6 +6,14 @@ Release environment: Windows x64, .NET SDK 8.0.425 and Desktop/Core runtime 8.0.
 
 ## Automated coverage
 
+- Mac password-flow development (2026-10-09): real Swift compiler executes the
+  production HostModel/PairingEditor with explicit service doubles. Covered
+  deliberate/cached reveal without sharing-status changes, bounded legacy display
+  and exact copy, draft cancel, validation/same-password no-op, failed-save
+  draft/session preservation, successful cached replacement/restart, stale callback
+  rejection and stop/quit during save. No native SwiftUI/Keychain claim; see
+  `tests/MacHostModelChecks/check.sh` and `tests/results/pairing-flow-2026-10-09.txt`.
+
 - Pairing passwords (2026-10-09): independent PBKDF2 vector, wrong password/server
   proof/salt rejection and exact packaged Windows WPF regression in both RML1 and
   RMP1 modes passed, including control, clipboard, file transfer and quality reconnects.

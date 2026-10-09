@@ -1,0 +1,26 @@
+LocalRemote Mac sharing/password-flow development checks — 2026-10-09
+Mac internal build 18; public version and published assets unchanged.
+Windows executable and wire protocol unchanged in this update.
+
+Swift 5.9.2 on Ubuntu 22.04, tests/MacHostModelChecks/check.sh:
+PASS draft cancellation, deliberate/cached reveal, legacy bounded display and
+exact copying; sharing state unchanged.
+PASS inline validation, same-password no-op and failed-save draft/session preservation.
+PASS successful save closes old host, restarts with new cached credential and
+filters old callbacks.
+PASS busy dismissal guard and stop/quit during persistence never restarts sharing.
+
+The production HostModel body, PairingEditor, PairingCredential and
+SharingPreparation were compiled and executed. Only platform imports in a
+disposable HostModel copy are removed; explicit observable/UI/system/Host/Keychain
+service doubles replace Apple APIs. Password KDF uses the existing OpenSSL
+CommonCrypto test bridge on Linux. The doubles do not establish native SDK types,
+real credential-store side effects, secure input or system permission behavior.
+
+PASS syntax parsing of 18 production Swift/package sources (not type checking).
+PASS bilingual local links, aligned versions, icons, tracked-file hygiene and naming.
+
+NOT VERIFIED: native Apple SDK build, rendered SwiftUI width/layout/sheet behavior,
+real Keychain/TCC prompts, real Mac password persistence and two-device acceptance.
+The check script adds a native Swift package build gate when run on macOS.
+No claim that repeated system-password dialogs or permissions are permanently fixed.

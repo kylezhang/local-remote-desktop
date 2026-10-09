@@ -3,7 +3,7 @@
 [简体中文](zh-CN/next-release.md) · [Roadmap](roadmap.md)
 
 Status on 2026-10-09: development on main. **Not released.** Public app versions
-remain 0.1.0 until release preparation; Mac internal build number is 17.
+remain 0.1.0 until release preparation; Mac internal build number is 18.
 Existing v0.1.0 tag and assets remain unchanged.
 
 ## Implemented and locally checked

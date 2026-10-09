@@ -75,7 +75,7 @@ The development branch enables **Windows shortcuts** by default: Ctrl+C/V operat
 
 Development builds implement **bidirectional text and file clipboard sharing**, enabled by default for paired sessions. Both apps remember an explicit off choice in Settings → Clipboard. Wait for the enabled status, then copy again. Text is limited to 32 KiB; regular files transfer automatically with progress and cancellation, without repeated pairing or per-file dialogs. Windows encrypted-peer/UI tests pass; native Mac acceptance is pending. Published v0.1.0 packages do not include clipboard sharing. See the [user guide](docs/usage.md#text-clipboard-sync-development) and [file guide](docs/files.md) for supported formats and limits.
 
-Development builds also support a manually chosen **8–64 character pairing password** or a generated **12-character password**. Open Pairing Password on the Mac, enter or generate a password, then Save Password. Existing 64-character keys remain valid until explicitly changed; update both apps before using passwords. See the [user guide](docs/usage.md#pairing-password-development).
+Development builds also support a manually chosen **8–64 character pairing password** or a generated **12-character password**. Click Change Password beside Current Password on the Mac, enter or generate a password in the separate editor, then Save Password. Existing 64-character keys remain valid until explicitly changed; update both apps before using passwords. See the [user guide](docs/usage.md#pairing-password-development).
 
 Quality changes briefly reconnect the session. See the [user guide](docs/usage.md) for controls, picture settings and connection help.
 

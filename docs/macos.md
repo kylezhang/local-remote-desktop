@@ -39,7 +39,7 @@ The configuration script signs/verifies a temporary probe, saves the chosen fing
 
 Development builds signed ad-hoc, or without a signing-mode resource, do not access Keychain at startup. Start Sharing first checks screen access; if that fails, no credential read occurs. Certificate auto-start also checks screen access first. A failed background read waits for a deliberate action; there is no automatic interactive fallback. The packaged signing mode is a startup policy hint, not a certificate-trust check. Diagnostics include the mode, internal build number, backend and read/create counts, never the key value.
 
-To inspect the pairing key independently of screen permission, enable Show Pairing Key and click Read Pairing Key (读取配对密码). That deliberate action may authenticate; it does not start sharing. Sharing later reuses the successfully loaded key for that process.
+To inspect the credential independently of screen permission, click **查看** (View) beside **当前密码** (Current Password). That deliberate action may authenticate; it does not start sharing or change the sharing status. Later views and sharing reuse the successfully loaded credential for that process. **复制** copies the exact password without display line breaks.
 
 Explicit sharing clicks can allow macOS authentication and first-time creation; failure is not automatically retried. Successfully loaded keys are reused in memory for that process. Development builds therefore open after login but do not automatically begin sharing. Certificate builds can auto-start only when both the key and screen permission are accessible without UI.
 
@@ -74,4 +74,4 @@ rm ~/Library/LaunchAgents/com.remotemaclan.host.plist
 
 No FileVault Preboot bypass, new login session or guaranteed login/lock-screen control. Sleeping or closed-lid devices may be unreachable; the app does not alter power policy.
 
-In development builds, change pairing in **配对密码 → 保存密码**: enter an 8–64 character password or Generate a 12-character one. Saving replaces the existing credential and disconnects all current controllers; enter the new password on updated Windows clients. Existing legacy keys remain until saved. Do not delete the Keychain item for a normal password change or publish the password. Application files use LocalRemote; the established bundle/credential/launchd identities remain stable. See [naming migration](naming.md).
+In development builds, change pairing in **当前密码 → 修改密码… → 保存密码**: enter an 8–64 character password or Generate a 12-character one. Saving replaces the existing credential and disconnects all current controllers; enter the new password on updated Windows clients. Existing legacy keys remain until saved. Do not delete the Keychain item for a normal password change or publish the password. Application files use LocalRemote; the established bundle/credential/launchd identities remain stable. See [naming migration](naming.md).

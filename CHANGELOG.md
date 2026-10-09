@@ -4,6 +4,14 @@
 
 ## Unreleased
 
+- Simplified Mac sharing/password layout: fixed-width main window, hidden current
+  password with explicit legacy-key label, separate change-password editor and
+  inline validation/errors. Viewing credentials does not change sharing status;
+  cancelled drafts and failed saves preserve existing credentials/sessions.
+  Stale callbacks cannot overwrite replacement-host status, and stop/quit during
+  persistence cannot restart sharing. Production model checks passed with service
+  doubles; native SwiftUI/Keychain acceptance remains pending. Mac internal build 18.
+
 - Added editable 8–64 character pairing passwords and random 12-character generation.
   Explicit save updates the existing Keychain item and disconnects old controllers;
   restarts preserve the credential and legacy keys remain until saved. RMP1 uses

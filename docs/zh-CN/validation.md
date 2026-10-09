@@ -4,6 +4,11 @@
 
 环境：Windows x64，.NET SDK 8.0.425，桌面/Core 运行时 8.0.31，2026-10-08。最终构建的原始结果位于 tests/results/。
 
+2026-10-09 Mac 密码流程：真实 Swift 编译器执行产品 HostModel/PairingEditor，平台服务使用隔离模拟。
+覆盖查看/缓存不改变共享状态、旧密钥分行及精确复制、取消草稿、非法/相同密码不保存、失败保留草稿/会话、
+成功替换/缓存重启、旧回调过滤及保存期间停止/退出不重启。未验证原生 SwiftUI/钥匙串。
+见 `tests/MacHostModelChecks/check.sh` 与 `tests/results/pairing-flow-2026-10-09.txt`。
+
 2026-10-09 配对密码：独立 PBKDF2 向量、错误密码/服务端证明/salt 拒绝检查通过；最终 Windows DLL
 在 RML1/RMP1 两模式通过 WPF 模拟端回归，包括键鼠、剪贴板、文件与切档重连。
 真实 Swift 5.9.2 执行产品凭据编码/KDF/旧密钥/缓存逻辑，Linux 使用 OpenSSL 桥接测试模块。

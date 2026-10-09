@@ -1,9 +1,7 @@
 import SwiftUI
-import Combine
 import AppKit
 import ApplicationServices
-import ScreenCaptureKit
-private enum AppBrand {
+enum AppBrand {
     static let icon: NSImage? = {
         for ext in ["png", "icns"] {
             if let url = Bundle.main.url(forResource: "LocalRemote", withExtension: ext),
@@ -39,157 +37,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationWillTerminate(_ notification: Notification) { model.stop() }
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool { false }
 }
-final class HostModel: ObservableObject {
-    @Published var status = "准备启动"
-    @Published var secret = ""
-    @Published var active = false
-    @Published var starting = false
-    @Published var screenCheck = "尚未检查"
-    @Published var keychainCheck = "尚未读取"
-    // Avoid SwiftUI.State's SDK macro dependency in Command Line Tools builds.
-    @Published var revealSecret = false
-    @Published var passwordDraft = ""
-    @Published var allowClipboard = SharingPreferences.enabled("textClipboardAllowed") { didSet { UserDefaults.standard.set(allowClipboard, forKey: "textClipboardAllowed"); host?.setClipboardAllowed(allowClipboard) } }
-    @Published var allowFiles = SharingPreferences.enabled("fileClipboardAllowed") { didSet { UserDefaults.standard.set(allowFiles, forKey: "fileClipboardAllowed"); host?.setFilesAllowed(allowFiles) } }
-    @Published var fileStatus = "文件同步：等待连接"
-    private var host: Host?
-    private let preparation = SharingPreparation<PairingCredential>()
-    private var pairingKey: PairingCredential? { preparation.cachedKey }
-    private var startup: Task<Void, Never>?
-    private let inputSelfTest = InputSelfTest()
-    @Published var inputTestResult = ""
-    func testInput() { inputSelfTest.run { [weak self] result in self?.inputTestResult = result } }
-    func openAccessibilitySettings() {
-        let options = [kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String: true] as CFDictionary
-        _ = AXIsProcessTrustedWithOptions(options)
-        NSWorkspace.shared.open(URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility")!)
-    }
-    init() {}
-    func cancelFiles() { host?.cancelFiles() }
-    func openReceivedFiles() {
-        let root = MacFiles.receivedDirectory
-        do { try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true); NSWorkspace.shared.open(root) }
-        catch { fileStatus = "无法打开接收目录：\(error.localizedDescription)" }
-    }
-    func generatePassword() { passwordDraft = PairingCredential.generated(using: randomBytes(12)) }
-    func savePassword() {
-        guard !starting else { return }
-        do { try PairingCredential.validate(passwordDraft) }
-        catch { status = error.localizedDescription; return }
-        let password = passwordDraft, resumeSharing = active
-        starting = true; status = "正在保存配对密码…"
-        startup = Task { @MainActor [weak self] in
-            guard let self else { return }
-            do {
-                let credential = try await Pairing.savePassword(password)
-                self.host?.stop(); self.host = nil; self.active = false
-                self.preparation.replaceCachedKey(credential); self.displayPairingKey(credential)
-                self.passwordDraft = ""; self.starting = false; self.startup = nil
-                self.status = "密码已保存。Windows 断开后填写新密码即可；旧密码已失效。"
-                if resumeSharing { self.start(requestPermission: true) }
-            } catch { self.starting = false; self.status = "密码未更改：\(error.localizedDescription)" }
-        }
-    }
-    func retryPairing() {
-        guard host == nil, !starting, pairingKey == nil else { return }
-        starting = true; status = "正在读取配对密码…"
-        startup = Task { @MainActor [weak self] in
-            guard let self else { return }
-            defer { self.starting = false }
-            do {
-                let key = try await self.preparation.readKey { try await self.fetchPairingKey(allowInteraction: true) }
-                self.displayPairingKey(key)
-                self.status = "配对密码已就绪。点击开始共享后检查屏幕权限。"
-            } catch is CancellationError { }
-            catch { self.reportKeychainError(error) }
-        }
-    }
-    @MainActor private func fetchPairingKey(allowInteraction: Bool) async throws -> PairingCredential {
-        keychainCheck = allowInteraction ? "用户主动读取" : "启动静默读取"
-        return try await Pairing.load(allowInteraction: allowInteraction)
-    }
-    private func displayPairingKey(_ key: PairingCredential) {
-        secret = key.text
-        keychainCheck = "读取成功（本次运行已缓存）"
-    }
-    private func reportKeychainError(_ error: Error) {
-        let e = error as NSError
-        keychainCheck = "\(e.domain) / \(e.code)"
-        status = "无法读取配对密码：\(e.localizedDescription)。不会自动重复请求；需要时点击读取配对密码。"
-    }
-    func start(requestPermission: Bool = false) {
-        guard host == nil, !starting else { return }
-        if !requestPermission && pairingKey == nil && !Pairing.permitsAutomaticRead {
-            keychainCheck = "等待用户操作（启动未访问钥匙串）"
-            status = "点击开始共享。会先检查屏幕权限，再读取配对密码。"
-            return
-        }
-        starting = true; status = "正在检查屏幕访问…"
-        startup = Task { @MainActor [weak self] in
-          guard let self else { return }
-          defer { self.starting = false }
-          // Explicit sharing checks ScreenCaptureKit even if the legacy
-          // preflight reports false. Login must not request screen permission.
-          if !requestPermission && !CGPreflightScreenCaptureAccess() {
-            self.status = "尚未启动：点击开始共享，检查屏幕访问。授权后只需退出重开，不要重新安装。"
-            return
-          }
-          var checkingScreen = true
-          do {
-            let key = try await self.preparation.prepare(checkScreen: {
-                self.status = "正在通过 ScreenCaptureKit 检查屏幕访问…"
-                self.screenCheck = "ScreenCaptureKit 请求中"
-                let content = try await SCShareableContent.excludingDesktopWindows(false, onScreenWindowsOnly: true)
-                guard !content.displays.isEmpty else { throw CaptureError.noDisplay }
-                self.screenCheck = "ScreenCaptureKit 成功：\(content.displays.count) 个显示器"
-            }, readKey: {
-                checkingScreen = false
-                self.status = "正在读取配对密码…"
-                return try await self.fetchPairingKey(allowInteraction: requestPermission)
-            })
-            // prepare can reuse an already cached key without invoking readKey.
-            checkingScreen = false
-            self.displayPairingKey(key)
-            let trusted = AXIsProcessTrusted()
-            let h = Host(key: key.key, passwordSalt: key.salt, clipboardAllowed: self.allowClipboard, filesAllowed: self.allowFiles,
-                fileStatus: { [weak self] text in DispatchQueue.main.async { self?.fileStatus = text } }) { [weak self] text in DispatchQueue.main.async { self?.status = text } }
-            try h.start(); self.host = h; self.active = true
-            self.status = trusted ? "共享已启动，等待 Windows 连接 · TCP 47980" : "共享已启动（只能查看）· 辅助功能权限未被认可"
-          } catch is CancellationError { }
-          catch {
-            let e = error as NSError
-            if checkingScreen {
-                self.screenCheck = "失败：\(e.domain) / \(e.code)"
-                self.status = "屏幕访问失败：\(e.domain) / \(e.code)：\(e.localizedDescription)\n本次没有读取钥匙串。授权后退出重开，不要再次安装或重置。"
-            } else if self.pairingKey == nil { self.reportKeychainError(error) }
-            else { self.status = "共享启动失败：\(e.domain) / \(e.code)：\(e.localizedDescription)" }
-          }
-        }
-    }
-    func stop() { startup?.cancel(); host?.stop(); host = nil; active = false; status = "已停止" }
-    func copyDiagnostics() {
-        let text = """
-        LocalRemote \(Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "unknown")
-        Build: \(Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "unknown")
-        macOS: \(ProcessInfo.processInfo.operatingSystemVersionString)
-        InstalledAtApplications: \(Bundle.main.bundlePath == "/Applications/LocalRemote.app")
-        AppIconLoaded: \(AppBrand.icon != nil)
-        BuildSigningMode: \(Pairing.buildSigningMode)
-        LegacyScreenPreflight: \(CGPreflightScreenCaptureAccess())
-        ScreenCaptureKit: \(screenCheck)
-        Accessibility: \(AXIsProcessTrusted())
-        Listening: \(active)
-        Starting: \(starting)
-        Keychain: \(keychainCheck)
-        KeychainBackend: file-based (existing pairing-v1 item)
-        KeychainReadAttempts: \(Pairing.readAttempts)
-        KeychainCreateAttempts: \(Pairing.createAttempts)
-        ClipboardAllowed: \(allowClipboard)
-        Status: \(status)
-        """
-        NSPasteboard.general.clearContents(); NSPasteboard.general.setString(text, forType: .string)
-    }
-}
 struct HostView: View {
     @ObservedObject var model: HostModel
     private let blueberry = Color(red: 82.0 / 255.0, green: 101.0 / 255.0, blue: 236.0 / 255.0)
@@ -206,73 +53,134 @@ struct HostView: View {
     private var fileTransferring: Bool {
         model.fileStatus.hasPrefix("文件传输：") || model.fileStatus.hasPrefix("发送文件：") || model.fileStatus.hasPrefix("接收文件：") || model.fileStatus.hasPrefix("文件已复制")
     }
+    private var sharingTitle: String {
+        model.active ? "正在共享" : model.starting ? "正在启动共享…" : "尚未共享"
+    }
+    private var passwordText: String {
+        if model.secret.isEmpty { return "尚未读取" }
+        return model.revealSecret ? PairingEditor.displayed(model.secret) : "••••••••••••"
+    }
+    private var settingsMenu: some View {
+        Menu("设置") {
+            Section("剪贴板") {
+                Toggle("同步文字", isOn: $model.allowClipboard)
+                Toggle("同步文件", isOn: $model.allowFiles)
+                Button("打开接收目录") { model.openReceivedFiles() }
+            }
+            Menu("权限") {
+                Button("屏幕录制权限") { NSWorkspace.shared.open(URL(string:"x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture")!) }
+                Button("辅助功能权限") { model.openAccessibilitySettings() }
+            }
+            Menu("诊断") {
+                Button("本机键盘自检") { model.testInput() }
+                Button("复制启动诊断") { model.copyDiagnostics() }
+            }
+            Divider()
+            Button("退出 LocalRemote") { NSApplication.shared.terminate(nil) }
+        }.fixedSize()
+    }
     var body: some View {
-        VStack(alignment: .leading, spacing: 14) {
+        VStack(alignment: .leading, spacing: 18) {
             HStack(spacing: 10) {
                 if let icon = brandIcon {
                     Image(nsImage: icon).resizable().interpolation(.high).scaledToFit()
-                        .frame(width: 40, height: 40).accessibilityHidden(true)
+                        .frame(width: 36, height: 36).accessibilityHidden(true)
                 }
                 Text("LocalRemote 0.1.0").font(.title2).foregroundStyle(brandText)
                 Spacer()
-                Menu("设置") {
-                    Section("剪贴板") {
-                        Toggle("同步文字", isOn: $model.allowClipboard)
-                        Toggle("同步文件", isOn: $model.allowFiles)
-                        Button("打开接收目录") { model.openReceivedFiles() }
-                    }
-                    Menu("权限") {
-                        Button("屏幕录制权限") { NSWorkspace.shared.open(URL(string:"x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture")!) }
-                        Button("辅助功能权限") { model.openAccessibilitySettings() }
-                    }
-                    Menu("诊断") {
-                        Button("本机键盘自检") { model.testInput() }
-                        Button("复制启动诊断") { model.copyDiagnostics() }
-                    }
-                    Divider()
-                    Button("退出 LocalRemote") { NSApplication.shared.terminate(nil) }
-                }.fixedSize()
+                settingsMenu
             }
-            Text(model.status).textSelection(.enabled).frame(width: 450, alignment: .leading).fixedSize(horizontal: false, vertical: true)
-            Text("共享这台 Mac 的当前桌面。在 Windows 输入 Mac 的局域网 IP 和配对密码即可连接。")
-                .frame(width: 450, alignment: .leading)
-            HStack {
-                Button(model.starting ? "正在检查…" : model.active ? "停止共享" : "开始共享") {
-                    if model.active { model.stop() } else { model.start(requestPermission: true) }
-                }.buttonStyle(.borderedProminent).disabled(model.starting)
-                Button(model.revealSecret ? "收起配对密码" : "配对密码") { model.revealSecret.toggle() }
-            }
-            if model.revealSecret {
-                Text(model.secret.isEmpty ? "密码尚未读取，可点击下方按钮。" : model.secret)
-                    .font(.system(.caption, design: .monospaced)).textSelection(.enabled).frame(width: 450)
-                if model.secret.isEmpty {
-                    Button("读取配对密码") { model.retryPairing() }.disabled(model.starting)
-                } else {
-                    Button("复制配对密码") { NSPasteboard.general.clearContents(); NSPasteboard.general.setString(model.secret, forType: .string) }
+            VStack(alignment: .leading, spacing: 6) {
+                Text(sharingTitle).font(.headline)
+                Text(model.status).font(.callout).foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true).textSelection(.enabled)
+                if model.active && !AXIsProcessTrusted() {
+                    Button("允许键盘和鼠标控制") { model.openAccessibilitySettings() }
                 }
-            }
-            if model.revealSecret {
+            }.frame(maxWidth: .infinity, alignment: .leading)
+            Button(model.starting ? "正在启动…" : model.active ? "停止共享" : "开始共享") {
+                if model.active { model.stop() } else { model.start(requestPermission: true) }
+            }.buttonStyle(.borderedProminent).disabled(model.credentialBusy)
+            Divider()
+            VStack(alignment: .leading, spacing: 10) {
                 HStack {
-                    TextField("新密码：8–64 位，不含空格", text: $model.passwordDraft)
-                    Button("自动生成") { model.generatePassword() }.disabled(model.starting)
-                    Button("保存密码") { model.savePassword() }.disabled(model.starting || model.passwordDraft.isEmpty)
-                }.frame(width: 450)
-                Text("推荐生成 12 位密码。保存会断开原连接；Windows 需改填新密码。")
-                    .font(.caption).foregroundStyle(.secondary).frame(width: 450, alignment: .leading)
+                    Text(model.legacyCredential ? "当前密码（旧版密钥）" : "当前密码").font(.headline)
+                    Spacer()
+                    Button("修改密码…") { model.openPasswordEditor() }.disabled(model.credentialBusy)
+                }
+                HStack(alignment: .top, spacing: 12) {
+                    Text(passwordText).font(.system(.body, design: .monospaced))
+                        .fixedSize(horizontal: false, vertical: true).textSelection(.enabled)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .accessibilityLabel(model.revealSecret ? "当前配对密码" : "密码已隐藏")
+                    Button(model.readingPassword ? "读取中…" : model.revealSecret ? "隐藏" : "查看") {
+                        model.togglePasswordVisibility()
+                    }.disabled(model.credentialBusy)
+                    Button("复制") { model.copyPassword() }.disabled(model.secret.isEmpty || model.credentialBusy)
+                }
+                if model.legacyCredential {
+                    Text("旧版密钥仍然有效；点击“修改密码”可设置短密码。")
+                        .font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+                }
+                if !model.pairingMessage.isEmpty {
+                    Text(model.pairingMessage).font(.caption).fixedSize(horizontal: false, vertical: true)
+                }
+                Text("在 Windows 填写这台 Mac 的局域网 IP 和当前密码。")
+                    .font(.callout).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
             }
-            Text("文字与文件默认在已配对连接中共享，可在设置中关闭。")
-                .font(.caption).foregroundStyle(.secondary).frame(width: 450, alignment: .leading)
             if hasFileNotice {
                 HStack {
                     Text(model.fileStatus).font(.caption).frame(maxWidth: .infinity, alignment: .leading)
                     if fileTransferring { Button("取消传输") { model.cancelFiles() } }
-                }.frame(width: 450)
+                }
             }
             if !model.inputTestResult.isEmpty {
-                Text(model.inputTestResult).font(.caption).frame(width: 450, alignment: .leading).textSelection(.enabled)
+                Text(model.inputTestResult).font(.caption).fixedSize(horizontal: false, vertical: true).textSelection(.enabled)
             }
-            Text("Mac 需保持唤醒并登录；不支持 FileVault 预启动解锁。")
-                .font(.caption).foregroundStyle(.secondary)
-        }.padding(24).tint(blueberry)
+            Text("Mac 需保持唤醒并登录。剪贴板共享可在设置中调整。")
+                .font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+        }.frame(width: 450, alignment: .leading).padding(24).tint(blueberry)
+        .sheet(isPresented: $model.editingPassword, onDismiss: { model.cancelPasswordEditor() }) {
+            PasswordEditorView(model: model).tint(blueberry)
+        }
+    }
+}
+struct PasswordEditorView: View {
+    @ObservedObject var model: HostModel
+    var body: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            Text("修改配对密码").font(.title2)
+            Text("设置后，在 Windows 填写同一个密码。")
+                .font(.callout).foregroundStyle(.secondary)
+            VStack(alignment: .leading, spacing: 8) {
+                Text("新密码").font(.headline)
+                HStack {
+                    TextField("输入新密码", text: $model.passwordEditor.draft)
+                        .textFieldStyle(.roundedBorder).disabled(model.passwordEditor.saving)
+                    Button("自动生成") { model.generatePassword() }.disabled(model.passwordEditor.saving)
+                }
+                Text("8–64 位字母、数字或符号，不含空格；自动生成 12 位。")
+                    .font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+                if let message = model.passwordEditor.validation(current: model.secret) {
+                    Text(message).font(.caption).foregroundStyle(.red).fixedSize(horizontal: false, vertical: true)
+                }
+                if !model.passwordEditor.error.isEmpty {
+                    Text(model.passwordEditor.error).font(.caption).foregroundStyle(.red)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+            }
+            Text("保存后原密码失效，当前连接会断开。取消则不作修改。")
+                .font(.callout).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+            HStack {
+                if model.passwordEditor.saving { Text("正在安全保存…").font(.caption).foregroundStyle(.secondary) }
+                Spacer()
+                Button("取消") { model.cancelPasswordEditor() }
+                    .keyboardShortcut(.cancelAction).disabled(model.passwordEditor.saving)
+                Button("保存密码") { model.savePassword() }
+                    .keyboardShortcut(.defaultAction).buttonStyle(.borderedProminent)
+                    .disabled(!model.passwordEditor.canSave(current: model.secret))
+            }
+        }.frame(width: 420, alignment: .leading).padding(24)
+        .interactiveDismissDisabled(model.passwordEditor.saving)
     }
 }
