@@ -4,21 +4,6 @@
   <SolidColorBrush x:Key="{x:Static SystemColors.HighlightTextBrushKey}" Color="White"/>
   <Style TargetType="TextBox"><Setter Property="SelectionBrush" Value="#5265EC"/></Style>
   <Style TargetType="PasswordBox"><Setter Property="SelectionBrush" Value="#5265EC"/></Style>
-  <Style TargetType="CheckBox">
-   <Setter Property="Foreground" Value="#282C67"/>
-   <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="CheckBox">
-    <StackPanel Orientation="Horizontal">
-     <Border x:Name="CheckBorder" Width="16" Height="16" CornerRadius="3" BorderThickness="1" BorderBrush="#7C85BF" Background="White" VerticalAlignment="Center">
-      <Path x:Name="Tick" Data="M 3,8 L 6,11 L 12,4" Stroke="White" StrokeThickness="2" StrokeStartLineCap="Round" StrokeEndLineCap="Round" Visibility="Collapsed"/>
-     </Border>
-     <ContentPresenter Margin="6,0,0,0" VerticalAlignment="Center" RecognizesAccessKey="True"/>
-    </StackPanel>
-    <ControlTemplate.Triggers>
-     <Trigger Property="IsChecked" Value="True"><Setter TargetName="CheckBorder" Property="Background" Value="#5265EC"/><Setter TargetName="CheckBorder" Property="BorderBrush" Value="#5265EC"/><Setter TargetName="Tick" Property="Visibility" Value="Visible"/></Trigger>
-     <Trigger Property="IsEnabled" Value="False"><Setter Property="Opacity" Value="0.45"/></Trigger>
-    </ControlTemplate.Triggers>
-   </ControlTemplate></Setter.Value></Setter>
-  </Style>
   <Style x:Key="BrandConnectButton" TargetType="Button">
    <Setter Property="Foreground" Value="White"/>
    <Setter Property="FontWeight" Value="SemiBold"/>
@@ -36,32 +21,52 @@
   </Style>
  </Window.Resources>
  <DockPanel>
-  <StackPanel x:Name="Toolbar" DockPanel.Dock="Top" Margin="12,8,12,10">
-   <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
-    <Image x:Name="BrandLogo" Source="LocalRemote.png" Width="48" Height="48" Margin="0,0,10,0" AutomationProperties.Name="LocalRemote"/>
-    <TextBlock Text="LocalRemote" FontSize="22" FontWeight="SemiBold" VerticalAlignment="Center"/>
+  <DockPanel x:Name="Toolbar" DockPanel.Dock="Top" Margin="10,6,10,6">
+   <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
+    <Button x:Name="FullscreenButton" Content="全屏" ToolTip="F11 全屏 / 退出全屏" Click="FullscreenClick" Padding="8,4" Margin="8,0,6,0"/>
+     <Menu Background="Transparent" VerticalAlignment="Center" FontSize="13">
+      <MenuItem x:Name="SettingsMenu" Header="设置" Padding="10,5">
+       <MenuItem Header="剪贴板">
+        <MenuItem x:Name="ClipboardSync" Header="同步文字" IsCheckable="True" IsChecked="True" StaysOpenOnClick="True" ToolTip="同步新复制的纯文本，最多 32 KiB；只对已配对的 Mac 生效。"/>
+        <MenuItem x:Name="FileSync" Header="同步文件" IsCheckable="True" IsChecked="True" StaysOpenOnClick="True" ToolTip="复制普通文件后自动传输；暂不支持文件夹。只对已配对的 Mac 生效。"/>
+        <Separator/>
+        <MenuItem IsEnabled="False"><MenuItem.Header><TextBlock x:Name="ClipboardStatus" Text="文本同步：等待连接" FontSize="12"/></MenuItem.Header></MenuItem>
+        <MenuItem IsEnabled="False"><MenuItem.Header><TextBlock Text="{Binding ElementName=FileStatus,Path=Text}" FontSize="12"/></MenuItem.Header></MenuItem>
+       </MenuItem>
+       <MenuItem Header="键盘与连接">
+        <MenuItem x:Name="WindowsShortcuts" Header="Windows 快捷键" IsCheckable="True" IsChecked="True" StaysOpenOnClick="True" ToolTip="Ctrl 对应 Mac Command，Win 对应 Control；关闭后使用原生映射。"/>
+        <MenuItem x:Name="Reconnect" Header="自动重连" IsCheckable="True" IsChecked="True" StaysOpenOnClick="True"/>
+        <Separator/>
+        <MenuItem x:Name="ForgetButton" Header="忘记此连接" Click="ForgetClick"/>
+       </MenuItem>
+       <Separator/>
+       <MenuItem Header="打开接收目录" Click="OpenFilesClick"/>
+       <MenuItem x:Name="ShowPerformance" Header="显示性能数据" IsCheckable="True" StaysOpenOnClick="True"/>
+       <MenuItem Header="复制诊断" Click="DiagnosticsClick"/>
+      </MenuItem>
+     </Menu>
    </StackPanel>
+   <Image x:Name="BrandLogo" DockPanel.Dock="Left" Source="LocalRemote.png" Width="28" Height="28" Margin="0,0,8,0" AutomationProperties.Name="LocalRemote"/>
    <WrapPanel VerticalAlignment="Center">
-   <TextBox x:Name="Address" Width="155" ToolTip="优先填入上次记住的 Mac IP；首次使用填入本机局域网 IPv4"/>
-   <PasswordBox x:Name="Secret" Width="200" Margin="8,0" ToolTip="Paste the 64-character pairing key shown on Mac"/>
-   <ComboBox x:Name="Quality" SelectedIndex="0" Width="85" ToolTip="连接后也可切换；会短暂断开并自动按新画质重新连接"><ComboBoxItem>流畅</ComboBoxItem><ComboBoxItem>标准</ComboBoxItem><ComboBoxItem>高清</ComboBoxItem></ComboBox>
-   <Button x:Name="ConnectButton" Content="连接" Click="ConnectClick" Margin="8,0" Padding="16,5" Style="{StaticResource BrandConnectButton}"/>
-   <Button x:Name="ForgetButton" Content="忘记连接" Click="ForgetClick" Margin="0,0,8,0" Padding="8,4"/>
-   <Button Content="全屏 F11" Click="FullscreenClick" Padding="8,4"/>
-   <Button Content="复制诊断" Click="DiagnosticsClick" Padding="8,4" Margin="8,0,0,0"/>
-   <CheckBox x:Name="Reconnect" Content="自动重连" IsChecked="True" VerticalAlignment="Center" Margin="8,0"/>
-   <CheckBox x:Name="WindowsShortcuts" Content="Windows 快捷键" IsChecked="True" VerticalAlignment="Center" Margin="8,0" ToolTip="启用：Ctrl 对应 Mac Command，Win 对应 Control；关闭：Ctrl 对应 Control，Win 对应 Command。复制粘贴使用 Mac 的剪贴板。"/>
-   <CheckBox x:Name="ClipboardSync" Content="同步文本剪贴板" IsChecked="False" VerticalAlignment="Center" Margin="8,0" ToolTip="两端开启后同步新复制的纯文本，最多 32 KiB。复制的敏感文本也会发送到配对设备。"/>
-   <CheckBox x:Name="FileSync" Content="同步复制的文件" IsChecked="False" VerticalAlignment="Center" Margin="8,0" ToolTip="两端允许后，复制文件会自动传输，完成后在另一端粘贴；暂不支持文件夹。"/>
+    <StackPanel x:Name="ConnectionFields" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,8,0">
+     <TextBlock Text="Mac IP" VerticalAlignment="Center" Margin="0,0,5,0" FontSize="12"/>
+     <TextBox x:Name="Address" Width="126" Padding="4,4" ToolTip="Mac 的局域网 IPv4；优先填写上次记住的地址"/>
+     <TextBlock Text="密钥" VerticalAlignment="Center" Margin="8,0,5,0" FontSize="12"/>
+     <PasswordBox x:Name="Secret" Width="128" Padding="4,4" ToolTip="粘贴 Mac 上显示的配对密钥"/>
+    </StackPanel>
+    <TextBlock x:Name="ConnectionTarget" Visibility="Collapsed" VerticalAlignment="Center" Margin="0,0,12,0"/>
+    <ComboBox x:Name="Quality" SelectedIndex="0" Width="74" Padding="3,3" ToolTip="画质；连接后切换会短暂重连"><ComboBoxItem>流畅</ComboBoxItem><ComboBoxItem>标准</ComboBoxItem><ComboBoxItem>高清</ComboBoxItem></ComboBox>
+    <Button x:Name="ConnectButton" Content="连接" Click="ConnectClick" Margin="6,0,0,0" Padding="12,5" Style="{StaticResource BrandConnectButton}"/>
    </WrapPanel>
-   <TextBlock x:Name="ClipboardStatus" Text="文本同步：关闭" Margin="0,6,0,0" FontSize="12"/>
-   <WrapPanel Margin="0,4,0,0">
-    <TextBlock x:Name="FileStatus" Text="文件同步：关闭" FontSize="12" VerticalAlignment="Center"/>
-    <Button x:Name="CancelFiles" Content="取消传输" Click="CancelFilesClick" IsEnabled="False" Margin="8,0" Padding="6,2"/>
-    <Button Content="接收目录" Click="OpenFilesClick" Padding="6,2"/>
-   </WrapPanel>
-  </StackPanel>
-  <TextBlock x:Name="Status" DockPanel.Dock="Bottom" Text="填写 Mac IP 和配对密钥。Ctrl+Alt+Esc 释放输入；F11 切换全屏。" Margin="12,8" TextWrapping="Wrap"/>
+  </DockPanel>
+   <DockPanel x:Name="TransferNotice" DockPanel.Dock="Top" Visibility="Collapsed" Margin="12,0,12,8">
+    <StackPanel Orientation="Horizontal" DockPanel.Dock="Right">
+     <Button x:Name="CancelFiles" Content="取消传输" Click="CancelFilesClick" IsEnabled="False" Visibility="Collapsed" Margin="8,0" Padding="6,2"/>
+     <Button x:Name="DismissFileNotice" Content="收起" Click="DismissFilesClick" Padding="6,2"/>
+    </StackPanel>
+    <TextBlock x:Name="FileStatus" Text="文件同步：等待连接" FontSize="12" VerticalAlignment="Center" TextWrapping="Wrap"/>
+   </DockPanel>
+  <TextBlock x:Name="Status" DockPanel.Dock="Bottom" Text="输入 Mac 地址和配对密钥，连接后点击画面开始操作。" Margin="12,8" TextWrapping="Wrap"/>
   <Border x:Name="Surface" Background="Black" Focusable="True" ClipToBounds="True" InputMethod.IsInputMethodEnabled="False" KeyboardNavigation.TabNavigation="None"><Image x:Name="Desktop" Stretch="Uniform"/></Border>
  </DockPanel>
 </Window>

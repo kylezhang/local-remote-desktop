@@ -5,6 +5,8 @@ compiler="${SWIFTC:-swiftc}"
 stage="$(mktemp -d "${TMPDIR:-/tmp}/localremote-clipboard-check.XXXXXX")"
 trap 'rm -rf -- "$stage"' EXIT
 "$compiler" -parse-as-library "$root/apps/macos/Sources/LocalRemote/TextClipboardSync.swift" "$root/tests/ClipboardChecks/Check.swift" -o "$stage/check"
+"$compiler" -parse-as-library "$root/apps/macos/Sources/LocalRemote/SharingPreferences.swift" "$root/tests/ClipboardChecks/PreferenceCheck.swift" -o "$stage/preferences"
+"$stage/preferences"
 "$stage/check"
 if [[ "$(uname -s)" == Darwin ]]; then
     xcrun swift build --package-path "$root/apps/macos" --scratch-path "$stage/native-build" -c release

@@ -73,7 +73,7 @@ Both devices must be reachable on the same network. Allow TCP **47980** to the M
 
 The development branch enables **Windows shortcuts** by default: Ctrl+C/V operates the Mac clipboard. Disable it for the original Ctrl→Control / Win→Command mapping. Published v0.1.0 packages still use that original mapping.
 
-Development builds implement **optional bidirectional text and file clipboard sharing**. Enable the corresponding option on both devices, then copy again. Text is limited to 32 KiB; regular files transfer automatically with progress and cancellation, without repeated pairing or per-file dialogs. Windows encrypted-peer/UI tests pass; native Mac acceptance is pending. Published v0.1.0 packages do not include clipboard sharing. See the [user guide](docs/usage.md#text-clipboard-sync-development) and [file guide](docs/files.md) for supported formats and limits.
+Development builds implement **bidirectional text and file clipboard sharing**, enabled by default for paired sessions. Both apps remember an explicit off choice in Settings → Clipboard. Wait for the enabled status, then copy again. Text is limited to 32 KiB; regular files transfer automatically with progress and cancellation, without repeated pairing or per-file dialogs. Windows encrypted-peer/UI tests pass; native Mac acceptance is pending. Published v0.1.0 packages do not include clipboard sharing. See the [user guide](docs/usage.md#text-clipboard-sync-development) and [file guide](docs/files.md) for supported formats and limits.
 
 Quality changes briefly reconnect the session. See the [user guide](docs/usage.md) for controls, picture settings and connection help.
 

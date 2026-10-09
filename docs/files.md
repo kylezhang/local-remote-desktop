@@ -9,8 +9,9 @@ pass; native Mac and real two-device acceptance remain pending.
 ## Use it
 
 1. Update both apps and connect normally using the existing pairing key.
-2. On Mac, enable **允许双向文件复制粘贴**. On Windows, enable
-   **同步复制的文件**. Wait for the enabled status.
+2. File sharing starts enabled unless previously disabled. Both apps remember
+   your choice. Adjust it in **设置 → 剪贴板 → 同步文件** (Settings → Clipboard →
+   Sync Files). Wait for the enabled status in the Windows menu.
 3. Copy files in Explorer or Finder. Transfer starts automatically. When the status
    says ready, paste in Finder on the Mac or Explorer on Windows.
 

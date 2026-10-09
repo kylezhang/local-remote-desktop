@@ -9,16 +9,25 @@ The current UI is Chinese. English localization is planned. These labels help ma
 | Label | Meaning |
 |---|---|
 | 开始共享 / 停止共享 | Start Sharing / Stop Sharing (Mac) |
-| 显示配对密钥 | Show Pairing Key (Mac) |
+| 配对密钥 / 收起配对密钥 | Show / Hide Pairing Key (Mac) |
 | 复制配对密钥 | Copy Pairing Key (Mac) |
-| 打开权限设置 | Open Permission Settings (Mac) |
+| 设置 → 权限 | Permission Settings (Mac) |
 | 连接 / 断开 | Connect / Disconnect (Windows) |
-| 忘记连接 | Forget Connection (Windows) |
+| 忘记此连接 | Forget Connection (Windows) |
 | 流畅 / 标准 / 高清 | Smooth / Standard / High |
 | 复制诊断 | Copy Diagnostics (Windows) |
 | Windows 快捷键 | Windows Shortcuts (development update) |
-| 同步文本剪贴板 | Sync Text Clipboard (Windows development update) |
-| 允许双向文本剪贴板同步 | Allow Bidirectional Text Clipboard (Mac development update) |
+| 设置 → 剪贴板 → 同步文字 / 同步文件 | Text / File Sharing (both apps, development update) |
+
+## Interface organization
+
+Windows uses one compact toolbar for connection, quality, Full Screen and
+Settings. The title bar already identifies the app, so the toolbar uses just its icon. After connecting, the IP/key fields become a short Mac
+address label. Settings groups clipboard, keyboard/connection and diagnostic
+options; performance counters are hidden until enabled. Transfer progress and
+errors appear only when needed, including in full screen. Completed notices can
+be dismissed. Mac keeps sharing and pairing controls visible; clipboard,
+permissions and diagnostics are in Settings.
 
 ## Connect and control
 
@@ -26,17 +35,18 @@ Start sharing on the awake, logged-in Mac. On Windows, enter the Mac's IPv4 addr
 
 Click the picture for keyboard focus. In the development update, **Windows Shortcuts** is enabled by default: Ctrl maps to Mac Command, Win to Control, Alt to Option and Shift to Shift. Ctrl+C/V/X/A/Z/S therefore sends the corresponding Command shortcut. Ctrl+Shift combinations retain Shift. Changing this mode releases held remote keys; the choice is remembered on Windows. Disable it to use the original mapping (Ctrl→Control, Win→Command), including Control+C for a terminal interrupt. Published v0.1.0 packages use the original mapping.
 
-These shortcuts operate the Mac's own clipboard; transferring text between devices requires the separate opt-in below. Windows-reserved shortcuts such as Alt+Tab or Win combinations may stay local. Windows input-method composition is not transmitted; the Mac's own input method can process physical keys.
+These shortcuts operate the Mac's own clipboard; cross-device text sharing uses the separate setting below, enabled by default in current development builds. Windows-reserved shortcuts such as Alt+Tab or Win combinations may stay local. Windows input-method composition is not transmitted; the Mac's own input method can process physical keys.
 
 F11 toggles full screen. Ctrl+Alt+Esc releases remote input and restores local focus. Clicking a local button also moves keyboard focus away from the picture. Stop Sharing or quit the Mac application to end sharing. Closing its window alone does not quit the background application.
 
 ## Text clipboard sync (development)
 
-Update both devices from main. Mac: enable **允许双向文本剪贴板同步**; Windows:
-enable **同步文本剪贴板**. Wait for Windows status **已启用**, then copy text again.
-Both options start off on each app launch and retain their selection across
-quality changes/reconnects. Older peers keep desktop control working and report
-sync unsupported. If only Windows opts in, it waits for Mac consent.
+Update both devices from main. Text sharing starts enabled unless previously
+disabled. Both devices remember the choice across app launches. Adjust it in
+**设置 → 剪贴板 → 同步文字** (Settings → Clipboard → Sync Text). Wait for status
+**已启用** in that menu, then copy text again. Quality changes/reconnects retain
+the selection. Older peers keep desktop control working and report sync
+unsupported. If Mac has sharing disabled, Windows waits for Mac consent.
 
 - Copy plain text in a Windows application, focus the remote picture, then Ctrl+V
   with Windows Shortcuts enabled. The fresh clipboard update is queued before

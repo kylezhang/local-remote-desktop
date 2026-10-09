@@ -120,12 +120,17 @@ foreach(int modifiers in Enumerable.Range(0,16)) {
 Console.WriteLine("PASS Windows/native shortcut mappings: both modifier sides, all Shift/Control/Alt/Win combinations");
 var preferencePath=Path.Combine(Path.GetTempPath(),"localremote-preference-"+Guid.NewGuid().ToString("N")+".dpapi");
 try {
+    Assert(SecretStore.LoadFileSync(preferencePath) && SecretStore.LoadClipboardSync(preferencePath),"fresh sharing preferences should default on");
     Assert(SecretStore.LoadWindowsShortcuts(preferencePath),"missing shortcut preference should default on");
     SecretStore.SaveWindowsShortcuts(false,preferencePath); Assert(!SecretStore.LoadWindowsShortcuts(preferencePath),"native preference not restored");
     SecretStore.SaveWindowsShortcuts(true,preferencePath); Assert(SecretStore.LoadWindowsShortcuts(preferencePath),"Windows preference not restored");
     File.WriteAllBytes(preferencePath,new byte[]{0}); Assert(SecretStore.LoadWindowsShortcuts(preferencePath),"corrupt preference did not recover to default");
+    Assert(!SecretStore.LoadClipboardSync(preferencePath),"corrupt text-sharing preference must default off");
+    SecretStore.SaveClipboardSync(false,preferencePath); Assert(!SecretStore.LoadClipboardSync(preferencePath),"text revocation not remembered");
+    SecretStore.SaveClipboardSync(true,preferencePath); Assert(SecretStore.LoadClipboardSync(preferencePath),"text permission not remembered");
+    File.WriteAllBytes(preferencePath,new byte[]{0});
     Assert(!SecretStore.LoadFileSync(preferencePath),"corrupt file-sharing preference must default off");
     SecretStore.SaveFileSync(true,preferencePath); Assert(SecretStore.LoadFileSync(preferencePath),"file permission not remembered");
     SecretStore.SaveFileSync(false,preferencePath); Assert(!SecretStore.LoadFileSync(preferencePath),"file revocation not remembered");
 } finally { File.Delete(preferencePath); }
-Console.WriteLine("PASS shortcut preference: current-user DPAPI roundtrip, missing/corrupt recovery, isolated from user settings");
+Console.WriteLine("PASS clipboard defaults/explicit-off/corruption and shortcut preference: current-user DPAPI roundtrip, missing/corrupt recovery, isolated from user settings");

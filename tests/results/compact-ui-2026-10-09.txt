@@ -1,0 +1,28 @@
+LocalRemote compact toolbar/default sharing checks — 2026-10-09
+Curated summary, not a raw console log. Unreleased main; published assets unchanged.
+
+Exact self-contained Windows x64 LocalRemote.dll SHA256:
+de95977fd569b6290df8ea754aef7bfd8601057e936da697bd530f6767344325
+.NET SDK 8.0.425 / runtime 8.0.31. Mac internal build 15 / public version 0.1.0.
+
+PASS exact WPF candidate against independent encrypted loopback peers:
+  one-row toolbar below 40 logical pixels at minimum 720 window width;
+  connected credentials collapsed, restored on disconnect; idle notices hidden;
+  transfer notices visible/cancellable and separate from fullscreen toolbar;
+  completed notice dismissible; optional performance counters show/hide;
+  text/file defaults on, no pre-existing clipboard transmitted;
+  both-direction text and regular-file transfers, byte comparison and no echo;
+  stale request/revocation/recovery, newer copy priority and cancellation cleanup;
+  paste readiness, input/video during file jobs, shortcuts/digits/pointer/focus;
+  permission feedback, quality changes/reconnect/disconnect and FFmpeg close cleanup.
+PASS current-user DPAPI defaults on for missing preferences, explicit off/on
+  roundtrip, corrupt sharing preferences remain off. Original ProtocolChecks pass.
+PASS real Swift 5.9.2 Linux compiler: production SharingPreferences with isolated
+  UserDefaults suite (fresh on, saved off/on); text state and mocked Mac adapter.
+PASS syntax of 15 Swift source/package files; bilingual docs/versions/icon/hygiene.
+Visual review: exported WPF toolbar at 720 disconnected and 1280 connected,
+  single row with readable controls and no clipping. Synthetic test clipboards only.
+
+No native macOS SDK/SwiftUI compilation, TCC/Keychain or two-device acceptance
+performed in this Windows environment. Linux adapter mocks do not validate Apple
+frameworks. Historical file test results describe the earlier default-off build.

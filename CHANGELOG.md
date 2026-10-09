@@ -4,6 +4,11 @@
 
 ## Unreleased
 
+- Text/file sharing now defaults on for paired sessions and remembers explicit
+  off choices. Simplified Windows/Mac controls into Settings; Windows uses one compact toolbar, connected Windows
+  credentials collapse, performance data is optional and file notices appear as
+  needed. Mac internal build 15; public version/published packages unchanged.
+
 - Added optional bidirectional regular-file clipboard sharing to development builds:
   automatic copy-triggered transfers on a separate encrypted TCP channel, existing
   pairing reuse plus desktop-session/consent binding, bounded chunks, SHA-256 and
@@ -16,7 +21,7 @@
 - Added opt-in bidirectional plain-text clipboard sync to development builds:
   capability/mutual-consent negotiation, encrypted bounded UTF-8 transport,
   stale-request rejection, echo suppression, busy-write recovery and text-before-paste
-  ordering. Both apps start with sync off. C#/Swift state tests, mocked Mac adapter
+  ordering. Defaults were initially off; the later UI update above enables new preferences. C#/Swift state tests, mocked Mac adapter
   and exact rebuilt WPF encrypted-peer tests pass; native Mac acceptance is pending.
   Published v0.1.0 assets are unchanged.
 

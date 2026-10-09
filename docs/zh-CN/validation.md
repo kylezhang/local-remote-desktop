@@ -46,3 +46,7 @@ FileChecks 执行实际 C# 来源/接收与加密传输，独立回环模拟端�
 Swift 5.9.2 在 Linux 编译执行产品文件模型/传输，Wire 使用替身，CryptoKit 测试模块用 OpenSSL 做哈希；MacFiles 适配使用 AppKit/Darwin/Wire 模拟验证允许、元数据、基线、防重复、撤销/恢复、旧 ID 和停止定时器。**不等于 Apple CryptoKit/AppKit、原生套接字或 macOS SDK 验证**。Mac 运行同脚本还会构建完整 Host，此项待完成。命令见英文页。
 
 真实两机文件粘贴、并发局域网延迟及大文件吞吐仍未验证。发布包不变，见[文件范围与行为](files.md)。
+
+## 精简界面与默认共享（开发更新）
+
+最终 Windows 候选通过最小窗口单行布局、连接后收起密钥、文件提示、可选指标及已有加密模拟端远控/剪贴板回归。DPAPI 检查覆盖首次开启、主动关闭及损坏配置；真实 Swift 编译检查覆盖隔离 Mac 偏好。Mac 原生 SwiftUI/Apple SDK 验收仍待完成。见[记录](../../tests/results/compact-ui-2026-10-09.txt)。

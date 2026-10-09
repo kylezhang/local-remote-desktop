@@ -110,3 +110,12 @@ bash tests/FileChecks/check.sh
 Native two-machine file clipboard acceptance, concurrent LAN latency and large-file
 throughput remain unverified. Published release assets are unchanged. See [file
 behavior and limits](files.md).
+
+## Compact interface and defaults (development)
+
+The exact rebuilt Windows candidate passed one-row minimum-width layout,
+connected credentials, transient file notices, optional metrics and existing
+encrypted-peer input/video/text/file regressions. DPAPI checks cover fresh-on,
+explicit-off and corrupt preferences. Real Swift checks cover isolated Mac
+sharing preferences; full native SwiftUI/Apple SDK acceptance remains pending.
+See the [record](../tests/results/compact-ui-2026-10-09.txt).

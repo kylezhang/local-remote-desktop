@@ -48,9 +48,9 @@ final class HostModel: ObservableObject {
     @Published var keychainCheck = "尚未读取"
     // Avoid SwiftUI.State's SDK macro dependency in Command Line Tools builds.
     @Published var revealSecret = false
-    @Published var allowClipboard = false { didSet { host?.setClipboardAllowed(allowClipboard) } }
-    @Published var allowFiles = UserDefaults.standard.bool(forKey: "fileClipboardAllowed") { didSet { UserDefaults.standard.set(allowFiles, forKey: "fileClipboardAllowed"); host?.setFilesAllowed(allowFiles) } }
-    @Published var fileStatus = "文件同步：关闭"
+    @Published var allowClipboard = SharingPreferences.enabled("textClipboardAllowed") { didSet { UserDefaults.standard.set(allowClipboard, forKey: "textClipboardAllowed"); host?.setClipboardAllowed(allowClipboard) } }
+    @Published var allowFiles = SharingPreferences.enabled("fileClipboardAllowed") { didSet { UserDefaults.standard.set(allowFiles, forKey: "fileClipboardAllowed"); host?.setFilesAllowed(allowFiles) } }
+    @Published var fileStatus = "文件同步：等待连接"
     private var host: Host?
     private let preparation = SharingPreparation<Data>()
     private var pairingKey: Data? { preparation.cachedKey }
@@ -65,6 +65,11 @@ final class HostModel: ObservableObject {
     }
     init() {}
     func cancelFiles() { host?.cancelFiles() }
+    func openReceivedFiles() {
+        let root = MacFiles.receivedDirectory
+        do { try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true); NSWorkspace.shared.open(root) }
+        catch { fileStatus = "无法打开接收目录：\(error.localizedDescription)" }
+    }
     func retryPairing() {
         guard host == nil, !starting, pairingKey == nil else { return }
         starting = true; status = "正在读取配对密钥…"
@@ -175,48 +180,70 @@ struct HostView: View {
         return NSColor(srgbRed: 40.0 / 255.0, green: 44.0 / 255.0, blue: 103.0 / 255.0, alpha: 1)
     })
     private var brandIcon: NSImage? { AppBrand.icon }
+    private var hasFileNotice: Bool {
+        !model.fileStatus.hasPrefix("文件同步：") || model.fileStatus.contains("不可用")
+    }
+    private var fileTransferring: Bool {
+        model.fileStatus.hasPrefix("文件传输：") || model.fileStatus.hasPrefix("文件已复制")
+    }
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
-            HStack(spacing: 12) {
+            HStack(spacing: 10) {
                 if let icon = brandIcon {
                     Image(nsImage: icon).resizable().interpolation(.high).scaledToFit()
-                        .frame(width: 60, height: 60).accessibilityHidden(true)
+                        .frame(width: 40, height: 40).accessibilityHidden(true)
                 }
-                Text("LocalRemote 0.1.0").font(.title)
-                    .foregroundStyle(brandText)
+                Text("LocalRemote 0.1.0").font(.title2).foregroundStyle(brandText)
+                Spacer()
+                Menu("设置") {
+                    Section("剪贴板") {
+                        Toggle("同步文字", isOn: $model.allowClipboard)
+                        Toggle("同步文件", isOn: $model.allowFiles)
+                        Button("打开接收目录") { model.openReceivedFiles() }
+                    }
+                    Menu("权限") {
+                        Button("屏幕录制权限") { NSWorkspace.shared.open(URL(string:"x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture")!) }
+                        Button("辅助功能权限") { model.openAccessibilitySettings() }
+                    }
+                    Menu("诊断") {
+                        Button("本机键盘自检") { model.testInput() }
+                        Button("复制启动诊断") { model.copyDiagnostics() }
+                    }
+                    Divider()
+                    Button("退出 LocalRemote") { NSApplication.shared.terminate(nil) }
+                }.fixedSize()
             }
             Text(model.status).textSelection(.enabled).frame(width: 450, alignment: .leading).fixedSize(horizontal: false, vertical: true)
-            Text("在 Windows 填写此 Mac 的局域网 IP 和配对密钥。当前桌面会被共享；停止共享即可收回控制。").frame(width: 450, alignment: .leading)
-            Toggle("显示配对密钥（仅交给自己的 Windows）", isOn: $model.revealSecret)
-            Toggle("允许双向文本剪贴板同步", isOn: $model.allowClipboard)
-            Text("两端开启后同步新复制的纯文本，最多 32 KiB；可能包含敏感内容。")
-                .font(.caption).foregroundStyle(.secondary).frame(width: 450, alignment: .leading)
-            Toggle("允许双向文件复制粘贴", isOn: $model.allowFiles)
-            Text(model.fileStatus).font(.caption).frame(width: 450, alignment: .leading)
-            Button("取消文件传输") { model.cancelFiles() }
-            Button("打开接收目录") {
-                let root = MacFiles.receivedDirectory
-                do { try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true); NSWorkspace.shared.open(root) }
-                catch { model.fileStatus = "无法打开接收目录：\(error.localizedDescription)" }
+            Text("共享这台 Mac 的当前桌面。在 Windows 输入 Mac 的局域网 IP 和配对密钥即可连接。")
+                .frame(width: 450, alignment: .leading)
+            HStack {
+                Button(model.starting ? "正在检查…" : model.active ? "停止共享" : "开始共享") {
+                    if model.active { model.stop() } else { model.start(requestPermission: true) }
+                }.buttonStyle(.borderedProminent).disabled(model.starting)
+                Button(model.revealSecret ? "收起配对密钥" : "配对密钥") { model.revealSecret.toggle() }
             }
-            Text("复制普通文件后自动传输，完成后在另一端粘贴。暂不支持文件夹。")
-                .font(.caption).foregroundStyle(.secondary).frame(width: 450, alignment: .leading)
             if model.revealSecret {
                 Text(model.secret.isEmpty ? "密钥尚未读取，可点击下方按钮。" : model.secret)
                     .font(.system(.caption, design: .monospaced)).textSelection(.enabled).frame(width: 450)
-                Button("复制配对密钥") { NSPasteboard.general.clearContents(); NSPasteboard.general.setString(model.secret, forType: .string) }.disabled(model.secret.isEmpty)
-                if model.secret.isEmpty { Button("读取配对密钥") { model.retryPairing() }.disabled(model.starting) }
+                if model.secret.isEmpty {
+                    Button("读取配对密钥") { model.retryPairing() }.disabled(model.starting)
+                } else {
+                    Button("复制配对密钥") { NSPasteboard.general.clearContents(); NSPasteboard.general.setString(model.secret, forType: .string) }
+                }
             }
-            HStack {
-                Button(model.starting ? "正在检查…" : model.active ? "停止共享" : "开始共享") { if model.active { model.stop() } else { model.start(requestPermission: true) } }.buttonStyle(.borderedProminent).disabled(model.starting)
-                Button("屏幕权限") { NSWorkspace.shared.open(URL(string:"x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture")!) }
-                Button("辅助功能权限") { model.openAccessibilitySettings() }
-                Button("退出") { NSApplication.shared.terminate(nil) }
+            Text("文字与文件默认在已配对连接中共享，可在设置中关闭。")
+                .font(.caption).foregroundStyle(.secondary).frame(width: 450, alignment: .leading)
+            if hasFileNotice {
+                HStack {
+                    Text(model.fileStatus).font(.caption).frame(maxWidth: .infinity, alignment: .leading)
+                    if fileTransferring { Button("取消传输") { model.cancelFiles() } }
+                }.frame(width: 450)
             }
-            Button("本机键盘自检") { model.testInput() }
-            Button("复制启动诊断") { model.copyDiagnostics() }
-            if !model.inputTestResult.isEmpty { Text(model.inputTestResult).font(.caption).frame(width: 450, alignment: .leading).textSelection(.enabled) }
-            Text("仅支持正常登录后的用户会话；不支持 FileVault 预启动解锁。\n端口 47980、47981；不传输音频、不写录像文件。").font(.caption).foregroundStyle(.secondary)
+            if !model.inputTestResult.isEmpty {
+                Text(model.inputTestResult).font(.caption).frame(width: 450, alignment: .leading).textSelection(.enabled)
+            }
+            Text("Mac 需保持唤醒并登录；不支持 FileVault 预启动解锁。")
+                .font(.caption).foregroundStyle(.secondary)
         }.padding(24).tint(blueberry)
     }
 }

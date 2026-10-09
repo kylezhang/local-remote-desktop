@@ -3,14 +3,14 @@
 [简体中文](zh-CN/next-release.md) · [Roadmap](roadmap.md)
 
 Status on 2026-10-09: development on main. **Not released.** Public app versions
-remain 0.1.0 until release preparation; Mac internal build number is 13.
+remain 0.1.0 until release preparation; Mac internal build number is 15.
 Existing v0.1.0 tag and assets remain unchanged.
 
 ## Implemented and locally checked
 
 - [x] Optional text clipboard implementation on main: both-platform portable
   state, mocked Mac adapter and exact Windows WPF/encrypted-peer checks passed.
-  Both apps default off; native Mac and two-device acceptance remain pending.
+  Both apps default on for paired sessions and remember explicit off choices; native Mac and two-device acceptance remain pending.
   Clipboard is a roadmap v0.2.0 feature under development, not a released claim.
 
 - [x] Bounded Windows decoder diagnostics, idempotent disposal and direct cleanup
@@ -44,7 +44,7 @@ Existing v0.1.0 tag and assets remain unchanged.
 - [x] Remembered Windows shortcut mode converts Ctrl→Command and Win→Control,
   releases held keys on change and retains native mapping. Actual WPF shortcut
   chords passed through the encrypted mock peer. Real Mac application acceptance
-  is pending; clipboard synchronization has a separate opt-in.
+  is pending; clipboard synchronization has separate, remembered settings and now defaults on for paired sessions.
 
 ## Required before publishing v0.1.1
 

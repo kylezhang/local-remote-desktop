@@ -41,3 +41,8 @@ directory. File-transfer progress is throttled, copied file paths are excluded
 from text sync, received writes suppress echo, and newer local copies take priority.
 File pacing leaves bandwidth for the desktop but is not a latency guarantee.
 Completed files remain on disk; see the [file guide](files.md).
+
+Text and file sharing default to on for new preferences, remain scoped to
+authenticated paired sessions and remember explicit revocation across launches.
+No existing clipboard contents are sent on connection. Platform preferences are
+UserDefaults on Mac and current-user DPAPI on Windows.

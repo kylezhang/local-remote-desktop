@@ -47,12 +47,38 @@ static class Program {
             var window=new MainWindow(false,()=>fakeModifiers,board,fileBoard,fileRoot,host.Port,fileServer.Port) { Left=-20000,Top=-20000,ShowActivated=false,ShowInTaskbar=false };
             try {
                 window.Show();
+                var toolbar=(FrameworkElement)window.FindName("Toolbar");
+                var fields=(FrameworkElement)window.FindName("ConnectionFields");
+                var notice=(FrameworkElement)window.FindName("TransferNotice");
+                var metrics=(MenuItem)window.FindName("ShowPerformance");
+                Assert(!metrics.IsChecked && notice.Visibility==Visibility.Collapsed,"idle UI shows optional details");
+                Assert(ReferenceEquals(notice.Parent,toolbar.Parent),"file notice would be hidden with fullscreen toolbar");
+                void Snapshot(string name) {
+                    var root=Environment.GetEnvironmentVariable("LOCALREMOTE_UI_SNAPSHOTS"); if(string.IsNullOrEmpty(root)) return;
+                    window.UpdateLayout(); Directory.CreateDirectory(root);
+                    var image=new System.Windows.Media.Imaging.RenderTargetBitmap((int)Math.Ceiling(toolbar.ActualWidth),(int)Math.Ceiling(toolbar.ActualHeight),96,96,System.Windows.Media.PixelFormats.Pbgra32);
+                    var drawing=new System.Windows.Media.DrawingVisual();
+                    using(var context=drawing.RenderOpen()) {
+                        var bounds=new Rect(0,0,toolbar.ActualWidth,toolbar.ActualHeight);
+                        context.DrawRectangle(new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(247,248,255)),null,bounds);
+                        context.DrawRectangle(new System.Windows.Media.VisualBrush(toolbar),null,bounds);
+                    }
+                    image.Render(drawing); var png=new System.Windows.Media.Imaging.PngBitmapEncoder(); png.Frames.Add(System.Windows.Media.Imaging.BitmapFrame.Create(image));
+                    using var stream=File.Create(Path.Combine(root,name+".png")); png.Save(stream);
+                }
+                window.Width=720; window.UpdateLayout(); Assert(toolbar.ActualHeight<40,"toolbar wraps excessively at minimum window width");
+                Snapshot("disconnected-720"); window.Width=1280;
+
                 ((TextBox)window.FindName("Address")).Text="127.0.0.1";
                 ((PasswordBox)window.FindName("Secret")).Password=Convert.ToHexString(host.Key);
-                ((CheckBox)window.FindName("Reconnect")).IsChecked=false;
+                ((MenuItem)window.FindName("Reconnect")).IsChecked=false;
                 var connect=(Button)window.FindName("ConnectButton"); var surface=(UIElement)window.FindName("Surface");
                 connect.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
                 await Until(()=>((Image)window.FindName("Desktop")).Source!=null,"real client did not decode/display mock H264");
+                Assert(fields.Visibility==Visibility.Collapsed && ((FrameworkElement)window.FindName("ConnectionTarget")).Visibility==Visibility.Visible,"connected credentials remain visible");
+                Assert(notice.Visibility==Visibility.Collapsed,"idle sharing consumes toolbar space");
+                Snapshot("connected-1280");
+                Console.WriteLine("PASS compact minimum-width toolbar, hidden connected credentials and optional details");
                 Console.WriteLine("PASS real WPF client authenticates, receives H264 and creates displayed bitmap");
                 Assert(!InputMethod.GetIsInputMethodEnabled(surface),"local IME can consume remote input");
                 foreach(var key in new[]{Key.A,Key.D0,Key.D1,Key.NumPad0,Key.NumPad9,Key.Enter,Key.LeftCtrl,Key.LeftAlt,Key.LWin}) {
@@ -86,7 +112,7 @@ static class Program {
                 fakeModifiers=ModifierKeys.Control; Raise(Key.LeftCtrl,true);
                 await Until(()=>host.Inputs.Count(x=>x.GetProperty("op").GetString()=="key_event")==51,"held Ctrl not delivered");
                 int releases=host.Inputs.Count(x=>x.GetProperty("op").GetString()=="release_all");
-                ((CheckBox)window.FindName("WindowsShortcuts")).IsChecked=false;
+                ((MenuItem)window.FindName("WindowsShortcuts")).IsChecked=false;
                 await Until(()=>host.Inputs.Count(x=>x.GetProperty("op").GetString()=="release_all")>releases,"keyboard mode switch left modifiers held");
                 fakeModifiers=ModifierKeys.None; Raise(Key.LeftCtrl,false);
                 fakeModifiers=ModifierKeys.Control|ModifierKeys.Shift; Raise(Key.RightCtrl,true); Raise(Key.V,true); Raise(Key.V,false);
@@ -96,7 +122,7 @@ static class Program {
                 Assert(native[0].GetProperty("vk").GetInt32()==163 && native[3].GetProperty("vk").GetInt32()==163,"native right Control mapping changed");
                 Assert(native.Select(x=>x.GetProperty("flags").GetInt32()).SequenceEqual(new[]{3,3,3,0}),"native Control+Shift flags changed");
                 releases=host.Inputs.Count(x=>x.GetProperty("op").GetString()=="release_all");
-                ((CheckBox)window.FindName("WindowsShortcuts")).IsChecked=true;
+                ((MenuItem)window.FindName("WindowsShortcuts")).IsChecked=true;
                 await Until(()=>host.Inputs.Count(x=>x.GetProperty("op").GetString()=="release_all")>releases,"return to Windows shortcut mode did not release keys");
                 releases=host.Inputs.Count(x=>x.GetProperty("op").GetString()=="release_all");
                 fakeModifiers=ModifierKeys.Control|ModifierKeys.Alt; Raise(Key.Escape,true); fakeModifiers=ModifierKeys.None;
@@ -121,9 +147,15 @@ static class Program {
                 await host.Permission(true);
                 await Until(()=>!((TextBlock)window.FindName("Status")).Text.Contains("只能查看"),"permission recovery not shown");
                 Console.WriteLine("PASS Mac permission denial/recovery is reflected by real client");
-                var clipboardOption=(CheckBox)window.FindName("ClipboardSync");
+                metrics.IsChecked=true;
+                await Until(()=>((TextBlock)window.FindName("Status")).Text.Contains("Mbps"),"performance setting did not reveal metrics");
+                metrics.IsChecked=false;
+                await Until(()=>!((TextBlock)window.FindName("Status")).Text.Contains("Mbps"),"performance setting did not restore concise status");
+                Console.WriteLine("PASS optional performance menu shows and hides counters");
+                var clipboardOption=(MenuItem)window.FindName("ClipboardSync");
                 var clipboardStatus=(TextBlock)window.FindName("ClipboardStatus");
-                Assert(clipboardOption.IsChecked==false && board.Reads==0 && !host.Inputs.Any(x=>x.GetProperty("op").GetString()=="clipboard_text"),"default clipboard consent violated");
+                await Until(()=>clipboardStatus.Text.Contains("已启用"),"default text sharing did not negotiate");
+                Assert(clipboardOption.IsChecked && board.Reads==0 && !host.Inputs.Any(x=>x.GetProperty("op").GetString()=="clipboard_text"),"default sharing sent pre-existing clipboard");
                 clipboardOption.IsChecked=true;
                 await Until(()=>clipboardStatus.Text.Contains("已启用"),"clipboard negotiation failed");
                 Assert(board.Reads==0 && !host.Inputs.Any(x=>x.GetProperty("op").GetString()=="clipboard_text"),"enable sent existing clipboard");
@@ -154,9 +186,10 @@ static class Program {
                 await host.Capabilities(false); await Until(()=>clipboardStatus.Text.Contains("版本不支持"),"old peer did not degrade safely");
                 await host.Capabilities(true); await Until(()=>clipboardStatus.Text.Contains("已启用"),"new peer recovery failed");
                 Console.WriteLine("PASS WPF encrypted clipboard: mutual consent, both directions, before-paste ordering, Unicode, no echo, invalid payloads, revocation, stale IDs and old-peer fallback");
-                var fileOption=(CheckBox)window.FindName("FileSync");
+                var fileOption=(MenuItem)window.FindName("FileSync");
                 var fileStatus=(TextBlock)window.FindName("FileStatus");
-                Assert(fileOption.IsChecked==false && fileBoard.Reads==0,"file clipboard default consent violated");
+                await Until(()=>fileStatus.Text.Contains("已启用"),"default file sharing did not negotiate");
+                Assert(fileOption.IsChecked && fileBoard.Reads==0,"default file sharing sent pre-existing files");
                 fileOption.IsChecked=true;
                 await Until(()=>fileStatus.Text.Contains("已启用"),"file consent failed");
                 Assert(fileBoard.Reads==0 && fileServer.Uploaded.IsEmpty,"enable sent existing files");
@@ -169,9 +202,12 @@ static class Program {
                 Raise(Key.B,true); Raise(Key.B,false);
                 await Until(()=>host.Inputs.Any(x=>x.GetProperty("op").GetString()=="key_event" && x.GetProperty("vk").GetInt32()==66),"file upload blocked input");
                 Assert(((Button)window.FindName("CancelFiles")).IsEnabled,"file job finished before input concurrency was checked");
+                Assert(notice.Visibility==Visibility.Visible && !((Button)window.FindName("DismissFileNotice")).IsEnabled,"active transfer notice missing or dismissible");
                 await host.Video();
                 await Until(()=> (long)typeof(MainWindow).GetField("frames",System.Reflection.BindingFlags.NonPublic|System.Reflection.BindingFlags.Instance)!.GetValue(window)!>0,"video did not decode during file transfer");
                 await Until(()=>fileStatus.Text.Contains("文件已发送"),"automatic upload failed");
+                ((Button)window.FindName("DismissFileNotice")).RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                Assert(notice.Visibility==Visibility.Collapsed,"completed notice cannot be dismissed");
                 Assert(fileServer.Uploaded.TryDequeue(out var upload) && upload[0].SequenceEqual(data),"WPF upload bytes differ");
                 fakeModifiers=ModifierKeys.Control; Raise(Key.V,true); Raise(Key.V,false); fakeModifiers=ModifierKeys.None;
                 await Until(()=>host.Inputs.Count(x=>x.GetProperty("op").GetString()=="key_event" && x.GetProperty("vk").GetInt32()==86 && x.GetProperty("down").GetBoolean())==pastes+1,"completed-file paste blocked");
@@ -210,6 +246,7 @@ static class Program {
                 connect.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
                 await Until(()=>Equals(connect.Content,"连接"),"disconnect did not complete");
                 Assert(((Image)window.FindName("Desktop")).Source==null,"stale desktop after disconnect");
+                Assert(fields.Visibility==Visibility.Visible && notice.Visibility==Visibility.Collapsed,"disconnect did not restore compact connection UI");
                 Console.WriteLine("PASS disconnect cleans video/transport and restores controls");
                 var timer=(DispatcherTimer)typeof(MainWindow).GetField("render",System.Reflection.BindingFlags.NonPublic|System.Reflection.BindingFlags.Instance)!.GetValue(window)!;
                 Assert(!timer.IsEnabled,"disconnected client still polls display at 60Hz");
