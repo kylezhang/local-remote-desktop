@@ -58,7 +58,7 @@ Change detection runs every 500 ms, suppresses echo and retries busy writes for
 at most two seconds. A newer local copy cancels a pending remote write. Simultaneous
 copies can race; this is not clipboard history. Avoid immediately pasting after
 a remote copy or while the clipboard is busy. LocalRemote does not log or store
-clipboard contents. Windows UI/transport and portable Swift state/adapter tests
+text clipboard contents. Windows UI/transport and portable Swift state/adapter tests
 pass; native AppKit and real two-device paste acceptance remain pending.
 
 ## Picture quality
@@ -75,7 +75,7 @@ Selecting quality during a connection releases held input, closes the previous s
 
 ## Connection and permission help
 
-- Allow TCP 47980 to the Mac. Guest Wi-Fi isolation or VPN routing may prevent devices from reaching each other.
+- Allow TCP 47980 to the Mac, plus 47981 for optional file sharing. Guest Wi-Fi isolation or VPN routing may prevent devices from reaching each other.
 - Grant Screen Recording and Accessibility to the installed Mac application. After granting, quit/reopen rather than reinstall. Without Accessibility, viewing may work while control does not. See [Mac troubleshooting](macos.md).
 - Pairing keys are stored in Mac Keychain and Windows current-user DPAPI. Forget Connection clears the selected saved Windows connection. Never include the key in an issue, screenshot or public message.
 - Copy Diagnostics reports focus and input counters without the pairing key or typed content. KeyboardFocus=false after clicking the diagnostic button is expected. HostPosted means submitted to CGEvent, not accepted by the destination application.
@@ -83,8 +83,8 @@ Selecting quality during a connection releases held input, closes the previous s
 ## Session support
 
 One controller, the primary display and IPv4. Published v0.1.0 has no clipboard
-sync; development text sync is described above. No file transfer, audio, recording
-or automatic discovery yet. The Mac must be awake and logged in. No FileVault
+sync; development text sync is described above, and optional regular-file sharing
+is documented in the [file guide](files.md). No audio, recording or automatic discovery yet. The Mac must be awake and logged in. No FileVault
 Preboot bypass, new login session or guaranteed secure-field/lock-screen input.
 
 The protocol is encrypted and authenticated but has not had an independent security audit and does not provide forward secrecy. Use a trusted LAN and do not expose the port to the internet. See [protocol details](protocol.md) and [build/test status](validation.md).

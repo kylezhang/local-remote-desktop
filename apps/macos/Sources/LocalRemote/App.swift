@@ -49,6 +49,8 @@ final class HostModel: ObservableObject {
     // Avoid SwiftUI.State's SDK macro dependency in Command Line Tools builds.
     @Published var revealSecret = false
     @Published var allowClipboard = false { didSet { host?.setClipboardAllowed(allowClipboard) } }
+    @Published var allowFiles = UserDefaults.standard.bool(forKey: "fileClipboardAllowed") { didSet { UserDefaults.standard.set(allowFiles, forKey: "fileClipboardAllowed"); host?.setFilesAllowed(allowFiles) } }
+    @Published var fileStatus = "文件同步：关闭"
     private var host: Host?
     private let preparation = SharingPreparation<Data>()
     private var pairingKey: Data? { preparation.cachedKey }
@@ -62,6 +64,7 @@ final class HostModel: ObservableObject {
         NSWorkspace.shared.open(URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility")!)
     }
     init() {}
+    func cancelFiles() { host?.cancelFiles() }
     func retryPairing() {
         guard host == nil, !starting, pairingKey == nil else { return }
         starting = true; status = "正在读取配对密钥…"
@@ -123,7 +126,8 @@ final class HostModel: ObservableObject {
             checkingScreen = false
             self.displayPairingKey(key)
             let trusted = AXIsProcessTrusted()
-            let h = Host(key: key, clipboardAllowed: self.allowClipboard) { [weak self] text in DispatchQueue.main.async { self?.status = text } }
+            let h = Host(key: key, clipboardAllowed: self.allowClipboard, filesAllowed: self.allowFiles,
+                fileStatus: { [weak self] text in DispatchQueue.main.async { self?.fileStatus = text } }) { [weak self] text in DispatchQueue.main.async { self?.status = text } }
             try h.start(); self.host = h; self.active = true
             self.status = trusted ? "共享已启动，等待 Windows 连接 · TCP 47980" : "共享已启动（只能查看）· 辅助功能权限未被认可"
           } catch is CancellationError { }
@@ -185,7 +189,17 @@ struct HostView: View {
             Text("在 Windows 填写此 Mac 的局域网 IP 和配对密钥。当前桌面会被共享；停止共享即可收回控制。").frame(width: 450, alignment: .leading)
             Toggle("显示配对密钥（仅交给自己的 Windows）", isOn: $model.revealSecret)
             Toggle("允许双向文本剪贴板同步", isOn: $model.allowClipboard)
-            Text("两端开启后同步新复制的纯文本，最多 32 KiB；可能包含敏感内容。不传图片和文件。")
+            Text("两端开启后同步新复制的纯文本，最多 32 KiB；可能包含敏感内容。")
+                .font(.caption).foregroundStyle(.secondary).frame(width: 450, alignment: .leading)
+            Toggle("允许双向文件复制粘贴", isOn: $model.allowFiles)
+            Text(model.fileStatus).font(.caption).frame(width: 450, alignment: .leading)
+            Button("取消文件传输") { model.cancelFiles() }
+            Button("打开接收目录") {
+                let root = MacFiles.receivedDirectory
+                do { try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true); NSWorkspace.shared.open(root) }
+                catch { model.fileStatus = "无法打开接收目录：\(error.localizedDescription)" }
+            }
+            Text("复制普通文件后自动传输，完成后在另一端粘贴。暂不支持文件夹。")
                 .font(.caption).foregroundStyle(.secondary).frame(width: 450, alignment: .leading)
             if model.revealSecret {
                 Text(model.secret.isEmpty ? "密钥尚未读取，可点击下方按钮。" : model.secret)
@@ -202,7 +216,7 @@ struct HostView: View {
             Button("本机键盘自检") { model.testInput() }
             Button("复制启动诊断") { model.copyDiagnostics() }
             if !model.inputTestResult.isEmpty { Text(model.inputTestResult).font(.caption).frame(width: 450, alignment: .leading).textSelection(.enabled) }
-            Text("仅支持正常登录后的用户会话；不支持 FileVault 预启动解锁。\n端口 47980；不传输音频、不写录像文件。").font(.caption).foregroundStyle(.secondary)
+            Text("仅支持正常登录后的用户会话；不支持 FileVault 预启动解锁。\n端口 47980、47981；不传输音频、不写录像文件。").font(.caption).foregroundStyle(.secondary)
         }.padding(24).tint(blueberry)
     }
 }

@@ -55,6 +55,8 @@ static class SecretStore
     public static string LastHost() { try { return System.Text.Encoding.UTF8.GetString(Transform(File.ReadAllBytes(Path.Combine(DirectoryPath(),"last-host.dpapi")),false)); } catch { return ""; } }
     public static void SaveWindowsShortcuts(bool enabled,string? preferencePath=null) => File.WriteAllBytes(preferencePath??Path.Combine(DirectoryPath(),"windows-shortcuts.dpapi"),Transform(new byte[]{enabled?(byte)1:(byte)0},true));
     public static bool LoadWindowsShortcuts(string? preferencePath=null) { try { var data=Transform(File.ReadAllBytes(preferencePath??Path.Combine(DirectoryPath(),"windows-shortcuts.dpapi")),false); return data.Length!=1 || data[0]!=0; } catch { return true; } }
+    public static void SaveFileSync(bool enabled,string? preferencePath=null) => File.WriteAllBytes(preferencePath??Path.Combine(DirectoryPath(),"file-clipboard.dpapi"),Transform(new byte[]{enabled?(byte)1:(byte)0},true));
+    public static bool LoadFileSync(string? preferencePath=null) { try { var data=Transform(File.ReadAllBytes(preferencePath??Path.Combine(DirectoryPath(),"file-clipboard.dpapi")),false); return data.Length==1 && data[0]==1; } catch { return false; } }
     public static void Forget(string host) {
         File.Delete(PathFor(host));
         if (LastHost()==host) File.Delete(Path.Combine(DirectoryPath(),"last-host.dpapi"));

@@ -39,7 +39,12 @@ static class Program {
             // synthesized, and the offscreen test window does not activate itself.
             ModifierKeys fakeModifiers=ModifierKeys.None;
             var board=new TestClipboard(); board.Copy("existing private clipboard");
-            var window=new MainWindow(false,()=>fakeModifiers,board) { Left=-20000,Top=-20000,ShowActivated=false,ShowInTaskbar=false };
+            var fileBoard=new TestFileClipboard();
+            var fileRoot=Path.Combine(directory,"received");
+            using var fileServer=new MockFileServer(host.Key,host.FileSession,id=>host.FilesAllowed && id==host.FileRequestId);
+            host.FilePort=fileServer.Port;
+            var fileRunner=fileServer.Run();
+            var window=new MainWindow(false,()=>fakeModifiers,board,fileBoard,fileRoot,host.Port,fileServer.Port) { Left=-20000,Top=-20000,ShowActivated=false,ShowInTaskbar=false };
             try {
                 window.Show();
                 ((TextBox)window.FindName("Address")).Text="127.0.0.1";
@@ -149,6 +154,48 @@ static class Program {
                 await host.Capabilities(false); await Until(()=>clipboardStatus.Text.Contains("版本不支持"),"old peer did not degrade safely");
                 await host.Capabilities(true); await Until(()=>clipboardStatus.Text.Contains("已启用"),"new peer recovery failed");
                 Console.WriteLine("PASS WPF encrypted clipboard: mutual consent, both directions, before-paste ordering, Unicode, no echo, invalid payloads, revocation, stale IDs and old-peer fallback");
+                var fileOption=(CheckBox)window.FindName("FileSync");
+                var fileStatus=(TextBlock)window.FindName("FileStatus");
+                Assert(fileOption.IsChecked==false && fileBoard.Reads==0,"file clipboard default consent violated");
+                fileOption.IsChecked=true;
+                await Until(()=>fileStatus.Text.Contains("已启用"),"file consent failed");
+                Assert(fileBoard.Reads==0 && fileServer.Uploaded.IsEmpty,"enable sent existing files");
+                string file=Path.Combine(directory,"文件 📎.txt"); byte[] data=RandomNumberGenerator.GetBytes(2000003); File.WriteAllBytes(file,data);
+                fileBoard.Copy([file]);
+                int pastes=host.Inputs.Count(x=>x.GetProperty("op").GetString()=="key_event" && x.GetProperty("vk").GetInt32()==86 && x.GetProperty("down").GetBoolean());
+                fakeModifiers=ModifierKeys.Control; Raise(Key.V,true); Raise(Key.V,false); fakeModifiers=ModifierKeys.None;
+                await Task.Delay(40);
+                Assert(host.Inputs.Count(x=>x.GetProperty("op").GetString()=="key_event" && x.GetProperty("vk").GetInt32()==86 && x.GetProperty("down").GetBoolean())==pastes,"early paste sent old clipboard");
+                Raise(Key.B,true); Raise(Key.B,false);
+                await Until(()=>host.Inputs.Any(x=>x.GetProperty("op").GetString()=="key_event" && x.GetProperty("vk").GetInt32()==66),"file upload blocked input");
+                Assert(((Button)window.FindName("CancelFiles")).IsEnabled,"file job finished before input concurrency was checked");
+                await host.Video();
+                await Until(()=> (long)typeof(MainWindow).GetField("frames",System.Reflection.BindingFlags.NonPublic|System.Reflection.BindingFlags.Instance)!.GetValue(window)!>0,"video did not decode during file transfer");
+                await Until(()=>fileStatus.Text.Contains("文件已发送"),"automatic upload failed");
+                Assert(fileServer.Uploaded.TryDequeue(out var upload) && upload[0].SequenceEqual(data),"WPF upload bytes differ");
+                fakeModifiers=ModifierKeys.Control; Raise(Key.V,true); Raise(Key.V,false); fakeModifiers=ModifierKeys.None;
+                await Until(()=>host.Inputs.Count(x=>x.GetProperty("op").GetString()=="key_event" && x.GetProperty("vk").GetInt32()==86 && x.GetProperty("down").GetBoolean())==pastes+1,"completed-file paste blocked");
+                fileServer.Offer=FileSource.Prepare([file]); await host.FileOffer(fileServer.OfferId,fileServer.Offer.Items);
+                await Until(()=>fileBoard.Writes==1,"automatic download did not populate file clipboard");
+                Assert(File.ReadAllBytes(fileBoard.Paths![0]).SequenceEqual(data),"WPF received file corrupted");
+                await Task.Delay(650); Assert(fileServer.Uploaded.IsEmpty,"received file echoed back");
+                // A new local clipboard copy wins over an in-progress download.
+                fileServer.DelayMilliseconds=30; await host.FileOffer(fileServer.OfferId,fileServer.Offer.Items);
+                await Until(()=>((Button)window.FindName("CancelFiles")).IsEnabled,"download did not start");
+                fileBoard.Copy(null); await Task.Delay(750); Assert(fileBoard.Writes==1,"download replaced a newer local copy");
+                await Until(()=>!Directory.GetDirectories(fileRoot).Any(p=>Path.GetFileName(p).StartsWith(".incoming-")),"cancelled WPF job left partial files");
+                await host.FileOffer(fileServer.OfferId,fileServer.Offer.Items);
+                await Until(()=>((Button)window.FindName("CancelFiles")).IsEnabled,"cancel-button job did not start");
+                ((Button)window.FindName("CancelFiles")).RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                await Until(()=>!Directory.GetDirectories(fileRoot).Any(p=>Path.GetFileName(p).StartsWith(".incoming-")),"cancel button left partial files");
+                Assert(fileBoard.Writes==1,"cancelled job changed clipboard");
+                await host.FilesConsent(false); await Until(()=>fileStatus.Text.Contains("等待 Mac"),"file consent revocation failed");
+                fileBoard.Copy([file]); await Task.Delay(600); Assert(fileServer.Uploaded.IsEmpty,"files sent while revoked");
+                await host.FilesConsent(true); await Until(()=>fileStatus.Text.Contains("已启用"),"file consent recovery failed");
+                await Task.Delay(600); Assert(fileServer.Uploaded.IsEmpty,"re-enable sent existing files");
+                fileOption.IsChecked=false;
+                await host.FileOffer(fileServer.OfferId,fileServer.Offer.Items); await Task.Delay(150); Assert(fileBoard.Writes==1,"disabled file offer applied");
+                Console.WriteLine("PASS exact WPF file client: copy-triggered encrypted upload/download, input during transfer, paste readiness, no echo, newer copy wins, revocation/recovery and partial cleanup");
                 var quality=(ComboBox)window.FindName("Quality");
                 Assert(quality.IsEnabled,"quality selector disabled while connected");
                 var firstImage=((Image)window.FindName("Desktop")).Source;
@@ -178,15 +225,18 @@ static class Program {
                 Assert(!timer.IsEnabled,"closed window kept display timer running");
                 Assert(!clipboardTimer.IsEnabled,"closed window kept clipboard timer running");
                 Console.WriteLine("PASS disconnected display timer stops; closing connected window terminates the owned FFmpeg process");
-            } finally { window.Close(); host.Dispose(); }
+            } finally { window.Close(); host.Dispose(); fileServer.Dispose(); }
+            await fileRunner;
             try { await server; } catch(Exception ex) when(ex is OperationCanceledException or IOException or ObjectDisposedException or SocketException) {}
         } finally { Directory.Delete(directory,true); }
     }
 }
 
 sealed class MockHost:IDisposable {
-    readonly TcpListener listener=new(IPAddress.Loopback,47980);
-    readonly CancellationTokenSource stop=new(TimeSpan.FromSeconds(60));
+    readonly TcpListener listener=new(IPAddress.Loopback,0);
+    public int Port=>((IPEndPoint)listener.LocalEndpoint).Port;
+    public int FilePort;
+    readonly CancellationTokenSource stop=new(TimeSpan.FromSeconds(90));
     readonly SemaphoreSlim writes=new(1);
     readonly byte[] video;
     NetworkStream stream=null!; byte[] tx=[],rx=[]; ulong sent,received; TcpClient? peer;
@@ -194,13 +244,19 @@ sealed class MockHost:IDisposable {
     public ConcurrentQueue<JsonElement> Inputs {get;}=new();
     public ConcurrentQueue<int> Qualities {get;}=new();
     public long ClipboardRequestId {get;private set;}
+    public long FileRequestId {get;private set;}
+    public string FileSession {get;}=Convert.ToHexString(RandomNumberGenerator.GetBytes(32));
+    public bool FilesAllowed=true;
     bool clipboardAllowed=true;
     public MockHost(byte[] video) { this.video=video; listener.Start(); }
     static byte[] Join(params byte[][] arrays)=>arrays.SelectMany(x=>x).ToArray();
     static byte[] H(byte[] key,string label,byte[] transcript)=>HMACSHA256.HashData(key,Join(Encoding.ASCII.GetBytes(label),transcript));
     static byte[] Nonce(ulong value) { var n=new byte[12]; BinaryPrimitives.WriteUInt64BigEndian(n.AsSpan(4),value); return n; }
     public Task Permission(bool trusted)=>Json(new {op="heartbeat",accessibility=trusted,inputReceived=Inputs.Count,inputPosted=Inputs.Count,inputBlocked=0,inputRejected=0,inputError=""});
-    public Task Capabilities(bool clipboard)=>Json(new {op="capabilities",accessibility=true,clipboardText=clipboard});
+    public Task Video()=>Send(2,video);
+    public Task Capabilities(bool clipboard)=>Json(new {op="capabilities",accessibility=true,clipboardText=clipboard,fileClipboard=true,filePort=FilePort,fileSession=FileSession});
+    public Task FileOffer(string offer,FileItem[] items)=>Json(new {op="file_offer",offer,items,requestId=FileRequestId});
+    public Task FilesConsent(bool enabled) { FilesAllowed=enabled; return Json(new {op="file_sync",enabled,requestId=FileRequestId}); }
     public Task ClipboardAck(bool enabled,long request)=>Json(new {op="clipboard_sync",enabled,requestId=request});
     public Task ClipboardConsent(bool enabled) { clipboardAllowed=enabled; return ClipboardAck(enabled,ClipboardRequestId); }
     public Task ClipboardText(string text,long? request=null)=>Json(new {op="clipboard_text",encoding="utf8-base64url",text,requestId=request??ClipboardRequestId});
@@ -235,6 +291,10 @@ sealed class MockHost:IDisposable {
                     ClipboardRequestId=root.GetProperty("requestId").GetInt64();
                     await ClipboardAck(root.GetProperty("enabled").GetBoolean() && clipboardAllowed,ClipboardRequestId);
                 }
+                if(root.GetProperty("op").GetString()=="file_sync") {
+                    FileRequestId=root.GetProperty("requestId").GetInt64();
+                    await Json(new {op="file_sync",requestId=FileRequestId,enabled=root.GetProperty("enabled").GetBoolean() && FilesAllowed});
+                }
             }
         }
     }
@@ -250,4 +310,11 @@ sealed class TestClipboard : ITextClipboard {
     public void Copy(string text) { Text=text; Revision++; }
     public bool TryRead(out string? text) { Reads++; text=Text; return true; }
     public bool TryWrite(string text) { Writes++; Copy(text); return true; }
+}
+sealed class TestFileClipboard : IFileClipboard {
+    public long Revision {get;private set;}
+    public string[]? Paths; public int Reads,Writes;
+    public void Copy(string[]? paths) { Paths=paths; Revision++; }
+    public bool TryReadFiles(out string[]? paths) { Reads++; paths=Paths; return true; }
+    public bool TryWriteFiles(string[] paths) { Writes++; Copy(paths); return true; }
 }

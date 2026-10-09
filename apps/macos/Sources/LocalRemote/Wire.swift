@@ -52,13 +52,18 @@ final class Wire {
         try write(header + box.ciphertext + box.tag)
     }
     func json(_ object: [String: Any]) throws { try send(type: 1, payload: JSONSerialization.data(withJSONObject: object)) }
-    func receive() throws -> [String: Any] {
+    func receivePacket() throws -> (UInt8, Data) {
         let header = try read(4); let size = header.reduce(UInt32(0)) { ($0 << 8) | UInt32($1) }
         guard size >= 17 && size <= 65536 else { throw WireError.invalid }
         let body = try read(Int(size))
         let box = try AES.GCM.SealedBox(nonce: nonce(received), ciphertext: body.dropLast(16), tag: body.suffix(16)); received += 1
         let plain = try AES.GCM.open(box, using: rx, authenticating: header)
-        guard plain.first == 1, let object = try JSONSerialization.jsonObject(with: plain.dropFirst()) as? [String: Any] else { throw WireError.invalid }
+        guard let type = plain.first else { throw WireError.invalid }
+        return (type, Data(plain.dropFirst()))
+    }
+    func receive() throws -> [String: Any] {
+        let (type, payload) = try receivePacket()
+        guard type == 1, let object = try JSONSerialization.jsonObject(with: payload) as? [String: Any] else { throw WireError.invalid }
         return object
     }
     deinit { close(); Darwin.close(fd) }

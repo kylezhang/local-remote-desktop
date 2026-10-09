@@ -19,3 +19,13 @@ encoding=utf8-base64url、text；关闭、旧 ID 或非法载荷忽略。RML1/ve
 队列发送，Host 处理后再处理下一输入；剪贴板忙时不能保证立即可粘贴。
 
 首次密钥需可信渠道传递；存储使用 Keychain/DPAPI。没有独立审计、前向保密、证书体系、撤销界面或完整防拒绝服务。已知长期密钥及握手可解密历史流量；未认证连接可占用单连接槽直至超时。仅可信局域网，不公开端口。
+
+## 可选文件剪贴板
+
+capabilities 声明 fileClipboard、filePort=47981 和每次桌面连接新生成的 fileSession（64 hex）。file_sync 独立于文本允许，使用递增 requestId 和匹配确认；撤销即关闭文件连接。选择会记住，但开启/重连不发送已有剪贴板。
+
+Mac 新复制文件后发 file_offer（requestId、offer、items），offer 为最新来源批次的 32 hex 标识，items 只有 name/size，不含源路径。Windows 始终主动连接 TCP 47981，自动以原配对密钥执行 RML1 双向证明及新方向密钥派生，然后发 file_push（session、requestId、items）或 file_pull（session、requestId、offer）。Host 校验当前桌面令牌、允许状态和 ID 后回复 file_ready，拉取时还返回匹配元数据。不增加人工认证。
+
+按序传 file_start/index、类型 3 原始文件分块、file_end/index/sha256，最后 file_complete。类型 3 只用于文件连接；每块最多 32 KiB、加密包体最多 64 KiB。接收端校验长度及 SHA-256 后才提交本地生成目录。上传由 Host 回 file_done/clipboardReady，下载由 Client 提交后回 file_done，再尝试更新 Windows 剪贴板。新本地复制优先；完成文件保留，未完成的正常清理删除。
+
+最多 32 个普通文件，单个 4 GiB、合计 8 GiB；NFC 文件名最多 240 UTF-8 字节且忽略大小写不重名，拒绝路径分隔符、设备名、末尾点/空格。不支持文件夹/符号链接。约 4 MiB/s 节流，接收等待 15 秒、总任务一小时，取消关闭连接。不提供任意远程文件系统操作，不删除源文件。此为 LocalRemote 扩展，不兼容 LocalSend 协议；详见[文件指南](files.md)及英文完整规范。

@@ -31,6 +31,10 @@ public partial class MainWindow : Window
     IVideoDecoder? activeDecoder;
     bool windowClosing;
     readonly TextClipboardSync clipboard;
+    readonly FileClipboardSession files;
+    readonly int desktopPort;
+    bool pasteSuppressed;
+    readonly DispatcherTimer fileTimer=new() { Interval=TimeSpan.FromMilliseconds(500) };
     bool peerClipboard;
     long clipboardRequestId;
     readonly DispatcherTimer clipboardTimer=new() { Interval=TimeSpan.FromMilliseconds(500) };
@@ -38,11 +42,22 @@ public partial class MainWindow : Window
     readonly DispatcherTimer render = new() { Interval=TimeSpan.FromMilliseconds(16) };
     public MainWindow():this(true) {}
     internal MainWindow(bool remember):this(remember,null) {}
-    internal MainWindow(bool remember, Func<ModifierKeys>? modifiers, ITextClipboard? board=null) {
+    internal MainWindow(bool remember, Func<ModifierKeys>? modifiers, ITextClipboard? board=null, IFileClipboard? fileBoard=null, string? fileRoot=null, int desktopPort=47980, int filePort=47981) {
         rememberConnection=remember;
+        this.desktopPort=desktopPort;
         readModifiers=modifiers ?? (()=>Keyboard.Modifiers);
         clipboard=new TextClipboardSync(board ?? (remember?new WindowsClipboard():new DisabledClipboard()));
         InitializeComponent(); var savedHost=remember?SecretStore.LastHost():""; Address.Text=savedHost.Length>0?savedHost:LocalAddress.Find(); Secret.Password=remember?SecretStore.Load(Address.Text):"";
+        files=new FileClipboardSession(fileBoard ?? (remember?new WindowsFileClipboard():new DisabledFileClipboard()),ClipboardMessage,
+            (text,busy)=> { FileStatus.Text=text; CancelFiles.IsEnabled=busy; }, action=>Dispatcher.BeginInvoke(action),fileRoot,filePort);
+        fileTimer.Tick+=(_,_)=>files.Poll();
+        FileSync.IsChecked=remember && SecretStore.LoadFileSync();
+        void FileModeChanged() {
+            files.Configure(FileSync.IsChecked==true);
+            if(rememberConnection) { try { SecretStore.SaveFileSync(FileSync.IsChecked==true); } catch(Exception ex) { FileStatus.Text=$"文件同步已切换，但无法保存选择：{ex.Message}"; } }
+        }
+        FileSync.Checked+=(_,_)=>FileModeChanged(); FileSync.Unchecked+=(_,_)=>FileModeChanged();
+        files.Configure(FileSync.IsChecked==true);
         clipboardTimer.Tick+=(_,_)=>PollClipboard();
         ClipboardSync.Checked+=(_,_)=>ClipboardModeChanged(); ClipboardSync.Unchecked+=(_,_)=>ClipboardModeChanged();
         WindowsShortcuts.IsChecked=!remember || SecretStore.LoadWindowsShortcuts();
@@ -64,7 +79,7 @@ public partial class MainWindow : Window
         Surface.LostMouseCapture+=(_,_)=> { if(Mouse.LeftButton==MouseButtonState.Pressed || Mouse.RightButton==MouseButtonState.Pressed || Mouse.MiddleButton==MouseButtonState.Pressed) Input(new {op="release_all"}); };
         PreviewKeyDown+=(_,e)=> { if(e.Key==System.Windows.Input.Key.F11) { ToggleFull(); e.Handled=true; } };
         Closing+=(_,_)=> {
-            render.Stop(); ResetClipboard(); session?.Cancel();
+            render.Stop(); ResetClipboard(); ResetFiles(); session?.Cancel();
             // App shutdown can stop Dispatcher continuations before Run's
             // finally executes. Kill the owned decoder directly while closing.
             lock(decoderGate) { windowClosing=true; activeDecoder?.Dispose(); activeDecoder=null; }
@@ -83,7 +98,11 @@ public partial class MainWindow : Window
         var mapped=KeyboardMapping.Map(KeyInterop.VirtualKeyFromKey(key),flags,WindowsShortcuts.IsChecked==true);
         // Queue a fresh local clipboard change ahead of the Mac paste key.
         // Both messages use the same encrypted writer/input ordering.
-        if(down && key==System.Windows.Input.Key.V && (mapped.Flags&8)!=0) PollClipboard();
+        if(key==System.Windows.Input.Key.V && !down && pasteSuppressed) { pasteSuppressed=false; e.Handled=true; return; }
+        if(down && key==System.Windows.Input.Key.V && (mapped.Flags&8)!=0) {
+            PollClipboard(); files.Poll();
+            if(!files.PasteReady) { pasteSuppressed=true; FileStatus.Text=files.Busy?"文件正在传输，完成后再粘贴":"文件未就绪，请重新复制文件后重试"; e.Handled=true; return; }
+        }
         Input(new {op="key_event",vk=mapped.VirtualKey,down,flags=mapped.Flags}); e.Handled=true;
     }
     void ClipboardMessage(object message) {
@@ -102,6 +121,15 @@ public partial class MainWindow : Window
     void ResetClipboard() {
         clipboardTimer.Stop(); clipboard.SetEnabled(false); peerClipboard=false;
         ClipboardStatus.Text=ClipboardSync.IsChecked==true?"文本同步：等待连接":"文本同步：关闭";
+    }
+    void ResetFiles() {
+        fileTimer.Stop(); files.Reset(); pasteSuppressed=false; CancelFiles.IsEnabled=false;
+        FileStatus.Text=FileSync.IsChecked==true?"文件同步：等待连接":"文件同步：关闭";
+    }
+    void CancelFilesClick(object sender,RoutedEventArgs e) { files.Cancel(); CancelFiles.IsEnabled=false; FileStatus.Text="文件传输已取消；重新复制可重试"; }
+    void OpenFilesClick(object sender,RoutedEventArgs e) {
+        try { Directory.CreateDirectory(files.ReceivedDirectory); Process.Start(new ProcessStartInfo(files.ReceivedDirectory) { UseShellExecute=true }); }
+        catch(Exception ex) { FileStatus.Text=$"无法打开接收目录：{ex.Message}"; }
     }
     void ClipboardControl(JsonElement root) {
         string? op=root.GetProperty("op").GetString();
@@ -141,7 +169,7 @@ public partial class MainWindow : Window
         requestedQuality=quality; qualityChangePending=false;
         session=new(); render.Start(); ConnectButton.Content="断开"; Address.IsEnabled=Secret.IsEnabled=ForgetButton.IsEnabled=false;
         runner=Run(ip,secret,session.Token);
-        try { await runner; } finally { render.Stop(); ResetClipboard(); connected=false; session.Dispose(); session=null; ConnectButton.Content="连接"; Address.IsEnabled=Secret.IsEnabled=Quality.IsEnabled=ForgetButton.IsEnabled=true; Desktop.Source=null; bitmap=null; width=height=0; }
+        try { await runner; } finally { render.Stop(); ResetClipboard(); ResetFiles(); connected=false; session.Dispose(); session=null; ConnectButton.Content="连接"; Address.IsEnabled=Secret.IsEnabled=Quality.IsEnabled=ForgetButton.IsEnabled=true; Desktop.Source=null; bitmap=null; width=height=0; }
     }
     async Task Run(string ip,string secret,CancellationToken ct) {
         bool paired=false;
@@ -153,9 +181,10 @@ public partial class MainWindow : Window
             Task? heartbeat=null, controls=null;
             try {
                 Status.Text="连接和验证 Mac…";
-                using(var timeout=CancellationTokenSource.CreateLinkedTokenSource(ct)) { timeout.CancelAfter(TimeSpan.FromSeconds(8)); await wire.Connect(ip,secret,timeout.Token); }
+                using(var timeout=CancellationTokenSource.CreateLinkedTokenSource(ct)) { timeout.CancelAfter(TimeSpan.FromSeconds(8)); await wire.Connect(ip,secret,timeout.Token,desktopPort); }
                 paired=true; if(rememberConnection) SecretStore.Save(ip,secret);
                 inputs=new InputQueue(); connected=true;
+                files.Connect(ip,secret); files.Configure(FileSync.IsChecked==true); fileTimer.Start();
                 Interlocked.Exchange(ref inputsQueued,0); Interlocked.Exchange(ref inputsSent,0);
                 Interlocked.Exchange(ref hostReceived,0); Interlocked.Exchange(ref hostPosted,0);
                 Interlocked.Exchange(ref hostBlocked,0); Interlocked.Exchange(ref hostRejected,0); hostInputError="";
@@ -173,8 +202,8 @@ public partial class MainWindow : Window
                     var packet=await wire.Read(timeout.Token);
                     if(packet.type==1) {
                         using var json=JsonDocument.Parse(packet.data); var root=json.RootElement;
-                        if(root.GetProperty("op").GetString() is "capabilities" or "clipboard_sync" or "clipboard_text")
-                            await Dispatcher.InvokeAsync(()=>ClipboardControl(root));
+                        if(root.GetProperty("op").GetString() is "capabilities" or "clipboard_sync" or "clipboard_text" or "file_sync" or "file_offer")
+                            await Dispatcher.InvokeAsync(()=> { ClipboardControl(root); files.Control(root); });
                         if(root.GetProperty("op").GetString()=="video_header") {
                             int videoWidth=root.GetProperty("width").GetInt32(), videoHeight=root.GetProperty("height").GetInt32();
                             if(videoWidth<2 || videoHeight<2 || videoWidth>3840 || videoHeight>2160) throw new IOException("Invalid video dimensions");
@@ -203,7 +232,7 @@ public partial class MainWindow : Window
                 },attempt.Token);
             } catch(Exception ex) { Status.Text=ct.IsCancellationRequested?"已断开":qualityChangePending?"正在切换画质":$"连接中断：{ex.Message}"; }
             finally {
-                connected=false; ResetClipboard(); inputs?.Complete(); attempt.Cancel(); wire.Dispose();
+                connected=false; ResetClipboard(); ResetFiles(); inputs?.Complete(); attempt.Cancel(); wire.Dispose();
                 lock(decoderGate) { decoder?.Dispose(); if(ReferenceEquals(activeDecoder,decoder)) activeDecoder=null; }
                 Interlocked.Exchange(ref latest,null);
                 if(heartbeat!=null) await heartbeat; if(controls!=null) await controls;

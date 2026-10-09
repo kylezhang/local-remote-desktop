@@ -4,15 +4,21 @@ import ApplicationServices
 final class Host {
     private let lock = NSLock()
     private var listener: Int32 = -1, current: Wire?
+    private var currentFiles: MacFiles?
     private var running = false
     private var clipboardAllowed: Bool
+    private var filesAllowed: Bool
+    private let fileStatus: (String) -> Void
     private let key: Data
     private let status: (String) -> Void
-    init(key: Data, clipboardAllowed: Bool = false, status: @escaping (String) -> Void) {
-        self.key = key; self.clipboardAllowed = clipboardAllowed; self.status = status
+    init(key: Data, clipboardAllowed: Bool = false, filesAllowed: Bool = false, fileStatus: @escaping (String) -> Void = { _ in }, status: @escaping (String) -> Void) {
+        self.key = key; self.clipboardAllowed = clipboardAllowed; self.filesAllowed = filesAllowed; self.fileStatus = fileStatus; self.status = status
     }
     func setClipboardAllowed(_ value: Bool) { lock.lock(); clipboardAllowed = value; lock.unlock() }
     private func allowsClipboard() -> Bool { lock.lock(); defer { lock.unlock() }; return clipboardAllowed }
+    func setFilesAllowed(_ value: Bool) { lock.lock(); filesAllowed = value; lock.unlock() }
+    private func allowsFiles() -> Bool { lock.lock(); defer { lock.unlock() }; return filesAllowed }
+    func cancelFiles() { lock.lock(); let files = currentFiles; lock.unlock(); files?.cancelTransfer() }
     func start() throws {
         let s = Darwin.socket(AF_INET, SOCK_STREAM, 0); guard s >= 0 else { throw POSIXError(.EIO) }
         var one: Int32 = 1; setsockopt(s, SOL_SOCKET, SO_REUSEADDR, &one, socklen_t(MemoryLayout<Int32>.size))
@@ -42,11 +48,13 @@ final class Host {
         let input = InputInjector()
         var capture: Capture?
         var clipboard: MacClipboard?
+        var files: MacFiles?
         defer {
             wire.close(); input.release()
             clipboard?.stop()
+            files?.stop()
             if let capture { wait { await capture.stop() } }
-            lock.lock(); if current === wire { current = nil }; let active = running; lock.unlock()
+            lock.lock(); if current === wire { current = nil; currentFiles = nil }; let active = running; lock.unlock()
             status(active ? "等待连接 · TCP 47980" : "已停止")
         }
         do {
@@ -60,7 +68,14 @@ final class Host {
             if let startupError { throw startupError }
             var trusted = AXIsProcessTrusted()
             clipboard = MacClipboard(wire: wire, allowed: { [weak self] in self?.allowsClipboard() ?? false })
-            try wire.json(["op":"capabilities","accessibility":trusted,"clipboardText":true])
+            var capabilities: [String: Any] = ["op":"capabilities","accessibility":trusted,"clipboardText":true,"fileClipboard":false]
+            do {
+                let fileSession = try MacFiles(key: key, control: wire, allowed: { [weak self] in self?.allowsFiles() ?? false }, status: fileStatus); files = fileSession
+                lock.lock(); let active = running; if active { currentFiles = fileSession }; lock.unlock()
+                if !active { fileSession.stop(); throw WireError.closed }
+                capabilities["fileClipboard"] = true; capabilities["filePort"] = 47981; capabilities["fileSession"] = fileSession.session
+            } catch { fileStatus("文件通道不可用，请检查 47981 端口；桌面共享可继续") }
+            try wire.json(capabilities)
             status(trusted ? "正在共享当前桌面 · 可控制" : "正在共享当前桌面 · 辅助功能未授权，只能查看")
             var lastHeartbeat = Date()
             while true {
@@ -80,14 +95,15 @@ final class Host {
                 if message["op"] as? String == "disconnect" { break }
                 if message["op"] as? String == "clipboard_sync" { try clipboard?.configure(message); continue }
                 if message["op"] as? String == "clipboard_text" { clipboard?.receive(message); continue }
+                if message["op"] as? String == "file_sync" { try files?.configure(message); continue }
                 input.handle(message)
             }
         } catch { status("连接结束：\(error)") }
     }
     private func wait(_ action: @escaping () async -> Void) { let done = DispatchSemaphore(value: 0); Task { await action(); done.signal() }; done.wait() }
     func stop() {
-        lock.lock(); running = false; let fd = listener; listener = -1; let wire = current; lock.unlock()
-        wire?.close(); if fd >= 0 { shutdown(fd, SHUT_RDWR); Darwin.close(fd) }
+        lock.lock(); running = false; let fd = listener; listener = -1; let wire = current, files = currentFiles; lock.unlock()
+        wire?.close(); files?.stop(); if fd >= 0 { shutdown(fd, SHUT_RDWR); Darwin.close(fd) }
     }
     deinit { stop() }
 }

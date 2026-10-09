@@ -6,7 +6,7 @@ public sealed class WindowsClipboard : ITextClipboard {
     public long Revision=>GetClipboardSequenceNumber();
     public bool TryRead(out string? text) {
         text=null;
-        try { text=Clipboard.GetDataObject()?.GetData(DataFormats.UnicodeText,false) as string; return true; }
+        try { var value=Clipboard.GetDataObject(); if(value?.GetDataPresent(DataFormats.FileDrop,false)!=true) text=value?.GetData(DataFormats.UnicodeText,false) as string; return true; }
         catch(ExternalException) { return false; }
     }
     public bool TryWrite(string text) {

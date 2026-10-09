@@ -14,7 +14,7 @@ final class MacClipboard {
         self.wire = wire; self.allowed = allowed
         DispatchQueue.main.sync {
             let board = NSPasteboard.general
-            self.sync = TextClipboardSync(revision: { board.changeCount }, read: { (true, board.string(forType: .string)) },
+            self.sync = TextClipboardSync(revision: { board.changeCount }, read: { (true, board.types?.contains(.fileURL) == true ? nil : board.string(forType: .string)) },
                 write: { text in board.clearContents(); return board.setString(text, forType: .string) })
         }
         let source = DispatchSource.makeTimerSource(queue: output)

@@ -4,6 +4,15 @@
 
 ## Unreleased
 
+- Added optional bidirectional regular-file clipboard sharing to development builds:
+  automatic copy-triggered transfers on a separate encrypted TCP channel, existing
+  pairing reuse plus desktop-session/consent binding, bounded chunks, SHA-256 and
+  byte-count checks, progress/cancel, partial cleanup, no echo and protection for
+  newer clipboard copies. File-sharing consent is remembered. Supports 1–32 files,
+  4 GiB each/8 GiB total; folders and pixel-image clipboard formats are pending.
+  Exact WPF/crypto-peer and portable Swift checks pass; native Mac acceptance is
+  pending. Mac bundle build is 14; public version and published assets are unchanged.
+
 - Added opt-in bidirectional plain-text clipboard sync to development builds:
   capability/mutual-consent negotiation, encrypted bounded UTF-8 transport,
   stale-request rejection, echo suppression, busy-write recovery and text-before-paste

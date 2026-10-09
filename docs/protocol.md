@@ -58,3 +58,52 @@ before the next input event. Busy writes can still prevent immediate paste readi
 ## Threat limits
 
 Initial key transfer needs a trusted out-of-band path. Mac Keychain and current-user Windows DPAPI store the long-term key. No independent audit, forward secrecy, certificate PKI, key-revocation UI or comprehensive denial-of-service protection. A known PSK plus a recorded handshake can decrypt historical sessions. An unauthenticated peer may occupy the single slot until the 15-second timeout. Use only on a trusted LAN; do not expose the port publicly.
+
+## Optional file clipboard
+
+The desktop capabilities record adds fileClipboard=true, filePort=47981 and
+fileSession=64 hex characters generated fresh for this desktop session. Client
+sends file_sync with enabled and a positive increasing requestId; Host acknowledges
+the same ID only when both peers allow files. Revocation acknowledges false and
+aborts active jobs. File consent is separate from text consent and remembered on
+each device, but enable/reconnect takes a new clipboard baseline.
+
+On a new Mac file copy, Host sends file_offer {requestId,offer,items}; offer is
+32 hex characters identifying the latest source batch. Items are {name,size}
+without source paths. Windows file copies start a push instead.
+
+Windows always initiates TCP 47981, including Mac-to-Windows pulls. It repeats
+RML1 PSK challenge/proof and direction-key derivation automatically with fresh
+nonces, then sends a type-1 request:
+
+- file_push {session: fileSession,requestId,items}
+- file_pull {session: fileSession,requestId,offer}
+
+Host requires the active desktop token, matching enabled requestId and local
+consent; only one file connection is accepted. Old tokens and revoked generations
+are rejected. Host replies file_ready (with items for pulls). Pull metadata must
+match the offered metadata exactly. These are background checks, not a second
+manual pairing/password step.
+
+For each ordered item, sender emits file_start {index}, zero or more **type-3 raw
+file chunks**, then file_end {index,sha256:64 lowercase hex}. Type 3 is used only
+on the file socket. Chunks are nonempty and at most 32 KiB, lengths match declarations.
+Then file_complete terminates the batch. Receiver validates lengths and SHA-256
+before promoting its generated staging directory. For pushes, Host replies
+file_done with clipboardReady. For pulls, Client replies file_done after committing;
+Windows then publishes file paths if no newer local clipboard copy won.
+
+Both directions cap encrypted file records at 64 KiB, metadata at 32 items,
+each file at 4 GiB and total at 8 GiB. NFC portable basenames are at most 240 UTF-8
+bytes and unique ignoring case; separators/device names and trailing dots/spaces
+are rejected. Sources are regular files. Cancel uses connection closure. Send
+pacing is about 4 MiB/s before overhead; receive inactivity is 15 seconds, jobs
+one hour. Committed files are retained; uncommitted files are removed during normal
+cleanup. There is no automatic source deletion or arbitrary remote filesystem API.
+
+Authenticated Host failures may send file_error {code}; stable codes are invalid,
+changed, incomplete, checksum, denied, diskFull and io. No source paths or secrets
+are included. Connection loss can prevent error delivery.
+
+This is LocalRemote's extension, not LocalSend protocol compatibility. See the
+[file guide](files.md) for clipboard races, storage and current limitations.

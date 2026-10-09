@@ -1,0 +1,51 @@
+LocalRemote file clipboard development checks — 2026-10-09
+Curated summary, not a raw console log.
+
+Windows: .NET SDK 8.0.425, Desktop/Core runtime 8.0.31, self-contained x64.
+Exact tested LocalRemote.dll SHA256:
+42f7ee83d183cf1794fe87ec298e8ff4d3ae2f218860a2e556c22a38c3741a0f
+Swift: 5.9.2, Ubuntu 22.04. Public version 0.1.0, Mac internal build 14.
+Unreleased development feature; published tags/packages unchanged.
+
+PASS FileChecks: production regular-file source/sink, portable NFC names,
+     traversal/device/duplicate/count/size rejection, Unicode and empty files,
+     multi-chunk SHA256/length verification, corruption/truncation/index failures,
+     partial cleanup preserving completed batches and readable Host error codes.
+PASS independent RML1 mutual-auth/AES-GCM peer: automatic upload/download,
+     progress bytes, wrong desktop token/consent ID rejection, cancel cleanup,
+     independently bounded stalled handshake. Test sockets use ephemeral loopback
+     ports; production ports remain 47980/47981.
+PASS exact rebuilt WPF client with injected synthetic text/file clipboard:
+     default file consent off; enable does not send existing files;
+     local copy automatically uploads, offers automatically download;
+     binary byte comparison, paste-before-ready is consumed, ready paste passes;
+     keyboard messages and fresh H264 decoding continue during a file job;
+     no received-file echo, newer local copy wins, cancel button aborts,
+     partial cleanup, permission revoke/recovery and no disabled-content replay.
+PASS original WPF video/input/shortcut/focus/permission/quality/reconnect/disconnect
+     and connected-close cleanup regression checks.
+PASS ProtocolChecks: tamper/replay/wrong-key/oversize rejection, actual H264 decode,
+     DPAPI storage/migration and file-consent roundtrip, bounded input/coordinates,
+     all keyboard modifier/shortcut mappings.
+PASS C# text clipboard regression, payload/record limits, busy retries/no echo.
+
+PASS real Swift compiler: production FileModels and FileTransport with a mocked
+     Wire; Unicode/empty/chunks, SHA256 comparison, bad metadata/corruption,
+     truncation, permission revoked before commit and partial cleanup.
+     Linux CryptoKit fixture uses OpenSSL, NOT Apple's cryptographic module.
+PASS production MacFiles with mocked AppKit/Darwin/Wire: mutual consent,
+     copied-file metadata, no initial/duplicate offer, revocation/recovery,
+     stale request IDs and stopped timer. These mocks do not validate Apple APIs
+     or native socket/authentication behavior.
+PASS original production Swift text clipboard state/adapter regression.
+PASS syntax parse of 14 Swift source/package files (not native type checking).
+PASS bilingual documentation links, versions/icons and tracked-file hygiene.
+
+All data/files/clipboard adapters are test fixtures; real user clipboard and
+connection settings are untouched. Product transfers are chunked, single-job,
+separately encrypted/session-bound and paced; completed files persist on disk.
+
+Pending: native Apple SDK build, real NSPasteboard/Windows file-drop acceptance,
+two-machine file paste, LAN input/display latency under transfer, large-file
+throughput, long sessions and real permission/update behavior. Forced OS exit
+can leave an incomplete .incoming-* directory; no crash-cleanup guarantee.

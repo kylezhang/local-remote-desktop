@@ -16,7 +16,7 @@ static byte[] Packet(byte[] key,byte[] payload,ulong counter,bool corrupt=false)
 static void Assert(bool condition,string message) { if(!condition) throw new Exception(message); }
 foreach(var mode in new[]{"valid","tamper","replay","wrong-key","oversize"}) {
     using var timeout=new CancellationTokenSource(TimeSpan.FromSeconds(10)); var ct=timeout.Token;
-    var key=RandomNumberGenerator.GetBytes(32); var listener=new TcpListener(IPAddress.Loopback,47980); listener.Start();
+    var key=RandomNumberGenerator.GetBytes(32); var listener=new TcpListener(IPAddress.Loopback,0); listener.Start();
     try {
         var server=Task.Run(async()=> {
             using var peer=await listener.AcceptTcpClientAsync(ct); var stream=peer.GetStream();
@@ -36,7 +36,7 @@ foreach(var mode in new[]{"valid","tamper","replay","wrong-key","oversize"}) {
         },ct);
         using var wire=new Wire(); bool rejected=false;
         try {
-            await wire.Connect("127.0.0.1",Convert.ToHexString(mode=="wrong-key"?RandomNumberGenerator.GetBytes(32):key),ct);
+            await wire.Connect("127.0.0.1",Convert.ToHexString(mode=="wrong-key"?RandomNumberGenerator.GetBytes(32):key),ct,((IPEndPoint)listener.LocalEndpoint).Port);
             await wire.Json(new {op="heartbeat"},ct); var packet=await wire.Read(ct);
             Assert(packet.type==2 && Encoding.UTF8.GetString(packet.data)=="sample","video payload mismatch");
             if(mode=="replay") await wire.Read(ct);
@@ -124,5 +124,8 @@ try {
     SecretStore.SaveWindowsShortcuts(false,preferencePath); Assert(!SecretStore.LoadWindowsShortcuts(preferencePath),"native preference not restored");
     SecretStore.SaveWindowsShortcuts(true,preferencePath); Assert(SecretStore.LoadWindowsShortcuts(preferencePath),"Windows preference not restored");
     File.WriteAllBytes(preferencePath,new byte[]{0}); Assert(SecretStore.LoadWindowsShortcuts(preferencePath),"corrupt preference did not recover to default");
+    Assert(!SecretStore.LoadFileSync(preferencePath),"corrupt file-sharing preference must default off");
+    SecretStore.SaveFileSync(true,preferencePath); Assert(SecretStore.LoadFileSync(preferencePath),"file permission not remembered");
+    SecretStore.SaveFileSync(false,preferencePath); Assert(!SecretStore.LoadFileSync(preferencePath),"file revocation not remembered");
 } finally { File.Delete(preferencePath); }
 Console.WriteLine("PASS shortcut preference: current-user DPAPI roundtrip, missing/corrupt recovery, isolated from user settings");

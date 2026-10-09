@@ -14,14 +14,23 @@ public sealed class Wire : IDisposable
     NetworkStream stream = null!;
     byte[] tx = [], rx = [];
     ulong sent, received;
+    readonly int maximumRead;
+    readonly int ioTimeoutSeconds;
+    public Wire(int maximumRead=8*1024*1024,int ioTimeoutSeconds=0) { this.maximumRead=maximumRead; this.ioTimeoutSeconds=ioTimeoutSeconds; }
+    CancellationTokenSource Timeout(CancellationToken ct) {
+        var timeout=CancellationTokenSource.CreateLinkedTokenSource(ct);
+        if(ioTimeoutSeconds>0) timeout.CancelAfter(TimeSpan.FromSeconds(ioTimeoutSeconds));
+        return timeout;
+    }
     public static byte[] Mac(byte[] key, byte[] data) => HMACSHA256.HashData(key, data);
     static byte[] Join(params byte[][] arrays) => arrays.SelectMany(a => a).ToArray();
     static byte[] Label(string label) => Encoding.ASCII.GetBytes(label);
-    public async Task Connect(string ip, string secret, CancellationToken ct)
+    public async Task Connect(string ip, string secret, CancellationToken ct,int port=47980)
     {
+        using var timeout=Timeout(ct); ct=timeout.Token;
         var key = Convert.FromHexString(secret.Trim());
         if (key.Length != 32) throw new ArgumentException("配对密钥必须为 64 个十六进制字符。");
-        await tcp.ConnectAsync(ip, 47980, ct); stream = tcp.GetStream();
+        await tcp.ConnectAsync(ip, port, ct); stream = tcp.GetStream();
         var hello = new byte[36]; await stream.ReadExactlyAsync(hello, ct);
         if (!hello.AsSpan(0, 4).SequenceEqual("RML1"u8)) throw new IOException("不兼容的 Host 协议。");
         var server = hello[4..]; var client = RandomNumberGenerator.GetBytes(32);
@@ -35,6 +44,8 @@ public sealed class Wire : IDisposable
     static byte[] Nonce(ulong n) { var b = new byte[12]; BinaryPrimitives.WriteUInt64BigEndian(b.AsSpan(4), n); return b; }
     public async Task Send(byte type, byte[] payload, CancellationToken ct)
     {
+        using var timeout=Timeout(ct); ct=timeout.Token;
+        if(payload.Length>65536-17) throw new IOException("Control/file record too large");
         await gate.WaitAsync(ct);
         try {
             var plain = Join([type], payload); var cipher = new byte[plain.Length]; var tag = new byte[16];
@@ -46,9 +57,10 @@ public sealed class Wire : IDisposable
     public Task Json(object value, CancellationToken ct) => Send(1, JsonSerializer.SerializeToUtf8Bytes(value), ct);
     public async Task<(byte type, byte[] data)> Read(CancellationToken ct)
     {
+        using var timeout=Timeout(ct); ct=timeout.Token;
         var header = new byte[4]; await stream.ReadExactlyAsync(header, ct);
         var size = BinaryPrimitives.ReadUInt32BigEndian(header);
-        if (size < 17 || size > 8 * 1024 * 1024) throw new IOException("Invalid frame size");
+        if (size < 17 || size > maximumRead) throw new IOException("Invalid frame size");
         var body = new byte[(int)size]; await stream.ReadExactlyAsync(body, ct); var plain = new byte[body.Length - 16];
         using var aes = new AesGcm(rx, 16); aes.Decrypt(Nonce(received++), body.AsSpan(0, plain.Length), body.AsSpan(plain.Length), plain, header);
         return (plain[0], plain[1..]);

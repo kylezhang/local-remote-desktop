@@ -8,7 +8,7 @@ Only v0.1.0 is released. The versions below are targets, not completed features 
 
 Track v0.1.1 implementation and remaining validation in the [release checklist](next-release.md).
 
-The v0.2.0 optional text clipboard prototype is now implemented on main with
+The v0.2.0 optional text and regular-file clipboard prototypes are implemented on main with
 portable/Windows encrypted-peer tests. Native Mac acceptance remains pending;
 this does not change the published release or declare the v0.2.0 feature set complete.
 
@@ -19,7 +19,7 @@ this does not change the published release or declare the v0.2.0 feature set com
 | v0.1.0 — released | First usable product | Windows → Apple Silicon Mac, paired/encrypted current-session control, remembered connection, full screen, reconnect, quality selection and diagnostics | Published baseline; see validation notes below |
 | v0.1.1 — next | Installation and update reliability | Confirmed blueberry identity, icon packaging, clear permission actions, clean replacement/preserve-permissions options; improve signing and Keychain update behavior | Native Mac build and install/update tests; Windows package validated; signing/authorization behavior documented |
 | v0.1.2 | Input and responsiveness | Keyboard layouts and numeric keypad, focus/modifier release, disconnect cleanup, sleep/wake recovery; measure and reduce input/video delay | Repeatable real two-device tests, no stuck modifiers, measured latency baseline and verified recovery |
-| v0.2.0 | Easier daily use | LAN device discovery, explicit pairing/revocation, optional bounded text clipboard sync, English UI with Chinese localization | Discovery cannot bypass pairing; clipboard is opt-in with size limits; both languages tested |
+| v0.2.0 | Easier daily use | LAN device discovery, explicit pairing/revocation, optional bounded text and regular-file clipboard sharing, English UI with Chinese localization | Discovery cannot bypass pairing; clipboard is opt-in with size limits; both languages tested |
 | v0.3.0 | Desktop control in both directions | Windows capture/input host, Mac viewer/controller, one app per desktop with Connect and Allow connections modes | Windows ↔ Mac verified on real hardware; authorization, disconnect release and session continuity pass |
 | v1.0.0 | Stable desktop release | Consolidate desktop features, reliable installers and upgrade paths, onboarding, supported-system matrix and regression coverage | Both desktop directions meet documented release criteria; native builds and signed distribution validated |
 | v1.1.0 | Mobile controller | Android controller first: connect to Windows/Mac, touch, text entry and small-screen navigation | Real phone-to-desktop tests and explicit authorization; mobile receiving control is outside this scope |
@@ -27,7 +27,7 @@ this does not change the published release or declare the v0.2.0 feature set com
 | v1.3.0 | Linux desktop | Linux controller and host, interoperating with Windows/Mac; define supported desktop sessions and packaging | Capture/input permissions and both control directions verified on supported real Linux systems |
 | v1.4.0 | HarmonyOS controller | Native phone/tablet controller for supported Windows/Mac/Linux hosts; adapt touch, text entry and pairing | Native SDK, permissions, distribution and real-device interoperability verified; receiving control is outside this scope |
 
-Linux and HarmonyOS are versioned targets, not current support claims. HarmonyOS desktop control requires a separate feasibility assessment; the v1.4.0 target covers phone/tablet controllers only. File transfer, multiple displays and audio are not assigned versions yet.
+Linux and HarmonyOS are versioned targets, not current support claims. HarmonyOS desktop control requires a separate feasibility assessment; the v1.4.0 target covers phone/tablet controllers only. Regular-file clipboard sharing belongs to v0.2.0; folder/virtual-file support, multiple displays and audio are not assigned versions yet.
 
 ## Verification and prerequisites
 

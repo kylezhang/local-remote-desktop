@@ -83,3 +83,30 @@ The user reports that the real Windows→Mac workflow now meets most needs. This
 An earlier controlled FFmpeg buffering comparison is retained as `decoder-latency-comparison.json`. It is a synthetic decoder-path observation, not LAN input-to-display latency or a performance promise.
 
 For future Mac acceptance: build/install normally, authorize once, test ordinary text/keypad/modifiers/click/drag/scroll, change quality, disconnect and resume locally, test login auto-start after normal FileVault unlock, then test updates with a stable signing identity. Record failures and platform versions without publishing pairing keys or typed content.
+
+## File clipboard development checks — 2026-10-09
+
+FileChecks exercises actual C# source/sink and encrypted transfer against an
+independent loopback peer: Unicode/empty/multi-chunk files, byte/hash checks,
+metadata/path/count/size rejection, wrong session/consent, cancellation cleanup and
+stalled-authentication deadlines. ClientChecks uses the exact rebuilt WPF assembly
+with injected file clipboard and temporary files, testing automatic upload/download,
+input while transferring, paste readiness, no echo, newer-copy priority, revocation,
+recovery and existing video/quality/disconnect regressions. DPAPI checks cover
+remembered file consent. No real user clipboard or credentials are used.
+
+Swift 5.9.2 compiles/runs production file models/transport on Linux with a Wire
+fixture and a test CryptoKit module backed by OpenSSL. Production MacFiles adapter
+checks use mocked AppKit/Darwin/Wire for consent, metadata offers, baseline, duplicates,
+revocation/recovery, stale IDs and stopped timers. These do **not** validate Apple's
+CryptoKit/AppKit, native sockets or the macOS SDK. Mac runs of the script also
+compile the full native Host; those runs are pending.
+
+```sh
+dotnet run --project tests/FileChecks/FileChecks.csproj -c Release
+bash tests/FileChecks/check.sh
+```
+
+Native two-machine file clipboard acceptance, concurrent LAN latency and large-file
+throughput remain unverified. Published release assets are unchanged. See [file
+behavior and limits](files.md).

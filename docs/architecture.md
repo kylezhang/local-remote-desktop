@@ -26,3 +26,18 @@ and [protocol](protocol.md#optional-text-clipboard).
 Metrics are decoded FPS and incoming H.264 Mbps on Windows, plus mean Mac encoding callback time. Encoding time includes encoder queuing and excludes network time. There is no trustworthy per-frame decoder or total input-to-display latency metric in this subprocess pipeline.
 
 PSK stored in Keychain/DPAPI authenticates each connection; independent direction keys protect video and input. Protocol limits and diagnostics are documented separately. Application files and source names use LocalRemote; stable bundle/Keychain identities and the wire protocol remain compatible. See [naming migration](naming.md).
+
+## File clipboard extension
+
+Development builds use a separate TCP 47981 socket for file content, bound to the
+authenticated desktop session and independent mutual file consent. Both transfer
+directions are initiated by Windows; metadata offers travel on the desktop control
+channel. Existing PSK authentication/AES-GCM run automatically with new file-channel
+keys and a fresh desktop-session token. No additional user pairing is needed.
+
+Platform clipboard access stays on main/UI. One cancellable background file task
+streams 32 KiB chunks, validates SHA-256/lengths and promotes a private staging
+directory. File-transfer progress is throttled, copied file paths are excluded
+from text sync, received writes suppress echo, and newer local copies take priority.
+File pacing leaves bandwidth for the desktop but is not a latency guarantee.
+Completed files remain on disk; see the [file guide](files.md).
