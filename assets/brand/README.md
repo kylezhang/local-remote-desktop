@@ -2,32 +2,36 @@
 
 [简体中文](README.zh-CN.md)
 
-The selected identity combines a universal screen outline with two opposing arrows. Its cherry-red gradient, edge highlights and soft glow express reciprocal connection across devices. The application icon uses the white symbol on a luminous cherry-red tile. Black and navy alternatives have been retired.
+A universal screen outline and two opposing arrows express reciprocal desktop control across devices. The mark is flat and solid; only the application tile has a subtle cherry-red gradient. It has no glow, bevel, shadow or grain texture.
 
-![LocalRemote cherry-red identity](identity-board.png)
+![LocalRemote identity](identity-board.png)
 
 ## Assets
 
-- `identity-board.png`: the selected logo, wordmark and app icon presentation.
-- `icon-master.png`: the approved square RGBA raster master, including transparent margins and glow.
-- `icon.png`: 1024px app icon used by the repository README.
+- `icon.svg`: editable application icon master, with transparent margins.
+- `symbol.svg`: solid cherry-red symbol for light backgrounds, derived from the same geometry.
+- `icon-master.png`: 2048px RGBA export of the vector master.
+- `icon.png`: 1024px app/header icon.
 - `LocalRemote.ico`: Windows sizes from 16px through 256px.
 - `LocalRemote.icns`: macOS icon representations.
+- `identity-board.png`: symbol, wordmark and application icon presentation.
 
-The artwork was developed with user direction and the built-in image_gen tool. The PNG master is the source of truth; it is not editable vector artwork. The obsolete desktop/mobile SVG and its limited renderer were removed.
+The tile gradient runs from **#C77A8D** to **#A45A70**, brightened while retaining the muted cherry-red direction. The standalone symbol and interface actions use **#A4546B**; wordmark text uses **#683247**. This palette interprets a user-supplied paint swatch for screens; it is not an official paint specification.
 
-The current artwork softens the original cherry red into a muted palette around **#B9677A**, with gentler shadows, pale highlights and reduced glow. Interface actions use **#A4546B** to retain text contrast. This is a screen-color interpretation of a user-supplied paint swatch, not an official paint specification. The icon gradient is embedded in the approved artwork.
+The design was explored with the built-in image_gen tool, then reconstructed as editable SVG geometry. The SVG is now the production source of truth. Generated raster exploration is reference material, not the platform icon master. The earlier luminous artwork has been superseded.
 
 ## Regeneration
 
-With Python and Pillow installed, run from the repository root:
+Install Node.js, sharp, Python and Pillow. From the repository root:
 
 ```sh
+npm install --no-save --package-lock=false sharp
+node scripts/render-brand.mjs
 python scripts/generate-icons.py
 ```
 
-The script performs size and format conversion only. Preserve the master alpha channel; do not flatten transparent margins onto a black or white background. Windows and macOS builds already consume the generated ICO/ICNS files.
+Rendering uses sharp; container conversion uses Pillow. Keep transparent margins intact. The screen outline, arrows and tile contain no bitmap data or visual-effect filters. The presentation wordmark uses the available Segoe UI/Arial font; platform icons contain no text and do not depend on font availability.
 
-Both application headers display the selected artwork. Windows embeds the PNG as a WPF resource, keeps the whole header inside the full-screen toolbar, and uses a cherry-red connection action. macOS packages PNG and ICNS, explicitly sets the running Dock icon from the PNG (ICNS fallback), and uses the same image in its header.
+Both app headers use the exported PNG. Windows embeds PNG/ICO resources, keeps the entire header inside the full-screen toolbar, and uses a cherry-red connection action. macOS packages PNG/ICNS and explicitly sets the running Dock icon (including direct LaunchAgent starts).
 
-Brand imagery expresses the product vision. The current application supports Windows → Mac; reverse control and mobile support remain planned.
+The identity expresses the product vision. Current functionality is Windows → Mac; reverse control and mobile support remain planned.

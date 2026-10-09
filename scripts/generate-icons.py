@@ -1,7 +1,8 @@
-"""Export platform icon containers from the approved RGBA PNG master.
+"""Export platform icon containers from the SVG-rendered RGBA PNG master.
 
 Requires Pillow. This performs size/format conversion only, preserving the
-cherry-red artwork and its transparency. Run from any working directory.
+cherry-red artwork and its transparency. Run render-brand.mjs first when the
+editable SVG changes. Run from any working directory.
 """
 from pathlib import Path
 from PIL import Image

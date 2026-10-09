@@ -1,0 +1,17 @@
+LocalRemote clean vector identity validation — 2026-10-09
+
+- Reconstructed screen/arrow geometry as editable SVG; no embedded bitmap,
+  filters, glow, bevel or texture. Transparent margins preserved in RGBA exports.
+- Brightened tile gradient to #C77A8D → #A45A70 at the user's request.
+- Exported 2048px master, 1024px PNG, seven-size Windows ICO and macOS ICNS.
+- ReleaseChecks passed: metadata/version alignment, bilingual local links,
+  icon containers, tracked-file hygiene and basic secret indicators.
+- Windows self-contained x64 publish succeeded.
+- Actual WPF render passed at 1280px and 720px, including resource loading,
+  connection-action visibility and full-screen toolbar hide/restore.
+- Updated the user's existing Windows executable directory; application files
+  verified by hash. Runtime dependencies and stored credentials preserved.
+
+Scope: artwork, render/export tooling, brand documentation and Mac bundle build
+number. Remote-control logic and protocol unchanged; no new release tag created.
+No native Mac SDK build or actual Dock behavior verification was available.

@@ -23,6 +23,7 @@ Desktop.ini
 *.userosscache
 *.sln.docstates
 __pycache__/
+node_modules/
 *.py[cod]
 .venv/
 

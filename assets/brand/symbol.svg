@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <title>LocalRemote application icon</title>
+  <desc>A white screen outline with opposing arrows on a muted cherry-red gradient.</desc>
+  <defs>
+    <linearGradient id="cherry" x1="96" y1="96" x2="928" y2="928" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#C77A8D"/>
+      <stop offset="1" stop-color="#A45A70"/>
+    </linearGradient>
+    <g id="screen-half">
+      <path d="M544 352H304C260 352 224 388 224 432V592C224 636 260 672 304 672H388"
+            fill="none" stroke="currentColor" stroke-width="48"/>
+      <path d="M540 309Q540 305 544 308L600 349Q604 352 600 355L544 396Q540 399 540 395Z" fill="currentColor"/>
+    </g>
+  </defs>
+  
+  <g color="#A4546B">
+    <use href="#screen-half"/>
+    <use href="#screen-half" transform="rotate(180 512 512)"/>
+  </g>
+</svg>
