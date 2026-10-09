@@ -3,7 +3,7 @@
 [简体中文](zh-CN/next-release.md) · [Roadmap](roadmap.md)
 
 Status on 2026-10-09: development on main. **Not released.** Public app versions
-remain 0.1.0 until release preparation; Mac internal build number is 10.
+remain 0.1.0 until release preparation; Mac internal build number is 11.
 Existing v0.1.0 tag and assets remain unchanged.
 
 ## Implemented and locally checked
@@ -20,10 +20,17 @@ Existing v0.1.0 tag and assets remain unchanged.
   Incompatible/unreadable/invalid signatures fail safely in mock scenarios.
 - [x] Keychain access moved off the UI thread onto a serial queue. Ad-hoc or
   unmarked builds defer every credential call until a user action. Certificate
-  builds use both per-query and legacy interaction controls for startup reads.
+  builds use scoped legacy interaction control on the explicitly file-based store.
   Explicit authentication/creation and process-memory reuse remain.
   Implementation and syntax checked only; native behavior is pending.
 - [x] English/Chinese documentation, hygiene and release sanity checks.
+- [x] Screen access checked before credentials; standalone key viewing preserved.
+  Production ordering/cache/failure/cancellation logic compiled and executed with
+  Swift 5.9.2 on Ubuntu. Apple framework/system-dialog checks remain pending.
+- [x] Remembered Windows shortcut mode converts Ctrl→Command and Win→Control,
+  releases held keys on change and retains native mapping. Actual WPF shortcut
+  chords passed through the encrypted mock peer. Real Mac application acceptance
+  is pending; cross-device clipboard synchronization is not added.
 
 ## Required before publishing v0.1.1
 
@@ -46,7 +53,9 @@ Existing v0.1.0 tag and assets remain unchanged.
 User feedback on 2026-10-09 reports repeated two-password groups and needing
 to remove both permission entries manually after a preserve-permissions update.
 This is an unresolved acceptance failure, not a successful permissions test.
-The newer guards have passed mock/syntax checks only.
+Installer guards passed mocks; the shared startup helper now runs with a real
+Swift compiler. Neither proves native Keychain/TCC behavior. See the
+[signing and distribution plan](macos-signing.md).
 
 There is no native Mac build or independently reproduced Keychain/TCC validation
 in the current Windows environment. Do not describe permissions as permanently

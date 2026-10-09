@@ -16,12 +16,15 @@ The current UI is Chinese. English localization is planned. These labels help ma
 | 忘记连接 | Forget Connection (Windows) |
 | 流畅 / 标准 / 高清 | Smooth / Standard / High |
 | 复制诊断 | Copy Diagnostics (Windows) |
+| Windows 快捷键 | Windows Shortcuts (development update) |
 
 ## Connect and control
 
 Start sharing on the awake, logged-in Mac. On Windows, enter the Mac's IPv4 address and 64-character hexadecimal pairing key, select Smooth, then Connect. The first address default may be the Windows computer's own LAN address to make the subnet easier to edit; it does not discover the Mac. A previously saved Mac address/key takes precedence.
 
-Click the picture for keyboard focus. Ctrl maps to Mac Control, Alt to Option, Win to Command and Shift to Shift; Win+C maps to Mac Command+C. Windows-reserved shortcuts such as Alt+Tab may stay local. Windows input-method composition is not transmitted; the Mac's own input method can process physical keys.
+Click the picture for keyboard focus. In the development update, **Windows Shortcuts** is enabled by default: Ctrl maps to Mac Command, Win to Control, Alt to Option and Shift to Shift. Ctrl+C/V/X/A/Z/S therefore sends the corresponding Command shortcut. Ctrl+Shift combinations retain Shift. Changing this mode releases held remote keys; the choice is remembered on Windows. Disable it to use the original mapping (Ctrl→Control, Win→Command), including Control+C for a terminal interrupt. Published v0.1.0 packages use the original mapping.
+
+These shortcuts operate the Mac's own clipboard. Copying text in a local Windows application does not yet transfer that text to the Mac. Windows-reserved shortcuts such as Alt+Tab or Win combinations may stay local. Windows input-method composition is not transmitted; the Mac's own input method can process physical keys.
 
 F11 toggles full screen. Ctrl+Alt+Esc releases remote input and restores local focus. Clicking a local button also moves keyboard focus away from the picture. Stop Sharing or quit the Mac application to end sharing. Closing its window alone does not quit the background application.
 

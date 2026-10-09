@@ -53,7 +53,7 @@ bash macos-host/install-app.sh
 
 Grant **Screen Recording** and **Accessibility** in System Settings → Privacy & Security. Quit and reopen the application after granting access, then start sharing. Run the installer as your normal user, without `sudo`.
 
-The default installer resets this app's two permission decisions for a clean installation. For an update that preserves working permissions, add `--keep-permissions`.
+The default installer resets this app's two permission decisions for a clean installation. Updates can use `--keep-permissions` when new and installed signatures are compatible; incompatible updates stop before changing the installed app or permissions. See the Mac guide before updating an ad-hoc development build.
 
 macOS is currently distributed as source. See the [Mac guide](docs/macos.md) for signing, updates, permissions and troubleshooting.
 
@@ -69,7 +69,9 @@ Both devices must be reachable on the same network. Allow TCP **47980** to the M
 |---|---|
 | F11 | Toggle full screen |
 | Ctrl+Alt+Esc | Release remote input |
-| Win key | Send the Mac Command modifier |
+| Ctrl key, Windows shortcut mode on | Send the Mac Command modifier |
+
+The development branch enables **Windows shortcuts** by default: Ctrl+C/V operates the Mac clipboard. Disable it for the original Ctrl→Control / Win→Command mapping. Published v0.1.0 packages still use that original mapping. Clipboard synchronization between devices is planned.
 
 Quality changes briefly reconnect the session. See the [user guide](docs/usage.md) for controls, picture settings and connection help.
 

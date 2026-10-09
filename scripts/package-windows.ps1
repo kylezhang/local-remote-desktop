@@ -56,6 +56,8 @@ or place it and all its required DLLs beside the app. https://ffmpeg.org/downloa
 Mac must be logged in, running the Host and authorized for screen capture/Accessibility.
 Enter Mac LAN IPv4 and its 64-character pairing key. Click the picture to type.
 F11: full screen. Ctrl+Alt+Esc: release input. Quality changes briefly reconnect.
+Windows Shortcuts defaults on: Ctrl is Mac Command, Win is Control. Disable for native mapping.
+Copy/paste uses the Mac clipboard; cross-device clipboard synchronization is not included.
 
 运行 RemoteMacLAN.exe，保持完整目录；无需另装 .NET。
 FFmpeg 需单独完整安装并配置 PATH；现有正常安装可继续用。

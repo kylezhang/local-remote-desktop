@@ -10,3 +10,7 @@
 6. The existing local Windows executable path remains a deployment target. Close only that instance before replacing it, then reopen one instance. Do not copy build output into Git or remove saved connections.
 
 The release notes must distinguish implemented features, automated test coverage, user-reported real-device behavior and unverified platforms. A 0.x release can be published as a normal release while explicitly documenting its early-product limits. Do not change repository privacy or select an open-source license implicitly.
+
+A Mac binary requires the [signing and distribution acceptance](macos-signing.md).
+Maintainers supply the Developer ID signing/notarization environment; end users
+should not need signing credentials. Shared Swift tests alone do not satisfy that gate.

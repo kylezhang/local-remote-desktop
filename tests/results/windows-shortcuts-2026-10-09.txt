@@ -1,0 +1,30 @@
+LocalRemote unreleased Windows shortcut update, public version remains 0.1.0.
+Windows x64; .NET SDK 8.0.425; Desktop/Core runtime 8.0.31; FFmpeg available.
+
+PASS Release self-contained Windows publish.
+PASS ClientChecks against the exact published RemoteMacLAN.dll (ClientAssemblyPath).
+Ctrl+C/V/X/A/Z/Y/S/F routed chords carry Command modifier VK and flags with complete
+letter press/release ordering through the authenticated encrypted loopback mock.
+Keyboard mode changes release held input; original Control+Shift mapping retained;
+physical Ctrl+Alt+Esc stays local in Windows shortcut mode. No physical input injected.
+PASS existing video/decoding, mouse/drag/wheel, focus release, permission status,
+quality reconnect/rapid selection and disconnect behavior.
+
+PASS ProtocolChecks: existing authentication/tamper/replay/wrong-key/oversize cases,
+real H264/BGRA decoding, DPAPI, queue flood/coalescing/release and coordinates.
+PASS every Shift/Control/Alt/Win flag combination for both modifier sides and native mode.
+PASS shortcut preference current-user DPAPI save/load and missing/corrupt recovery,
+using only a unique temporary preference path, not real remembered connections.
+PASS WPF rendering and shortcut/connection layout at 1280px and 720px.
+PASS entire toolbar hides/restores in fullscreen.
+
+Published/tested/deployed DLL SHA-256:
+236579a1897861605d3dd1256b9e7da7d869c5b45a05186bb89c3b1b97c2930d
+Five verified app files updated at the existing local win-x64 deployment directory.
+Existing Desktop/Core runtime versions match the candidate. One responding window
+reopened, saved connection storage untouched. No new release ZIP or tag overwritten.
+
+PASS ReleaseChecks and git diff --check.
+Tests verify Windows routing and protocol transport, not real Mac target acceptance.
+Shortcut mapping works with the existing Mac protocol. Clipboard remains on the
+Mac; local Windows clipboard content is not transferred by this change.

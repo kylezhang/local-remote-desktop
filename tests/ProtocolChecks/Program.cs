@@ -83,3 +83,21 @@ Assert(RemoteCoordinates.Map(100,0,200,200,1920,1080)==null,"letterbox click sho
 Assert(RemoteCoordinates.Map(-10,300,200,200,1920,1080,true) is {x:0,y:1},"drag should clamp beyond viewport");
 Assert(RemoteCoordinates.Map(0,0,0,0,1920,1080)==null && RemoteCoordinates.Map(double.NaN,0,200,200,1920,1080)==null,"invalid coordinates accepted");
 Console.WriteLine("PASS letterbox coordinate conversion, outside drag clamping, invalid size/NaN safety");
+foreach(int modifiers in Enumerable.Range(0,16)) {
+    foreach(var (vk,expected) in new[]{(17,91),(162,91),(163,92),(91,162),(92,163),(67,67),(86,86),(16,16),(164,164),(96,96)}) {
+        var result=KeyboardMapping.Map(vk,modifiers,true);
+        Assert(result.VirtualKey==expected,"modifier VK side lost");
+        Assert((result.Flags&5)==(modifiers&5),"Shift/Option changed");
+        Assert(((result.Flags&8)!=0)==((modifiers&2)!=0) && ((result.Flags&2)!=0)==((modifiers&8)!=0),"Control/Command flags inconsistent");
+        Assert(KeyboardMapping.Map(vk,modifiers,false)==(vk,modifiers),"native mapping changed");
+    }
+}
+Console.WriteLine("PASS Windows/native shortcut mappings: both modifier sides, all Shift/Control/Alt/Win combinations");
+var preferencePath=Path.Combine(Path.GetTempPath(),"localremote-preference-"+Guid.NewGuid().ToString("N")+".dpapi");
+try {
+    Assert(SecretStore.LoadWindowsShortcuts(preferencePath),"missing shortcut preference should default on");
+    SecretStore.SaveWindowsShortcuts(false,preferencePath); Assert(!SecretStore.LoadWindowsShortcuts(preferencePath),"native preference not restored");
+    SecretStore.SaveWindowsShortcuts(true,preferencePath); Assert(SecretStore.LoadWindowsShortcuts(preferencePath),"Windows preference not restored");
+    File.WriteAllBytes(preferencePath,new byte[]{0}); Assert(SecretStore.LoadWindowsShortcuts(preferencePath),"corrupt preference did not recover to default");
+} finally { File.Delete(preferencePath); }
+Console.WriteLine("PASS shortcut preference: current-user DPAPI roundtrip, missing/corrupt recovery, isolated from user settings");

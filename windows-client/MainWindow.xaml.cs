@@ -26,12 +26,17 @@ public partial class MainWindow : Window
     long inputsQueued, inputsSent, hostReceived, hostPosted, hostBlocked, hostRejected;
     string hostInputError = "";
     readonly bool rememberConnection;
+    readonly Func<ModifierKeys> readModifiers;
     WindowState previousState;
     readonly DispatcherTimer render = new() { Interval=TimeSpan.FromMilliseconds(16) };
     public MainWindow():this(true) {}
-    internal MainWindow(bool remember) {
+    internal MainWindow(bool remember):this(remember,null) {}
+    internal MainWindow(bool remember, Func<ModifierKeys>? modifiers) {
         rememberConnection=remember;
+        readModifiers=modifiers ?? (()=>Keyboard.Modifiers);
         InitializeComponent(); var savedHost=remember?SecretStore.LastHost():""; Address.Text=savedHost.Length>0?savedHost:LocalAddress.Find(); Secret.Password=remember?SecretStore.Load(Address.Text):"";
+        WindowsShortcuts.IsChecked=!remember || SecretStore.LoadWindowsShortcuts();
+        WindowsShortcuts.Checked+=(_,_)=>KeyboardModeChanged(); WindowsShortcuts.Unchecked+=(_,_)=>KeyboardModeChanged();
         Address.LostFocus+=(_,_)=> { if(!rememberConnection) return; var s=SecretStore.Load(Address.Text.Trim()); if(s.Length>0) Secret.Password=s; };
         Quality.SelectionChanged+=(_,_)=> {
             if(session==null) return;
@@ -57,9 +62,17 @@ public partial class MainWindow : Window
     void Key(KeyEventArgs e,bool down) {
         var key=e.Key==System.Windows.Input.Key.System?e.SystemKey:e.Key==System.Windows.Input.Key.ImeProcessed?e.ImeProcessedKey:e.Key==System.Windows.Input.Key.DeadCharProcessed?e.DeadCharProcessedKey:e.Key;
         if(key==System.Windows.Input.Key.F11) { e.Handled=true; return; }
-        if(down && key==System.Windows.Input.Key.Escape && Keyboard.Modifiers.HasFlag(ModifierKeys.Control) && Keyboard.Modifiers.HasFlag(ModifierKeys.Alt)) { Input(new {op="release_all"}); ConnectButton.Focus(); e.Handled=true; return; }
-        int flags=(Keyboard.Modifiers.HasFlag(ModifierKeys.Shift)?1:0)|(Keyboard.Modifiers.HasFlag(ModifierKeys.Control)?2:0)|(Keyboard.Modifiers.HasFlag(ModifierKeys.Alt)?4:0)|(Keyboard.Modifiers.HasFlag(ModifierKeys.Windows)?8:0);
-        Input(new {op="key_event",vk=KeyInterop.VirtualKeyFromKey(key),down,flags}); e.Handled=true;
+        var modifiers=readModifiers();
+        if(down && key==System.Windows.Input.Key.Escape && modifiers.HasFlag(ModifierKeys.Control) && modifiers.HasFlag(ModifierKeys.Alt)) { Input(new {op="release_all"}); ConnectButton.Focus(); e.Handled=true; return; }
+        int flags=(modifiers.HasFlag(ModifierKeys.Shift)?1:0)|(modifiers.HasFlag(ModifierKeys.Control)?2:0)|(modifiers.HasFlag(ModifierKeys.Alt)?4:0)|(modifiers.HasFlag(ModifierKeys.Windows)?8:0);
+        var mapped=KeyboardMapping.Map(KeyInterop.VirtualKeyFromKey(key),flags,WindowsShortcuts.IsChecked==true);
+        Input(new {op="key_event",vk=mapped.VirtualKey,down,flags=mapped.Flags}); e.Handled=true;
+    }
+    void KeyboardModeChanged() {
+        Input(new {op="release_all"});
+        if(!rememberConnection) return;
+        try { SecretStore.SaveWindowsShortcuts(WindowsShortcuts.IsChecked==true); }
+        catch(Exception ex) { Status.Text=$"快捷键模式已切换，但无法保存：{ex.Message}"; }
     }
     void Input(object message) {
         if(!connected || inputs==null) return;
@@ -153,7 +166,7 @@ public partial class MainWindow : Window
     }
     void FullscreenClick(object sender,RoutedEventArgs e)=>ToggleFull();
     void DiagnosticsClick(object sender,RoutedEventArgs e) {
-        Clipboard.SetText($"LocalRemote input diagnostics\nConnected: {connected}\nKeyboardFocus: {Surface.IsKeyboardFocusWithin}\nAccessibility: {inputAllowed}\nHostReportsInput: {hostReportsInput}\nQueued: {Interlocked.Read(ref inputsQueued)}\nSent: {Interlocked.Read(ref inputsSent)}\nHostReceived: {Interlocked.Read(ref hostReceived)}\nHostPosted: {Interlocked.Read(ref hostPosted)}\nHostBlocked: {Interlocked.Read(ref hostBlocked)}\nHostRejected: {Interlocked.Read(ref hostRejected)}\nHostError: {hostInputError}\nPosted means submitted to CGEvent, not confirmed application acceptance.");
+        Clipboard.SetText($"LocalRemote input diagnostics\nConnected: {connected}\nKeyboardFocus: {Surface.IsKeyboardFocusWithin}\nWindowsShortcuts: {WindowsShortcuts.IsChecked==true}\nAccessibility: {inputAllowed}\nHostReportsInput: {hostReportsInput}\nQueued: {Interlocked.Read(ref inputsQueued)}\nSent: {Interlocked.Read(ref inputsSent)}\nHostReceived: {Interlocked.Read(ref hostReceived)}\nHostPosted: {Interlocked.Read(ref hostPosted)}\nHostBlocked: {Interlocked.Read(ref hostBlocked)}\nHostRejected: {Interlocked.Read(ref hostRejected)}\nHostError: {hostInputError}\nPosted means submitted to CGEvent, not confirmed application acceptance.");
         Status.Text="诊断已复制（不包含密钥、IP 或输入内容）";
     }
     void ForgetClick(object sender,RoutedEventArgs e) {

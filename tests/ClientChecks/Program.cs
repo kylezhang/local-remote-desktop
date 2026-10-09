@@ -37,7 +37,8 @@ static class Program {
             var server=host.Run();
             // No persisted user credentials are read or changed, no physical input is
             // synthesized, and the offscreen test window does not activate itself.
-            var window=new MainWindow(false) { Left=-20000,Top=-20000,ShowActivated=false,ShowInTaskbar=false };
+            ModifierKeys fakeModifiers=ModifierKeys.None;
+            var window=new MainWindow(false,()=>fakeModifiers) { Left=-20000,Top=-20000,ShowActivated=false,ShowInTaskbar=false };
             try {
                 window.Show();
                 ((TextBox)window.FindName("Address")).Text="127.0.0.1";
@@ -56,9 +57,46 @@ static class Program {
                 }
                 await Until(()=>host.Inputs.Count(x=>x.GetProperty("op").GetString()=="key_event")==18,"keyboard route/queue/transport lost events");
                 var keys=host.Inputs.Where(x=>x.GetProperty("op").GetString()=="key_event").ToArray();
-                Assert(keys.Select(x=>x.GetProperty("vk").GetInt32()).SequenceEqual(new[]{65,65,48,48,49,49,96,96,105,105,13,13,162,162,164,164,91,91}),"unexpected VK mapping");
+                Assert(keys.Select(x=>x.GetProperty("vk").GetInt32()).SequenceEqual(new[]{65,65,48,48,49,49,96,96,105,105,13,13,91,91,164,164,162,162}),"unexpected VK mapping");
                 Assert(keys.Select(x=>x.GetProperty("down").GetBoolean()).SequenceEqual(Enumerable.Range(0,18).Select(i=>i%2==0)),"lost press/release order");
                 Console.WriteLine("PASS routed letter, top-row/keypad digits, Enter, Ctrl/Alt/Win → authenticated mock host, in order");
+                void Raise(Key key,bool down) {
+                    var e=new KeyEventArgs(Keyboard.PrimaryDevice,PresentationSource.FromVisual(window)!,Environment.TickCount,key) { RoutedEvent=down?Keyboard.PreviewKeyDownEvent:Keyboard.PreviewKeyUpEvent };
+                    surface.RaiseEvent(e); Assert(e.Handled,"shortcut escaped remote input routing");
+                }
+                foreach(var letter in new[]{Key.C,Key.V,Key.X,Key.A,Key.Z,Key.Y,Key.S,Key.F}) {
+                    fakeModifiers=ModifierKeys.Control; Raise(Key.LeftCtrl,true); Raise(letter,true); Raise(letter,false);
+                    fakeModifiers=ModifierKeys.None; Raise(Key.LeftCtrl,false);
+                }
+                await Until(()=>host.Inputs.Count(x=>x.GetProperty("op").GetString()=="key_event")==50,"Ctrl shortcut chords were not delivered");
+                var chords=host.Inputs.Where(x=>x.GetProperty("op").GetString()=="key_event").Skip(18).ToArray();
+                for(int i=0;i<8;i++) {
+                    var chord=chords.Skip(i*4).Take(4).ToArray();
+                    Assert(chord[0].GetProperty("vk").GetInt32()==91 && chord[3].GetProperty("vk").GetInt32()==91,"Ctrl modifier VK not mapped on both edges");
+                    Assert(chord.Select(x=>x.GetProperty("flags").GetInt32()).SequenceEqual(new[]{8,8,8,0}),"Command flags incomplete on shortcut chord");
+                    Assert(chord.Select(x=>x.GetProperty("down").GetBoolean()).SequenceEqual(new[]{true,true,false,false}),"shortcut release order changed");
+                }
+                Console.WriteLine("PASS Ctrl+C/V/X/A/Z/Y/S/F chords: Command VK/flags, letter edges and releases → encrypted mock host");
+                fakeModifiers=ModifierKeys.Control; Raise(Key.LeftCtrl,true);
+                await Until(()=>host.Inputs.Count(x=>x.GetProperty("op").GetString()=="key_event")==51,"held Ctrl not delivered");
+                int releases=host.Inputs.Count(x=>x.GetProperty("op").GetString()=="release_all");
+                ((CheckBox)window.FindName("WindowsShortcuts")).IsChecked=false;
+                await Until(()=>host.Inputs.Count(x=>x.GetProperty("op").GetString()=="release_all")>releases,"keyboard mode switch left modifiers held");
+                fakeModifiers=ModifierKeys.None; Raise(Key.LeftCtrl,false);
+                fakeModifiers=ModifierKeys.Control|ModifierKeys.Shift; Raise(Key.RightCtrl,true); Raise(Key.V,true); Raise(Key.V,false);
+                fakeModifiers=ModifierKeys.None; Raise(Key.RightCtrl,false);
+                await Until(()=>host.Inputs.Count(x=>x.GetProperty("op").GetString()=="key_event")==56,"native shortcut mode lost events");
+                var native=host.Inputs.Where(x=>x.GetProperty("op").GetString()=="key_event").Skip(52).ToArray();
+                Assert(native[0].GetProperty("vk").GetInt32()==163 && native[3].GetProperty("vk").GetInt32()==163,"native right Control mapping changed");
+                Assert(native.Select(x=>x.GetProperty("flags").GetInt32()).SequenceEqual(new[]{3,3,3,0}),"native Control+Shift flags changed");
+                releases=host.Inputs.Count(x=>x.GetProperty("op").GetString()=="release_all");
+                ((CheckBox)window.FindName("WindowsShortcuts")).IsChecked=true;
+                await Until(()=>host.Inputs.Count(x=>x.GetProperty("op").GetString()=="release_all")>releases,"return to Windows shortcut mode did not release keys");
+                releases=host.Inputs.Count(x=>x.GetProperty("op").GetString()=="release_all");
+                fakeModifiers=ModifierKeys.Control|ModifierKeys.Alt; Raise(Key.Escape,true); fakeModifiers=ModifierKeys.None;
+                await Until(()=>host.Inputs.Count(x=>x.GetProperty("op").GetString()=="release_all")>releases,"physical release shortcut did not work with remapping");
+                Assert(!host.Inputs.Any(x=>x.GetProperty("op").GetString()=="key_event" && x.GetProperty("vk").GetInt32()==27),"local escape shortcut sent to Mac");
+                Console.WriteLine("PASS keyboard mode switch releases held keys; native Control+Shift preserved; physical Ctrl+Alt+Esc stays local");
                 var center=new Point(((FrameworkElement)surface).ActualWidth/2,((FrameworkElement)surface).ActualHeight/2);
                 window.SendPointerButton(center,MouseButton.Left,true);
                 window.SendPointerMove(new Point(-50,5000),true);

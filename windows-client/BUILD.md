@@ -23,6 +23,8 @@ First start defaults the address to the Windows machine's LAN IPv4 to make editi
 
 Click the picture for keyboard focus. F11 toggles full screen; Ctrl+Alt+Esc releases input. UI/diagnostic-button focus means KeyboardFocus=false is expected. InputPosted reports CGEvent submission, not target-app acceptance. Windows IME is disabled on the picture so physical key events reach the Mac; Mac input methods can handle them.
 
+Development builds default to Windows Shortcuts: Ctrl→Mac Command and Win→Control, with both key codes and modifier flags converted. Disable the checkbox for the original physical mapping. Its preference is stored locally with DPAPI. The physical Ctrl+Alt+Esc release shortcut works in both modes. This change needs only a Windows update and is compatible with the existing Mac input protocol; it does not add cross-device clipboard synchronization.
+
 Quality remains selectable during a connection. Choosing a setting causes a brief disconnect and automatic reauthentication after about three seconds; the latest rapid selection wins even when Auto Reconnect is unchecked. No Mac protocol update is needed solely for this behavior.
 
 The existing local deployment path `windows-client/bin/Release/net8.0-windows/win-x64` remains supported. Close that running instance before publishing over its files. Never delete remembered credentials as part of deployment.

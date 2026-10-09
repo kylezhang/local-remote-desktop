@@ -6,6 +6,17 @@ Release environment: Windows x64, .NET SDK 8.0.425 and Desktop/Core runtime 8.0.
 
 ## Automated coverage
 
+- Latest development: MacStartupChecks compiles/executes production SharingPreparation
+  on Ubuntu 22.04 with Swift 5.9.2. Seven scenarios cover permission failure without
+  credential access, ordering/cache/recheck, standalone key reuse, failed read without
+  auto-retry, and three cancellation boundaries. On Mac the script also compiles the
+  whole Host with the Apple SDK; that platform gate has not run here.
+- Windows shortcut update: WPF Ctrl+C/V/X/A/Z/Y/S/F chords reach the encrypted mock
+  Host with Command key codes/flags and ordered releases. Mode changes, native
+  Control+Shift and physical local release are checked. Protocol tests cover every
+  modifier combination and isolated DPAPI preference persistence/recovery. These
+  verify transport, not real Mac applications or cross-device clipboard behavior.
+
 - Unreleased v0.1.1 work (2026-10-09): InstallerChecks also exercises late move/signature/metadata failure, interrupt/termination rollback, recovery-backup retention, first-install cleanup and launch failure. Signature-preserving update checks cover changed ad-hoc identity, duplicate-copy mismatch, unreadable requirements and verification failure without stopping the working Host or resetting permissions. Keychain startup gating and silent-read changes are syntax-checked only, not natively compiled or exercised; see the [release checklist](next-release.md).
 - ProtocolChecks: mutual authentication, fragmented TCP, wrong-key/tamper/replay/oversize rejection, actual H.264→BGRA decode, synthetic-key DPAPI round-trip, 10,000-move queue coalescing, ordered input/release and letterbox/clamp/NaN coordinates.
 - ClientChecks: real WPF window and FFmpeg against an encrypted simulated peer; displayed bitmap, routed letter/top-row/keypad/modifier input, pointer/drag/wheel, focus-release, permission status, disconnect cleanup and connected quality changes including rapid selection with Auto Reconnect off. The window is off-screen and non-activated, and credentials are not loaded/saved.
@@ -21,6 +32,8 @@ dotnet run --project tests/ClientChecks/ClientChecks.csproj -c Release
 python tests/InstallerChecks/check.py --bash "C:/Program Files/Git/bin/bash.exe" --work-dir work/installer-checks
 python tests/InstallerChecks/signing.py --bash "C:/Program Files/Git/bin/bash.exe" --work-dir work/signing-checks
 python tests/ReleaseChecks/check.py
+# macOS or Linux with Swift; Mac also compiles the whole Host:
+bash tests/MacStartupChecks/check.sh
 ```
 
 ## What these results do not prove

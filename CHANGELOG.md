@@ -4,6 +4,9 @@
 
 ## Unreleased
 
+- Added a remembered Windows Shortcuts mode, enabled by default: Ctrl→Mac Command and Win→Control. Both modifier key codes and flags are converted, mode changes release held input, and native mapping remains available. This operates the Mac clipboard; cross-device clipboard sync is still planned.
+- Mac sharing now checks screen access before reading credentials. Standalone pairing-key access remains available; failed/cancelled startup does not retry or proceed. The production startup helper is compiled and exercised with Swift 5.9.2 on Linux. Keychain queries explicitly retain the existing file-based backend; system dialogs remain a native acceptance item.
+
 - Hardened Mac installation with full-bundle rollback on replacement/verification failure or interruption, retained recovery backups if rollback fails, and explicit launch-failure messages.
 - Moved Keychain reads to a serial background queue; development builds now defer credential access until a sharing action, while certificate builds attempt a UI-disabled startup read. User actions allow authentication/first-time creation and loaded keys are reused for the process. Repeated system prompts remain unverified on Mac.
 - Preserve-permissions installation now aborts before stopping the old Host or touching permissions if designated requirements differ, cannot be read or fail verification. This prevents changed ad-hoc updates from being presented as permission-preserving.

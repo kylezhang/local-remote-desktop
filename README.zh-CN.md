@@ -53,7 +53,7 @@ bash macos-host/install-app.sh
 
 在系统设置 → 隐私与安全性授权**屏幕录制**和**辅助功能**，授权后退出重开应用，再开始共享。以正常用户执行安装，不使用 `sudo`。
 
-默认安装会清理本应用这两项授权。日常更新若要保留已正常工作的权限，可加 `--keep-permissions`。
+默认安装会清理本应用这两项授权。新旧签名兼容时可加 `--keep-permissions`；不兼容时会在改变应用及权限前停止。临时签名开发构建更新前请查看 Mac 指南。
 
 Mac 当前提供源码安装。签名、升级、权限与排障见 [Mac 指南](docs/zh-CN/macos.md)。
 
@@ -69,7 +69,9 @@ Mac 当前提供源码安装。签名、升级、权限与排障见 [Mac 指南]
 |---|---|
 | F11 | 切换全屏 |
 | Ctrl+Alt+Esc | 释放远程输入 |
-| Win 键 | 对应 Mac Command 修饰键 |
+| Ctrl 键（Windows 快捷键启用） | 对应 Mac Command 修饰键 |
+
+开发分支默认启用“Windows 快捷键”，Ctrl+C/V 操作 Mac 自己的剪贴板；取消后恢复 Ctrl→Control、Win→Command。已发布的 v0.1.0 安装包仍使用原映射。跨设备剪贴板同步另行规划。
 
 切换画质会短暂重连。控件、画质及连接帮助见 [使用指南](docs/zh-CN/usage.md)。
 

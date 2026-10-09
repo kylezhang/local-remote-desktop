@@ -6,7 +6,9 @@
 
 Mac 保持唤醒、正常登录，开始共享。在 Windows 填入 Mac IPv4、64 位十六进制配对密钥，选流畅后连接。首次默认 IP 可能是 Windows 本机局域网地址，仅方便修改同网段，并非自动发现；有记忆时优先恢复上次 Mac 的地址与密钥。
 
-点击画面获得键盘焦点。Ctrl/Alt/Win/Shift 对应 Mac Control/Option/Command/Shift，例如 Win+C 是 Mac Command+C。Alt+Tab 等 Windows 保留键可能留在本地；Windows 输入法组合文本不传输，可用 Mac 本身输入法处理物理按键。
+点击画面获得键盘焦点。开发更新默认勾选“Windows 快捷键”：Ctrl→Command、Win→Control、Alt→Option、Shift→Shift，Ctrl+C/V/X/A/Z/S 对应 Mac 的 Command 快捷键；Ctrl+Shift 组合保留 Shift。切换模式会释放远端已按下的键，并记住选择。取消勾选后恢复原映射 Ctrl→Control、Win→Command，可用于终端 Control+C 中断。已发布 v0.1.0 安装包仍使用原映射。
+
+上述快捷键操作 Mac 自己的剪贴板。在 Windows 本地应用复制的文字暂不会自动传到 Mac。Alt+Tab、Win 组合等 Windows 保留键可能留在本地；Windows 输入法组合文本不传输，可用 Mac 本身输入法处理物理按键。
 
 F11 全屏，Ctrl+Alt+Esc 释放输入并回到本地焦点。点击本地按钮也会移走键盘焦点。Mac 停止共享或退出应用即可结束共享；只关闭窗口不会退出后台应用。
 
