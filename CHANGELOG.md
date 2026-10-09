@@ -4,6 +4,12 @@
 
 ## Unreleased
 
+- Bounded FFmpeg diagnostic draining, made decoder disposal idempotent, terminate
+  the owned decoder directly on window close, and stop disconnected display timers.
+  Added real decoder resource samples and WPF close/disconnect checks. Short synthetic
+  runs do not establish full-session resource use or Mac performance; frame allocation
+  and software decoding remain optimization work.
+
 - Unified source layout as apps/macos and apps/windows, Swift package/target and
   Windows project/assembly/namespace as LocalRemote, and executable files as
   LocalRemote.app/LocalRemote.exe. Updated build, test, package and bilingual docs.

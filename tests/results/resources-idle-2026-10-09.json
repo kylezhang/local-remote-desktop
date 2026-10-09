@@ -1,0 +1,9 @@
+{
+  "scope": "real GUI idle after startup; disconnected; 30-second observation, not full session",
+  "logicalProcessors": 32,
+  "privateMiBStart": 106.3,
+  "cpuMachinePercent": 0.01,
+  "privateMiBEnd": 106.1,
+  "responding": true,
+  "windowTitle": "LocalRemote · 0.1.0"
+}

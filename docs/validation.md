@@ -6,6 +6,12 @@ Release environment: Windows x64, .NET SDK 8.0.425 and Desktop/Core runtime 8.0.
 
 ## Automated coverage
 
+- Windows ResourceChecks (2026-10-09): production decoder fed 720p/30 and 1080p/60
+  for 40 seconds each; CPU/private-memory samples, bounded diagnostic draining,
+  cancellation, dimension rejection and decoder exit checked. Production source passed
+  ProtocolChecks; the exact rebuilt DLL passed WPF ClientChecks, including closing a connected window
+  and stopping the disconnected display timer. See [resource scope and results](performance.md).
+
 - Naming migration (2026-10-09): LocalRemote Windows project/assembly built and
   packaged self-contained; the exact packaged DLL passed WPF mock-peer regression.
   Protocol tests exercised opaque DPAPI migration, decryptability, newer-setting
@@ -48,6 +54,7 @@ Run on Windows with .NET SDK and FFmpeg:
 ```powershell
 dotnet run --project tests/ProtocolChecks/ProtocolChecks.csproj -c Release
 dotnet run --project tests/ClientChecks/ClientChecks.csproj -c Release
+dotnet run --project tests/ResourceChecks/ResourceChecks.csproj -c Release -- 40 resources.json
 python tests/InstallerChecks/check.py --bash "C:/Program Files/Git/bin/bash.exe" --work-dir work/installer-checks
 python tests/InstallerChecks/signing.py --bash "C:/Program Files/Git/bin/bash.exe" --work-dir work/signing-checks
 python tests/ReleaseChecks/check.py

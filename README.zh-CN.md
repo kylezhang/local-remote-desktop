@@ -91,6 +91,7 @@ Mac 当前提供源码安装。签名、升级、权限与排障见 [Mac 指南]
 - [Windows 源码构建](apps/windows/BUILD.zh-CN.md)
 - [架构](docs/zh-CN/architecture.md)与 [安全协议](docs/zh-CN/protocol.md)
 - [构建与测试状态](docs/zh-CN/validation.md)
+- [资源占用与性能](docs/zh-CN/performance.md)
 - [参与维护](CONTRIBUTING.md)与 [发版流程](docs/zh-CN/releasing.md)
 - [工程结构与命名迁移](docs/zh-CN/naming.md)
 

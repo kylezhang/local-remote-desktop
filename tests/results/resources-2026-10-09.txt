@@ -1,0 +1,37 @@
+LocalRemote Windows resource checks — 2026-10-09
+This is a curated test summary, not a raw console log.
+
+Environment: Windows x64; .NET SDK 8.0.425; runtime 8.0.31; 32 logical CPUs.
+Final self-contained client DLL SHA256:
+250383bff63c1cc4b3eeded7cc27ab0f6264eee666ee6b1e61b5fc84eb8ad0df
+
+PASS ResourceChecks: bounded draining of a logical 256 MiB diagnostic stream;
+     cancellation of an idle reader; dimension rejection before decoder creation.
+PASS actual paced production decoder: 1280x720 at 30 fps, 40 seconds, 1199 frames.
+PASS actual paced production decoder: 1920x1080 at 60 fps, 40 seconds, 2398 frames.
+PASS repeated Dispose terminates owned FFmpeg in both cases.
+Raw samples: resources-2026-10-09.json.
+
+PASS real deployed GUI idle observation: 30 seconds while disconnected;
+     whole-machine average CPU 0.010%; private memory 106.3 -> 106.1 MiB;
+     responding, one window and no FFmpeg child at the final snapshot.
+Raw idle observation: resources-idle-2026-10-09.json.
+
+PASS ClientChecks using the exact final DLL above: authenticated WPF/mock peer;
+     displayed bitmap, letters, top row and keypad digits, modifiers, shortcut
+     chords, input order/release, pointer/drag/wheel, focus release, permission
+     status, connected quality changes/rapid selection, disconnect, display timer
+     stopped while disconnected, connected window close terminates owned FFmpeg.
+PASS ProtocolChecks using linked production source: valid/tamper/replay/wrong-key/
+     oversize transport, actual H264/BGRA decode, DPAPI/storage migration, input
+     coalescing/overload/release, coordinates, modifier combinations/preferences.
+PASS ReleaseChecks: versions, naming, icons, local links and tracked-file hygiene.
+
+The same final DLL was deployed to the canonical apps/windows output and the
+legacy Windows launch directory. The legacy RemoteMacLAN.exe filename is only
+a compatibility copy of the new LocalRemote apphost.
+
+Limits: no native Mac measurement; no capture/LAN/WPF in paced decoder samples;
+no hours-long soak test or full-session performance guarantee. Frequent large
+frame allocations and generation-2 collections remain optimization work.
+See docs/performance.md and its Chinese counterpart for exact interpretation.

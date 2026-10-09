@@ -91,6 +91,7 @@ LocalRemote began with a practical frustration: finding a Windows-to-Mac client 
 - [Windows source build](apps/windows/BUILD.md)
 - [Architecture](docs/architecture.md) and [security protocol](docs/protocol.md)
 - [Build and test status](docs/validation.md)
+- [Resource use and performance](docs/performance.md)
 - [Contributing](CONTRIBUTING.md) and [release process](docs/releasing.md)
 - [Project layout and naming migration](docs/naming.md)
 

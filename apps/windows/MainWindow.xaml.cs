@@ -27,6 +27,9 @@ public partial class MainWindow : Window
     string hostInputError = "";
     readonly bool rememberConnection;
     readonly Func<ModifierKeys> readModifiers;
+    readonly object decoderGate=new();
+    IVideoDecoder? activeDecoder;
+    bool windowClosing;
     WindowState previousState;
     readonly DispatcherTimer render = new() { Interval=TimeSpan.FromMilliseconds(16) };
     public MainWindow():this(true) {}
@@ -44,7 +47,7 @@ public partial class MainWindow : Window
             Input(new {op="release_all"}); activeAttempt?.Cancel();
             Status.Text="正在切换画质，将自动重新连接…";
         };
-        render.Tick+=(_,_)=>Render(); render.Start();
+        render.Tick+=(_,_)=>Render();
         Surface.MouseMove+=(_,e)=> { if(mouseClock.ElapsedMilliseconds<8) return; mouseClock.Restart(); SendPointerMove(e.GetPosition(Surface),Surface.IsMouseCaptured); };
         Surface.MouseDown+=(_,e)=> { Keyboard.Focus(Surface); Surface.CaptureMouse(); SendPointerButton(e.GetPosition(Surface),e.ChangedButton,true); e.Handled=true; };
         Surface.MouseUp+=(_,e)=> { SendPointerButton(e.GetPosition(Surface),e.ChangedButton,false); if(e.LeftButton==MouseButtonState.Released && e.RightButton==MouseButtonState.Released && e.MiddleButton==MouseButtonState.Released) Surface.ReleaseMouseCapture(); e.Handled=true; };
@@ -53,7 +56,12 @@ public partial class MainWindow : Window
         Surface.LostKeyboardFocus+=(_,_)=>Input(new {op="release_all"}); Deactivated+=(_,_)=>Input(new {op="release_all"});
         Surface.LostMouseCapture+=(_,_)=> { if(Mouse.LeftButton==MouseButtonState.Pressed || Mouse.RightButton==MouseButtonState.Pressed || Mouse.MiddleButton==MouseButtonState.Pressed) Input(new {op="release_all"}); };
         PreviewKeyDown+=(_,e)=> { if(e.Key==System.Windows.Input.Key.F11) { ToggleFull(); e.Handled=true; } };
-        Closing+=(_,_)=>session?.Cancel();
+        Closing+=(_,_)=> {
+            render.Stop(); session?.Cancel();
+            // App shutdown can stop Dispatcher continuations before Run's
+            // finally executes. Kill the owned decoder directly while closing.
+            lock(decoderGate) { windowClosing=true; activeDecoder?.Dispose(); activeDecoder=null; }
+        };
     }
     static int Button(MouseButton b)=>b==MouseButton.Right?1:b==MouseButton.Middle?2:0;
     internal void SendPointerMove(Point point,bool captured) { if(Position(point,captured) is {} p) Input(new {op="mouse_move",p.x,p.y}); }
@@ -87,9 +95,9 @@ public partial class MainWindow : Window
             if(rememberConnection) SecretStore.Remember(ip,secret);
         } catch(Exception ex) { Status.Text=$"无法记住连接：{ex.Message}"; return; }
         requestedQuality=quality; qualityChangePending=false;
-        session=new(); ConnectButton.Content="断开"; Address.IsEnabled=Secret.IsEnabled=ForgetButton.IsEnabled=false;
+        session=new(); render.Start(); ConnectButton.Content="断开"; Address.IsEnabled=Secret.IsEnabled=ForgetButton.IsEnabled=false;
         runner=Run(ip,secret,session.Token);
-        try { await runner; } finally { connected=false; session.Dispose(); session=null; ConnectButton.Content="连接"; Address.IsEnabled=Secret.IsEnabled=Quality.IsEnabled=ForgetButton.IsEnabled=true; Desktop.Source=null; bitmap=null; width=height=0; }
+        try { await runner; } finally { render.Stop(); connected=false; session.Dispose(); session=null; ConnectButton.Content="连接"; Address.IsEnabled=Secret.IsEnabled=Quality.IsEnabled=ForgetButton.IsEnabled=true; Desktop.Source=null; bitmap=null; width=height=0; }
     }
     async Task Run(string ip,string secret,CancellationToken ct) {
         bool paired=false;
@@ -125,7 +133,12 @@ public partial class MainWindow : Window
                             int videoWidth=root.GetProperty("width").GetInt32(), videoHeight=root.GetProperty("height").GetInt32();
                             if(videoWidth<2 || videoHeight<2 || videoWidth>3840 || videoHeight>2160) throw new IOException("Invalid video dimensions");
                             decoder?.Dispose(); Interlocked.Exchange(ref latest,null);
-                            decoder=new FfmpegDecoder(videoWidth,videoHeight); decoder.Frame+=p=> { Interlocked.Exchange(ref latest,p); Interlocked.Increment(ref frames); };
+                            var nextDecoder=new FfmpegDecoder(videoWidth,videoHeight);
+                            lock(decoderGate) {
+                                if(windowClosing) { nextDecoder.Dispose(); throw new OperationCanceledException(attempt.Token); }
+                                decoder=nextDecoder; activeDecoder=decoder;
+                            }
+                            decoder.Frame+=p=> { Interlocked.Exchange(ref latest,p); Interlocked.Increment(ref frames); };
                             _=decoder.Completion.ContinueWith(_=> { try { attempt.Cancel(); } catch(ObjectDisposedException) {} },TaskScheduler.Default);
                             await Dispatcher.InvokeAsync(()=> {
                                 width=videoWidth; height=videoHeight;
@@ -144,7 +157,9 @@ public partial class MainWindow : Window
                 },attempt.Token);
             } catch(Exception ex) { Status.Text=ct.IsCancellationRequested?"已断开":qualityChangePending?"正在切换画质":$"连接中断：{ex.Message}"; }
             finally {
-                connected=false; inputs?.Complete(); attempt.Cancel(); wire.Dispose(); decoder?.Dispose(); Interlocked.Exchange(ref latest,null);
+                connected=false; inputs?.Complete(); attempt.Cancel(); wire.Dispose();
+                lock(decoderGate) { decoder?.Dispose(); if(ReferenceEquals(activeDecoder,decoder)) activeDecoder=null; }
+                Interlocked.Exchange(ref latest,null);
                 if(heartbeat!=null) await heartbeat; if(controls!=null) await controls;
                 activeAttempt=null;
                 if(Surface.IsMouseCaptured) Surface.ReleaseMouseCapture();

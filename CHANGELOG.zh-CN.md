@@ -4,6 +4,9 @@
 
 ## 未发布
 
+- FFmpeg 错误输出改为固定缓冲读取，重复释放解码器安全处理；关闭窗口直接结束自身解码进程，未连接时停止画面刷新。
+  增加真实解码资源采样和 WPF 关闭/断开检查。短期合成测试不代表完整会话或 Mac 性能；逐帧分配与软件解码仍需优化。
+
 - 源码统一 apps/macos、apps/windows；Swift 包/target、Windows 工程/程序集/命名空间统一 LocalRemote，
   程序文件改为 LocalRemote.app、LocalRemote.exe，更新构建、测试、打包和中英文文档。
   增加旧 Mac 应用/签名配置/自启动路径及 Windows 加密配置一次性迁移；Mac 授权/钥匙串/任务身份和 RML1 协议保持兼容，已有 v0.1.0 附件不修改。

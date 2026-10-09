@@ -130,6 +130,17 @@ static class Program {
                 await Until(()=>Equals(connect.Content,"连接"),"disconnect did not complete");
                 Assert(((Image)window.FindName("Desktop")).Source==null,"stale desktop after disconnect");
                 Console.WriteLine("PASS disconnect cleans video/transport and restores controls");
+                var timer=(DispatcherTimer)typeof(MainWindow).GetField("render",System.Reflection.BindingFlags.NonPublic|System.Reflection.BindingFlags.Instance)!.GetValue(window)!;
+                Assert(!timer.IsEnabled,"disconnected client still polls display at 60Hz");
+                connect.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                await Until(()=>((Image)window.FindName("Desktop")).Source!=null,"reconnection before close failed");
+                var ownedDecoder=typeof(MainWindow).GetField("activeDecoder",System.Reflection.BindingFlags.NonPublic|System.Reflection.BindingFlags.Instance)!.GetValue(window)!;
+                var child=(Process)typeof(FfmpegDecoder).GetField("process",System.Reflection.BindingFlags.NonPublic|System.Reflection.BindingFlags.Instance)!.GetValue(ownedDecoder)!;
+                int childId=child.Id;
+                window.Close();
+                await Until(()=> { try { using var remaining=Process.GetProcessById(childId); return remaining.HasExited; } catch(ArgumentException) { return true; } },"closing the connected window left FFmpeg running");
+                Assert(!timer.IsEnabled,"closed window kept display timer running");
+                Console.WriteLine("PASS disconnected display timer stops; closing connected window terminates the owned FFmpeg process");
             } finally { window.Close(); host.Dispose(); }
             try { await server; } catch(Exception ex) when(ex is OperationCanceledException or IOException or ObjectDisposedException or SocketException) {}
         } finally { Directory.Delete(directory,true); }

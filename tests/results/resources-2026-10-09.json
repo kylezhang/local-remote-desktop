@@ -1,0 +1,677 @@
+{
+  "scope": "synthetic paced decoder pipeline; driver includes producer; no capture, network or WPF rendering",
+  "cases": [
+    {
+      "width": 1280,
+      "height": 720,
+      "sourceFps": 30,
+      "durationSeconds": 40,
+      "decodedFrames": 1199,
+      "decodedFps": 29.73,
+      "logicalProcessors": 32,
+      "cpu": {
+        "driverMachinePercent": 0.77,
+        "ffmpegMachinePercent": 0.69
+      },
+      "samples": [
+        {
+          "elapsedSeconds": 1.01,
+          "decodedFrames": 28,
+          "driverPrivateMiB": 36.8,
+          "ffmpegPrivateMiB": 57.3,
+          "managedHeapMiB": 14.7,
+          "gen2Collections": 7
+        },
+        {
+          "elapsedSeconds": 2.01,
+          "decodedFrames": 58,
+          "driverPrivateMiB": 31.2,
+          "ffmpegPrivateMiB": 57.5,
+          "managedHeapMiB": 14.7,
+          "gen2Collections": 17
+        },
+        {
+          "elapsedSeconds": 3,
+          "decodedFrames": 88,
+          "driverPrivateMiB": 31.3,
+          "ffmpegPrivateMiB": 57.5,
+          "managedHeapMiB": 14.8,
+          "gen2Collections": 27
+        },
+        {
+          "elapsedSeconds": 4.01,
+          "decodedFrames": 118,
+          "driverPrivateMiB": 26.4,
+          "ffmpegPrivateMiB": 57.5,
+          "managedHeapMiB": 14.6,
+          "gen2Collections": 37
+        },
+        {
+          "elapsedSeconds": 5.01,
+          "decodedFrames": 148,
+          "driverPrivateMiB": 26.5,
+          "ffmpegPrivateMiB": 57.5,
+          "managedHeapMiB": 14.7,
+          "gen2Collections": 47
+        },
+        {
+          "elapsedSeconds": 6.01,
+          "decodedFrames": 178,
+          "driverPrivateMiB": 26.6,
+          "ffmpegPrivateMiB": 57.7,
+          "managedHeapMiB": 14.8,
+          "gen2Collections": 57
+        },
+        {
+          "elapsedSeconds": 7.02,
+          "decodedFrames": 208,
+          "driverPrivateMiB": 26.7,
+          "ffmpegPrivateMiB": 57.7,
+          "managedHeapMiB": 14.9,
+          "gen2Collections": 67
+        },
+        {
+          "elapsedSeconds": 8.01,
+          "decodedFrames": 238,
+          "driverPrivateMiB": 25.6,
+          "ffmpegPrivateMiB": 57.7,
+          "managedHeapMiB": 14.6,
+          "gen2Collections": 77
+        },
+        {
+          "elapsedSeconds": 9,
+          "decodedFrames": 268,
+          "driverPrivateMiB": 25.7,
+          "ffmpegPrivateMiB": 57.7,
+          "managedHeapMiB": 14.7,
+          "gen2Collections": 87
+        },
+        {
+          "elapsedSeconds": 10,
+          "decodedFrames": 298,
+          "driverPrivateMiB": 25.7,
+          "ffmpegPrivateMiB": 57.7,
+          "managedHeapMiB": 14.7,
+          "gen2Collections": 97
+        },
+        {
+          "elapsedSeconds": 11.01,
+          "decodedFrames": 328,
+          "driverPrivateMiB": 25.7,
+          "ffmpegPrivateMiB": 57.7,
+          "managedHeapMiB": 14.8,
+          "gen2Collections": 107
+        },
+        {
+          "elapsedSeconds": 12.01,
+          "decodedFrames": 358,
+          "driverPrivateMiB": 25.8,
+          "ffmpegPrivateMiB": 57.7,
+          "managedHeapMiB": 14.7,
+          "gen2Collections": 117
+        },
+        {
+          "elapsedSeconds": 13.01,
+          "decodedFrames": 388,
+          "driverPrivateMiB": 26,
+          "ffmpegPrivateMiB": 57.7,
+          "managedHeapMiB": 14.9,
+          "gen2Collections": 127
+        },
+        {
+          "elapsedSeconds": 14,
+          "decodedFrames": 418,
+          "driverPrivateMiB": 26.1,
+          "ffmpegPrivateMiB": 57.7,
+          "managedHeapMiB": 15,
+          "gen2Collections": 137
+        },
+        {
+          "elapsedSeconds": 15.01,
+          "decodedFrames": 448,
+          "driverPrivateMiB": 26.3,
+          "ffmpegPrivateMiB": 57.7,
+          "managedHeapMiB": 14.7,
+          "gen2Collections": 147
+        },
+        {
+          "elapsedSeconds": 16,
+          "decodedFrames": 478,
+          "driverPrivateMiB": 26.7,
+          "ffmpegPrivateMiB": 57.7,
+          "managedHeapMiB": 15.4,
+          "gen2Collections": 157
+        },
+        {
+          "elapsedSeconds": 17.01,
+          "decodedFrames": 508,
+          "driverPrivateMiB": 27.1,
+          "ffmpegPrivateMiB": 57.7,
+          "managedHeapMiB": 14.7,
+          "gen2Collections": 167
+        },
+        {
+          "elapsedSeconds": 18.01,
+          "decodedFrames": 538,
+          "driverPrivateMiB": 27.1,
+          "ffmpegPrivateMiB": 57.7,
+          "managedHeapMiB": 14.7,
+          "gen2Collections": 177
+        },
+        {
+          "elapsedSeconds": 19.01,
+          "decodedFrames": 568,
+          "driverPrivateMiB": 27.2,
+          "ffmpegPrivateMiB": 57.7,
+          "managedHeapMiB": 15.8,
+          "gen2Collections": 187
+        },
+        {
+          "elapsedSeconds": 20.01,
+          "decodedFrames": 598,
+          "driverPrivateMiB": 26.1,
+          "ffmpegPrivateMiB": 57.7,
+          "managedHeapMiB": 15.9,
+          "gen2Collections": 197
+        },
+        {
+          "elapsedSeconds": 21.01,
+          "decodedFrames": 628,
+          "driverPrivateMiB": 28.4,
+          "ffmpegPrivateMiB": 57.7,
+          "managedHeapMiB": 14.7,
+          "gen2Collections": 207
+        },
+        {
+          "elapsedSeconds": 22.01,
+          "decodedFrames": 658,
+          "driverPrivateMiB": 28.2,
+          "ffmpegPrivateMiB": 57.7,
+          "managedHeapMiB": 14.7,
+          "gen2Collections": 217
+        },
+        {
+          "elapsedSeconds": 23.01,
+          "decodedFrames": 688,
+          "driverPrivateMiB": 28.1,
+          "ffmpegPrivateMiB": 57.7,
+          "managedHeapMiB": 14.7,
+          "gen2Collections": 227
+        },
+        {
+          "elapsedSeconds": 24,
+          "decodedFrames": 718,
+          "driverPrivateMiB": 28.1,
+          "ffmpegPrivateMiB": 57.7,
+          "managedHeapMiB": 14.7,
+          "gen2Collections": 237
+        },
+        {
+          "elapsedSeconds": 25.01,
+          "decodedFrames": 748,
+          "driverPrivateMiB": 28,
+          "ffmpegPrivateMiB": 57.7,
+          "managedHeapMiB": 14.9,
+          "gen2Collections": 247
+        },
+        {
+          "elapsedSeconds": 26,
+          "decodedFrames": 778,
+          "driverPrivateMiB": 28,
+          "ffmpegPrivateMiB": 57.7,
+          "managedHeapMiB": 15,
+          "gen2Collections": 257
+        },
+        {
+          "elapsedSeconds": 27.01,
+          "decodedFrames": 808,
+          "driverPrivateMiB": 28,
+          "ffmpegPrivateMiB": 57.7,
+          "managedHeapMiB": 14.7,
+          "gen2Collections": 267
+        },
+        {
+          "elapsedSeconds": 28.01,
+          "decodedFrames": 838,
+          "driverPrivateMiB": 28,
+          "ffmpegPrivateMiB": 57.7,
+          "managedHeapMiB": 15.1,
+          "gen2Collections": 277
+        },
+        {
+          "elapsedSeconds": 29.01,
+          "decodedFrames": 868,
+          "driverPrivateMiB": 28,
+          "ffmpegPrivateMiB": 57.7,
+          "managedHeapMiB": 15.2,
+          "gen2Collections": 287
+        },
+        {
+          "elapsedSeconds": 30,
+          "decodedFrames": 898,
+          "driverPrivateMiB": 28.2,
+          "ffmpegPrivateMiB": 57.7,
+          "managedHeapMiB": 15.2,
+          "gen2Collections": 297
+        },
+        {
+          "elapsedSeconds": 31,
+          "decodedFrames": 928,
+          "driverPrivateMiB": 28.4,
+          "ffmpegPrivateMiB": 57.6,
+          "managedHeapMiB": 15.3,
+          "gen2Collections": 307
+        },
+        {
+          "elapsedSeconds": 32.01,
+          "decodedFrames": 958,
+          "driverPrivateMiB": 29.4,
+          "ffmpegPrivateMiB": 57.6,
+          "managedHeapMiB": 15.5,
+          "gen2Collections": 317
+        },
+        {
+          "elapsedSeconds": 33.05,
+          "decodedFrames": 989,
+          "driverPrivateMiB": 32.8,
+          "ffmpegPrivateMiB": 57.6,
+          "managedHeapMiB": 19.1,
+          "gen2Collections": 327
+        },
+        {
+          "elapsedSeconds": 34,
+          "decodedFrames": 1018,
+          "driverPrivateMiB": 29.4,
+          "ffmpegPrivateMiB": 57.6,
+          "managedHeapMiB": 15.7,
+          "gen2Collections": 337
+        },
+        {
+          "elapsedSeconds": 35.01,
+          "decodedFrames": 1048,
+          "driverPrivateMiB": 28.1,
+          "ffmpegPrivateMiB": 57.6,
+          "managedHeapMiB": 15.7,
+          "gen2Collections": 347
+        },
+        {
+          "elapsedSeconds": 36.01,
+          "decodedFrames": 1078,
+          "driverPrivateMiB": 28.1,
+          "ffmpegPrivateMiB": 57.6,
+          "managedHeapMiB": 15.8,
+          "gen2Collections": 357
+        },
+        {
+          "elapsedSeconds": 37.01,
+          "decodedFrames": 1108,
+          "driverPrivateMiB": 28.1,
+          "ffmpegPrivateMiB": 57.6,
+          "managedHeapMiB": 14.6,
+          "gen2Collections": 367
+        },
+        {
+          "elapsedSeconds": 38.01,
+          "decodedFrames": 1138,
+          "driverPrivateMiB": 28.1,
+          "ffmpegPrivateMiB": 57.6,
+          "managedHeapMiB": 14.7,
+          "gen2Collections": 377
+        },
+        {
+          "elapsedSeconds": 39.01,
+          "decodedFrames": 1168,
+          "driverPrivateMiB": 28.2,
+          "ffmpegPrivateMiB": 57.6,
+          "managedHeapMiB": 14.8,
+          "gen2Collections": 387
+        },
+        {
+          "elapsedSeconds": 40,
+          "decodedFrames": 1198,
+          "driverPrivateMiB": 28.3,
+          "ffmpegPrivateMiB": 57.6,
+          "managedHeapMiB": 16,
+          "gen2Collections": 397
+        }
+      ],
+      "decoderExitedAfterDispose": true
+    },
+    {
+      "width": 1920,
+      "height": 1080,
+      "sourceFps": 60,
+      "durationSeconds": 40,
+      "decodedFrames": 2398,
+      "decodedFps": 59.46,
+      "logicalProcessors": 32,
+      "cpu": {
+        "driverMachinePercent": 1.7,
+        "ffmpegMachinePercent": 1.62
+      },
+      "samples": [
+        {
+          "elapsedSeconds": 1.03,
+          "decodedFrames": 59,
+          "driverPrivateMiB": 128.9,
+          "ffmpegPrivateMiB": 76.2,
+          "managedHeapMiB": 53.5,
+          "gen2Collections": 409
+        },
+        {
+          "elapsedSeconds": 2.01,
+          "decodedFrames": 118,
+          "driverPrivateMiB": 129,
+          "ffmpegPrivateMiB": 76.2,
+          "managedHeapMiB": 45.7,
+          "gen2Collections": 419
+        },
+        {
+          "elapsedSeconds": 3,
+          "decodedFrames": 178,
+          "driverPrivateMiB": 129,
+          "ffmpegPrivateMiB": 76.2,
+          "managedHeapMiB": 45.7,
+          "gen2Collections": 429
+        },
+        {
+          "elapsedSeconds": 4.01,
+          "decodedFrames": 238,
+          "driverPrivateMiB": 120.6,
+          "ffmpegPrivateMiB": 76.2,
+          "managedHeapMiB": 45.8,
+          "gen2Collections": 439
+        },
+        {
+          "elapsedSeconds": 5,
+          "decodedFrames": 298,
+          "driverPrivateMiB": 120.6,
+          "ffmpegPrivateMiB": 76.2,
+          "managedHeapMiB": 45.9,
+          "gen2Collections": 449
+        },
+        {
+          "elapsedSeconds": 6,
+          "decodedFrames": 358,
+          "driverPrivateMiB": 120.7,
+          "ffmpegPrivateMiB": 76.2,
+          "managedHeapMiB": 46,
+          "gen2Collections": 459
+        },
+        {
+          "elapsedSeconds": 7.01,
+          "decodedFrames": 418,
+          "driverPrivateMiB": 131.3,
+          "ffmpegPrivateMiB": 76.2,
+          "managedHeapMiB": 45.6,
+          "gen2Collections": 469
+        },
+        {
+          "elapsedSeconds": 8.01,
+          "decodedFrames": 478,
+          "driverPrivateMiB": 147,
+          "ffmpegPrivateMiB": 76.2,
+          "managedHeapMiB": 109.2,
+          "gen2Collections": 479
+        },
+        {
+          "elapsedSeconds": 9,
+          "decodedFrames": 538,
+          "driverPrivateMiB": 147,
+          "ffmpegPrivateMiB": 76.2,
+          "managedHeapMiB": 109.2,
+          "gen2Collections": 489
+        },
+        {
+          "elapsedSeconds": 10.01,
+          "decodedFrames": 598,
+          "driverPrivateMiB": 147,
+          "ffmpegPrivateMiB": 76.2,
+          "managedHeapMiB": 109.2,
+          "gen2Collections": 499
+        },
+        {
+          "elapsedSeconds": 11,
+          "decodedFrames": 658,
+          "driverPrivateMiB": 147,
+          "ffmpegPrivateMiB": 76.2,
+          "managedHeapMiB": 109.2,
+          "gen2Collections": 509
+        },
+        {
+          "elapsedSeconds": 12.01,
+          "decodedFrames": 718,
+          "driverPrivateMiB": 147,
+          "ffmpegPrivateMiB": 76.2,
+          "managedHeapMiB": 109.2,
+          "gen2Collections": 519
+        },
+        {
+          "elapsedSeconds": 13.01,
+          "decodedFrames": 778,
+          "driverPrivateMiB": 147,
+          "ffmpegPrivateMiB": 76.2,
+          "managedHeapMiB": 109.2,
+          "gen2Collections": 529
+        },
+        {
+          "elapsedSeconds": 14.01,
+          "decodedFrames": 838,
+          "driverPrivateMiB": 147,
+          "ffmpegPrivateMiB": 76.2,
+          "managedHeapMiB": 109.2,
+          "gen2Collections": 539
+        },
+        {
+          "elapsedSeconds": 15.01,
+          "decodedFrames": 898,
+          "driverPrivateMiB": 147,
+          "ffmpegPrivateMiB": 76.2,
+          "managedHeapMiB": 109.2,
+          "gen2Collections": 549
+        },
+        {
+          "elapsedSeconds": 16.01,
+          "decodedFrames": 958,
+          "driverPrivateMiB": 147,
+          "ffmpegPrivateMiB": 76.2,
+          "managedHeapMiB": 109.2,
+          "gen2Collections": 559
+        },
+        {
+          "elapsedSeconds": 17.01,
+          "decodedFrames": 1018,
+          "driverPrivateMiB": 147,
+          "ffmpegPrivateMiB": 76.2,
+          "managedHeapMiB": 109.2,
+          "gen2Collections": 569
+        },
+        {
+          "elapsedSeconds": 18.01,
+          "decodedFrames": 1077,
+          "driverPrivateMiB": 147.1,
+          "ffmpegPrivateMiB": 84.1,
+          "managedHeapMiB": 101.2,
+          "gen2Collections": 579
+        },
+        {
+          "elapsedSeconds": 19.01,
+          "decodedFrames": 1137,
+          "driverPrivateMiB": 147.1,
+          "ffmpegPrivateMiB": 84.1,
+          "managedHeapMiB": 101.2,
+          "gen2Collections": 589
+        },
+        {
+          "elapsedSeconds": 20.01,
+          "decodedFrames": 1197,
+          "driverPrivateMiB": 147.1,
+          "ffmpegPrivateMiB": 84.1,
+          "managedHeapMiB": 101.3,
+          "gen2Collections": 599
+        },
+        {
+          "elapsedSeconds": 21,
+          "decodedFrames": 1257,
+          "driverPrivateMiB": 147.1,
+          "ffmpegPrivateMiB": 84.1,
+          "managedHeapMiB": 101.2,
+          "gen2Collections": 609
+        },
+        {
+          "elapsedSeconds": 22.01,
+          "decodedFrames": 1317,
+          "driverPrivateMiB": 147.1,
+          "ffmpegPrivateMiB": 84.1,
+          "managedHeapMiB": 101.2,
+          "gen2Collections": 619
+        },
+        {
+          "elapsedSeconds": 23.01,
+          "decodedFrames": 1377,
+          "driverPrivateMiB": 147.1,
+          "ffmpegPrivateMiB": 84.1,
+          "managedHeapMiB": 101.2,
+          "gen2Collections": 629
+        },
+        {
+          "elapsedSeconds": 24,
+          "decodedFrames": 1437,
+          "driverPrivateMiB": 147.1,
+          "ffmpegPrivateMiB": 84.1,
+          "managedHeapMiB": 101.2,
+          "gen2Collections": 639
+        },
+        {
+          "elapsedSeconds": 25,
+          "decodedFrames": 1497,
+          "driverPrivateMiB": 147.1,
+          "ffmpegPrivateMiB": 84.1,
+          "managedHeapMiB": 101.2,
+          "gen2Collections": 649
+        },
+        {
+          "elapsedSeconds": 26.01,
+          "decodedFrames": 1557,
+          "driverPrivateMiB": 147,
+          "ffmpegPrivateMiB": 84.1,
+          "managedHeapMiB": 101.2,
+          "gen2Collections": 659
+        },
+        {
+          "elapsedSeconds": 27.01,
+          "decodedFrames": 1617,
+          "driverPrivateMiB": 147,
+          "ffmpegPrivateMiB": 84.1,
+          "managedHeapMiB": 101.2,
+          "gen2Collections": 669
+        },
+        {
+          "elapsedSeconds": 28.01,
+          "decodedFrames": 1677,
+          "driverPrivateMiB": 147,
+          "ffmpegPrivateMiB": 84.1,
+          "managedHeapMiB": 101.2,
+          "gen2Collections": 679
+        },
+        {
+          "elapsedSeconds": 29.01,
+          "decodedFrames": 1737,
+          "driverPrivateMiB": 147,
+          "ffmpegPrivateMiB": 84.1,
+          "managedHeapMiB": 101.2,
+          "gen2Collections": 689
+        },
+        {
+          "elapsedSeconds": 30.01,
+          "decodedFrames": 1797,
+          "driverPrivateMiB": 147,
+          "ffmpegPrivateMiB": 84,
+          "managedHeapMiB": 101.2,
+          "gen2Collections": 699
+        },
+        {
+          "elapsedSeconds": 31.01,
+          "decodedFrames": 1857,
+          "driverPrivateMiB": 147,
+          "ffmpegPrivateMiB": 84,
+          "managedHeapMiB": 101.2,
+          "gen2Collections": 709
+        },
+        {
+          "elapsedSeconds": 32.01,
+          "decodedFrames": 1917,
+          "driverPrivateMiB": 147,
+          "ffmpegPrivateMiB": 84,
+          "managedHeapMiB": 101.2,
+          "gen2Collections": 719
+        },
+        {
+          "elapsedSeconds": 33,
+          "decodedFrames": 1977,
+          "driverPrivateMiB": 147,
+          "ffmpegPrivateMiB": 84,
+          "managedHeapMiB": 101.2,
+          "gen2Collections": 729
+        },
+        {
+          "elapsedSeconds": 34.03,
+          "decodedFrames": 2038,
+          "driverPrivateMiB": 147,
+          "ffmpegPrivateMiB": 84,
+          "managedHeapMiB": 109.2,
+          "gen2Collections": 739
+        },
+        {
+          "elapsedSeconds": 35.01,
+          "decodedFrames": 2097,
+          "driverPrivateMiB": 147,
+          "ffmpegPrivateMiB": 84,
+          "managedHeapMiB": 101.2,
+          "gen2Collections": 749
+        },
+        {
+          "elapsedSeconds": 36.01,
+          "decodedFrames": 2157,
+          "driverPrivateMiB": 147,
+          "ffmpegPrivateMiB": 84,
+          "managedHeapMiB": 101.2,
+          "gen2Collections": 759
+        },
+        {
+          "elapsedSeconds": 37.01,
+          "decodedFrames": 2216,
+          "driverPrivateMiB": 147,
+          "ffmpegPrivateMiB": 84,
+          "managedHeapMiB": 101.2,
+          "gen2Collections": 769
+        },
+        {
+          "elapsedSeconds": 38,
+          "decodedFrames": 2277,
+          "driverPrivateMiB": 147,
+          "ffmpegPrivateMiB": 84,
+          "managedHeapMiB": 101.2,
+          "gen2Collections": 779
+        },
+        {
+          "elapsedSeconds": 39.01,
+          "decodedFrames": 2337,
+          "driverPrivateMiB": 147,
+          "ffmpegPrivateMiB": 84,
+          "managedHeapMiB": 101.2,
+          "gen2Collections": 789
+        },
+        {
+          "elapsedSeconds": 40,
+          "decodedFrames": 2397,
+          "driverPrivateMiB": 147,
+          "ffmpegPrivateMiB": 84,
+          "managedHeapMiB": 101.3,
+          "gen2Collections": 799
+        }
+      ],
+      "decoderExitedAfterDispose": true
+    }
+  ]
+}

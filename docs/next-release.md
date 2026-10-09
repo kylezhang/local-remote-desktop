@@ -8,6 +8,11 @@ Existing v0.1.0 tag and assets remain unchanged.
 
 ## Implemented and locally checked
 
+- [x] Bounded Windows decoder diagnostics, idempotent disposal and direct cleanup
+  on connected window close; disconnected display timer stops. Production decoder
+  passed short resource checks; exact rebuilt DLL passed WPF regression. Full-session
+  allocation/CPU optimization and long runs remain pending; see [performance](performance.md).
+
 - [x] LocalRemote source/project/artifact naming and platform layout; Windows build,
   encrypted storage migration and mock-peer regression passed. Mac legacy bundle,
   signing-pin and login-path migrations passed mocks, with native verification pending.
