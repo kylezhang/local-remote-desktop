@@ -1,4 +1,4 @@
-# RML1 protocol
+# LocalRemote protocol (RML1)
 
 [简体中文](zh-CN/protocol.md)
 

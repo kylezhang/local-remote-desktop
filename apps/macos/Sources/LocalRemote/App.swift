@@ -16,7 +16,7 @@ private enum AppBrand {
     }
 }
 @main
-struct RemoteMacLANApp: App {
+struct LocalRemoteApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) var delegate
     var body: some Scene { WindowGroup("LocalRemote") { HostView(model: delegate.model) }.windowResizability(.contentSize) }
 }
@@ -142,7 +142,7 @@ final class HostModel: ObservableObject {
         LocalRemote \(Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "unknown")
         Build: \(Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "unknown")
         macOS: \(ProcessInfo.processInfo.operatingSystemVersionString)
-        InstalledAtApplications: \(Bundle.main.bundlePath == "/Applications/RemoteMacLAN.app")
+        InstalledAtApplications: \(Bundle.main.bundlePath == "/Applications/LocalRemote.app")
         AppIconLoaded: \(AppBrand.icon != nil)
         BuildSigningMode: \(Pairing.buildSigningMode)
         LegacyScreenPreflight: \(CGPreflightScreenCaptureAccess())

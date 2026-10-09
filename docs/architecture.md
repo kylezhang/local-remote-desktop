@@ -12,4 +12,4 @@ The bounded input queue coalesces only consecutive pending mouse moves, preservi
 
 Metrics are decoded FPS and incoming H.264 Mbps on Windows, plus mean Mac encoding callback time. Encoding time includes encoder queuing and excludes network time. There is no trustworthy per-frame decoder or total input-to-display latency metric in this subprocess pipeline.
 
-PSK stored in Keychain/DPAPI authenticates each connection; independent direction keys protect video and input. Protocol limits and diagnostics are documented separately. Brand changes retain the legacy bundle ID, application path and protocol to avoid unnecessary credential/TCC migration.
+PSK stored in Keychain/DPAPI authenticates each connection; independent direction keys protect video and input. Protocol limits and diagnostics are documented separately. Application files and source names use LocalRemote; stable bundle/Keychain identities and the wire protocol remain compatible. See [naming migration](naming.md).

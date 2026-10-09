@@ -1,4 +1,4 @@
-namespace RemoteMacLAN;
+namespace LocalRemote;
 public static class RemoteCoordinates {
     public static (double x,double y)? Map(double px,double py,double viewWidth,double viewHeight,int frameWidth,int frameHeight,bool clamp=false) {
         if(frameWidth<=0 || frameHeight<=0 || viewWidth<=0 || viewHeight<=0 || !double.IsFinite(px) || !double.IsFinite(py) || !double.IsFinite(viewWidth) || !double.IsFinite(viewHeight)) return null;

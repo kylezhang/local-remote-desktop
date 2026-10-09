@@ -12,12 +12,12 @@ arguments = argparse.ArgumentParser()
 arguments.add_argument('--bash', required=True)
 arguments.add_argument('--work-dir', required=True)
 options, remainder = arguments.parse_known_args()
-source = (Path(__file__).resolve().parents[2] / 'macos-host/install-app.sh').read_text(encoding='utf-8')
+source = (Path(__file__).resolve().parents[2] / 'apps/macos/install-app.sh').read_text(encoding='utf-8')
 work = Path(options.work_dir).resolve()
 work.mkdir(parents=True, exist_ok=True)
 
 class InstallerChecks(unittest.TestCase):
-    def run_case(self, mode='normal', loaded=False, duplicate=False, option=None):
+    def run_case(self, mode='normal', loaded=False, duplicate=False, option=None, legacy=False):
         temporary = tempfile.TemporaryDirectory(prefix='installer-', dir=work)
         root = Path(temporary.name).resolve()
         self.assertTrue(root.is_relative_to(work))
@@ -30,15 +30,18 @@ class InstallerChecks(unittest.TestCase):
             (path/'Contents/Resources').mkdir()
             for name in ('LocalRemote.icns', 'LocalRemote.png'):
                 (path/'Contents/Resources'/name).write_text('new icon' if not old else 'old icon')
-            executable = path/'Contents/MacOS/RemoteMacLAN'
+            executable = path/'Contents/MacOS/LocalRemote'
             executable.write_text('#!/bin/sh\n# new executable\n' if not old else '#!/bin/sh\n# old executable\n', encoding='utf-8')
             executable.chmod(0o755)
             if old: (path/'Contents/obsolete-resource').write_text('must disappear')
-        bundle(project/'build/RemoteMacLAN.app')
-        if mode=='missing-icon': (project/'build/RemoteMacLAN.app/Contents/Resources/LocalRemote.png').unlink()
-        if mode != 'first-install-verification-fail':
-            bundle(apps/'RemoteMacLAN.app', old=True, identifier='other.app' if mode=='wrong-id' else 'com.remotemaclan.host')
-        if duplicate: bundle(personal/'RemoteMacLAN.app', old=True)
+        bundle(project/'build/LocalRemote.app')
+        if mode=='missing-icon': (project/'build/LocalRemote.app/Contents/Resources/LocalRemote.png').unlink()
+        if mode not in ('first-install-verification-fail', 'legacy-only', 'legacy-only-verification-fail'):
+            bundle(apps/'LocalRemote.app', old=True, identifier='other.app' if mode=='wrong-id' else 'com.remotemaclan.host')
+        if duplicate: bundle(personal/'LocalRemote.app', old=True)
+        if legacy:
+            bundle(apps/'RemoteMacLAN.app', old=True, identifier='other.app' if mode == 'wrong-legacy-id' else 'com.remotemaclan.host')
+            bundle(personal/'RemoteMacLAN.app', old=True)
         (root/'process').write_text('12345\n', newline='\n')
         (root/'agent.plist').write_text('configured agent')
         if loaded: (root/'loaded').touch()
@@ -56,22 +59,26 @@ _mode='MODE'
 uname() { echo Darwin; }
 sleep() { :; }
 plist_read() {
-  if [[ "$*" == *CFBundleShortVersionString* ]]; then
+  if [[ "$*" == *'Set :ProgramArguments:0'* ]]; then
+    echo "agent-path $2" >> "$_test_root/actions"
+    [[ "$_mode" != agent-path-fail ]]
+  elif [[ "$*" == *CFBundleShortVersionString* ]]; then
     [[ "$_mode" != installed-metadata-fail ]] || return 1
     echo 0.1.0
   elif [[ "$*" == *CFBundleIconFile* ]]; then
     if [[ "$_mode" == bad-icon-metadata ]]; then echo wrong.icns; else echo LocalRemote.icns; fi
   else cat "${@: -1}"; fi
 }
+plutil() { :; }
 codesign() {
   [[ "$_mode" != bad-signature ]] || return 1
   if [[ "$1" == -d ]]; then
     [[ "$_mode" != unreadable-requirement ]] || return 1
-    if [[ "$_mode" == changed-adhoc && "${@: -1}" == */build/RemoteMacLAN.app ]]; then
+    if [[ "$_mode" == changed-adhoc && "${@: -1}" == */build/LocalRemote.app ]]; then
       echo 'designated => cdhash H"new"'
     elif [[ "$_mode" == changed-adhoc ]]; then
       echo 'designated => cdhash H"old"'
-    elif [[ "$_mode" == changed-user-identity && "${@: -1}" == */personal-apps/RemoteMacLAN.app ]]; then
+    elif [[ "$_mode" == changed-user-identity && "${@: -1}" == */personal-apps/LocalRemote.app ]]; then
       echo 'designated => identifier "com.remotemaclan.host" and anchor other'
     elif [[ "$_mode" == unchanged-adhoc ]]; then
       echo 'designated => cdhash H"same"'
@@ -85,17 +92,17 @@ codesign() {
     [[ "$_mode" != requirement-rejected ]] || return 1
     return 0
   fi
-  if [[ "${@: -1}" == "$_test_root/apps/RemoteMacLAN.app" ]]; then
+  if [[ "${@: -1}" == "$_test_root/apps/LocalRemote.app" ]]; then
     case "$_mode" in
-      installed-signature-fail|restore-fail|first-install-verification-fail) return 1;;
+      installed-signature-fail|restore-fail|first-install-verification-fail|legacy-only-verification-fail) return 1;;
       interrupted-install) builtin kill -TERM $$; return 1;;
     esac
   fi
 }
 mv() {
-  if [[ "$2" == "$_test_root/apps/RemoteMacLAN.app" && "$1" == */RemoteMacLAN.app && "$_mode" == install-move-fail ]]; then return 1; fi
+  if [[ "$2" == "$_test_root/apps/LocalRemote.app" && "$1" == */LocalRemote.app && "$_mode" == install-move-fail ]]; then return 1; fi
   if [[ "$1" == */previous-system.app && "$_mode" == restore-fail ]]; then return 1; fi
-  if [[ "$1" == "$_test_root/personal-apps/RemoteMacLAN.app" && "$_mode" == user-backup-fail ]]; then return 1; fi
+  if [[ "$1" == "$_test_root/personal-apps/LocalRemote.app" && "$_mode" == user-backup-fail ]]; then return 1; fi
   command mv "$@"
 }
 ditto() {
@@ -141,14 +148,14 @@ open() { echo "open $*" >> "$_test_root/actions"; [[ "$_mode" != launch-fail ]];
     def test_complete_replace_and_duplicate_removal(self):
         root, result, actions = self.run_case(duplicate=True)
         self.assertEqual(result.returncode, 0, result.stdout+result.stderr)
-        self.assertFalse((root/'apps/RemoteMacLAN.app/Contents/obsolete-resource').exists())
-        self.assertFalse((root/'personal-apps/RemoteMacLAN.app').exists())
-        self.assertEqual((root/'apps/RemoteMacLAN.app/Contents/MacOS/RemoteMacLAN').read_text(), '#!/bin/sh\n# new executable\n')
+        self.assertFalse((root/'apps/LocalRemote.app/Contents/obsolete-resource').exists())
+        self.assertFalse((root/'personal-apps/LocalRemote.app').exists())
+        self.assertEqual((root/'apps/LocalRemote.app/Contents/MacOS/LocalRemote').read_text(), '#!/bin/sh\n# new executable\n')
         self.assertIn('tccutil reset ScreenCapture com.remotemaclan.host', actions)
         self.assertIn('tccutil reset Accessibility com.remotemaclan.host', actions)
-        self.assertEqual((root/'apps/RemoteMacLAN.app/Contents/Resources/LocalRemote.png').read_text(), 'new icon')
+        self.assertEqual((root/'apps/LocalRemote.app/Contents/Resources/LocalRemote.png').read_text(), 'new icon')
         self.assertEqual(actions.count('open '), 1)
-        self.assertFalse(list((root/'apps').glob('.remote-mac-lan-install.*')))
+        self.assertFalse(list((root/'apps').glob('.localremote-install.*')))
 
     def test_loaded_agent_restarts_without_second_open(self):
         root, result, actions = self.run_case(loaded=True)
@@ -157,6 +164,35 @@ open() { echo "open $*" >> "$_test_root/actions"; [[ "$_mode" != launch-fail ]];
         self.assertIn('launchctl bootout', actions)
         self.assertIn('launchctl bootstrap', actions)
         self.assertNotIn('open ', actions)
+        self.assertIn('LocalRemote.app/Contents/MacOS/LocalRemote', actions)
+
+    def test_legacy_bundle_migration_and_rollback(self):
+        for mode in ('normal', 'legacy-only', 'installed-signature-fail', 'legacy-only-verification-fail'):
+            with self.subTest(mode=mode):
+                root, result, actions = self.run_case(mode, duplicate=True, legacy=True, option='--keep-permissions')
+                success = mode in ('normal', 'legacy-only')
+                self.assertEqual(result.returncode == 0, success, result.stdout+result.stderr)
+                for folder in ('apps', 'personal-apps'):
+                    legacy = root/folder/'RemoteMacLAN.app/Contents/obsolete-resource'
+                    self.assertEqual(legacy.exists(), not success)
+                self.assertNotIn('tccutil ', actions)
+                if success:
+                    self.assertTrue((root/'apps/LocalRemote.app/Contents/MacOS/LocalRemote').exists())
+                self.assertFalse(list((root/'apps').glob('.localremote-install.*')))
+                if mode == 'legacy-only-verification-fail': self.assertFalse((root/'apps/LocalRemote.app').exists())
+
+    def test_wrong_legacy_bundle_is_never_removed(self):
+        root, result, actions = self.run_case('wrong-legacy-id', legacy=True)
+        self.assertNotEqual(result.returncode, 0)
+        self.assertTrue((root/'apps/RemoteMacLAN.app/Contents/obsolete-resource').exists())
+        for forbidden in ('kill ', 'launchctl ', 'tccutil ', 'open '): self.assertNotIn(forbidden, actions)
+
+    def test_failed_agent_path_update_keeps_verified_app(self):
+        root, result, actions = self.run_case('agent-path-fail', loaded=True)
+        self.assertNotEqual(result.returncode, 0)
+        self.assertFalse((root/'apps/LocalRemote.app/Contents/obsolete-resource').exists())
+        self.assertNotIn('launchctl bootstrap', actions)
+        self.assertIn('install-launch-agent.sh', result.stderr)
 
     def test_default_resets_both_services_only_for_our_bundle(self):
         _, result, actions = self.run_case()
@@ -178,12 +214,12 @@ open() { echo "open $*" >> "$_test_root/actions"; [[ "$_mode" != launch-fail ]];
                 root, result, actions = self.run_case(mode, loaded=True, duplicate=True, option='--keep-permissions')
                 self.assertNotEqual(result.returncode, 0, result.stdout+result.stderr)
                 for folder in ('apps', 'personal-apps'):
-                    self.assertTrue((root/folder/'RemoteMacLAN.app/Contents/obsolete-resource').exists())
+                    self.assertTrue((root/folder/'LocalRemote.app/Contents/obsolete-resource').exists())
                 self.assertTrue((root/'process').exists())
                 self.assertTrue((root/'loaded').exists())
                 for forbidden in ('kill ', 'launchctl ', 'tccutil ', 'open '):
                     self.assertNotIn(forbidden, actions)
-                self.assertFalse(list((root/'apps').glob('.remote-mac-lan-install.*')))
+                self.assertFalse(list((root/'apps').glob('.localremote-install.*')))
 
     def test_unchanged_adhoc_can_preserve_but_changed_reset_is_explicit(self):
         _, result, actions = self.run_case('unchanged-adhoc', option='--keep-permissions')
@@ -215,10 +251,10 @@ open() { echo "open $*" >> "$_test_root/actions"; [[ "$_mode" != launch-fail ]];
             with self.subTest(mode=mode):
                 root, result, actions = self.run_case(mode)
                 self.assertNotEqual(result.returncode, 0, result.stdout+result.stderr)
-                self.assertTrue((root/'apps/RemoteMacLAN.app/Contents/obsolete-resource').exists())
+                self.assertTrue((root/'apps/LocalRemote.app/Contents/obsolete-resource').exists())
                 self.assertNotIn('open ', actions)
                 if mode not in ('reset-fail','accessibility-reset-fail'): self.assertNotIn('tccutil reset', actions)
-                self.assertFalse(list((root/'apps').glob('.remote-mac-lan-install.*')))
+                self.assertFalse(list((root/'apps').glob('.localremote-install.*')))
 
     def test_late_failures_restore_both_complete_bundles(self):
         for mode in ('install-move-fail', 'installed-signature-fail', 'installed-metadata-fail', 'interrupted-install', 'user-backup-fail'):
@@ -226,17 +262,17 @@ open() { echo "open $*" >> "$_test_root/actions"; [[ "$_mode" != launch-fail ]];
                 root, result, actions = self.run_case(mode, duplicate=True, loaded=True, option='--keep-permissions')
                 self.assertNotEqual(result.returncode, 0, result.stdout+result.stderr)
                 for folder in ('apps', 'personal-apps'):
-                    old = root/folder/'RemoteMacLAN.app/Contents'
+                    old = root/folder/'LocalRemote.app/Contents'
                     self.assertTrue((old/'obsolete-resource').exists(), result.stdout+result.stderr)
                     self.assertEqual((old/'Resources/LocalRemote.png').read_text(), 'old icon')
                 self.assertNotIn('open ', actions)
                 self.assertNotIn('launchctl bootstrap', actions)
-                self.assertFalse(list((root/'apps').glob('.remote-mac-lan-install.*')))
+                self.assertFalse(list((root/'apps').glob('.localremote-install.*')))
 
     def test_failed_restore_retains_recoverable_backup(self):
         root, result, actions = self.run_case('restore-fail')
         self.assertNotEqual(result.returncode, 0)
-        stages=list((root/'apps').glob('.remote-mac-lan-install.*'))
+        stages=list((root/'apps').glob('.localremote-install.*'))
         self.assertEqual(len(stages), 1)
         self.assertTrue((stages[0]/'previous-system.app/Contents/obsolete-resource').exists())
         self.assertIn('请勿删除', result.stderr)
@@ -247,14 +283,14 @@ open() { echo "open $*" >> "$_test_root/actions"; [[ "$_mode" != launch-fail ]];
         self.assertNotEqual(result.returncode, 0)
         resets=[line for line in actions.splitlines() if line.startswith('tccutil ')]
         self.assertEqual(resets, ['tccutil reset ScreenCapture com.remotemaclan.host', 'tccutil reset Accessibility com.remotemaclan.host'])
-        self.assertTrue((root/'apps/RemoteMacLAN.app/Contents/obsolete-resource').exists())
+        self.assertTrue((root/'apps/LocalRemote.app/Contents/obsolete-resource').exists())
         self.assertIn('权限不会回滚', result.stderr)
 
     def test_failed_first_install_removes_unverified_bundle(self):
         root, result, actions = self.run_case('first-install-verification-fail')
         self.assertNotEqual(result.returncode, 0)
-        self.assertFalse((root/'apps/RemoteMacLAN.app').exists())
-        self.assertFalse(list((root/'apps').glob('.remote-mac-lan-install.*')))
+        self.assertFalse((root/'apps/LocalRemote.app').exists())
+        self.assertFalse(list((root/'apps').glob('.localremote-install.*')))
         self.assertNotIn('open ', actions)
 
     def test_launch_failure_keeps_verified_new_bundle(self):
@@ -262,10 +298,10 @@ open() { echo "open $*" >> "$_test_root/actions"; [[ "$_mode" != launch-fail ]];
             with self.subTest(loaded=loaded):
                 root, result, actions = self.run_case('launch-fail', loaded=loaded)
                 self.assertNotEqual(result.returncode, 0)
-                app=root/'apps/RemoteMacLAN.app/Contents'
+                app=root/'apps/LocalRemote.app/Contents'
                 self.assertFalse((app/'obsolete-resource').exists())
                 self.assertEqual((app/'Resources/LocalRemote.png').read_text(), 'new icon')
-                self.assertFalse(list((root/'apps').glob('.remote-mac-lan-install.*')))
+                self.assertFalse(list((root/'apps').glob('.localremote-install.*')))
 
 if __name__ == '__main__':
     unittest.main(argv=[__file__]+remainder, verbosity=2)

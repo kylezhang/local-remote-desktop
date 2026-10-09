@@ -1,0 +1,31 @@
+LocalRemote naming migration validation summary — 2026-10-09
+This is a summary of executed checks, not a raw console transcript.
+
+Windows: .NET SDK 8.0.425; Core/Desktop runtime 8.0.31.
+PASS LocalRemote.csproj self-contained publish, namespace/XAML/assembly/resource names.
+PASS new package script, ZIP inventory, included runtime and dependency notices.
+PASS ProtocolChecks: transport rejection, decode, input queues, modifiers and DPAPI.
+PASS DPAPI legacy migration: opaque blobs remain decryptable; new settings win;
+     original files retained; completion marker prevents forgotten-data resurrection.
+PASS ClientChecks against the final packaged LocalRemote.dll: real off-screen WPF
+     bitmap, keys/shortcuts, pointer/focus release, permissions, quality reconnect,
+     disconnect cleanup. No real Mac or user connection credentials involved.
+PASS deployed new and existing shortcut locations match that exact packaged DLL.
+PASS previous RemoteMacLAN.exe shortcut opens one responsive LocalRemote window.
+DLL SHA256: 8a522853473a81ea8ab9ecbdf1dc744dae596df8209a4ffa8da825429b521431
+ZIP SHA256: 196150a1f8c4f931af78bf84f13d9cc793216a367582a8f3a4502bcea819fa9f
+The 0.1.0-named candidate is local/unpublished; existing release assets are unchanged.
+
+Mac scripted checks use mocks in disposable directories:
+PASS InstallerChecks: 18 tests, including current/legacy system/user copies,
+     legacy-only rollback, unrelated-bundle rejection and login-job path updates.
+PASS SigningChecks: 13 cases, including old ignored signing-pin migration.
+PASS MacPackageChecks: bundle/archive validation and 15 mocked release scenarios.
+PASS nine Swift source/manifest syntax parses.
+PASS seven production SharingPreparation scenarios compiled/executed with Swift
+     5.9.2 on Ubuntu 22.04, via the new source paths.
+SKIP full Apple SDK compilation, native TCC/Keychain, real installation/signing/
+     notarization and Windows-to-Mac acceptance: no native Mac executor available.
+
+PASS bilingual local links, aligned public versions, icons, tracked-file hygiene,
+     LocalRemote source naming and explicit compatibility-name exceptions.

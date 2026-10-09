@@ -37,7 +37,7 @@ LocalRemote 让你通过局域网查看并操作另一台电脑当前的桌面�
 
 1. 从 [Releases](https://atomgit.com/zkxw2008/LocalRemote/releases) 下载 Windows x64 ZIP 并解压。
 2. 完整安装支持 H.264 解码的 [FFmpeg 构建](https://ffmpeg.org/download.html)，并加入 PATH。
-3. 运行解压目录中的 `RemoteMacLAN.exe`。
+3. 运行解压目录中的 `LocalRemote.exe`（已有 v0.1.0 发版中仍为 `RemoteMacLAN.exe`）。
 
 发布包包含 .NET Desktop Runtime。已有能正常使用的 FFmpeg 可继续沿用。程序文件名暂时保留兼容名称。
 
@@ -48,7 +48,7 @@ LocalRemote 让你通过局域网查看并操作另一台电脑当前的桌面�
 ```sh
 git clone https://atomgit.com/zkxw2008/LocalRemote.git
 cd LocalRemote
-bash macos-host/install-app.sh
+bash apps/macos/install-app.sh
 ```
 
 在系统设置 → 隐私与安全性授权**屏幕录制**和**辅助功能**，授权后退出重开应用，再开始共享。以正常用户执行安装，不使用 `sudo`。
@@ -88,10 +88,11 @@ Mac 当前提供源码安装。签名、升级、权限与排障见 [Mac 指南]
 ## 文档
 
 - [使用指南](docs/zh-CN/usage.md)与 [Mac 排障](docs/zh-CN/macos.md)
-- [Windows 源码构建](windows-client/BUILD.zh-CN.md)
+- [Windows 源码构建](apps/windows/BUILD.zh-CN.md)
 - [架构](docs/zh-CN/architecture.md)与 [安全协议](docs/zh-CN/protocol.md)
 - [构建与测试状态](docs/zh-CN/validation.md)
 - [参与维护](CONTRIBUTING.md)与 [发版流程](docs/zh-CN/releasing.md)
+- [工程结构与命名迁移](docs/zh-CN/naming.md)
 
 ## 许可证
 

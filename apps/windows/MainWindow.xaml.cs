@@ -7,7 +7,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Threading;
-namespace RemoteMacLAN;
+namespace LocalRemote;
 public partial class MainWindow : Window
 {
     CancellationTokenSource? session;

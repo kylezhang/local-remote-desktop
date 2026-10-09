@@ -3,10 +3,14 @@
 [简体中文](zh-CN/next-release.md) · [Roadmap](roadmap.md)
 
 Status on 2026-10-09: development on main. **Not released.** Public app versions
-remain 0.1.0 until release preparation; Mac internal build number is 11.
+remain 0.1.0 until release preparation; Mac internal build number is 12.
 Existing v0.1.0 tag and assets remain unchanged.
 
 ## Implemented and locally checked
+
+- [x] LocalRemote source/project/artifact naming and platform layout; Windows build,
+  encrypted storage migration and mock-peer regression passed. Mac legacy bundle,
+  signing-pin and login-path migrations passed mocks, with native verification pending.
 
 - [x] Confirmed vector identity and platform icon exports; Windows built/rendered.
 - [x] Installer validates staged signature and icons before replacement.

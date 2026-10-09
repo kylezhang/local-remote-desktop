@@ -1,4 +1,4 @@
-# RML1 协议
+# LocalRemote 协议（RML1）
 
 [English / 完整字段规范](../protocol.md)
 

@@ -2,7 +2,7 @@
 set -euo pipefail
 cd "$(dirname "$0")"
 [[ "$(uname -s)" == Darwin ]] || { echo '仅支持 macOS。' >&2; exit 1; }
-[[ $# == 0 ]] || { echo '用法：bash macos-host/configure-signing.sh；也可通过 SIGN_IDENTITY 指定已有证书。' >&2; exit 1; }
+[[ $# == 0 ]] || { echo '用法：bash apps/macos/configure-signing.sh；也可通过 SIGN_IDENTITY 指定已有证书。' >&2; exit 1; }
 identities="$(security find-identity -v -p codesigning)"
 identity="${SIGN_IDENTITY:-}"
 if [[ -z "$identity" ]]; then identity="$(printf '%s\n' "$identities" | awk '/"Developer ID Application:/ {print $2; exit}')"; fi

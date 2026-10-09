@@ -11,7 +11,7 @@ import zipfile
 
 def check_files(files, version):
     required = {
-        'Contents/Info.plist', 'Contents/MacOS/RemoteMacLAN',
+        'Contents/Info.plist', 'Contents/MacOS/LocalRemote',
         'Contents/Resources/LocalRemote.icns', 'Contents/Resources/LocalRemote.png',
         'Contents/Resources/signing-mode.txt', 'Contents/_CodeSignature/CodeResources',
     }
@@ -24,11 +24,11 @@ def check_files(files, version):
     info = plistlib.loads(files['Contents/Info.plist'])
     if (info.get('CFBundleIdentifier') != 'com.remotemaclan.host'
             or info.get('CFBundleShortVersionString') != version
-            or info.get('CFBundleExecutable') != 'RemoteMacLAN'
+            or info.get('CFBundleExecutable') != 'LocalRemote'
             or info.get('CFBundleIconFile') != 'LocalRemote.icns'
             or not re.fullmatch(r'[1-9][0-9]*', str(info.get('CFBundleVersion', '')))):
         raise ValueError('Incorrect application identity, version or icon')
-    executable = files['Contents/MacOS/RemoteMacLAN']
+    executable = files['Contents/MacOS/LocalRemote']
     if len(executable) < 32 or struct.unpack('<II', executable[:8]) != (0xFEEDFACF, 0x0100000C):
         raise ValueError('Expected a thin Apple Silicon Mach-O executable')
     png = files['Contents/Resources/LocalRemote.png']
@@ -61,7 +61,7 @@ def check_archive(archive, version, commit):
     if not re.fullmatch(r'[0-9a-f]{40}', commit or ''):
         raise ValueError('A full source commit is required')
     folder = f'LocalRemote-v{version}-macos-arm64'
-    app_prefix = folder + '/RemoteMacLAN.app/'
+    app_prefix = folder + '/LocalRemote.app/'
     required_docs = {folder + '/' + name for name in ('NOTICE.md', 'START-HERE.txt', 'release.json')}
     files = {}
     with zipfile.ZipFile(archive) as package:

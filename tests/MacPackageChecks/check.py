@@ -30,10 +30,10 @@ def bundle(app):
     (app/'Contents/MacOS').mkdir(parents=True)
     (app/'Contents/Resources').mkdir()
     (app/'Contents/_CodeSignature').mkdir()
-    info = plistlib.loads((root/'macos-host/Info.plist').read_bytes())
+    info = plistlib.loads((root/'apps/macos/Info.plist').read_bytes())
     info['CFBundleShortVersionString'] = '0.1.1'
     (app/'Contents/Info.plist').write_bytes(plistlib.dumps(info))
-    executable = app/'Contents/MacOS/RemoteMacLAN'
+    executable = app/'Contents/MacOS/LocalRemote'
     executable.write_bytes(struct.pack('<II', 0xFEEDFACF, 0x0100000C) + bytes(24))
     executable.chmod(0o755)
     for source, target in [('LocalRemote.icns', 'LocalRemote.icns'), ('icon.png', 'LocalRemote.png')]:
@@ -51,14 +51,14 @@ class PackageChecks(unittest.TestCase):
     def test_bundle_validation(self):
         for change in ('none', 'missing-icon', 'wrong-version', 'wrong-cpu', 'adhoc', 'extra-key', 'bad-icns'):
             with self.subTest(change=change):
-                app = self.fixture()/'RemoteMacLAN.app'
+                app = self.fixture()/'LocalRemote.app'
                 bundle(app)
                 if change == 'missing-icon': (app/'Contents/Resources/LocalRemote.png').unlink()
                 if change == 'wrong-version':
                     info = plistlib.loads((app/'Contents/Info.plist').read_bytes())
                     info['CFBundleShortVersionString'] = '9.9.9'
                     (app/'Contents/Info.plist').write_bytes(plistlib.dumps(info))
-                if change == 'wrong-cpu': (app/'Contents/MacOS/RemoteMacLAN').write_bytes(bytes(32))
+                if change == 'wrong-cpu': (app/'Contents/MacOS/LocalRemote').write_bytes(bytes(32))
                 if change == 'adhoc': (app/'Contents/Resources/signing-mode.txt').write_text('ad-hoc')
                 if change == 'extra-key': (app/'Contents/Resources/secret.key').write_text('fixture')
                 if change == 'bad-icns': (app/'Contents/Resources/LocalRemote.icns').write_bytes(b'icns0000')
@@ -69,7 +69,7 @@ class PackageChecks(unittest.TestCase):
     def test_archive_validation(self):
         fixture = self.fixture()
         payload = fixture/name
-        bundle(payload/'RemoteMacLAN.app')
+        bundle(payload/'LocalRemote.app')
         for doc in ('NOTICE.md', 'START-HERE.txt'): (payload/doc).write_text('fixture documentation')
         hashes = {p.relative_to(payload).as_posix(): hashlib.sha256(p.read_bytes()).hexdigest()
                   for p in payload.rglob('*') if p.is_file()}
@@ -104,22 +104,22 @@ class PackageChecks(unittest.TestCase):
                      'staple-failed', 'extract-tampered', 'source-changed', 'existing-output'):
             with self.subTest(mode=mode):
                 fixture = self.fixture()
-                for directory in ('scripts', 'macos-host', 'tests/MacStartupChecks', 'dist'):
+                for directory in ('scripts', 'apps/macos', 'tests/MacStartupChecks', 'dist'):
                     (fixture/directory).mkdir(parents=True)
-                bundle(fixture/'template/RemoteMacLAN.app')
+                bundle(fixture/'template/LocalRemote.app')
                 (fixture/'NOTICE.md').write_text('fixture notices')
-                (fixture/'macos-host/Info.plist').write_bytes((fixture/'template/RemoteMacLAN.app/Contents/Info.plist').read_bytes())
+                (fixture/'apps/macos/Info.plist').write_bytes((fixture/'template/LocalRemote.app/Contents/Info.plist').read_bytes())
                 if mode == 'wrong-version':
-                    info = plistlib.loads((fixture/'macos-host/Info.plist').read_bytes())
+                    info = plistlib.loads((fixture/'apps/macos/Info.plist').read_bytes())
                     info['CFBundleShortVersionString'] = '0.1.0'
-                    (fixture/'macos-host/Info.plist').write_bytes(plistlib.dumps(info))
+                    (fixture/'apps/macos/Info.plist').write_bytes(plistlib.dumps(info))
                 (fixture/'scripts/check-macos-package.py').write_bytes((root/'scripts/check-macos-package.py').read_bytes())
-                (fixture/'macos-host/build-app.sh').write_text('''#!/bin/bash
+                (fixture/'apps/macos/build-app.sh').write_text('''#!/bin/bash
 set -eu
-[[ "$RML_RELEASE_BUILD" == 1 && "$SIGN_IDENTITY" == ABCDEF ]]
+[[ "$LOCALREMOTE_RELEASE_BUILD" == 1 && "$SIGN_IDENTITY" == ABCDEF ]]
 echo build >> actions
-mkdir -p macos-host/build
-cp -R template/RemoteMacLAN.app macos-host/build/RemoteMacLAN.app
+mkdir -p apps/macos/build
+cp -R template/LocalRemote.app apps/macos/build/LocalRemote.app
 ''', newline='\n')
                 (fixture/'tests/MacStartupChecks/check.sh').write_text('echo startup-check >> actions\n', newline='\n')
                 # Only archive creation/extraction is simulated by Python; production
@@ -182,7 +182,7 @@ ditto() {
   elif [[ "$1" == -x ]]; then
     python3 archive.py unpack "${@: -2:1}" "${@: -1}"
     if [[ "$mode" == extract-tampered ]]; then
-      rm "${@: -1}/LocalRemote-v0.1.1-macos-arm64/RemoteMacLAN.app/Contents/CodeResources"
+      rm "${@: -1}/LocalRemote-v0.1.1-macos-arm64/LocalRemote.app/Contents/CodeResources"
     fi
   else cp -R "$1" "$2"; fi
 }

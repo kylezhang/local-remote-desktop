@@ -9,14 +9,19 @@ import subprocess
 import xml.etree.ElementTree as ET
 
 root = Path(__file__).resolve().parents[2]
-version = ET.parse(root/'windows-client/RemoteMacLAN.csproj').findtext('./PropertyGroup/Version')
+version = ET.parse(root/'apps/windows/LocalRemote.csproj').findtext('./PropertyGroup/Version')
 assert re.fullmatch(r'\d+\.\d+\.\d+', version)
-plist = plistlib.loads((root/'macos-host/Info.plist').read_bytes())
+plist = plistlib.loads((root/'apps/macos/Info.plist').read_bytes())
 assert plist['CFBundleShortVersionString'] == version
 assert plist['CFBundleIdentifier'] == 'com.remotemaclan.host'
 assert plist['CFBundleIconFile'] == 'LocalRemote.icns'
-assert f'LocalRemote · {version}' in (root/'windows-client/MainWindow.xaml').read_text(encoding='utf-8')
-assert f'LocalRemote {version}' in (root/'macos-host/Sources/RemoteMacLAN/App.swift').read_text(encoding='utf-8')
+assert plist['CFBundleExecutable'] == 'LocalRemote'
+project = ET.parse(root/'apps/windows/LocalRemote.csproj')
+assert project.findtext('./PropertyGroup/AssemblyName') == 'LocalRemote'
+assert project.findtext('./PropertyGroup/RootNamespace') == 'LocalRemote'
+assert 'name: "LocalRemote"' in (root/'apps/macos/Package.swift').read_text(encoding='utf-8')
+assert f'LocalRemote · {version}' in (root/'apps/windows/MainWindow.xaml').read_text(encoding='utf-8')
+assert f'LocalRemote {version}' in (root/'apps/macos/Sources/LocalRemote/App.swift').read_text(encoding='utf-8')
 assert not (root/'experiments').exists()
 print('PASS aligned public versions, legacy Mac identity and removed experiment')
 
@@ -43,6 +48,12 @@ assert (root/'assets/brand/icon.png').read_bytes().startswith(b'\x89PNG\r\n\x1a\
 print('PASS square RGBA master/PNG/multi-size ICO/ICNS containers')
 
 tracked = subprocess.check_output(['git','ls-files','-z'],cwd=root).decode().split('\0')
+assert not any(p.startswith(('macos-host/', 'windows-client/')) for p in tracked if p and (root/p).exists()), 'Old source layout remains tracked'
+legacy_migration_files = {
+    'apps/macos/install-app.sh', 'apps/macos/diagnose-permissions.sh',
+    'apps/windows/SecretStore.cs', 'tests/InstallerChecks/check.py',
+    'tests/ProtocolChecks/Program.cs',
+}
 for relative in filter(None,tracked):
     path=root/relative
     if not path.exists(): continue
@@ -52,4 +63,8 @@ for relative in filter(None,tracked):
         content=path.read_text(encoding='utf-8')
         assert not re.search(r'-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----',content),relative
         assert not re.search(r'(?i)(?:access_token|api_key)\s*[:=]\s*[\"\'][^\"\']{12,}[\"\']',content),relative
+    if path.suffix.lower() in {'.cs','.xaml','.csproj','.swift','.ps1','.sh','.py'}:
+        content = path.read_text(encoding='utf-8')
+        assert 'RemoteMacLAN' not in content or relative in legacy_migration_files or relative == 'tests/ReleaseChecks/check.py', ('Unexpected legacy source name', relative)
 print('PASS tracked-file hygiene and basic secret indicators (not a security audit)')
+print('PASS LocalRemote source naming; legacy names restricted to migration code')

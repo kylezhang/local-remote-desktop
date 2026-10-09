@@ -10,14 +10,19 @@ if [[ $# == 1 ]]; then
     --reset-permissions) ;;
     --keep-permissions) reset_screen=false; reset_accessibility=false ;;
     --reset-screen-permission) reset_accessibility=false ;;
-    *) echo '用法：bash macos-host/install-app.sh [--keep-permissions|--reset-permissions|--reset-screen-permission]' >&2; exit 1 ;;
+    *) echo '用法：bash apps/macos/install-app.sh [--keep-permissions|--reset-permissions|--reset-screen-permission]' >&2; exit 1 ;;
   esac
 elif [[ $# != 0 ]]; then
-  echo '用法：bash macos-host/install-app.sh [--keep-permissions|--reset-permissions|--reset-screen-permission]' >&2; exit 1
+  echo '用法：bash apps/macos/install-app.sh [--keep-permissions|--reset-permissions|--reset-screen-permission]' >&2; exit 1
 fi
 
-target=/Applications/RemoteMacLAN.app
-user_target="$HOME/Applications/RemoteMacLAN.app"
+target=/Applications/LocalRemote.app
+user_target="$HOME/Applications/LocalRemote.app"
+# Product filenames migrate; persistent bundle/Keychain/launchd identities do not.
+legacy_target=/Applications/RemoteMacLAN.app
+legacy_user_target="$HOME/Applications/RemoteMacLAN.app"
+old_bundles=("$target" "$user_target" "$legacy_target" "$legacy_user_target")
+backup_names=(previous-system.app previous-user.app legacy-system.app legacy-user.app)
 agent="$HOME/Library/LaunchAgents/com.remotemaclan.host.plist"
 domain="gui/$(id -u)"
 stage_dir=""
@@ -34,10 +39,10 @@ cleanup() {
   # bundles in the private staging directory. Never merge old/new contents.
   if [[ "$replacement_started" == true && "$installed" == false ]]; then
     echo '新应用安装未完成，正在恢复旧应用包。' >&2
-    local backup destination
-    for backup in previous-system.app previous-user.app; do
-      destination="$target"
-      [[ "$backup" != previous-user.app ]] || destination="$user_target"
+    local backup destination index
+    for index in "${!old_bundles[@]}"; do
+      backup="${backup_names[$index]}"
+      destination="${old_bundles[$index]}"
       if [[ -e "$stage_dir/$backup" ]]; then
         if [[ -L "$destination" ]]; then
           preserve_stage=true
@@ -58,7 +63,7 @@ cleanup() {
       echo '安装恢复处理完成；已经重置的权限不会回滚，应用未自动启动。' >&2
     fi
   fi
-  if [[ -n "$stage_dir" && "$stage_dir" == /Applications/.remote-mac-lan-install.* && "$preserve_stage" == false ]]; then rm -rf -- "$stage_dir"; fi
+  if [[ -n "$stage_dir" && "$stage_dir" == /Applications/.localremote-install.* && "$preserve_stage" == false ]]; then rm -rf -- "$stage_dir"; fi
   if [[ "$agent_removed" == true && "$installed" == false ]]; then
     echo '安装未完成；旧自启动暂时保持停止，避免启动不完整的应用。' >&2
   fi
@@ -72,8 +77,8 @@ had_system_bundle=false
 
 echo '[1/6] 构建最新版；构建失败时保留已安装的应用。'
 bash ./build-app.sh
-app="$PWD/build/RemoteMacLAN.app"
-[[ -x "$app/Contents/MacOS/RemoteMacLAN" ]] || { echo '构建产物不完整。' >&2; exit 1; }
+app="$PWD/build/LocalRemote.app"
+[[ -x "$app/Contents/MacOS/LocalRemote" ]] || { echo '构建产物不完整。' >&2; exit 1; }
 codesign --verify --strict "$app"
 [[ -s "$app/Contents/Resources/LocalRemote.icns" && -s "$app/Contents/Resources/LocalRemote.png" ]] || {
   echo '新应用缺少图标资源；保留旧应用，安装中止。' >&2; exit 1
@@ -81,18 +86,18 @@ codesign --verify --strict "$app"
 [[ "$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIconFile' "$app/Contents/Info.plist")" == LocalRemote.icns ]] || {
   echo '新应用图标声明不正确；保留旧应用，安装中止。' >&2; exit 1
 }
-stage_dir="$(mktemp -d /Applications/.remote-mac-lan-install.XXXXXX)"
-[[ "$stage_dir" == /Applications/.remote-mac-lan-install.* && ! -L "$stage_dir" ]] || { echo '安装暂存路径异常。' >&2; exit 1; }
-ditto "$app" "$stage_dir/RemoteMacLAN.app"
-codesign --verify --strict "$stage_dir/RemoteMacLAN.app"
+stage_dir="$(mktemp -d /Applications/.localremote-install.XXXXXX)"
+[[ "$stage_dir" == /Applications/.localremote-install.* && ! -L "$stage_dir" ]] || { echo '安装暂存路径异常。' >&2; exit 1; }
+ditto "$app" "$stage_dir/LocalRemote.app"
+codesign --verify --strict "$stage_dir/LocalRemote.app"
 for icon in LocalRemote.icns LocalRemote.png; do
-  cmp -s "$app/Contents/Resources/$icon" "$stage_dir/RemoteMacLAN.app/Contents/Resources/$icon" || {
+  cmp -s "$app/Contents/Resources/$icon" "$stage_dir/LocalRemote.app/Contents/Resources/$icon" || {
     echo '暂存图标与构建产物不一致；保留旧应用，安装中止。' >&2; exit 1
   }
 done
 
 # Restrict every deletion to these exact, non-symlink application bundles.
-for old in "$target" "$user_target"; do
+for old in "${old_bundles[@]}"; do
   [[ ! -L "$old" ]] || { echo "拒绝删除符号链接：$old" >&2; exit 1; }
   if [[ -e "$old" ]]; then
     bundle_id="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "$old/Contents/Info.plist")"
@@ -110,7 +115,7 @@ if [[ "$reset_screen" == false && "$reset_accessibility" == false ]]; then
     echo '无法读取新版本签名要求；保留旧应用，安装中止。' >&2; exit 1
   fi
   [[ -n "$new_requirement" ]] || { echo '无法读取新版本签名要求；保留旧应用，安装中止。' >&2; exit 1; }
-  for old in "$target" "$user_target"; do
+  for old in "${old_bundles[@]}"; do
     [[ -e "$old" ]] || continue
     old_requirement="$(designated_requirement "$old")" || old_requirement=""
     if [[ -z "$old_requirement" || "$old_requirement" != "$new_requirement" ]]; then
@@ -136,19 +141,22 @@ fi
 # Match the executable name, including copies launched from build/Downloads.
 # No AppleScript prompt or dependency on the original launch path.
 stop_hosts() {
-  local signal="$1" pid
-  while IFS= read -r pid; do
-    [[ "$pid" =~ ^[0-9]+$ ]] || continue
-    kill "-$signal" "$pid" 2>/dev/null || true
-  done < <(pgrep -x RemoteMacLAN || true)
+  local signal="$1" pid name
+  for name in LocalRemote RemoteMacLAN; do
+    while IFS= read -r pid; do
+      [[ "$pid" =~ ^[0-9]+$ ]] || continue
+      kill "-$signal" "$pid" 2>/dev/null || true
+    done < <(pgrep -x "$name" || true)
+  done
 }
+hosts_running() { pgrep -x LocalRemote >/dev/null || pgrep -x RemoteMacLAN >/dev/null; }
 stop_hosts TERM
 for attempt in {1..30}; do
-  if ! pgrep -x RemoteMacLAN >/dev/null; then break; fi
+  if ! hosts_running; then break; fi
   sleep 0.1
 done
-if pgrep -x RemoteMacLAN >/dev/null; then stop_hosts KILL; sleep 0.2; fi
-if pgrep -x RemoteMacLAN >/dev/null; then echo '旧 Host 无法停止，安装已中止。' >&2; exit 1; fi
+if hosts_running; then stop_hosts KILL; sleep 0.2; fi
+if hosts_running; then echo '旧 Host 无法停止，安装已中止。' >&2; exit 1; fi
 
 echo '[3/6] 清理本应用的屏幕录制和辅助功能授权。'
 # User-requested clean installation. Reset only these two services for our
@@ -174,16 +182,31 @@ if [[ -e "$target" ]]; then
   had_system_bundle=true
   mv "$target" "$stage_dir/previous-system.app"
 fi
-if [[ -e "$user_target" ]]; then mv "$user_target" "$stage_dir/previous-user.app"; fi
-[[ ! -e "$target" && ! -e "$user_target" ]] || { echo '旧应用删除失败。' >&2; exit 1; }
+for index in 1 2 3; do
+  old="${old_bundles[$index]}"
+  if [[ -e "$old" ]]; then mv "$old" "$stage_dir/${backup_names[$index]}"; fi
+done
+for old in "${old_bundles[@]}"; do
+  [[ ! -e "$old" ]] || { echo '旧应用删除失败。' >&2; exit 1; }
+done
 
 echo '[5/6] 安装并验证新应用。'
-mv "$stage_dir/RemoteMacLAN.app" "$target"
+mv "$stage_dir/LocalRemote.app" "$target"
 new_at_target=true
 codesign --verify --strict "$target"
 version="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$target/Contents/Info.plist")"
 installed=true
 touch "$target"
+
+# Existing agents keep their stable label but must no longer point at the old
+# bundle/executable. Rewrite only ProgramArguments:0 after successful installation.
+if [[ -f "$agent" ]]; then
+  if ! /usr/libexec/PlistBuddy -c "Set :ProgramArguments:0 $target/Contents/MacOS/LocalRemote" "$agent" ||
+     ! plutil -lint "$agent"; then
+    echo '新应用已安装，但自启动路径更新失败；请运行 apps/macos/install-launch-agent.sh。' >&2
+    exit 1
+  fi
+fi
 
 echo '[6/6] 启动唯一的新版本。'
 if [[ "$agent_was_loaded" == true ]]; then

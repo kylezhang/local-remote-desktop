@@ -3,9 +3,18 @@ set -euo pipefail
 cd "$(dirname "$0")"
 if [[ "$(uname -m)" != arm64 ]]; then echo "Apple Silicon required" >&2; exit 1; fi
 identity="${SIGN_IDENTITY:-}"
-release_mode="${RML_RELEASE_BUILD:-0}"
+release_mode="${LOCALREMOTE_RELEASE_BUILD:-${RML_RELEASE_BUILD:-0}}"
 identity_file="$PWD/.signing-identity"
-stable_mode="${RML_REQUIRE_STABLE_SIGNATURE:-0}"
+legacy_signing_dir="$PWD/../../macos-host"
+# Git does not move ignored signing settings with renamed source directories.
+if [[ "$release_mode" != 1 ]]; then
+  for setting in .signing-identity .require-stable-signature; do
+    if [[ ! -e "$PWD/$setting" && -f "$legacy_signing_dir/$setting" && ! -L "$legacy_signing_dir/$setting" ]]; then
+      cp "$legacy_signing_dir/$setting" "$PWD/$setting"
+    fi
+  done
+fi
+stable_mode="${LOCALREMOTE_REQUIRE_STABLE_SIGNATURE:-${RML_REQUIRE_STABLE_SIGNATURE:-0}}"
 if [[ -f "$PWD/.require-stable-signature" ]]; then stable_mode=1; fi
 if [[ -z "$identity" && -f "$identity_file" ]]; then identity="$(cat "$identity_file")"; fi
 if [[ -z "$identity" ]]; then
@@ -32,7 +41,7 @@ fi
 # a separate cache so products from different backends are never mixed.
 xcrun swift build --build-system native --scratch-path .build-native -c release
 bin_dir="$(xcrun swift build --build-system native --scratch-path .build-native -c release --show-bin-path)"
-app="$PWD/build/RemoteMacLAN.app"
+app="$PWD/build/LocalRemote.app"
 mkdir -p "$PWD/build"
 [[ ! -L "$PWD/build" && ! -L "$app" ]] || { echo 'Build output must not be a symlink.' >&2; exit 1; }
 stage="$(mktemp -d "$PWD/build/.bundle.XXXXXXXX")"
@@ -52,12 +61,12 @@ cleanup_bundle() {
 trap cleanup_bundle EXIT
 trap 'exit 130' INT
 trap 'exit 143' TERM
-app="$stage/RemoteMacLAN.app"
+app="$stage/LocalRemote.app"
 mkdir -p "$app/Contents/MacOS" "$app/Contents/Resources"
-cp "$bin_dir/RemoteMacLAN" "$app/Contents/MacOS/RemoteMacLAN"
+cp "$bin_dir/LocalRemote" "$app/Contents/MacOS/LocalRemote"
 cp Info.plist "$app/Contents/Info.plist"
-cp ../assets/brand/LocalRemote.icns "$app/Contents/Resources/LocalRemote.icns"
-cp ../assets/brand/icon.png "$app/Contents/Resources/LocalRemote.png"
+cp ../../assets/brand/LocalRemote.icns "$app/Contents/Resources/LocalRemote.icns"
+cp ../../assets/brand/icon.png "$app/Contents/Resources/LocalRemote.png"
 [[ -s "$app/Contents/Resources/LocalRemote.icns" && -s "$app/Contents/Resources/LocalRemote.png" ]] || {
   echo '图标资源缺失，构建中止。' >&2; exit 1
 }
@@ -69,7 +78,7 @@ printf '%s\n' "$signing_mode" > "$app/Contents/Resources/signing-mode.txt"
 # readable/executable when copied into /Applications for another normal user.
 find "$app" -type d -exec chmod 755 {} +
 find "$app" -type f -exec chmod 644 {} +
-chmod 755 "$app/Contents/MacOS/RemoteMacLAN"
+chmod 755 "$app/Contents/MacOS/LocalRemote"
 sign_options=()
 if [[ "$release_mode" == 1 ]]; then sign_options=(--options runtime --timestamp); fi
 codesign --force --sign "$identity" --identifier com.remotemaclan.host "${sign_options[@]}" "$app"

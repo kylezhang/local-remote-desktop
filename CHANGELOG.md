@@ -4,6 +4,13 @@
 
 ## Unreleased
 
+- Unified source layout as apps/macos and apps/windows, Swift package/target and
+  Windows project/assembly/namespace as LocalRemote, and executable files as
+  LocalRemote.app/LocalRemote.exe. Updated build, test, package and bilingual docs.
+  Added legacy Mac bundle/signing-pin/login-path migration and one-time encrypted
+  Windows settings migration. Stable Mac authorization/Keychain/job identities and
+  the RML1 wire contract remain compatible; published v0.1.0 assets are unchanged.
+
 - Added a maintainer-only Mac candidate pipeline with Developer ID-only release signing,
   Hardened Runtime/timestamp, notarization and stapling, final ZIP extraction checks,
   provenance, notices and checksums. Portable and mocked failure tests pass; no real Mac

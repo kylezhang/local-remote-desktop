@@ -11,7 +11,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Threading;
-using RemoteMacLAN;
+using LocalRemote;
 
 static class Program {
     [STAThread] static int Main() {
@@ -27,7 +27,7 @@ static class Program {
         } await Task.Delay(20); }
     }
     static async Task Check() {
-        var directory=Path.Combine(Path.GetTempPath(),"rml-client-check-"+Guid.NewGuid().ToString("N")); Directory.CreateDirectory(directory);
+        var directory=Path.Combine(Path.GetTempPath(),"localremote-client-check-"+Guid.NewGuid().ToString("N")); Directory.CreateDirectory(directory);
         var sample=Path.Combine(directory,"sample.h264");
         var start=new ProcessStartInfo("ffmpeg.exe") { UseShellExecute=false,CreateNoWindow=true,RedirectStandardError=true };
         foreach(var arg in new[]{"-hide_banner","-loglevel","error","-f","lavfi","-i","testsrc2=size=320x180:rate=30","-t","2","-c:v","libx264","-preset","ultrafast","-tune","zerolatency","-x264-params","aud=1:keyint=30:repeat-headers=1","-f","h264",sample}) start.ArgumentList.Add(arg);

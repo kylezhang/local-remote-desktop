@@ -6,6 +6,15 @@ Release environment: Windows x64, .NET SDK 8.0.425 and Desktop/Core runtime 8.0.
 
 ## Automated coverage
 
+- Naming migration (2026-10-09): LocalRemote Windows project/assembly built and
+  packaged self-contained; the exact packaged DLL passed WPF mock-peer regression.
+  Protocol tests exercised opaque DPAPI migration, decryptability, newer-setting
+  priority, retained originals and no resurrection after forgetting. Mac installer
+  mocks exercised all legacy locations, rollback and login-job path updates; signing
+  mocks exercised old ignored pin migration. Swift startup checks still execute with
+  a real Linux compiler; full Apple SDK/native install acceptance remains pending.
+  Historical result files retain the source/artifact names from their original runs.
+
 - MacPackageChecks (2026-10-09): portable bundle/archive checks reject missing icons,
   wrong version/CPU, development mode, extra files, malformed icons, unsafe ZIP entries,
   modified content and wrong provenance. Mocked release cases cover invalid identity,

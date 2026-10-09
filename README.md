@@ -37,7 +37,7 @@ The current release supports one controller and one display. The Mac must be awa
 
 1. Download the Windows x64 ZIP from [Releases](https://atomgit.com/zkxw2008/LocalRemote/releases) and extract it.
 2. Install a complete [FFmpeg build](https://ffmpeg.org/download.html) with H.264 decoding and add it to PATH.
-3. Run `RemoteMacLAN.exe` from the extracted folder.
+3. Run `LocalRemote.exe` from the extracted folder (`RemoteMacLAN.exe` in the existing v0.1.0 release).
 
 The ZIP includes the .NET Desktop Runtime. If FFmpeg already works on your machine, you can keep that installation. The executable retains its original name for compatibility.
 
@@ -48,7 +48,7 @@ Install Xcode Command Line Tools if needed (`xcode-select --install`), then buil
 ```sh
 git clone https://atomgit.com/zkxw2008/LocalRemote.git
 cd LocalRemote
-bash macos-host/install-app.sh
+bash apps/macos/install-app.sh
 ```
 
 Grant **Screen Recording** and **Accessibility** in System Settings → Privacy & Security. Quit and reopen the application after granting access, then start sharing. Run the installer as your normal user, without `sudo`.
@@ -88,10 +88,11 @@ LocalRemote began with a practical frustration: finding a Windows-to-Mac client 
 ## Documentation
 
 - [User guide](docs/usage.md) and [Mac troubleshooting](docs/macos.md)
-- [Windows source build](windows-client/BUILD.md)
+- [Windows source build](apps/windows/BUILD.md)
 - [Architecture](docs/architecture.md) and [security protocol](docs/protocol.md)
 - [Build and test status](docs/validation.md)
 - [Contributing](CONTRIBUTING.md) and [release process](docs/releasing.md)
+- [Project layout and naming migration](docs/naming.md)
 
 ## License
 

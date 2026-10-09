@@ -1,8 +1,8 @@
 using System.Diagnostics;
 using System.Text.Json;
-using RemoteMacLAN;
+using LocalRemote;
 
-var directory=Path.Combine(Path.GetTempPath(),"rml-latency-"+Guid.NewGuid().ToString("N")); Directory.CreateDirectory(directory);
+var directory=Path.Combine(Path.GetTempPath(),"localremote-latency-"+Guid.NewGuid().ToString("N")); Directory.CreateDirectory(directory);
 try {
     var file=Path.Combine(directory,"test.h264");
     var generate=new ProcessStartInfo("ffmpeg.exe") { UseShellExecute=false,CreateNoWindow=true,RedirectStandardError=true };

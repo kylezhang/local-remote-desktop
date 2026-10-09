@@ -7,7 +7,7 @@ enum CaptureError: Error { case noDisplay, encoder(OSStatus) }
 final class Capture: NSObject, SCStreamOutput, SCStreamDelegate {
     var stream: SCStream?
     private var encoder: VTCompressionSession?
-    private let queue = DispatchQueue(label: "rml.capture")
+    private let queue = DispatchQueue(label: "localremote.capture")
     private let wire: Wire
     private let failure: () -> Void
     private let outputLock = NSLock()

@@ -1,3 +1,3 @@
 using System.Windows;
-namespace RemoteMacLAN;
+namespace LocalRemote;
 public partial class App : Application { }

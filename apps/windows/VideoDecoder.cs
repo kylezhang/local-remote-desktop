@@ -1,6 +1,6 @@
 using System.Diagnostics;
 using System.IO;
-namespace RemoteMacLAN;
+namespace LocalRemote;
 public interface IVideoDecoder : IDisposable {
     event Action<byte[]>? Frame;
     Task Feed(byte[] annexB, CancellationToken ct);

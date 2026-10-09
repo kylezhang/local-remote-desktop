@@ -1,0 +1,23 @@
+test_complete_replace_and_duplicate_removal (__main__.InstallerChecks.test_complete_replace_and_duplicate_removal) ... ok
+test_default_resets_both_services_only_for_our_bundle (__main__.InstallerChecks.test_default_resets_both_services_only_for_our_bundle) ... ok
+test_explicit_reset_alias (__main__.InstallerChecks.test_explicit_reset_alias) ... ok
+test_failed_agent_path_update_keeps_verified_app (__main__.InstallerChecks.test_failed_agent_path_update_keeps_verified_app) ... ok
+test_failed_first_install_removes_unverified_bundle (__main__.InstallerChecks.test_failed_first_install_removes_unverified_bundle) ... ok
+test_failed_restore_retains_recoverable_backup (__main__.InstallerChecks.test_failed_restore_retains_recoverable_backup) ... ok
+test_failures_preserve_old_application (__main__.InstallerChecks.test_failures_preserve_old_application) ... ok
+test_force_stop_of_stale_host (__main__.InstallerChecks.test_force_stop_of_stale_host) ... ok
+test_incompatible_preservation_leaves_working_host_and_permissions_untouched (__main__.InstallerChecks.test_incompatible_preservation_leaves_working_host_and_permissions_untouched) ... ok
+test_late_failures_restore_both_complete_bundles (__main__.InstallerChecks.test_late_failures_restore_both_complete_bundles) ... ok
+test_launch_failure_keeps_verified_new_bundle (__main__.InstallerChecks.test_launch_failure_keeps_verified_new_bundle) ... ok
+test_legacy_bundle_migration_and_rollback (__main__.InstallerChecks.test_legacy_bundle_migration_and_rollback) ... ok
+test_legacy_screen_only_option_is_scoped (__main__.InstallerChecks.test_legacy_screen_only_option_is_scoped) ... ok
+test_loaded_agent_restarts_without_second_open (__main__.InstallerChecks.test_loaded_agent_restarts_without_second_open) ... ok
+test_permission_preservation_is_available (__main__.InstallerChecks.test_permission_preservation_is_available) ... ok
+test_rollback_does_not_repeat_or_claim_to_restore_permissions (__main__.InstallerChecks.test_rollback_does_not_repeat_or_claim_to_restore_permissions) ... ok
+test_unchanged_adhoc_can_preserve_but_changed_reset_is_explicit (__main__.InstallerChecks.test_unchanged_adhoc_can_preserve_but_changed_reset_is_explicit) ... ok
+test_wrong_legacy_bundle_is_never_removed (__main__.InstallerChecks.test_wrong_legacy_bundle_is_never_removed) ... ok
+
+----------------------------------------------------------------------
+Ran 18 tests in 18.749s
+
+OK

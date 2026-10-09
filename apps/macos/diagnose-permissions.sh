@@ -1,6 +1,7 @@
 #!/bin/bash
 set -euo pipefail
-app=/Applications/RemoteMacLAN.app
+app=/Applications/LocalRemote.app
+if [[ ! -d "$app" && -d /Applications/RemoteMacLAN.app ]]; then app=/Applications/RemoteMacLAN.app; fi
 echo 'Installed application signature:'
 codesign --verify --strict "$app"
 codesign -d -r- --verbose=2 "$app" 2>&1

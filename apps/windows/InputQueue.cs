@@ -1,6 +1,6 @@
 using System.Text.Json;
 using System.Threading.Channels;
-namespace RemoteMacLAN;
+namespace LocalRemote;
 
 // Replace only consecutive, unsent moves: never move a pointer event across a
 // button/key boundary. Keys/buttons are retained; overload closes the session.

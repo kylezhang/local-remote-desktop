@@ -4,7 +4,7 @@ using System.Net.Sockets;
 using System.Security.Cryptography;
 using System.Text;
 using System.Diagnostics;
-using RemoteMacLAN;
+using LocalRemote;
 static byte[] Join(params byte[][] a)=>a.SelectMany(x=>x).ToArray();
 static byte[] H(byte[] k,string label,byte[] transcript)=>HMACSHA256.HashData(k,Join(Encoding.ASCII.GetBytes(label),transcript));
 static byte[] N(ulong n) { var r=new byte[12]; BinaryPrimitives.WriteUInt64BigEndian(r.AsSpan(4),n); return r; }
@@ -45,7 +45,7 @@ foreach(var mode in new[]{"valid","tamper","replay","wrong-key","oversize"}) {
         Assert(rejected==(mode!="valid"),$"unexpected outcome {mode}"); Console.WriteLine($"PASS authenticated transport: {mode}");
     } finally { listener.Stop(); }
 }
-var directory=Path.Combine(Path.GetTempPath(),"rml-check-"+Guid.NewGuid().ToString("N")); Directory.CreateDirectory(directory);
+var directory=Path.Combine(Path.GetTempPath(),"localremote-check-"+Guid.NewGuid().ToString("N")); Directory.CreateDirectory(directory);
 try {
     var sample=Path.Combine(directory,"sample.h264");
     var start=new ProcessStartInfo("ffmpeg.exe") {UseShellExecute=false,CreateNoWindow=true,RedirectStandardError=true};
@@ -59,8 +59,33 @@ try {
 // A unique synthetic host/key exercises DPAPI without touching a real pairing.
 var fake="test-"+Guid.NewGuid().ToString("N"); var secret=Convert.ToHexString(RandomNumberGenerator.GetBytes(32));
 SecretStore.Save(fake,secret); Assert(SecretStore.Load(fake)==secret,"DPAPI roundtrip");
-var store=Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),"RemoteMacLAN",Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(fake)))+".dpapi"); File.Delete(store);
+var store=Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),"LocalRemote",Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(fake)))+".dpapi"); File.Delete(store);
 Console.WriteLine("PASS Windows current-user DPAPI roundtrip");
+
+var migrationRoot=Path.Combine(Path.GetTempPath(),"localremote-migration-"+Guid.NewGuid().ToString("N"));
+try {
+    var legacy=Path.Combine(migrationRoot,"RemoteMacLAN"); var current=Path.Combine(migrationRoot,"LocalRemote");
+    Directory.CreateDirectory(legacy); Directory.CreateDirectory(current);
+    var blobName=new string('A',64)+".dpapi";
+    var dpapiFile=Path.Combine(migrationRoot,"encrypted.dpapi");
+    SecretStore.SaveWindowsShortcuts(false,dpapiFile);
+    var opaque=File.ReadAllBytes(dpapiFile);
+    File.WriteAllBytes(Path.Combine(legacy,blobName),opaque);
+    File.WriteAllBytes(Path.Combine(legacy,"last-host.dpapi"),opaque);
+    File.WriteAllBytes(Path.Combine(legacy,"windows-shortcuts.dpapi"),opaque);
+    File.WriteAllText(Path.Combine(legacy,"unrelated.dpapi"),"fixture, not a connection");
+    File.WriteAllText(Path.Combine(current,"last-host.dpapi"),"new settings must win");
+    SecretStore.MigrateLegacyDirectory(legacy,current);
+    Assert(File.ReadAllBytes(Path.Combine(current,blobName)).SequenceEqual(opaque),"DPAPI ciphertext changed during migration");
+    Assert(!SecretStore.LoadWindowsShortcuts(Path.Combine(current,"windows-shortcuts.dpapi")),"migrated ciphertext cannot be decrypted");
+    Assert(File.ReadAllText(Path.Combine(current,"last-host.dpapi"))=="new settings must win","migration overwrote current settings");
+    Assert(!File.Exists(Path.Combine(current,"unrelated.dpapi")),"unrelated file migrated");
+    Assert(File.Exists(Path.Combine(legacy,blobName)),"legacy store was deleted");
+    File.Delete(Path.Combine(current,blobName));
+    SecretStore.MigrateLegacyDirectory(legacy,current);
+    Assert(!File.Exists(Path.Combine(current,blobName)),"forgotten connection was resurrected by migration");
+    Console.WriteLine("PASS LocalRemote encrypted storage migration: decryptable blobs, no overwrite, legacy retained, no resurrection");
+} finally { Directory.Delete(migrationRoot,true); }
 
 // Input floods must not drop button/key transitions or move across them.
 var queue=new InputQueue(4);

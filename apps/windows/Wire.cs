@@ -4,7 +4,7 @@ using System.Net.Sockets;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
-namespace RemoteMacLAN;
+namespace LocalRemote;
 
 // All writes pass one gate; counters are implicit, monotonic, and direction-specific.
 public sealed class Wire : IDisposable

@@ -1,4 +1,4 @@
-namespace RemoteMacLAN;
+namespace LocalRemote;
 
 // Protocol flags: Shift=1, Control=2, Option=4, Command=8.
 // The existing Mac Host maps Windows VK_CONTROL to Control and VK_L/RWIN

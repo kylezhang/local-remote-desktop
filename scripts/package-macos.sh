@@ -15,7 +15,7 @@ command -v python3 >/dev/null || fail 'Python 3 is required for portable package
 commit="$(git rev-parse HEAD)"
 [[ "$commit" =~ ^[0-9a-f]{40}$ ]] || fail 'Cannot identify the source commit.'
 python3 tests/ReleaseChecks/check.py
-actual_version="$(python3 -c 'import plistlib; print(plistlib.load(open("macos-host/Info.plist", "rb"))["CFBundleShortVersionString"])')"
+actual_version="$(python3 -c 'import plistlib; print(plistlib.load(open("apps/macos/Info.plist", "rb"))["CFBundleShortVersionString"])')"
 [[ "$version" == "$actual_version" ]] || fail 'Requested version does not match the committed application version.'
 identities="$(security find-identity -v -p codesigning)"
 [[ -n "$(printf '%s\n' "$identities" | awk -v selected="$SIGN_IDENTITY" '$2 == selected && /"Developer ID Application:/ { print $2; exit }')" ]] || fail 'The selected fingerprint is not a valid Developer ID Application identity.'
@@ -34,9 +34,9 @@ mkdir -p "$payload" "$stage/publish"
 
 echo '[1/5] Compile the full Host and run startup checks; build with distribution signing.'
 bash tests/MacStartupChecks/check.sh
-RML_RELEASE_BUILD=1 bash macos-host/build-app.sh
-ditto macos-host/build/RemoteMacLAN.app "$payload/RemoteMacLAN.app"
-app="$payload/RemoteMacLAN.app"
+LOCALREMOTE_RELEASE_BUILD=1 bash apps/macos/build-app.sh
+ditto apps/macos/build/LocalRemote.app "$payload/LocalRemote.app"
+app="$payload/LocalRemote.app"
 check_native_signature() {
   codesign --verify --strict -R 'anchor apple generic and certificate leaf[field.1.2.840.113635.100.6.1.13] exists' "$1"
   local details
@@ -67,7 +67,7 @@ cp NOTICE.md "$payload/NOTICE.md"
 cat > "$payload/START-HERE.txt" <<EOF
 LocalRemote $version — macOS Apple Silicon
 
-Quit any older Host. Copy RemoteMacLAN.app to /Applications, replacing the old bundle.
+Quit any older Host. Copy LocalRemote.app to /Applications, replacing the old bundle.
 Open the installed app, allow Screen Recording and Accessibility when requested,
 then quit and reopen if macOS asks. Start sharing; enter the Mac LAN IP and pairing
 key in Windows. Share the pairing key only with your own trusted controller.
@@ -75,7 +75,7 @@ Requires macOS 13 or later and a normally logged-in user session.
 FileVault preboot and login-before-user-session control are not supported.
 A development-to-distribution signing change can require new permission approval.
 
-退出旧 Host，将 RemoteMacLAN.app 完整替换到 /Applications，打开后按系统提示
+退出旧 Host，将 LocalRemote.app 完整替换到 /Applications，打开后按系统提示
 授予屏幕录制和辅助功能权限；需要时退出重开。开始共享后，在 Windows
 填写 Mac 局域网 IP 和配对密钥。仅支持正常登录后的用户会话。
 从开发签名切换到发布签名时，可能需要重新授权。
@@ -91,9 +91,9 @@ ditto -c -k --keepParent "$payload" "$archive"
 python3 scripts/check-macos-package.py --archive "$archive" --version "$version" --commit "$commit"
 mkdir "$stage/extracted"
 ditto -x -k "$archive" "$stage/extracted"
-check_native_signature "$stage/extracted/$name/RemoteMacLAN.app"
-xcrun stapler validate "$stage/extracted/$name/RemoteMacLAN.app"
-spctl --assess --type execute "$stage/extracted/$name/RemoteMacLAN.app"
+check_native_signature "$stage/extracted/$name/LocalRemote.app"
+xcrun stapler validate "$stage/extracted/$name/LocalRemote.app"
+spctl --assess --type execute "$stage/extracted/$name/LocalRemote.app"
 [[ "$(git rev-parse HEAD)" == "$commit" && -z "$(git status --porcelain --untracked-files=normal)" ]] || fail 'Source changed during packaging; refusing to publish the candidate.'
 (cd "$stage/publish" && python3 -c 'import hashlib,sys; print(hashlib.sha256(open(sys.argv[1], "rb").read()).hexdigest()+"  "+sys.argv[1])' "$name.zip" > SHA256SUMS.txt)
 cp "$payload/release.json" "$stage/publish/release.json"

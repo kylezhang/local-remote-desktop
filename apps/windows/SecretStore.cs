@@ -1,6 +1,6 @@
 using System.IO;
 using System.Runtime.InteropServices;
-namespace RemoteMacLAN;
+namespace LocalRemote;
 // Current-user DPAPI; no plaintext keys on disk, no NuGet dependency.
 static class SecretStore
 {
@@ -18,8 +18,32 @@ static class SecretStore
         } finally { Marshal.FreeHGlobal(input.Data); if(output.Data!=IntPtr.Zero) LocalFree(output.Data); }
     }
     static string DirectoryPath() {
-        var dir=Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),"RemoteMacLAN"); Directory.CreateDirectory(dir);
+        var dir=Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),"LocalRemote"); Directory.CreateDirectory(dir);
+        MigrateLegacyDirectory(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),"RemoteMacLAN"),dir);
         return dir;
+    }
+    static readonly object migrationLock = new();
+    // Copy opaque DPAPI blobs once. Never rotate keys, overwrite new settings,
+    // delete the old store or resurrect forgotten data on later launches.
+    internal static void MigrateLegacyDirectory(string legacy,string current) {
+        lock(migrationLock) {
+            Directory.CreateDirectory(current);
+            var marker=Path.Combine(current,"legacy-migration-v1.complete");
+            if(File.Exists(marker)) return;
+            if(Directory.Exists(legacy)) {
+                foreach(var path in Directory.EnumerateFiles(legacy,"*.dpapi",SearchOption.TopDirectoryOnly)) {
+                    var name=Path.GetFileName(path);
+                    if(name!="last-host.dpapi" && name!="windows-shortcuts.dpapi" &&
+                       !System.Text.RegularExpressions.Regex.IsMatch(name,@"\A[0-9A-Fa-f]{64}\.dpapi\z")) continue;
+                    var destination=Path.Combine(current,name);
+                    if(!File.Exists(destination)) {
+                        try { File.Copy(path,destination,false); }
+                        catch(IOException e) when((e.HResult & 0xFFFF) is 80 or 183 && File.Exists(destination)) { /* Another process migrated it. */ }
+                    }
+                }
+            }
+            File.WriteAllText(marker,"LocalRemote encrypted settings migration completed.\n");
+        }
     }
     static string PathFor(string host) => Path.Combine(DirectoryPath(),Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(host)))+".dpapi");
     public static void Save(string host,string secret) => File.WriteAllBytes(PathFor(host), Transform(System.Text.Encoding.UTF8.GetBytes(secret),true));

@@ -4,6 +4,10 @@
 
 ## 未发布
 
+- 源码统一 apps/macos、apps/windows；Swift 包/target、Windows 工程/程序集/命名空间统一 LocalRemote，
+  程序文件改为 LocalRemote.app、LocalRemote.exe，更新构建、测试、打包和中英文文档。
+  增加旧 Mac 应用/签名配置/自启动路径及 Windows 加密配置一次性迁移；Mac 授权/钥匙串/任务身份和 RML1 协议保持兼容，已有 v0.1.0 附件不修改。
+
 - 新增维护者专用 Mac 候选打包：仅 Developer ID 发布签名、runtime/时间戳、公证及票据、最终 ZIP 解压校验、来源、声明和散列。
   便携与模拟失败检查通过，未宣称已有真实 Mac 候选包或公证结果。构建采用全新包，移动失败/终止恢复旧构建产物，不操作已安装应用。
 
