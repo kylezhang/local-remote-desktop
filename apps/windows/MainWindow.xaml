@@ -46,7 +46,6 @@
       </MenuItem>
      </Menu>
    </StackPanel>
-   <Image x:Name="BrandLogo" DockPanel.Dock="Left" Source="LocalRemote.png" Width="28" Height="28" Margin="0,0,8,0" AutomationProperties.Name="LocalRemote"/>
    <WrapPanel VerticalAlignment="Center">
     <StackPanel x:Name="ConnectionFields" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,8,0">
      <TextBlock Text="Mac IP" VerticalAlignment="Center" Margin="0,0,5,0" FontSize="12"/>

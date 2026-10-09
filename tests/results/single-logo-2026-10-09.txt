@@ -1,0 +1,18 @@
+LocalRemote Windows toolbar cleanup — 2026-10-09
+Self-contained x64 rebuilt, zero warnings/errors. Public version remains 0.1.0.
+Exact tested/deployed LocalRemote.dll SHA256:
+4a8dae0ddc39071ccbdd9953e3113282f82412c7f6e7116b08da0527197469c5
+
+PASS exact rebuilt WPF candidate against independent encrypted test peers:
+minimum-width single-row layout, connected credential collapse, optional metrics,
+video/keyboard/shortcuts/pointer/focus, permission feedback, bidirectional text and
+file clipboard, input/video during transfers, paste readiness, cancellation,
+quality reconnect/disconnect and owned-decoder close cleanup.
+Visual review: toolbar has no duplicate logo; native window/icon remain.
+Synthetic test clipboards only; no real user clipboard/settings changed.
+
+Deployment: canonical build directory and user's legacy directory updated;
+duplicate RemoteMacLAN.exe launcher retired. LocalRemote.exe is the only client
+entry point. createdump.exe is the bundled .NET diagnostics component.
+No macOS source behavior changed in this follow-up; native Mac remains unverified.
+Published tags/releases unchanged.

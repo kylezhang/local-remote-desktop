@@ -22,7 +22,7 @@ The current UI is Chinese. English localization is planned. These labels help ma
 ## Interface organization
 
 Windows uses one compact toolbar for connection, quality, Full Screen and
-Settings. The title bar already identifies the app, so the toolbar uses just its icon. After connecting, the IP/key fields become a short Mac
+Settings. The title bar carries the app name/icon; the toolbar does not repeat them. After connecting, the IP/key fields become a short Mac
 address label. Settings groups clipboard, keyboard/connection and diagnostic
 options; performance counters are hidden until enabled. Transfer progress and
 errors appear only when needed, including in full screen. Completed notices can

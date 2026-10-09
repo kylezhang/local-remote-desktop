@@ -4,6 +4,8 @@
 
 ## Unreleased
 
+- Removed the repeated Windows toolbar logo; the native title bar retains the app icon.
+
 - Text/file sharing now defaults on for paired sessions and remembers explicit
   off choices. Simplified Windows/Mac controls into Settings; Windows uses one compact toolbar, connected Windows
   credentials collapse, performance data is optional and file notices appear as
