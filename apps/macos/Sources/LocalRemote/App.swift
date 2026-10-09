@@ -48,12 +48,13 @@ final class HostModel: ObservableObject {
     @Published var keychainCheck = "尚未读取"
     // Avoid SwiftUI.State's SDK macro dependency in Command Line Tools builds.
     @Published var revealSecret = false
+    @Published var passwordDraft = ""
     @Published var allowClipboard = SharingPreferences.enabled("textClipboardAllowed") { didSet { UserDefaults.standard.set(allowClipboard, forKey: "textClipboardAllowed"); host?.setClipboardAllowed(allowClipboard) } }
     @Published var allowFiles = SharingPreferences.enabled("fileClipboardAllowed") { didSet { UserDefaults.standard.set(allowFiles, forKey: "fileClipboardAllowed"); host?.setFilesAllowed(allowFiles) } }
     @Published var fileStatus = "文件同步：等待连接"
     private var host: Host?
-    private let preparation = SharingPreparation<Data>()
-    private var pairingKey: Data? { preparation.cachedKey }
+    private let preparation = SharingPreparation<PairingCredential>()
+    private var pairingKey: PairingCredential? { preparation.cachedKey }
     private var startup: Task<Void, Never>?
     private let inputSelfTest = InputSelfTest()
     @Published var inputTestResult = ""
@@ -70,38 +71,57 @@ final class HostModel: ObservableObject {
         do { try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true); NSWorkspace.shared.open(root) }
         catch { fileStatus = "无法打开接收目录：\(error.localizedDescription)" }
     }
+    func generatePassword() { passwordDraft = PairingCredential.generated(using: randomBytes(12)) }
+    func savePassword() {
+        guard !starting else { return }
+        do { try PairingCredential.validate(passwordDraft) }
+        catch { status = error.localizedDescription; return }
+        let password = passwordDraft, resumeSharing = active
+        starting = true; status = "正在保存配对密码…"
+        startup = Task { @MainActor [weak self] in
+            guard let self else { return }
+            do {
+                let credential = try await Pairing.savePassword(password)
+                self.host?.stop(); self.host = nil; self.active = false
+                self.preparation.replaceCachedKey(credential); self.displayPairingKey(credential)
+                self.passwordDraft = ""; self.starting = false; self.startup = nil
+                self.status = "密码已保存。Windows 断开后填写新密码即可；旧密码已失效。"
+                if resumeSharing { self.start(requestPermission: true) }
+            } catch { self.starting = false; self.status = "密码未更改：\(error.localizedDescription)" }
+        }
+    }
     func retryPairing() {
         guard host == nil, !starting, pairingKey == nil else { return }
-        starting = true; status = "正在读取配对密钥…"
+        starting = true; status = "正在读取配对密码…"
         startup = Task { @MainActor [weak self] in
             guard let self else { return }
             defer { self.starting = false }
             do {
                 let key = try await self.preparation.readKey { try await self.fetchPairingKey(allowInteraction: true) }
                 self.displayPairingKey(key)
-                self.status = "配对密钥已就绪。点击开始共享后检查屏幕权限。"
+                self.status = "配对密码已就绪。点击开始共享后检查屏幕权限。"
             } catch is CancellationError { }
             catch { self.reportKeychainError(error) }
         }
     }
-    @MainActor private func fetchPairingKey(allowInteraction: Bool) async throws -> Data {
+    @MainActor private func fetchPairingKey(allowInteraction: Bool) async throws -> PairingCredential {
         keychainCheck = allowInteraction ? "用户主动读取" : "启动静默读取"
         return try await Pairing.load(allowInteraction: allowInteraction)
     }
-    private func displayPairingKey(_ key: Data) {
-        secret = key.map { String(format: "%02x", $0) }.joined()
+    private func displayPairingKey(_ key: PairingCredential) {
+        secret = key.text
         keychainCheck = "读取成功（本次运行已缓存）"
     }
     private func reportKeychainError(_ error: Error) {
         let e = error as NSError
         keychainCheck = "\(e.domain) / \(e.code)"
-        status = "无法读取配对密钥：\(e.localizedDescription)。不会自动重复请求；需要时点击读取配对密钥。"
+        status = "无法读取配对密码：\(e.localizedDescription)。不会自动重复请求；需要时点击读取配对密码。"
     }
     func start(requestPermission: Bool = false) {
         guard host == nil, !starting else { return }
         if !requestPermission && pairingKey == nil && !Pairing.permitsAutomaticRead {
             keychainCheck = "等待用户操作（启动未访问钥匙串）"
-            status = "点击开始共享。会先检查屏幕权限，再读取配对密钥。"
+            status = "点击开始共享。会先检查屏幕权限，再读取配对密码。"
             return
         }
         starting = true; status = "正在检查屏幕访问…"
@@ -124,14 +144,14 @@ final class HostModel: ObservableObject {
                 self.screenCheck = "ScreenCaptureKit 成功：\(content.displays.count) 个显示器"
             }, readKey: {
                 checkingScreen = false
-                self.status = "正在读取配对密钥…"
+                self.status = "正在读取配对密码…"
                 return try await self.fetchPairingKey(allowInteraction: requestPermission)
             })
             // prepare can reuse an already cached key without invoking readKey.
             checkingScreen = false
             self.displayPairingKey(key)
             let trusted = AXIsProcessTrusted()
-            let h = Host(key: key, clipboardAllowed: self.allowClipboard, filesAllowed: self.allowFiles,
+            let h = Host(key: key.key, passwordSalt: key.salt, clipboardAllowed: self.allowClipboard, filesAllowed: self.allowFiles,
                 fileStatus: { [weak self] text in DispatchQueue.main.async { self?.fileStatus = text } }) { [weak self] text in DispatchQueue.main.async { self?.status = text } }
             try h.start(); self.host = h; self.active = true
             self.status = trusted ? "共享已启动，等待 Windows 连接 · TCP 47980" : "共享已启动（只能查看）· 辅助功能权限未被认可"
@@ -214,22 +234,31 @@ struct HostView: View {
                 }.fixedSize()
             }
             Text(model.status).textSelection(.enabled).frame(width: 450, alignment: .leading).fixedSize(horizontal: false, vertical: true)
-            Text("共享这台 Mac 的当前桌面。在 Windows 输入 Mac 的局域网 IP 和配对密钥即可连接。")
+            Text("共享这台 Mac 的当前桌面。在 Windows 输入 Mac 的局域网 IP 和配对密码即可连接。")
                 .frame(width: 450, alignment: .leading)
             HStack {
                 Button(model.starting ? "正在检查…" : model.active ? "停止共享" : "开始共享") {
                     if model.active { model.stop() } else { model.start(requestPermission: true) }
                 }.buttonStyle(.borderedProminent).disabled(model.starting)
-                Button(model.revealSecret ? "收起配对密钥" : "配对密钥") { model.revealSecret.toggle() }
+                Button(model.revealSecret ? "收起配对密码" : "配对密码") { model.revealSecret.toggle() }
             }
             if model.revealSecret {
-                Text(model.secret.isEmpty ? "密钥尚未读取，可点击下方按钮。" : model.secret)
+                Text(model.secret.isEmpty ? "密码尚未读取，可点击下方按钮。" : model.secret)
                     .font(.system(.caption, design: .monospaced)).textSelection(.enabled).frame(width: 450)
                 if model.secret.isEmpty {
-                    Button("读取配对密钥") { model.retryPairing() }.disabled(model.starting)
+                    Button("读取配对密码") { model.retryPairing() }.disabled(model.starting)
                 } else {
-                    Button("复制配对密钥") { NSPasteboard.general.clearContents(); NSPasteboard.general.setString(model.secret, forType: .string) }
+                    Button("复制配对密码") { NSPasteboard.general.clearContents(); NSPasteboard.general.setString(model.secret, forType: .string) }
                 }
+            }
+            if model.revealSecret {
+                HStack {
+                    TextField("新密码：8–64 位，不含空格", text: $model.passwordDraft)
+                    Button("自动生成") { model.generatePassword() }.disabled(model.starting)
+                    Button("保存密码") { model.savePassword() }.disabled(model.starting || model.passwordDraft.isEmpty)
+                }.frame(width: 450)
+                Text("推荐生成 12 位密码。保存会断开原连接；Windows 需改填新密码。")
+                    .font(.caption).foregroundStyle(.secondary).frame(width: 450, alignment: .leading)
             }
             Text("文字与文件默认在已配对连接中共享，可在设置中关闭。")
                 .font(.caption).foregroundStyle(.secondary).frame(width: 450, alignment: .leading)

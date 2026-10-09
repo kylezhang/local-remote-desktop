@@ -4,7 +4,7 @@ final class Wire {
     private let lock = NSLock()
     init() {}
     init(_ fd: Int32) {}
-    func authenticate(key: Data) throws {}
+    func authenticate(key: Data, passwordSalt: Data? = nil) throws {}
     func close() {}
     func send(type: UInt8, payload: Data) throws { lock.lock(); records.append((type,payload)); lock.unlock() }
     func json(_ value: [String: Any]) throws { try send(type: 1, payload: JSONSerialization.data(withJSONObject: value)) }

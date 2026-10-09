@@ -41,7 +41,7 @@ static class Program {
             var board=new TestClipboard(); board.Copy("existing private clipboard");
             var fileBoard=new TestFileClipboard();
             var fileRoot=Path.Combine(directory,"received");
-            using var fileServer=new MockFileServer(host.Key,host.FileSession,id=>host.FilesAllowed && id==host.FileRequestId);
+            using var fileServer=new MockFileServer(host.Key,host.FileSession,id=>host.FilesAllowed && id==host.FileRequestId,host.PasswordSalt);
             host.FilePort=fileServer.Port;
             var fileRunner=fileServer.Run();
             var window=new MainWindow(false,()=>fakeModifiers,board,fileBoard,fileRoot,host.Port,fileServer.Port) { Left=-20000,Top=-20000,ShowActivated=false,ShowInTaskbar=false };
@@ -70,7 +70,7 @@ static class Program {
                 Snapshot("disconnected-720"); window.Width=1280;
 
                 ((TextBox)window.FindName("Address")).Text="127.0.0.1";
-                ((PasswordBox)window.FindName("Secret")).Password=Convert.ToHexString(host.Key);
+                ((PasswordBox)window.FindName("Secret")).Password=host.Credential;
                 ((MenuItem)window.FindName("Reconnect")).IsChecked=false;
                 var connect=(Button)window.FindName("ConnectButton"); var surface=(UIElement)window.FindName("Surface");
                 connect.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
@@ -295,7 +295,9 @@ sealed class MockHost:IDisposable {
     readonly SemaphoreSlim writes=new(1);
     readonly byte[] video;
     NetworkStream stream=null!; byte[] tx=[],rx=[]; ulong sent,received; TcpClient? peer;
-    public byte[] Key {get;}=RandomNumberGenerator.GetBytes(32);
+    public byte[]? PasswordSalt {get;}=Environment.GetEnvironmentVariable("LOCALREMOTE_PASSWORD_CHECK")=="1"?Enumerable.Range(0,16).Select(x=>(byte)x).ToArray():null;
+    public byte[] Key {get;}
+    public string Credential=>PasswordSalt==null?Convert.ToHexString(Key):"Office-LAN#42";
     public ConcurrentQueue<JsonElement> Inputs {get;}=new();
     public ConcurrentQueue<int> Qualities {get;}=new();
     public long ClipboardRequestId {get;private set;}
@@ -303,7 +305,7 @@ sealed class MockHost:IDisposable {
     public string FileSession {get;}=Convert.ToHexString(RandomNumberGenerator.GetBytes(32));
     public bool FilesAllowed=true;
     bool clipboardAllowed=true;
-    public MockHost(byte[] video) { this.video=video; listener.Start(); }
+    public MockHost(byte[] video) { this.video=video; Key=PasswordSalt==null?RandomNumberGenerator.GetBytes(32):Convert.FromHexString("0dca4c657c16ea4e595de60ab5d6bad618ea62de9184dc41c08e40051905d87c"); listener.Start(); }
     static byte[] Join(params byte[][] arrays)=>arrays.SelectMany(x=>x).ToArray();
     static byte[] H(byte[] key,string label,byte[] transcript)=>HMACSHA256.HashData(key,Join(Encoding.ASCII.GetBytes(label),transcript));
     static byte[] Nonce(ulong value) { var n=new byte[12]; BinaryPrimitives.WriteUInt64BigEndian(n.AsSpan(4),value); return n; }
@@ -330,8 +332,8 @@ sealed class MockHost:IDisposable {
     async Task Session() {
         sent=received=0; ClipboardRequestId=0;
         peer=await listener.AcceptTcpClientAsync(stop.Token); peer.NoDelay=true; stream=peer.GetStream(); var nonce=RandomNumberGenerator.GetBytes(32);
-        await stream.WriteAsync(Join("RML1"u8.ToArray(),nonce),stop.Token); var response=new byte[64]; await stream.ReadExactlyAsync(response,stop.Token);
-        var transcript=Join(nonce,response[..32]);
+        await stream.WriteAsync(PasswordSalt==null?Join("RML1"u8.ToArray(),nonce):Join("RMP1"u8.ToArray(),nonce,PasswordSalt),stop.Token); var response=new byte[64]; await stream.ReadExactlyAsync(response,stop.Token);
+        var transcript=PasswordSalt==null?Join(nonce,response[..32]):Join("RMP1"u8.ToArray(),PasswordSalt,nonce,response[..32]);
         if(!CryptographicOperations.FixedTimeEquals(response[32..],H(Key,"client",transcript))) throw new CryptographicException("invalid test client proof");
         await stream.WriteAsync(H(Key,"server",transcript),stop.Token); tx=H(Key,"h2c",transcript); rx=H(Key,"c2h",transcript);
         using var hello=JsonDocument.Parse(await Read()); if(hello.RootElement.GetProperty("op").GetString()!="handshake") throw new IOException("no handshake");

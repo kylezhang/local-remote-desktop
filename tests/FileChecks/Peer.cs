@@ -16,9 +16,9 @@ sealed class FilePeer : IDisposable {
     static byte[] Proof(byte[] key,string label,byte[] transcript)=>HMACSHA256.HashData(key,Join(Encoding.ASCII.GetBytes(label),transcript));
     static byte[] Nonce(ulong counter) { var b=new byte[12]; BinaryPrimitives.WriteUInt64BigEndian(b.AsSpan(4),counter); return b; }
     public FilePeer(TcpClient tcp) { this.tcp=tcp; stream=tcp.GetStream(); }
-    public async Task Authenticate(byte[] key,CancellationToken ct) {
-        var nonce=RandomNumberGenerator.GetBytes(32); await stream.WriteAsync(Join("RML1"u8.ToArray(),nonce),ct);
-        var reply=new byte[64]; await stream.ReadExactlyAsync(reply,ct); var transcript=Join(nonce,reply[..32]);
+    public async Task Authenticate(byte[] key,CancellationToken ct,byte[]? salt=null) {
+        var nonce=RandomNumberGenerator.GetBytes(32); await stream.WriteAsync(salt==null?Join("RML1"u8.ToArray(),nonce):Join("RMP1"u8.ToArray(),nonce,salt),ct);
+        var reply=new byte[64]; await stream.ReadExactlyAsync(reply,ct); var transcript=salt==null?Join(nonce,reply[..32]):Join("RMP1"u8.ToArray(),salt,nonce,reply[..32]);
         if(!CryptographicOperations.FixedTimeEquals(reply[32..],Proof(key,"client",transcript))) throw new IOException("Bad proof");
         await stream.WriteAsync(Proof(key,"server",transcript),ct); tx=Proof(key,"h2c",transcript); rx=Proof(key,"c2h",transcript);
     }
@@ -45,7 +45,7 @@ sealed class MockFileServer : IDisposable {
     readonly TcpListener listener=new(IPAddress.Loopback,0);
     public int Port=>((IPEndPoint)listener.LocalEndpoint).Port;
     readonly CancellationTokenSource stop=new(TimeSpan.FromSeconds(90));
-    readonly byte[] key; readonly string token; readonly Func<long,bool> allowed;
+    readonly byte[] key; readonly byte[]? salt; readonly string token; readonly Func<long,bool> allowed;
     FilePeer? current;
     public FileSource? Offer;
     public string OfferId=Guid.NewGuid().ToString("N");
@@ -54,13 +54,13 @@ sealed class MockFileServer : IDisposable {
     public int DelayMilliseconds=5, CompletionDelayMilliseconds=0;
     public bool Stall {get;set;}
     public readonly ConcurrentQueue<string> Errors=new();
-    public MockFileServer(byte[] key,string token,Func<long,bool> allowed) { this.key=key; this.token=token; this.allowed=allowed; listener.Start(); }
+    public MockFileServer(byte[] key,string token,Func<long,bool> allowed,byte[]? salt=null) { this.key=key; this.salt=salt; this.token=token; this.allowed=allowed; listener.Start(); }
     public async Task Run() {
         try {
             while(!stop.IsCancellationRequested) {
                 using var peer=new FilePeer(await listener.AcceptTcpClientAsync(stop.Token)); current=peer;
                 try {
-                    await peer.Authenticate(key,stop.Token); var request=await peer.JsonRead(stop.Token);
+                    await peer.Authenticate(key,stop.Token,salt); var request=await peer.JsonRead(stop.Token);
                     if(request.GetProperty("session").GetString()!=token || !allowed(request.GetProperty("requestId").GetInt64())) continue;
                     if(Stall) { await Task.Delay(Timeout.Infinite,stop.Token); continue; }
                     string? op=request.GetProperty("op").GetString();

@@ -3,10 +3,14 @@
 [简体中文](zh-CN/next-release.md) · [Roadmap](roadmap.md)
 
 Status on 2026-10-09: development on main. **Not released.** Public app versions
-remain 0.1.0 until release preparation; Mac internal build number is 16.
+remain 0.1.0 until release preparation; Mac internal build number is 17.
 Existing v0.1.0 tag and assets remain unchanged.
 
 ## Implemented and locally checked
+
+- [x] Manual/generated pairing passwords (RMP1), legacy-key compatibility and Windows DPAPI remembering. Exact Windows WPF regression passed in both modes; portable Swift credential checks passed. Native Mac SDK/Keychain editor/save/restart acceptance remains required.
+
+
 
 - [x] Optional text clipboard implementation on main: both-platform portable
   state, mocked Mac adapter and exact Windows WPF/encrypted-peer checks passed.

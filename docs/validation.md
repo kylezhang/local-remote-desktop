@@ -6,6 +6,14 @@ Release environment: Windows x64, .NET SDK 8.0.425 and Desktop/Core runtime 8.0.
 
 ## Automated coverage
 
+- Pairing passwords (2026-10-09): independent PBKDF2 vector, wrong password/server
+  proof/salt rejection and exact packaged Windows WPF regression in both RML1 and
+  RMP1 modes passed, including control, clipboard, file transfer and quality reconnects.
+  Real Swift 5.9.2 executed production credential encoding/KDF/legacy/cache logic
+  using a test CommonCrypto bridge to OpenSSL on Linux. Native Apple SDK,
+  Keychain save/authorization and restart persistence remain pending. See
+  `tests/results/password-2026-10-09.txt` and `tests/PairingChecks/check.sh`.
+
 - Clipboard development (2026-10-09): C# and real Swift 5.9.2 compile/run the
   production state logic for Unicode, exact byte limits/JSON record fit, malformed
   data, consent baselines, no echo, bounded busy retries, local-copy priority,

@@ -33,9 +33,12 @@ final class Wire {
         try data.withUnsafeBytes { raw in var offset = 0; while offset < data.count { let n = Darwin.send(s, raw.baseAddress!.advanced(by: offset), data.count-offset, 0); if n <= 0 { throw WireError.closed }; offset += n } }
     }
     static func mac(_ key: Data, _ data: Data) -> Data { Data(HMAC<SHA256>.authenticationCode(for: data, using: SymmetricKey(data: key))) }
-    func authenticate(key: Data) throws {
-        let server = randomBytes(32); try write(Data("RML1".utf8) + server)
-        let response = try read(64), client = response.prefix(32), transcript = server + client
+    func authenticate(key: Data, passwordSalt: Data? = nil) throws {
+        let server = randomBytes(32), magic = Data((passwordSalt == nil ? "RML1" : "RMP1").utf8)
+        if let salt = passwordSalt { guard salt.count == 16 else { throw WireError.invalid }; try write(magic + server + salt) }
+        else { try write(magic + server) }
+        let response = try read(64), client = response.prefix(32)
+        let transcript = passwordSalt.map { magic + $0 + server + client } ?? (server + client)
         let proof = response.suffix(32)
         guard HMAC<SHA256>.isValidAuthenticationCode(proof, authenticating: Data("client".utf8) + transcript, using: SymmetricKey(data: key)) else { throw WireError.authentication }
         try write(Self.mac(key, Data("server".utf8) + transcript))

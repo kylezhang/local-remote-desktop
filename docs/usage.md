@@ -9,8 +9,9 @@ The current UI is Chinese. English localization is planned. These labels help ma
 | Label | Meaning |
 |---|---|
 | 开始共享 / 停止共享 | Start Sharing / Stop Sharing (Mac) |
-| 配对密钥 / 收起配对密钥 | Show / Hide Pairing Key (Mac) |
-| 复制配对密钥 | Copy Pairing Key (Mac) |
+| 配对密码 / 收起配对密码 | Show / Hide Pairing Password (Mac, development) |
+| 自动生成 / 保存密码 | Generate / Save Password (Mac, development) |
+| 复制配对密码 | Copy Pairing Password (Mac, development) |
 | 设置 → 权限 | Permission Settings (Mac) |
 | 连接 / 断开 | Connect / Disconnect (Windows) |
 | 忘记此连接 | Forget Connection (Windows) |
@@ -38,6 +39,27 @@ Click the picture for keyboard focus. In the development update, **Windows Short
 These shortcuts operate the Mac's own clipboard; cross-device text sharing uses the separate setting below, enabled by default in current development builds. Windows-reserved shortcuts such as Alt+Tab or Win combinations may stay local. Windows input-method composition is not transmitted; the Mac's own input method can process physical keys.
 
 F11 toggles full screen. Ctrl+Alt+Esc releases remote input and restores local focus. Clicking a local button also moves keyboard focus away from the picture. Stop Sharing or quit the Mac application to end sharing. Closing its window alone does not quit the background application.
+
+## Pairing password (development)
+
+Update both apps from main. On Mac, open **配对密码** (Pairing Password),
+type a new password or click **自动生成** (Generate), then **保存密码** (Save).
+Generating only fills the edit field; it takes effect when saved. Manual passwords
+accept 8–64 English letters, digits or printable symbols, without spaces, and are
+case-sensitive. Generated passwords use 12 random uppercase letters/digits,
+avoiding 0, 1, I and O. Prefer generation over a common word or numeric PIN.
+
+Saving replaces the existing Keychain item and disconnects current controllers.
+If sharing was running, the Host restarts it with the new password. On Windows,
+disconnect to reveal the connection fields, enter the same password and reconnect.
+Windows remembers it using current-user DPAPI. Restarting or reinstalling the Mac
+app does not intentionally change the saved password. Failed saves leave the
+previous credential intact; macOS may request Keychain authorization.
+
+Existing 64-character keys keep working until you explicitly save a password.
+The new Windows client supports both formats. An older Windows client cannot
+connect to a Mac using the new password mode. Published v0.1.0 assets still use
+legacy keys. Native Mac Keychain update/relaunch acceptance remains pending.
 
 ## Text clipboard sync (development)
 

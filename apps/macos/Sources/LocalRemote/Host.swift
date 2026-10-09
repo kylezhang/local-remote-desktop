@@ -10,9 +10,10 @@ final class Host {
     private var filesAllowed: Bool
     private let fileStatus: (String) -> Void
     private let key: Data
+    private let passwordSalt: Data?
     private let status: (String) -> Void
-    init(key: Data, clipboardAllowed: Bool = false, filesAllowed: Bool = false, fileStatus: @escaping (String) -> Void = { _ in }, status: @escaping (String) -> Void) {
-        self.key = key; self.clipboardAllowed = clipboardAllowed; self.filesAllowed = filesAllowed; self.fileStatus = fileStatus; self.status = status
+    init(key: Data, passwordSalt: Data? = nil, clipboardAllowed: Bool = false, filesAllowed: Bool = false, fileStatus: @escaping (String) -> Void = { _ in }, status: @escaping (String) -> Void) {
+        self.key = key; self.passwordSalt = passwordSalt; self.clipboardAllowed = clipboardAllowed; self.filesAllowed = filesAllowed; self.fileStatus = fileStatus; self.status = status
     }
     func setClipboardAllowed(_ value: Bool) { lock.lock(); clipboardAllowed = value; lock.unlock() }
     private func allowsClipboard() -> Bool { lock.lock(); defer { lock.unlock() }; return clipboardAllowed }
@@ -58,7 +59,7 @@ final class Host {
             status(active ? "等待连接 · TCP 47980" : "已停止")
         }
         do {
-            try wire.authenticate(key: key)
+            try wire.authenticate(key: key, passwordSalt: passwordSalt)
             let hello = try wire.receive()
             guard hello["op"] as? String == "handshake", hello["version"] as? Int == 1 else { throw WireError.invalid }
             let quality = hello["quality"] as? Int ?? 1; guard (0...2).contains(quality) else { throw WireError.invalid }
@@ -70,7 +71,7 @@ final class Host {
             clipboard = MacClipboard(wire: wire, allowed: { [weak self] in self?.allowsClipboard() ?? false })
             var capabilities: [String: Any] = ["op":"capabilities","accessibility":trusted,"clipboardText":true,"fileClipboard":false]
             do {
-                let fileSession = try MacFiles(key: key, control: wire, allowed: { [weak self] in self?.allowsFiles() ?? false }, status: fileStatus); files = fileSession
+                let fileSession = try MacFiles(key: key, passwordSalt: passwordSalt, control: wire, allowed: { [weak self] in self?.allowsFiles() ?? false }, status: fileStatus); files = fileSession
                 lock.lock(); let active = running; if active { currentFiles = fileSession }; lock.unlock()
                 if !active { fileSession.stop(); throw WireError.closed }
                 capabilities["fileClipboard"] = true; capabilities["filePort"] = 47981; capabilities["fileSession"] = fileSession.session

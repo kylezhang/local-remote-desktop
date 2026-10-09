@@ -14,6 +14,7 @@ static byte[] Packet(byte[] key,byte[] payload,ulong counter,bool corrupt=false)
     if(corrupt) tag[0]^=1; return Join(header,cipher,tag);
 }
 static void Assert(bool condition,string message) { if(!condition) throw new Exception(message); }
+await PasswordChecks.Run();
 foreach(var mode in new[]{"valid","tamper","replay","wrong-key","oversize"}) {
     using var timeout=new CancellationTokenSource(TimeSpan.FromSeconds(10)); var ct=timeout.Token;
     var key=RandomNumberGenerator.GetBytes(32); var listener=new TcpListener(IPAddress.Loopback,0); listener.Start();
@@ -59,6 +60,7 @@ try {
 // A unique synthetic host/key exercises DPAPI without touching a real pairing.
 var fake="test-"+Guid.NewGuid().ToString("N"); var secret=Convert.ToHexString(RandomNumberGenerator.GetBytes(32));
 SecretStore.Save(fake,secret); Assert(SecretStore.Load(fake)==secret,"DPAPI roundtrip");
+SecretStore.Save(fake,"Office-LAN#42"); Assert(SecretStore.Load(fake)=="Office-LAN#42","short password DPAPI roundtrip");
 var store=Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),"LocalRemote",Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(fake)))+".dpapi"); File.Delete(store);
 Console.WriteLine("PASS Windows current-user DPAPI roundtrip");
 

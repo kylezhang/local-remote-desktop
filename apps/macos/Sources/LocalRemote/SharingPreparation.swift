@@ -6,6 +6,9 @@ final class SharingPreparation<Key> {
     private(set) var cachedKey: Key?
 
     @MainActor
+    func replaceCachedKey(_ key: Key) { cachedKey = key }
+
+    @MainActor
     func readKey(using reader: @MainActor () async throws -> Key) async throws -> Key {
         try Task.checkCancellation()
         if let cachedKey { return cachedKey }

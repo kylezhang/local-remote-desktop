@@ -177,7 +177,8 @@ public partial class MainWindow : Window
         if(session!=null) { session.Cancel(); return; }
         var ip=Address.Text.Trim(); var secret=Secret.Password.Trim(); int quality=Quality.SelectedIndex;
         try {
-            if(ip.Length==0 || Convert.FromHexString(secret).Length!=32) throw new ArgumentException("请填写 Mac IP 和 64 个十六进制字符的配对密钥。");
+            if(ip.Length==0) throw new ArgumentException("请填写 Mac IP。");
+            PairingPassword.Validate(secret);
             if(rememberConnection) SecretStore.Remember(ip,secret);
         } catch(Exception ex) { Status.Text=$"无法记住连接：{ex.Message}"; return; }
         requestedQuality=quality; qualityChangePending=false;
@@ -276,7 +277,7 @@ public partial class MainWindow : Window
         Status.Text="诊断已复制（不包含密钥、IP 或输入内容）";
     }
     void ForgetClick(object sender,RoutedEventArgs e) {
-        try { SecretStore.Forget(Address.Text.Trim()); Secret.Password=""; Address.Text=LocalAddress.Find(); Status.Text="已清除当前 Mac 的 IP 和配对密钥记忆。"; }
+        try { SecretStore.Forget(Address.Text.Trim()); Secret.Password=""; Address.Text=LocalAddress.Find(); Status.Text="已清除当前 Mac 的 IP 和配对密码记忆。"; }
         catch(Exception ex) { Status.Text=$"清除失败：{ex.Message}"; }
     }
     void ToggleFull() { full=!full; if(full) { previousState=WindowState; WindowState=WindowState.Normal; WindowStyle=WindowStyle.None; WindowState=WindowState.Maximized; Toolbar.Visibility=Visibility.Collapsed; Surface.Focus(); } else { WindowState=WindowState.Normal; WindowStyle=WindowStyle.SingleBorderWindow; WindowState=previousState; Toolbar.Visibility=Visibility.Visible; } }

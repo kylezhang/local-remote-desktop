@@ -1,8 +1,8 @@
-# LocalRemote protocol (RML1)
+# LocalRemote protocol (RML1 / RMP1)
 
 [简体中文](zh-CN/protocol.md)
 
-TCP 47980, IPv4, one controller. Integers are big-endian. A PSK is 32 random bytes shown as 64 hex characters. Maximum encrypted body: Host→Client 8 MiB, Client→Host 64 KiB. LAN/private, link-local and loopback IPv4 are supported; not public internet traversal.
+TCP 47980, IPv4, one controller. Integers are big-endian. Legacy RML1 uses a 32-byte random PSK shown as 64 hex characters. Development password mode RMP1 derives a 32-byte PSK as specified below. Maximum encrypted body: Host→Client 8 MiB, Client→Host 64 KiB. LAN/private, link-local and loopback IPv4 are supported; not public internet traversal.
 
 ## Authentication and framing
 
@@ -10,6 +10,35 @@ TCP 47980, IPv4, one controller. Integers are big-endian. A PSK is 32 random byt
 2. Client sends random 32-byte C and HMAC-SHA256(PSK, `client` || S || C).
 3. Host verifies and sends HMAC-SHA256(PSK, `server` || S || C); Client verifies with a fixed-time comparison.
 4. Derive c2h = HMAC-SHA256(PSK, `c2h` || S || C), h2c similarly with `h2c`.
+
+### Password authentication (RMP1, development)
+
+Manual passwords are 8–64 printable ASCII characters excluding spaces (bytes
+33–126), case-sensitive. New credentials default to 12 uniformly random characters
+from `ABCDEFGHJKLMNPQRSTUVWXYZ23456789` (60 bits). Existing raw 32-byte credentials
+stay RML1 until explicitly replaced. A 64-character hex password can be used in
+RMP1; the Host's magic selects the mode, not the password's appearance.
+
+Host stores a unique random 16-byte salt and the password in its existing Keychain
+item. Its versioned value is ASCII `LOCALREMOTE-PAIRING-PASSWORD-V1:` followed by
+the salt and UTF-8 password; a raw 32-byte value remains the legacy format. Corrupt
+records fail without automatic regeneration. Explicit save updates the same item,
+disconnects existing controllers and replaces the in-memory credential.
+
+Derive PSK with PBKDF2-HMAC-SHA256(password, salt, 600000 iterations, 32 bytes).
+Host sends `RMP1` || random S (32 bytes) || salt (16 bytes). Define transcript as
+`RMP1` || salt || S || C. Client sends C (32 bytes) plus
+HMAC-SHA256(PSK, `client` || transcript); Host replies with
+HMAC-SHA256(PSK, `server` || transcript). Direction keys use `c2h`/`h2c` and this
+same transcript. Windows derives off the UI thread; Mac derives on its credential
+queue and caches the result. AES-GCM records and application version=1 are unchanged.
+This mode is also used on the file socket with the same stored salt and fresh S/C.
+Both apps need the development update to use RMP1; new clients retain RML1 support.
+
+The iteration choice follows [OWASP password-storage guidance](https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html).
+It slows guesses; it does not turn a weak password into a random 256-bit secret.
+A captured authentication exchange permits offline password guessing. Prefer a
+generated password and a trusted LAN; there is no PAKE or forward secrecy.
 
 Each encrypted record is u32 body length + ciphertext + 16-byte GCM tag. Plaintext is one type byte plus payload. AES-256-GCM nonce: four zero bytes + direction counter u64, starting at zero. The length header is AAD. Separate direction keys/counters and a serialized writer preserve nonce/order. Fresh handshake nonces create new keys on reconnect. Invalid authentication, lengths, tags, unexpected counter/order or EOF terminate the connection. There is no unauthenticated development-control mode.
 
@@ -57,7 +86,7 @@ before the next input event. Busy writes can still prevent immediate paste readi
 
 ## Threat limits
 
-Initial key transfer needs a trusted out-of-band path. Mac Keychain and current-user Windows DPAPI store the long-term key. No independent audit, forward secrecy, certificate PKI, key-revocation UI or comprehensive denial-of-service protection. A known PSK plus a recorded handshake can decrypt historical sessions. An unauthenticated peer may occupy the single slot until the 15-second timeout. Use only on a trusted LAN; do not expose the port publicly.
+Initial key transfer needs a trusted out-of-band path. Mac Keychain and current-user Windows DPAPI store the long-term key. No independent audit, forward secrecy, certificate PKI, comprehensive denial-of-service protection. A known PSK plus a recorded handshake can decrypt historical sessions. An unauthenticated peer may occupy the single slot until the 15-second timeout. Use only on a trusted LAN; do not expose the port publicly.
 
 ## Optional file clipboard
 
@@ -73,7 +102,7 @@ On a new Mac file copy, Host sends file_offer {requestId,offer,items}; offer is
 without source paths. Windows file copies start a push instead.
 
 Windows always initiates TCP 47981, including Mac-to-Windows pulls. It repeats
-RML1 PSK challenge/proof and direction-key derivation automatically with fresh
+RML1 or RMP1 challenge/proof and direction-key derivation automatically with fresh
 nonces, then sends a type-1 request:
 
 - file_push {session: fileSession,requestId,items}

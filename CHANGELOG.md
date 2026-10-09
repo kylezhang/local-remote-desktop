@@ -4,6 +4,14 @@
 
 ## Unreleased
 
+- Added editable 8–64 character pairing passwords and random 12-character generation.
+  Explicit save updates the existing Keychain item and disconnects old controllers;
+  restarts preserve the credential and legacy keys remain until saved. RMP1 uses
+  salted PBKDF2-HMAC-SHA256 and mutual proofs for desktop/file connections, retaining
+  RML1 compatibility. Exact Windows WPF/password/legacy checks and portable Swift
+  credential checks pass; native Mac SDK/Keychain acceptance remains pending.
+  Mac internal build 17; public versions and released assets unchanged.
+
 - Faster file sending uses elapsed-time pacing at 8 MiB/s with a bounded small-file
   allowance instead of fixed per-chunk sleeps. Progress shows percentage/rate;
   byte completion stays separate from OS clipboard readiness, and Mac-to-Windows

@@ -11,14 +11,15 @@ final class MacFiles {
             .appendingPathComponent("LocalRemote/ReceivedFiles", isDirectory: true)
     }
     private let key: Data, control: Wire, allowed: () -> Bool, status: (String) -> Void
+    private let passwordSalt: Data?
     private let lock = NSLock(), output = DispatchQueue(label: "localremote.files.poll")
     private var listener: Int32 = -1, current: Wire?, stopped = false
     private var requested = false, enabled = false, requestID = 0
     private var offer: (String, FileSource)?
     private var timer: DispatchSourceTimer?
     private var revision = 0 // Main-thread pasteboard revision, suppresses received-file echo.
-    init(key: Data, control: Wire, allowed: @escaping () -> Bool, status: @escaping (String) -> Void) throws {
-        self.key = key; self.control = control; self.allowed = allowed; self.status = status
+    init(key: Data, passwordSalt: Data? = nil, control: Wire, allowed: @escaping () -> Bool, status: @escaping (String) -> Void) throws {
+        self.key = key; self.passwordSalt = passwordSalt; self.control = control; self.allowed = allowed; self.status = status
         let fd = Darwin.socket(Darwin.AF_INET, Darwin.SOCK_STREAM, 0)
         guard fd >= 0 else { throw POSIXError(.EIO) }
         var one: Int32 = 1
@@ -115,7 +116,7 @@ final class MacFiles {
         defer { wire.close(); lock.lock(); if current === wire { current = nil }; lock.unlock() }
         var authenticated = false
         do {
-            try wire.authenticate(key: key)
+            try wire.authenticate(key: key, passwordSalt: passwordSalt)
             authenticated = true
             let message = try wire.receive()
             guard let supplied = message["session"] as? String, supplied.utf8.count == session.utf8.count,
