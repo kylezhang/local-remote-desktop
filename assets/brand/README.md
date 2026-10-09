@@ -2,23 +2,31 @@
 
 [简体中文](README.zh-CN.md)
 
-A universal screen outline and two opposing arrows express reciprocal desktop control across devices. The mark is flat and solid; only the application tile has a subtle cherry-red gradient. It has no glow, bevel, shadow or grain texture.
+The approved blueberry identity combines a white screen outline, two opposing arrows and a compact pointer. The screen represents a live desktop, the arrows express reciprocal connection, and the pointer makes remote interaction explicit. The geometry is flat: no glow, bevel, shadow or grain texture.
 
-![LocalRemote identity](identity-board.png)
+![LocalRemote blueberry identity](identity-board.png)
+
+## Palette
+
+- Application tile and primary action: **#5265EC → #643AC2**.
+- Solid symbol and hover action: **#4B50CE**.
+- Pressed action: **#4238AF**.
+- Light-surface brand text: **#282C67**; Windows surface: **#F7F8FF**.
+- Mac dark-appearance brand text: **#B1B7FF**.
+
+Windows uses the same blue for text selection, dropdown highlights and checked reconnect state. macOS uses the blue accent for native controls and adapts its brand text to light/dark appearance. White primary-action labels retain contrast in normal, hover and pressed states. Disabled controls remain visually muted.
 
 ## Assets
 
-- `icon.svg`: editable application icon master, with transparent margins.
-- `symbol.svg`: solid cherry-red symbol for light backgrounds, derived from the same geometry.
-- `icon-master.png`: 2048px RGBA export of the vector master.
+- `icon.svg`: approved editable icon master, with transparent margins.
+- `symbol.svg`: same screen/arrows/pointer in solid blue for light backgrounds.
+- `icon-master.png`: 2048px RGBA export.
 - `icon.png`: 1024px app/header icon.
 - `LocalRemote.ico`: Windows sizes from 16px through 256px.
-- `LocalRemote.icns`: macOS icon representations.
-- `identity-board.png`: symbol, wordmark and application icon presentation.
+- `LocalRemote.icns`: macOS representations.
+- `identity-board.png`: symbol, wordmark and app icon presentation.
 
-The tile gradient runs from **#C77A8D** to **#A45A70**, brightened while retaining the muted cherry-red direction. The standalone symbol and interface actions use **#A4546B**; wordmark text uses **#683247**. This palette interprets a user-supplied paint swatch for screens; it is not an official paint specification.
-
-The design was explored with the built-in image_gen tool, then reconstructed as editable SVG geometry. The SVG is now the production source of truth. Generated raster exploration is reference material, not the platform icon master. The earlier luminous artwork has been superseded.
+The pointer and frame use the refined B approved by the user: pointer scale 0.76, screen stroke 56, overall screen scale 1.06 and arrow scale 1.08. The pointer is optically centered slightly upward/left. The SVG is the production source of truth; all platform icons derive from it. Earlier cherry-red explorations have been superseded. Initial brand exploration used built-in image_gen; this refinement edits the established vector artwork.
 
 ## Regeneration
 
@@ -30,8 +38,8 @@ node scripts/render-brand.mjs
 python scripts/generate-icons.py
 ```
 
-Rendering uses sharp; container conversion uses Pillow. Keep transparent margins intact. The screen outline, arrows and tile contain no bitmap data or visual-effect filters. The presentation wordmark uses the available Segoe UI/Arial font; platform icons contain no text and do not depend on font availability.
+Preserve transparent margins. Symbol export recolors both the screen and pointer, including its stroke. The presentation wordmark uses Segoe UI/Arial when available; app icons contain no text and do not require these fonts.
 
-Both app headers use the exported PNG. Windows embeds PNG/ICO resources, keeps the entire header inside the full-screen toolbar, and uses a cherry-red connection action. macOS packages PNG/ICNS and explicitly sets the running Dock icon (including direct LaunchAgent starts).
+Both app headers use the PNG. Windows embeds PNG/ICO and hides the entire toolbar in full screen. macOS packages PNG/ICNS and sets the running Dock icon, including direct LaunchAgent starts. Windows is built and rendered; actual Mac Dock and native theme behavior remain unverified in this Windows environment.
 
-The identity expresses the product vision. Current functionality is Windows → Mac; reverse control and mobile support remain planned.
+The graphic expresses the product vision. Current functionality is Windows → Mac; reverse control and mobile support remain planned.

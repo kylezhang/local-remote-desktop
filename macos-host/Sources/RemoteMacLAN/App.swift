@@ -136,7 +136,13 @@ final class HostModel: ObservableObject {
 }
 struct HostView: View {
     @ObservedObject var model: HostModel
-    private let cherry = Color(red: 164.0 / 255.0, green: 84.0 / 255.0, blue: 107.0 / 255.0)
+    private let blueberry = Color(red: 82.0 / 255.0, green: 101.0 / 255.0, blue: 236.0 / 255.0)
+    private let brandText = Color(nsColor: NSColor(name: nil) { appearance in
+        if appearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua {
+            return NSColor(srgbRed: 177.0 / 255.0, green: 183.0 / 255.0, blue: 1, alpha: 1)
+        }
+        return NSColor(srgbRed: 40.0 / 255.0, green: 44.0 / 255.0, blue: 103.0 / 255.0, alpha: 1)
+    })
     private var brandIcon: NSImage? { AppBrand.icon }
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
@@ -146,7 +152,7 @@ struct HostView: View {
                         .frame(width: 60, height: 60).accessibilityHidden(true)
                 }
                 Text("LocalRemote 0.1.0").font(.title)
-                    .foregroundStyle(Color(red: 104.0 / 255.0, green: 50.0 / 255.0, blue: 71.0 / 255.0))
+                    .foregroundStyle(brandText)
             }
             Text(model.status).textSelection(.enabled).frame(width: 450, alignment: .leading).fixedSize(horizontal: false, vertical: true)
             Text("在 Windows 填写此 Mac 的局域网 IP 和配对密钥。当前桌面会被共享；停止共享即可收回控制。").frame(width: 450, alignment: .leading)
@@ -167,6 +173,6 @@ struct HostView: View {
             Button("复制启动诊断") { model.copyDiagnostics() }
             if !model.inputTestResult.isEmpty { Text(model.inputTestResult).font(.caption).frame(width: 450, alignment: .leading).textSelection(.enabled) }
             Text("仅支持正常登录后的用户会话；不支持 FileVault 预启动解锁。\n端口 47980；不传输音频、不写录像文件。").font(.caption).foregroundStyle(.secondary)
-        }.padding(24).tint(cherry)
+        }.padding(24).tint(blueberry)
     }
 }

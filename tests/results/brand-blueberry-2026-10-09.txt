@@ -1,0 +1,24 @@
+Approved blueberry branding integration — 2026-10-09
+
+Source: refined B from the user-approved Localremote (2) handoff.
+Approved geometry preserved: screen/arrows/pointer and transparent margins.
+Production 2048px master is pixel-identical to approved fuller.png.
+Solid symbol export recolors the pointer fill/stroke as well as the screen.
+
+Palette: #5265EC → #643AC2; hover #4B50CE; pressed #4238AF;
+brand text #282C67 on #F7F8FF. macOS dark-brand text #B1B7FF.
+Minimum white text/primary gradient contrast: 4.74:1 (101 sampled stops).
+White/hover: 6.29:1; white/pressed: 8.69:1; text/surface: 12.04:1.
+
+Windows self-contained x64 publish passed.
+Actual WPF resource/layout render passed at 1280px and 720px; full-screen
+toolbar hide/restore passed. Rendered reconnect checkmark uses the new accent.
+ClientChecks against a local encrypted mock Host passed video display, keyboard,
+mouse, focus release, permissions, disconnect and connected quality changes.
+No real Mac connection, remote input or stored user credentials were used.
+
+Swift syntax parsing and ReleaseChecks passed. These are not Mac SDK/native
+Dock/theme validation. Mac internal bundle build is 9; public version is 0.1.0.
+Installer recovery and Pairing.swift are unchanged from e5f8fad. App.swift
+changes affect HostView colors only; startup/Keychain logic is preserved.
+Existing release tags and archives were not modified; no new release created.

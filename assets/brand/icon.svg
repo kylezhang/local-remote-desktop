@@ -1,20 +1,20 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
   <title>LocalRemote application icon</title>
-  <desc>A white screen outline with opposing arrows on a muted cherry-red gradient.</desc>
+  <desc>A white screen outline with opposing arrows on a blueberry gradient.</desc>
   <defs>
-    <linearGradient id="cherry" x1="96" y1="96" x2="928" y2="928" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#C77A8D"/>
-      <stop offset="1" stop-color="#A45A70"/>
+    <linearGradient id="blueberry" x1="96" y1="96" x2="928" y2="928" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#5265EC"/>
+      <stop offset="1" stop-color="#643AC2"/>
     </linearGradient>
     <g id="screen-half">
       <path d="M544 352H304C260 352 224 388 224 432V592C224 636 260 672 304 672H388"
-            fill="none" stroke="currentColor" stroke-width="48"/>
-      <path d="M540 309Q540 305 544 308L600 349Q604 352 600 355L544 396Q540 399 540 395Z" fill="currentColor"/>
+            fill="none" stroke="currentColor" stroke-width="56"/>
+      <path d="M540 309Q540 305 544 308L600 349Q604 352 600 355L544 396Q540 399 540 395Z" fill="currentColor" transform="translate(570 352) scale(1.08) translate(-570 -352)"/>
     </g>
   </defs>
-  <rect x="96" y="96" width="832" height="832" rx="180" fill="url(#cherry)"/>
-  <g color="#FFFFFF">
+  <rect x="96" y="96" width="832" height="832" rx="180" fill="url(#blueberry)"/>
+  <g color="#FFFFFF" transform="translate(512 512) scale(1.06) translate(-512 -512)">
     <use href="#screen-half"/>
     <use href="#screen-half" transform="rotate(180 512 512)"/>
   </g>
-</svg>
+<path d="M466 442L590 533L538 537L565 591L535 606L508 551L475 583Z" fill="#FFFFFF" stroke="#FFFFFF" stroke-width="6" stroke-linejoin="round" transform="translate(524 514) scale(0.76) translate(-528 -524)"/></svg>

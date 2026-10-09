@@ -6,12 +6,11 @@
 
 - Hardened Mac installation with full-bundle rollback on replacement/verification failure or interruption, retained recovery backups if rollback fails, and explicit launch-failure messages.
 - Moved Keychain reads to a serial background queue; startup attempts a silent read, user actions allow authentication/first-time creation, and loaded keys are reused for the process. Native Mac acceptance is pending.
-- Refined the identity into an editable vector screen mark with smaller opposing arrows, solid white geometry and a brighter muted cherry-red tile. Removed glow, bevels and textured lighting; regenerated all platform icons.
-- Softened the cherry-red artwork and interface accent. macOS now validates bundled PNG/ICNS and explicitly sets its running Dock icon, including direct LaunchAgent starts.
+- Adopted the user-approved blueberry identity (#5265EC → #643AC2): white screen/arrows with a balanced interior pointer. Updated both apps' brand accents, Windows selection/checked states and Mac light/dark brand text; regenerated all platform icons from the editable SVG.
+- macOS validates bundled PNG/ICNS and explicitly sets its running Dock icon, including direct LaunchAgent starts.
 - Clean macOS installation now resets only this app's Screen Recording and Accessibility decisions by default; `--keep-permissions` preserves both for routine updates. Added separate permission settings actions.
 
-- Established the screen-and-bidirectional-connection identity in cherry red; retired black/navy alternatives.
-- Applied the selected icon to both app headers, with cherry-red primary actions; the Windows toolbar wraps on smaller windows and remains hidden in full screen.
+- Applied the selected icon to both app headers; the Windows toolbar wraps on smaller windows and remains hidden in full screen.
 - Rewrote the English-first README and Chinese counterpart for users; moved detailed controls, quality settings and diagnostics to a dedicated user guide.
 - Added English UI/localization to the near-term roadmap. Existing release tags and archives remain unchanged.
 
