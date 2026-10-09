@@ -18,8 +18,10 @@ Only v0.1.0 is released. The versions below are targets, not completed features 
 | v1.0.0 | Stable desktop release | Consolidate desktop features, reliable installers and upgrade paths, onboarding, supported-system matrix and regression coverage | Both desktop directions meet documented release criteria; native builds and signed distribution validated |
 | v1.1.0 | Mobile controller | Android controller first: connect to Windows/Mac, touch, text entry and small-screen navigation | Real phone-to-desktop tests and explicit authorization; mobile receiving control is outside this scope |
 | v1.2.0 | Broader mobile access | iOS/iPadOS controller, subject to platform validation; tablet interaction refinements | Feasibility and distribution requirements verified before committing the release scope |
+| v1.3.0 | Linux desktop | Linux controller and host, interoperating with Windows/Mac; define supported desktop sessions and packaging | Capture/input permissions and both control directions verified on supported real Linux systems |
+| v1.4.0 | HarmonyOS controller | Native phone/tablet controller for supported Windows/Mac/Linux hosts; adapt touch, text entry and pairing | Native SDK, permissions, distribution and real-device interoperability verified; receiving control is outside this scope |
 
-Linux is a later candidate; assign a release version only after desktop-session permissions and test hardware are evaluated. File transfer, multiple displays and audio are not assigned versions yet.
+Linux and HarmonyOS are versioned targets, not current support claims. HarmonyOS desktop control requires a separate feasibility assessment; the v1.4.0 target covers phone/tablet controllers only. File transfer, multiple displays and audio are not assigned versions yet.
 
 ## Verification and prerequisites
 
