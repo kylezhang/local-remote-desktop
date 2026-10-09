@@ -17,6 +17,8 @@ The current UI is Chinese. English localization is planned. These labels help ma
 | 流畅 / 标准 / 高清 | Smooth / Standard / High |
 | 复制诊断 | Copy Diagnostics (Windows) |
 | Windows 快捷键 | Windows Shortcuts (development update) |
+| 同步文本剪贴板 | Sync Text Clipboard (Windows development update) |
+| 允许双向文本剪贴板同步 | Allow Bidirectional Text Clipboard (Mac development update) |
 
 ## Connect and control
 
@@ -24,9 +26,40 @@ Start sharing on the awake, logged-in Mac. On Windows, enter the Mac's IPv4 addr
 
 Click the picture for keyboard focus. In the development update, **Windows Shortcuts** is enabled by default: Ctrl maps to Mac Command, Win to Control, Alt to Option and Shift to Shift. Ctrl+C/V/X/A/Z/S therefore sends the corresponding Command shortcut. Ctrl+Shift combinations retain Shift. Changing this mode releases held remote keys; the choice is remembered on Windows. Disable it to use the original mapping (Ctrl→Control, Win→Command), including Control+C for a terminal interrupt. Published v0.1.0 packages use the original mapping.
 
-These shortcuts operate the Mac's own clipboard. Copying text in a local Windows application does not yet transfer that text to the Mac. Windows-reserved shortcuts such as Alt+Tab or Win combinations may stay local. Windows input-method composition is not transmitted; the Mac's own input method can process physical keys.
+These shortcuts operate the Mac's own clipboard; transferring text between devices requires the separate opt-in below. Windows-reserved shortcuts such as Alt+Tab or Win combinations may stay local. Windows input-method composition is not transmitted; the Mac's own input method can process physical keys.
 
 F11 toggles full screen. Ctrl+Alt+Esc releases remote input and restores local focus. Clicking a local button also moves keyboard focus away from the picture. Stop Sharing or quit the Mac application to end sharing. Closing its window alone does not quit the background application.
+
+## Text clipboard sync (development)
+
+Update both devices from main. Mac: enable **允许双向文本剪贴板同步**; Windows:
+enable **同步文本剪贴板**. Wait for Windows status **已启用**, then copy text again.
+Both options start off on each app launch and retain their selection across
+quality changes/reconnects. Older peers keep desktop control working and report
+sync unsupported. If only Windows opts in, it waits for Mac consent.
+
+- Copy plain text in a Windows application, focus the remote picture, then Ctrl+V
+  with Windows Shortcuts enabled. The fresh clipboard update is queued before
+  the Mac paste key on the same encrypted stream.
+- Copy in the remote Mac with Ctrl+C, or locally with Command+C. Allow about
+  half a second plus network delay, then paste in a local Windows application.
+- Disable either option or disconnect to stop sync and discard pending retries.
+  Already delivered text remains in the system clipboard; in-flight data cannot
+  be recalled.
+
+Only new plain text is sent, including Unicode/emoji and line breaks. The limit
+is **32 KiB UTF-8**, not a fixed character count. Oversized text and embedded NUL
+characters are skipped, never truncated. Files, images and rich formatting are
+excluded; received text replaces clipboard formats. Existing contents are not sent
+on enable/reconnect. Copied passwords and other sensitive text are included when
+opted in; use a trusted paired device.
+
+Change detection runs every 500 ms, suppresses echo and retries busy writes for
+at most two seconds. A newer local copy cancels a pending remote write. Simultaneous
+copies can race; this is not clipboard history. Avoid immediately pasting after
+a remote copy or while the clipboard is busy. LocalRemote does not log or store
+clipboard contents. Windows UI/transport and portable Swift state/adapter tests
+pass; native AppKit and real two-device paste acceptance remain pending.
 
 ## Picture quality
 
@@ -49,6 +82,9 @@ Selecting quality during a connection releases held input, closes the previous s
 
 ## Session support
 
-One controller, the primary display and IPv4. No clipboard sync, file transfer, audio, recording or automatic discovery yet. The Mac must be awake and logged in. No FileVault Preboot bypass, new login session or guaranteed secure-field/lock-screen input.
+One controller, the primary display and IPv4. Published v0.1.0 has no clipboard
+sync; development text sync is described above. No file transfer, audio, recording
+or automatic discovery yet. The Mac must be awake and logged in. No FileVault
+Preboot bypass, new login session or guaranteed secure-field/lock-screen input.
 
 The protocol is encrypted and authenticated but has not had an independent security audit and does not provide forward secrecy. Use a trusted LAN and do not expose the port to the internet. See [protocol details](protocol.md) and [build/test status](validation.md).

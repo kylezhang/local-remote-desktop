@@ -48,6 +48,7 @@ final class HostModel: ObservableObject {
     @Published var keychainCheck = "尚未读取"
     // Avoid SwiftUI.State's SDK macro dependency in Command Line Tools builds.
     @Published var revealSecret = false
+    @Published var allowClipboard = false { didSet { host?.setClipboardAllowed(allowClipboard) } }
     private var host: Host?
     private let preparation = SharingPreparation<Data>()
     private var pairingKey: Data? { preparation.cachedKey }
@@ -122,7 +123,7 @@ final class HostModel: ObservableObject {
             checkingScreen = false
             self.displayPairingKey(key)
             let trusted = AXIsProcessTrusted()
-            let h = Host(key: key) { [weak self] text in DispatchQueue.main.async { self?.status = text } }
+            let h = Host(key: key, clipboardAllowed: self.allowClipboard) { [weak self] text in DispatchQueue.main.async { self?.status = text } }
             try h.start(); self.host = h; self.active = true
             self.status = trusted ? "共享已启动，等待 Windows 连接 · TCP 47980" : "共享已启动（只能查看）· 辅助功能权限未被认可"
           } catch is CancellationError { }
@@ -154,6 +155,7 @@ final class HostModel: ObservableObject {
         KeychainBackend: file-based (existing pairing-v1 item)
         KeychainReadAttempts: \(Pairing.readAttempts)
         KeychainCreateAttempts: \(Pairing.createAttempts)
+        ClipboardAllowed: \(allowClipboard)
         Status: \(status)
         """
         NSPasteboard.general.clearContents(); NSPasteboard.general.setString(text, forType: .string)
@@ -182,6 +184,9 @@ struct HostView: View {
             Text(model.status).textSelection(.enabled).frame(width: 450, alignment: .leading).fixedSize(horizontal: false, vertical: true)
             Text("在 Windows 填写此 Mac 的局域网 IP 和配对密钥。当前桌面会被共享；停止共享即可收回控制。").frame(width: 450, alignment: .leading)
             Toggle("显示配对密钥（仅交给自己的 Windows）", isOn: $model.revealSecret)
+            Toggle("允许双向文本剪贴板同步", isOn: $model.allowClipboard)
+            Text("两端开启后同步新复制的纯文本，最多 32 KiB；可能包含敏感内容。不传图片和文件。")
+                .font(.caption).foregroundStyle(.secondary).frame(width: 450, alignment: .leading)
             if model.revealSecret {
                 Text(model.secret.isEmpty ? "密钥尚未读取，可点击下方按钮。" : model.secret)
                     .font(.system(.caption, design: .monospaced)).textSelection(.enabled).frame(width: 450)

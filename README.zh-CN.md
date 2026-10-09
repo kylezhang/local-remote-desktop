@@ -71,7 +71,9 @@ Mac 当前提供源码安装。签名、升级、权限与排障见 [Mac 指南]
 | Ctrl+Alt+Esc | 释放远程输入 |
 | Ctrl 键（Windows 快捷键启用） | 对应 Mac Command 修饰键 |
 
-开发分支默认启用“Windows 快捷键”，Ctrl+C/V 操作 Mac 自己的剪贴板；取消后恢复 Ctrl→Control、Win→Command。已发布的 v0.1.0 安装包仍使用原映射。跨设备剪贴板同步另行规划。
+开发分支默认启用“Windows 快捷键”，Ctrl+C/V 操作 Mac 自己的剪贴板；取消后恢复 Ctrl→Control、Win→Command。已发布的 v0.1.0 安装包仍使用原映射。
+
+开发构建已加入**可选双向文本剪贴板同步**：两端开启后重新复制文字，最多 32 KiB，不传图片和文件。Windows 加密模拟端验证通过，Mac 原生验收待完成；已发布的 v0.1.0 安装包没有此功能。见[使用指南](docs/zh-CN/usage.md#文本剪贴板同步开发更新)。
 
 切换画质会短暂重连。控件、画质及连接帮助见 [使用指南](docs/zh-CN/usage.md)。
 

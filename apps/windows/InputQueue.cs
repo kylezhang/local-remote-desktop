@@ -18,7 +18,7 @@ public sealed class InputQueue
             if(complete) return false;
             string? op=Operation(message);
             if(op=="release_all") pending.Clear();
-            if(op=="mouse_move" && pending.Last is {} last && Operation(last.Value)=="mouse_move") last.Value=message;
+            if((op is "mouse_move" or "clipboard_text") && pending.Last is {} last && Operation(last.Value)==op) last.Value=message;
             else { if(pending.Count>=capacity) return false; pending.AddLast(message); }
             wake.Writer.TryWrite(true); return true;
         }

@@ -71,7 +71,9 @@ Both devices must be reachable on the same network. Allow TCP **47980** to the M
 | Ctrl+Alt+Esc | Release remote input |
 | Ctrl key, Windows shortcut mode on | Send the Mac Command modifier |
 
-The development branch enables **Windows shortcuts** by default: Ctrl+C/V operates the Mac clipboard. Disable it for the original Ctrl→Control / Win→Command mapping. Published v0.1.0 packages still use that original mapping. Clipboard synchronization between devices is planned.
+The development branch enables **Windows shortcuts** by default: Ctrl+C/V operates the Mac clipboard. Disable it for the original Ctrl→Control / Win→Command mapping. Published v0.1.0 packages still use that original mapping.
+
+Development builds also implement **optional bidirectional text clipboard sync**. Enable it on both devices, then copy text again. Text is limited to 32 KiB; files/images are excluded. Windows encrypted-peer tests pass; native Mac acceptance is pending. This feature is absent from the published v0.1.0 package. See the [user guide](docs/usage.md#text-clipboard-sync-development).
 
 Quality changes briefly reconnect the session. See the [user guide](docs/usage.md) for controls, picture settings and connection help.
 

@@ -38,7 +38,8 @@ static class Program {
             // No persisted user credentials are read or changed, no physical input is
             // synthesized, and the offscreen test window does not activate itself.
             ModifierKeys fakeModifiers=ModifierKeys.None;
-            var window=new MainWindow(false,()=>fakeModifiers) { Left=-20000,Top=-20000,ShowActivated=false,ShowInTaskbar=false };
+            var board=new TestClipboard(); board.Copy("existing private clipboard");
+            var window=new MainWindow(false,()=>fakeModifiers,board) { Left=-20000,Top=-20000,ShowActivated=false,ShowInTaskbar=false };
             try {
                 window.Show();
                 ((TextBox)window.FindName("Address")).Text="127.0.0.1";
@@ -115,6 +116,39 @@ static class Program {
                 await host.Permission(true);
                 await Until(()=>!((TextBlock)window.FindName("Status")).Text.Contains("只能查看"),"permission recovery not shown");
                 Console.WriteLine("PASS Mac permission denial/recovery is reflected by real client");
+                var clipboardOption=(CheckBox)window.FindName("ClipboardSync");
+                var clipboardStatus=(TextBlock)window.FindName("ClipboardStatus");
+                Assert(clipboardOption.IsChecked==false && board.Reads==0 && !host.Inputs.Any(x=>x.GetProperty("op").GetString()=="clipboard_text"),"default clipboard consent violated");
+                clipboardOption.IsChecked=true;
+                await Until(()=>clipboardStatus.Text.Contains("已启用"),"clipboard negotiation failed");
+                Assert(board.Reads==0 && !host.Inputs.Any(x=>x.GetProperty("op").GetString()=="clipboard_text"),"enable sent existing clipboard");
+                board.Copy("Windows → Mac 中文\r\nemoji 😀");
+                fakeModifiers=ModifierKeys.Control; Raise(Key.LeftCtrl,true); Raise(Key.V,true); Raise(Key.V,false); fakeModifiers=ModifierKeys.None; Raise(Key.LeftCtrl,false);
+                await Until(()=>host.Inputs.Any(x=>x.GetProperty("op").GetString()=="clipboard_text"),"local copy not sent");
+                var transfers=host.Inputs.ToArray(); int copyIndex=Array.FindIndex(transfers,x=>x.GetProperty("op").GetString()=="clipboard_text");
+                Assert(TextClipboardSync.Decode(transfers[copyIndex].GetProperty("text").GetString()!)==board.Text,"text corrupted on encrypted transport");
+                await Until(()=>host.Inputs.Skip(copyIndex+1).Any(x=>x.GetProperty("op").GetString()=="key_event" && x.GetProperty("vk").GetInt32()==86 && x.GetProperty("down").GetBoolean()),"paste key ordering failed");
+                int textCount=host.Inputs.Count(x=>x.GetProperty("op").GetString()=="clipboard_text");
+                await host.ClipboardText(TextClipboardSync.Encode("Mac → Windows\n第二行 🎉")!);
+                await Until(()=>board.Text=="Mac → Windows\n第二行 🎉","remote clipboard not applied");
+                await Task.Delay(650);
+                Assert(host.Inputs.Count(x=>x.GetProperty("op").GetString()=="clipboard_text")==textCount,"incoming clipboard echoed");
+                await host.ClipboardText("_w=="); await host.ClipboardText(new string('A',TextClipboardSync.MaxBase64+4));
+                await Task.Delay(100); Assert(board.Text=="Mac → Windows\n第二行 🎉","malformed clipboard applied");
+                await host.ClipboardConsent(false);
+                await Until(()=>clipboardStatus.Text.Contains("等待 Mac 开启"),"Mac revocation not reflected");
+                int writesBefore=board.Writes; await host.ClipboardText(TextClipboardSync.Encode("disabled remote")!);
+                board.Copy("copied while disabled"); await Task.Delay(600);
+                Assert(board.Writes==writesBefore && host.Inputs.Count(x=>x.GetProperty("op").GetString()=="clipboard_text")==textCount,"clipboard moved without mutual consent");
+                await host.ClipboardConsent(true); await Until(()=>clipboardStatus.Text.Contains("已启用"),"Mac consent recovery failed");
+                await Task.Delay(600); Assert(host.Inputs.Count(x=>x.GetProperty("op").GetString()=="clipboard_text")==textCount,"permission recovery sent offline clipboard");
+                long oldRequest=host.ClipboardRequestId; clipboardOption.IsChecked=false;
+                await host.ClipboardAck(true,oldRequest); await host.ClipboardText(TextClipboardSync.Encode("stale remote")!,oldRequest);
+                await Task.Delay(100); Assert(board.Text=="copied while disabled" && clipboardStatus.Text.Contains("关闭"),"stale acknowledgement enabled clipboard");
+                clipboardOption.IsChecked=true; await Until(()=>clipboardStatus.Text.Contains("已启用"),"re-enable failed");
+                await host.Capabilities(false); await Until(()=>clipboardStatus.Text.Contains("版本不支持"),"old peer did not degrade safely");
+                await host.Capabilities(true); await Until(()=>clipboardStatus.Text.Contains("已启用"),"new peer recovery failed");
+                Console.WriteLine("PASS WPF encrypted clipboard: mutual consent, both directions, before-paste ordering, Unicode, no echo, invalid payloads, revocation, stale IDs and old-peer fallback");
                 var quality=(ComboBox)window.FindName("Quality");
                 Assert(quality.IsEnabled,"quality selector disabled while connected");
                 var firstImage=((Image)window.FindName("Desktop")).Source;
@@ -132,6 +166,8 @@ static class Program {
                 Console.WriteLine("PASS disconnect cleans video/transport and restores controls");
                 var timer=(DispatcherTimer)typeof(MainWindow).GetField("render",System.Reflection.BindingFlags.NonPublic|System.Reflection.BindingFlags.Instance)!.GetValue(window)!;
                 Assert(!timer.IsEnabled,"disconnected client still polls display at 60Hz");
+                var clipboardTimer=(DispatcherTimer)typeof(MainWindow).GetField("clipboardTimer",System.Reflection.BindingFlags.NonPublic|System.Reflection.BindingFlags.Instance)!.GetValue(window)!;
+                Assert(!clipboardTimer.IsEnabled,"disconnected clipboard timer is running");
                 connect.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
                 await Until(()=>((Image)window.FindName("Desktop")).Source!=null,"reconnection before close failed");
                 var ownedDecoder=typeof(MainWindow).GetField("activeDecoder",System.Reflection.BindingFlags.NonPublic|System.Reflection.BindingFlags.Instance)!.GetValue(window)!;
@@ -140,6 +176,7 @@ static class Program {
                 window.Close();
                 await Until(()=> { try { using var remaining=Process.GetProcessById(childId); return remaining.HasExited; } catch(ArgumentException) { return true; } },"closing the connected window left FFmpeg running");
                 Assert(!timer.IsEnabled,"closed window kept display timer running");
+                Assert(!clipboardTimer.IsEnabled,"closed window kept clipboard timer running");
                 Console.WriteLine("PASS disconnected display timer stops; closing connected window terminates the owned FFmpeg process");
             } finally { window.Close(); host.Dispose(); }
             try { await server; } catch(Exception ex) when(ex is OperationCanceledException or IOException or ObjectDisposedException or SocketException) {}
@@ -149,18 +186,24 @@ static class Program {
 
 sealed class MockHost:IDisposable {
     readonly TcpListener listener=new(IPAddress.Loopback,47980);
-    readonly CancellationTokenSource stop=new(TimeSpan.FromSeconds(30));
+    readonly CancellationTokenSource stop=new(TimeSpan.FromSeconds(60));
     readonly SemaphoreSlim writes=new(1);
     readonly byte[] video;
     NetworkStream stream=null!; byte[] tx=[],rx=[]; ulong sent,received; TcpClient? peer;
     public byte[] Key {get;}=RandomNumberGenerator.GetBytes(32);
     public ConcurrentQueue<JsonElement> Inputs {get;}=new();
     public ConcurrentQueue<int> Qualities {get;}=new();
+    public long ClipboardRequestId {get;private set;}
+    bool clipboardAllowed=true;
     public MockHost(byte[] video) { this.video=video; listener.Start(); }
     static byte[] Join(params byte[][] arrays)=>arrays.SelectMany(x=>x).ToArray();
     static byte[] H(byte[] key,string label,byte[] transcript)=>HMACSHA256.HashData(key,Join(Encoding.ASCII.GetBytes(label),transcript));
     static byte[] Nonce(ulong value) { var n=new byte[12]; BinaryPrimitives.WriteUInt64BigEndian(n.AsSpan(4),value); return n; }
     public Task Permission(bool trusted)=>Json(new {op="heartbeat",accessibility=trusted,inputReceived=Inputs.Count,inputPosted=Inputs.Count,inputBlocked=0,inputRejected=0,inputError=""});
+    public Task Capabilities(bool clipboard)=>Json(new {op="capabilities",accessibility=true,clipboardText=clipboard});
+    public Task ClipboardAck(bool enabled,long request)=>Json(new {op="clipboard_sync",enabled,requestId=request});
+    public Task ClipboardConsent(bool enabled) { clipboardAllowed=enabled; return ClipboardAck(enabled,ClipboardRequestId); }
+    public Task ClipboardText(string text,long? request=null)=>Json(new {op="clipboard_text",encoding="utf8-base64url",text,requestId=request??ClipboardRequestId});
     Task Json(object value)=>Send(1,JsonSerializer.SerializeToUtf8Bytes(value));
     async Task Send(byte type,byte[] data) {
         await writes.WaitAsync(stop.Token);
@@ -174,7 +217,7 @@ sealed class MockHost:IDisposable {
         }
     }
     async Task Session() {
-        sent=received=0;
+        sent=received=0; ClipboardRequestId=0;
         peer=await listener.AcceptTcpClientAsync(stop.Token); peer.NoDelay=true; stream=peer.GetStream(); var nonce=RandomNumberGenerator.GetBytes(32);
         await stream.WriteAsync(Join("RML1"u8.ToArray(),nonce),stop.Token); var response=new byte[64]; await stream.ReadExactlyAsync(response,stop.Token);
         var transcript=Join(nonce,response[..32]);
@@ -182,12 +225,29 @@ sealed class MockHost:IDisposable {
         await stream.WriteAsync(H(Key,"server",transcript),stop.Token); tx=H(Key,"h2c",transcript); rx=H(Key,"c2h",transcript);
         using var hello=JsonDocument.Parse(await Read()); if(hello.RootElement.GetProperty("op").GetString()!="handshake") throw new IOException("no handshake");
         Qualities.Enqueue(hello.RootElement.GetProperty("quality").GetInt32());
-        await Json(new {op="video_header",width=320,height=180,fps=30,codec="h264-annexb"}); await Permission(true); await Send(2,video);
-        while(true) { using var message=JsonDocument.Parse(await Read()); if(message.RootElement.GetProperty("op").GetString()=="heartbeat") await Permission(true); else Inputs.Enqueue(message.RootElement.Clone()); }
+        await Json(new {op="video_header",width=320,height=180,fps=30,codec="h264-annexb"}); await Capabilities(true); await Permission(true); await Send(2,video);
+        while(true) {
+            using var message=JsonDocument.Parse(await Read()); var root=message.RootElement;
+            if(root.GetProperty("op").GetString()=="heartbeat") await Permission(true);
+            else {
+                Inputs.Enqueue(root.Clone());
+                if(root.GetProperty("op").GetString()=="clipboard_sync") {
+                    ClipboardRequestId=root.GetProperty("requestId").GetInt64();
+                    await ClipboardAck(root.GetProperty("enabled").GetBoolean() && clipboardAllowed,ClipboardRequestId);
+                }
+            }
+        }
     }
     async Task<byte[]> Read() {
         var header=new byte[4]; await stream.ReadExactlyAsync(header,stop.Token); int size=(int)BinaryPrimitives.ReadUInt32BigEndian(header);
         if(size<17 || size>65536) throw new IOException("invalid input size"); var body=new byte[size]; await stream.ReadExactlyAsync(body,stop.Token); var plain=new byte[size-16]; using var aes=new AesGcm(rx,16); aes.Decrypt(Nonce(received++),body.AsSpan(0,plain.Length),body.AsSpan(plain.Length),plain,header); if(plain[0]!=1) throw new IOException("invalid input type"); return plain[1..];
     }
     public void Dispose() { stop.Cancel(); listener.Stop(); peer?.Dispose(); }
+}
+sealed class TestClipboard : ITextClipboard {
+    public long Revision {get;private set;}
+    public string? Text; public int Reads,Writes;
+    public void Copy(string text) { Text=text; Revision++; }
+    public bool TryRead(out string? text) { Reads++; text=Text; return true; }
+    public bool TryWrite(string text) { Writes++; Copy(text); return true; }
 }

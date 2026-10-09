@@ -51,7 +51,9 @@
    <Button Content="复制诊断" Click="DiagnosticsClick" Padding="8,4" Margin="8,0,0,0"/>
    <CheckBox x:Name="Reconnect" Content="自动重连" IsChecked="True" VerticalAlignment="Center" Margin="8,0"/>
    <CheckBox x:Name="WindowsShortcuts" Content="Windows 快捷键" IsChecked="True" VerticalAlignment="Center" Margin="8,0" ToolTip="启用：Ctrl 对应 Mac Command，Win 对应 Control；关闭：Ctrl 对应 Control，Win 对应 Command。复制粘贴使用 Mac 的剪贴板。"/>
+   <CheckBox x:Name="ClipboardSync" Content="同步文本剪贴板" IsChecked="False" VerticalAlignment="Center" Margin="8,0" ToolTip="两端开启后同步新复制的纯文本，最多 32 KiB；不传图片和文件。复制的敏感文本也会发送到配对设备。"/>
    </WrapPanel>
+   <TextBlock x:Name="ClipboardStatus" Text="文本同步：关闭" Margin="0,6,0,0" FontSize="12"/>
   </StackPanel>
   <TextBlock x:Name="Status" DockPanel.Dock="Bottom" Text="填写 Mac IP 和配对密钥。Ctrl+Alt+Esc 释放输入；F11 切换全屏。" Margin="12,8" TextWrapping="Wrap"/>
   <Border x:Name="Surface" Background="Black" Focusable="True" ClipToBounds="True" InputMethod.IsInputMethodEnabled="False" KeyboardNavigation.TabNavigation="None"><Image x:Name="Desktop" Stretch="Uniform"/></Border>

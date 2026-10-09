@@ -5,9 +5,14 @@ final class Host {
     private let lock = NSLock()
     private var listener: Int32 = -1, current: Wire?
     private var running = false
+    private var clipboardAllowed: Bool
     private let key: Data
     private let status: (String) -> Void
-    init(key: Data, status: @escaping (String) -> Void) { self.key = key; self.status = status }
+    init(key: Data, clipboardAllowed: Bool = false, status: @escaping (String) -> Void) {
+        self.key = key; self.clipboardAllowed = clipboardAllowed; self.status = status
+    }
+    func setClipboardAllowed(_ value: Bool) { lock.lock(); clipboardAllowed = value; lock.unlock() }
+    private func allowsClipboard() -> Bool { lock.lock(); defer { lock.unlock() }; return clipboardAllowed }
     func start() throws {
         let s = Darwin.socket(AF_INET, SOCK_STREAM, 0); guard s >= 0 else { throw POSIXError(.EIO) }
         var one: Int32 = 1; setsockopt(s, SOL_SOCKET, SO_REUSEADDR, &one, socklen_t(MemoryLayout<Int32>.size))
@@ -36,8 +41,10 @@ final class Host {
     private func serve(_ wire: Wire) {
         let input = InputInjector()
         var capture: Capture?
+        var clipboard: MacClipboard?
         defer {
             wire.close(); input.release()
+            clipboard?.stop()
             if let capture { wait { await capture.stop() } }
             lock.lock(); if current === wire { current = nil }; let active = running; lock.unlock()
             status(active ? "等待连接 · TCP 47980" : "已停止")
@@ -52,7 +59,8 @@ final class Host {
             wait { do { try await c.start(quality: quality) } catch { startupError = error } }
             if let startupError { throw startupError }
             var trusted = AXIsProcessTrusted()
-            try wire.json(["op":"capabilities","accessibility":trusted])
+            clipboard = MacClipboard(wire: wire, allowed: { [weak self] in self?.allowsClipboard() ?? false })
+            try wire.json(["op":"capabilities","accessibility":trusted,"clipboardText":true])
             status(trusted ? "正在共享当前桌面 · 可控制" : "正在共享当前桌面 · 辅助功能未授权，只能查看")
             var lastHeartbeat = Date()
             while true {
@@ -70,6 +78,8 @@ final class Host {
                 }
                 if Date().timeIntervalSince(lastHeartbeat) > 15 { throw WireError.closed }
                 if message["op"] as? String == "disconnect" { break }
+                if message["op"] as? String == "clipboard_sync" { try clipboard?.configure(message); continue }
+                if message["op"] as? String == "clipboard_text" { clipboard?.receive(message); continue }
                 input.handle(message)
             }
         } catch { status("连接结束：\(error)") }

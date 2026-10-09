@@ -6,6 +6,17 @@ Release environment: Windows x64, .NET SDK 8.0.425 and Desktop/Core runtime 8.0.
 
 ## Automated coverage
 
+- Clipboard development (2026-10-09): C# and real Swift 5.9.2 compile/run the
+  production state logic for Unicode, exact byte limits/JSON record fit, malformed
+  data, consent baselines, no echo, bounded busy retries, local-copy priority,
+  expiry and disconnect. Linux also compiles/runs the production Mac adapter with
+  mock AppKit/Wire to check timer/consent/order/revocation/stale IDs. The exact
+  rebuilt self-contained Windows DLL passes real WPF/encrypted-peer clipboard
+  negotiation, both directions, before-paste ordering, invalid data, consent
+  changes and old-peer fallback alongside existing control/quality/close tests.
+  System clipboards are replaced by test adapters; no user clipboard is accessed.
+  Native AppKit/full Mac SDK and real two-device paste acceptance are pending.
+
 - Windows ResourceChecks (2026-10-09): production decoder fed 720p/30 and 1080p/60
   for 40 seconds each; CPU/private-memory samples, bounded diagnostic draining,
   cancellation, dimension rejection and decoder exit checked. Production source passed
@@ -54,6 +65,7 @@ Run on Windows with .NET SDK and FFmpeg:
 ```powershell
 dotnet run --project tests/ProtocolChecks/ProtocolChecks.csproj -c Release
 dotnet run --project tests/ClientChecks/ClientChecks.csproj -c Release
+dotnet run --project tests/ClipboardChecks/ClipboardChecks.csproj -c Release
 dotnet run --project tests/ResourceChecks/ResourceChecks.csproj -c Release -- 40 resources.json
 python tests/InstallerChecks/check.py --bash "C:/Program Files/Git/bin/bash.exe" --work-dir work/installer-checks
 python tests/InstallerChecks/signing.py --bash "C:/Program Files/Git/bin/bash.exe" --work-dir work/signing-checks
@@ -61,6 +73,7 @@ python tests/ReleaseChecks/check.py
 python tests/MacPackageChecks/check.py --bash "C:/Program Files/Git/bin/bash.exe" --work-dir work/mac-package-checks
 # macOS or Linux with Swift; Mac also compiles the whole Host:
 bash tests/MacStartupChecks/check.sh
+bash tests/ClipboardChecks/check.sh
 ```
 
 ## What these results do not prove

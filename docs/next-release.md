@@ -3,10 +3,15 @@
 [简体中文](zh-CN/next-release.md) · [Roadmap](roadmap.md)
 
 Status on 2026-10-09: development on main. **Not released.** Public app versions
-remain 0.1.0 until release preparation; Mac internal build number is 12.
+remain 0.1.0 until release preparation; Mac internal build number is 13.
 Existing v0.1.0 tag and assets remain unchanged.
 
 ## Implemented and locally checked
+
+- [x] Optional text clipboard implementation on main: both-platform portable
+  state, mocked Mac adapter and exact Windows WPF/encrypted-peer checks passed.
+  Both apps default off; native Mac and two-device acceptance remain pending.
+  Clipboard is a roadmap v0.2.0 feature under development, not a released claim.
 
 - [x] Bounded Windows decoder diagnostics, idempotent disposal and direct cleanup
   on connected window close; disconnected display timer stops. Production decoder
@@ -39,9 +44,14 @@ Existing v0.1.0 tag and assets remain unchanged.
 - [x] Remembered Windows shortcut mode converts Ctrl→Command and Win→Control,
   releases held keys on change and retains native mapping. Actual WPF shortcut
   chords passed through the encrypted mock peer. Real Mac application acceptance
-  is pending; cross-device clipboard synchronization is not added.
+  is pending; clipboard synchronization has a separate opt-in.
 
 ## Required before publishing v0.1.1
+
+- [ ] Any candidate containing the clipboard prototype needs native Mac pasteboard
+  build/runtime and real two-device copy/paste tests, consent/revoke, busy clipboard,
+  Unicode/size boundaries, reconnect and no echo; do not publish it as validated
+  from mock tests alone. Reconcile the candidate scope with the version roadmap.
 
 - [ ] Run the Mac candidate pipeline with the real distribution identity/profile:
   signed, Accepted notarization, stapled ticket, final ZIP extraction and assessment.

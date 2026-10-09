@@ -1,0 +1,41 @@
+LocalRemote text clipboard development checks — 2026-10-09
+Curated test summary, not a raw console log.
+
+Windows: .NET SDK 8.0.425, Desktop/Core runtime 8.0.31, self-contained x64.
+Exact rebuilt DLL SHA256:
+d9a330a5ce64f45974281c1e00b31d6e69f19002deb81085ed5991fc58e05617
+Swift: 5.9.2 on Ubuntu 22.04; no Apple SDK available.
+Public version remains 0.1.0; Mac internal build 13; unreleased development only.
+
+PASS C# production state: Unicode/emoji/CRLF/empty text, strict UTF8/base64url,
+     exact byte boundaries and escaped JSON within the legacy record limit,
+     malformed/oversize/NUL rejection, no existing-content transfer on consent,
+     non-text skip, no echo, busy read/write recovery, newer local copy priority,
+     two-second expiry, disabled/disconnected retry discard and reconnect baseline.
+PASS C# two directions settle without a feedback loop for 200 polls.
+PASS 10,000 consecutive clipboard changes coalesce without crossing a paste key.
+PASS Swift production state: same applicable data/state/loop cases compiled and run.
+PASS production MacClipboard adapter on Linux with mock AppKit/Wire: mutual consent,
+     baseline, both directions, write applied before receive returns, no echo,
+     permission revoke still advertised after an incoming blocked message,
+     stale configuration/text IDs, malformed data and stopped timer.
+     This fixture does not validate native AppKit APIs/behavior.
+
+PASS exact rebuilt WPF client with encrypted simulated peer and injected clipboard:
+     default off, no pre-existing-content transfer, bidirectional Unicode text,
+     text queued before paste down, no echo, malformed/oversize rejection,
+     Mac revoke/recovery, no offline content leak, stale acknowledgement/text,
+     local option off/on and old-peer capability fallback/recovery.
+PASS existing WPF keyboard/modifier/shortcut/pointer/focus/permission, connected
+     quality/reconnect, disconnect and close checks; both timers stopped after exit.
+PASS ProtocolChecks: authenticated/tamper/replay/wrong-key/oversize transport,
+     actual H264 decode, DPAPI migration, input bounds/order and shortcut mapping.
+PASS all 11 Mac Swift source/package files syntax parse (not Apple SDK type check).
+
+Tests do not read/write the user's real system clipboard. They use adapters and
+synthetic text. Neither clipboard contents nor pairing keys are logged/persisted
+by the new product feature. No new dependencies or unauthenticated channel added.
+
+Pending: actual Apple SDK build, NSPasteboard and Windows native clipboard acceptance,
+real two-device copy/paste, busy system clipboard, secure fields and long sessions.
+Published v0.1.0 tag/assets are unchanged; no native Mac release artifact is claimed.

@@ -10,4 +10,12 @@ Host 发 RML1 与随机 S，Client 发随机 C 及 HMAC-SHA256(PSK, client || S 
 
 诊断累计记录收到、post、权限阻止、无效事件及不含内容的错误代码；post 不表示目标应用确认执行，release_all 可产生多个事件。画质切换释放输入后关闭流及解码器，约三秒重新认证，以最后档位握手，不依赖自动重连选项。
 
+新 Host 以 capabilities.clipboardText=true 声明支持可选文本同步。Client 发 clipboard_sync（enabled、递增正整数 requestId），
+Host 在自身允许且 Client 请求时确认；本地允许项变化后用当前 requestId 回报。clipboard_text 双向携带同一 requestId、
+encoding=utf8-base64url、text；关闭、旧 ID 或非法载荷忽略。RML1/version=1 及包体上限不变，旧端忽略未知操作。
+纯文本最多 32 KiB UTF-8，使用带 padding 的 base64url（-/_），避免 JSON 转义膨胀超过反向 64 KiB 包体。
+拒绝非法 UTF-8、非规范编码、NUL 和超长文本，允许空文本，不传图片/文件/HTML。开启和重连不传已有内容，收到文本后更新
+本地观察版本以防回环。每 500 毫秒检查；忙时最多保留一条文本重试两秒，新本地复制取消待写。文本在粘贴按键前经同一 Client
+队列发送，Host 处理后再处理下一输入；剪贴板忙时不能保证立即可粘贴。
+
 首次密钥需可信渠道传递；存储使用 Keychain/DPAPI。没有独立审计、前向保密、证书体系、撤销界面或完整防拒绝服务。已知长期密钥及握手可解密历史流量；未认证连接可占用单连接槽直至超时。仅可信局域网，不公开端口。

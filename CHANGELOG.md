@@ -4,6 +4,13 @@
 
 ## Unreleased
 
+- Added opt-in bidirectional plain-text clipboard sync to development builds:
+  capability/mutual-consent negotiation, encrypted bounded UTF-8 transport,
+  stale-request rejection, echo suppression, busy-write recovery and text-before-paste
+  ordering. Both apps start with sync off. C#/Swift state tests, mocked Mac adapter
+  and exact rebuilt WPF encrypted-peer tests pass; native Mac acceptance is pending.
+  Published v0.1.0 assets are unchanged.
+
 - Bounded FFmpeg diagnostic draining, made decoder disposal idempotent, terminate
   the owned decoder directly on window close, and stop disconnected display timers.
   Added real decoder resource samples and WPF close/disconnect checks. Short synthetic
@@ -23,7 +30,7 @@
   candidate or notarization is claimed. Build bundles are now fresh and recover the old
   build output on replacement failure/termination; installed applications are not touched.
 
-- Added a remembered Windows Shortcuts mode, enabled by default: Ctrl→Mac Command and Win→Control. Both modifier key codes and flags are converted, mode changes release held input, and native mapping remains available. This operates the Mac clipboard; cross-device clipboard sync is still planned.
+- Added a remembered Windows Shortcuts mode, enabled by default: Ctrl→Mac Command and Win→Control. Both modifier key codes and flags are converted, mode changes release held input, and native mapping remains available. Cross-device clipboard sync uses a separate opt-in.
 - Mac sharing now checks screen access before reading credentials. Standalone pairing-key access remains available; failed/cancelled startup does not retry or proceed. The production startup helper is compiled and exercised with Swift 5.9.2 on Linux. Keychain queries explicitly retain the existing file-based backend; system dialogs remain a native acceptance item.
 
 - Hardened Mac installation with full-bundle rollback on replacement/verification failure or interruption, retained recovery backups if rollback fails, and explicit launch-failure messages.

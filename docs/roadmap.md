@@ -8,6 +8,10 @@ Only v0.1.0 is released. The versions below are targets, not completed features 
 
 Track v0.1.1 implementation and remaining validation in the [release checklist](next-release.md).
 
+The v0.2.0 optional text clipboard prototype is now implemented on main with
+portable/Windows encrypted-peer tests. Native Mac acceptance remains pending;
+this does not change the published release or declare the v0.2.0 feature set complete.
+
 ## Version plan
 
 | Version | Focus | Planned scope | Release gate |

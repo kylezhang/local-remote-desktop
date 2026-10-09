@@ -27,6 +27,8 @@ Type 1 is UTF-8 JSON. Type 2 is one Annex B H.264 access unit, without timestamp
 | release_all | C→H | release held keys/buttons |
 | heartbeat | both | Client every 3 seconds, Host responds; 15-second timeout |
 | capabilities | H→C | accessibility bool; also reported in newer heartbeats |
+| clipboard_sync | C→H request / H→C acknowledgement | enabled bool, requestId positive monotonic integer |
+| clipboard_text | both, only while mutually enabled | requestId, encoding=utf8-base64url, text=canonical padded base64url of UTF-8 |
 | disconnect | C→H | normal disconnect; EOF also closes |
 
 Flags: Shift=1, Control=2, Option=4, Command=8. Includes left/right modifier VK mapping and numeric-pad VK 96..111 with CGEvent numeric-pad flag. Num Lock-off navigation is not converted into digits. No Windows Unicode IME composition; Mac input methods can process physical events. Unknown operations are ignored; malformed JSON closes; non-finite coordinates are rejected.
@@ -34,6 +36,24 @@ Flags: Shift=1, Control=2, Option=4, Command=8. Includes left/right modifier VK 
 Heartbeat input diagnostics are cumulative for the current connection: inputReceived (recognized messages), inputPosted (CGEvent post calls), inputBlocked (permission denied), inputRejected (invalid/unsupported or event creation failure), inputError (latest non-content error code). Release-all may post multiple events. Posted is not confirmation of application acceptance. Diagnostics omit key content and pairing secrets.
 
 Quality 0 requests up to 1280×720/30fps/4Mbps; 1 up to 1920×1080/60fps/10Mbps; 2 same size/fps at 18Mbps. Preserve aspect ratio, even dimensions, no upscaling. Changing quality releases input, closes stream/decoder and reauthenticates after roughly three seconds with the latest selected quality, independently of Auto Reconnect. Settings are requests, not guarantees.
+
+## Optional text clipboard
+
+The Host advertises clipboardText=true in capabilities. Client consent needs a
+matching clipboard_sync acknowledgement with enabled=true and its own toggle on.
+The Host also needs its local Allow Clipboard toggle; changes produce an ack with
+the current requestId. New request IDs strictly increase per connection. Stale IDs
+and disabled-session text are ignored. Old peers ignore unknown operations; magic,
+version and encrypted record limits remain unchanged.
+
+UTF-8 text is limited to 32 KiB, encoded with padded base64url (-/_ instead of +/)
+to prevent JSON escaping inflating the record past 64 KiB. Invalid UTF-8, noncanonical
+encoding, NUL and oversize data are rejected; empty text is allowed. No files/images/
+HTML. Existing clipboard contents are not sent on enable/reconnect. Received writes
+advance the observed clipboard revision to suppress echo; polling is 500 ms, busy
+writes retain at most one text for two seconds, and a newer local copy cancels it.
+Clipboard and paste input share one ordered client queue; the Host processes text
+before the next input event. Busy writes can still prevent immediate paste readiness.
 
 ## Threat limits
 
