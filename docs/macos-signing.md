@@ -39,3 +39,44 @@ silently grant them. Stable signing preserves identity, not a guarantee of no
 future macOS prompts. Current Windows/Ubuntu tests cover the Windows client and
 shared Swift logic. Apple SDK, TCC, Keychain dialogs, capture and signing/notarization
 remain native Mac acceptance requirements.
+
+## Maintainer packaging
+
+`scripts/package-macos.sh` implements the candidate build workflow. It requires
+an Apple Silicon Mac, Xcode tools, Python 3, an existing valid Developer ID
+Application identity and a notarytool credential profile stored in Keychain.
+Prepare those on the maintainer's machine; do not put passwords, private keys or
+certificate exports in the repository. End users do not run this pipeline.
+
+After aligning the public version and committing the final source:
+
+```bash
+export SIGN_IDENTITY='<valid Developer ID Application fingerprint>'
+export NOTARY_PROFILE='<existing notarytool Keychain profile name>'
+bash scripts/package-macos.sh 0.1.1
+```
+
+The example version is the planned release, not the current app version. Today
+the committed app is 0.1.0, so requesting 0.1.1 correctly fails until release
+preparation. A clean source tree and matching versions are required.
+
+The pipeline compiles the full Host and runs startup checks, creates a fresh
+bundle, signs with Hardened Runtime and a secure timestamp, checks the Developer
+ID requirement and excludes debug entitlements. It submits an app ZIP with
+`notarytool`, requires `Accepted`, staples and validates the ticket, and runs
+Gatekeeper assessment. It then builds the final ZIP, checks its file inventory,
+version, Apple Silicon executable, icons, commit and hashes, and extracts it for
+another signature/ticket/assessment check. Apple describes these requirements in
+[notarization requirements](https://developer.apple.com/documentation/security/notarizing-macos-software-before-distribution)
+and the [custom workflow](https://developer.apple.com/documentation/security/customizing-the-notarization-workflow).
+
+Outputs go into `dist/LocalRemote-vVERSION-macos-arm64/`: ZIP, SHA256SUMS.txt and
+release.json. The ZIP includes notices, a bilingual launch guide and file hashes.
+Existing outputs are never overwritten; failed checks remove temporary candidates.
+The script does not install/open the app, reset privacy permissions, read pairing
+keys, change local signing pins, create tags or publish an AtomGit release.
+
+Portable tests exercise package rejection and mocked Apple-tool failures; they
+do not validate real signatures, notarization or permissions. No candidate has
+been natively produced here. A successful pipeline is still not the first-launch
+and two-update TCC/Keychain acceptance required for publishing v0.1.1.

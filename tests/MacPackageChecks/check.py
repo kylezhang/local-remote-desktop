@@ -1,0 +1,219 @@
+"""Portable package validation and mocked Mac release flow. No Apple service/keys/TCC."""
+import argparse
+import hashlib
+import importlib.util
+import json
+from pathlib import Path
+import plistlib
+import struct
+import subprocess
+import sys
+import tempfile
+import unittest
+import zipfile
+
+root = Path(__file__).resolve().parents[2]
+parser = argparse.ArgumentParser()
+parser.add_argument('--bash', required=True)
+parser.add_argument('--work-dir', required=True)
+args, rest = parser.parse_known_args()
+work = Path(args.work_dir).resolve()
+work.mkdir(parents=True, exist_ok=True)
+spec = importlib.util.spec_from_file_location('package_check', root/'scripts/check-macos-package.py')
+checker = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(checker)
+commit = 'a' * 40
+name = 'LocalRemote-v0.1.1-macos-arm64'
+
+
+def bundle(app):
+    (app/'Contents/MacOS').mkdir(parents=True)
+    (app/'Contents/Resources').mkdir()
+    (app/'Contents/_CodeSignature').mkdir()
+    info = plistlib.loads((root/'macos-host/Info.plist').read_bytes())
+    info['CFBundleShortVersionString'] = '0.1.1'
+    (app/'Contents/Info.plist').write_bytes(plistlib.dumps(info))
+    executable = app/'Contents/MacOS/RemoteMacLAN'
+    executable.write_bytes(struct.pack('<II', 0xFEEDFACF, 0x0100000C) + bytes(24))
+    executable.chmod(0o755)
+    for source, target in [('LocalRemote.icns', 'LocalRemote.icns'), ('icon.png', 'LocalRemote.png')]:
+        (app/'Contents/Resources'/target).write_bytes((root/'assets/brand'/source).read_bytes())
+    (app/'Contents/Resources/signing-mode.txt').write_text('certificate\n')
+    (app/'Contents/_CodeSignature/CodeResources').write_text('mock signature, not cryptographic verification')
+
+
+class PackageChecks(unittest.TestCase):
+    def fixture(self):
+        temporary = tempfile.TemporaryDirectory(prefix='mac-package-', dir=work)
+        self.addCleanup(temporary.cleanup)
+        return Path(temporary.name).resolve()
+
+    def test_bundle_validation(self):
+        for change in ('none', 'missing-icon', 'wrong-version', 'wrong-cpu', 'adhoc', 'extra-key', 'bad-icns'):
+            with self.subTest(change=change):
+                app = self.fixture()/'RemoteMacLAN.app'
+                bundle(app)
+                if change == 'missing-icon': (app/'Contents/Resources/LocalRemote.png').unlink()
+                if change == 'wrong-version':
+                    info = plistlib.loads((app/'Contents/Info.plist').read_bytes())
+                    info['CFBundleShortVersionString'] = '9.9.9'
+                    (app/'Contents/Info.plist').write_bytes(plistlib.dumps(info))
+                if change == 'wrong-cpu': (app/'Contents/MacOS/RemoteMacLAN').write_bytes(bytes(32))
+                if change == 'adhoc': (app/'Contents/Resources/signing-mode.txt').write_text('ad-hoc')
+                if change == 'extra-key': (app/'Contents/Resources/secret.key').write_text('fixture')
+                if change == 'bad-icns': (app/'Contents/Resources/LocalRemote.icns').write_bytes(b'icns0000')
+                if change == 'none': checker.check_app(app, '0.1.1')
+                else:
+                    with self.assertRaises(ValueError): checker.check_app(app, '0.1.1')
+
+    def test_archive_validation(self):
+        fixture = self.fixture()
+        payload = fixture/name
+        bundle(payload/'RemoteMacLAN.app')
+        for doc in ('NOTICE.md', 'START-HERE.txt'): (payload/doc).write_text('fixture documentation')
+        hashes = {p.relative_to(payload).as_posix(): hashlib.sha256(p.read_bytes()).hexdigest()
+                  for p in payload.rglob('*') if p.is_file()}
+        (payload/'release.json').write_text(json.dumps({'version': '0.1.1', 'commit': commit, 'sha256': hashes}))
+        for change in ('none', 'traversal', 'extra', 'symlink', 'tampered', 'wrong-commit', 'appledouble', 'orphan-appledouble'):
+            with self.subTest(change=change):
+                archive = fixture/(change + '.zip')
+                with zipfile.ZipFile(archive, 'w') as z:
+                    for path in payload.rglob('*'):
+                        if path.is_file():
+                            content = path.read_bytes()
+                            if change == 'tampered' and path.name == 'NOTICE.md': content = b'changed'
+                            z.writestr(path.relative_to(fixture).as_posix(), content)
+                    if change == 'traversal': z.writestr(name + '/../escape', b'fixture')
+                    if change == 'extra': z.writestr(name + '/unexpected.token', b'fixture')
+                    if change == 'symlink':
+                        entry = zipfile.ZipInfo(name + '/link')
+                        entry.external_attr = (0o120777 << 16)
+                        z.writestr(entry, b'/outside')
+                    if change in ('appledouble', 'orphan-appledouble'):
+                        target = 'NOTICE.md' if change == 'appledouble' else 'missing'
+                        z.writestr('__MACOSX/' + name + '/._' + target, b'\x00\x05\x16\x07fixture')
+                if change in ('none', 'appledouble'):
+                    checker.check_archive(archive, '0.1.1', commit)
+                else:
+                    with self.assertRaises(ValueError):
+                        checker.check_archive(archive, '0.1.1', 'b'*40 if change == 'wrong-commit' else commit)
+
+    def test_pipeline(self):
+        for mode in ('ok', 'dirty', 'wrong-version', 'no-identity', 'development', 'bad-signature',
+                     'no-runtime', 'no-timestamp', 'debug', 'notary-rejected', 'notary-error',
+                     'staple-failed', 'extract-tampered', 'source-changed', 'existing-output'):
+            with self.subTest(mode=mode):
+                fixture = self.fixture()
+                for directory in ('scripts', 'macos-host', 'tests/MacStartupChecks', 'dist'):
+                    (fixture/directory).mkdir(parents=True)
+                bundle(fixture/'template/RemoteMacLAN.app')
+                (fixture/'NOTICE.md').write_text('fixture notices')
+                (fixture/'macos-host/Info.plist').write_bytes((fixture/'template/RemoteMacLAN.app/Contents/Info.plist').read_bytes())
+                if mode == 'wrong-version':
+                    info = plistlib.loads((fixture/'macos-host/Info.plist').read_bytes())
+                    info['CFBundleShortVersionString'] = '0.1.0'
+                    (fixture/'macos-host/Info.plist').write_bytes(plistlib.dumps(info))
+                (fixture/'scripts/check-macos-package.py').write_bytes((root/'scripts/check-macos-package.py').read_bytes())
+                (fixture/'macos-host/build-app.sh').write_text('''#!/bin/bash
+set -eu
+[[ "$RML_RELEASE_BUILD" == 1 && "$SIGN_IDENTITY" == ABCDEF ]]
+echo build >> actions
+mkdir -p macos-host/build
+cp -R template/RemoteMacLAN.app macos-host/build/RemoteMacLAN.app
+''', newline='\n')
+                (fixture/'tests/MacStartupChecks/check.sh').write_text('echo startup-check >> actions\n', newline='\n')
+                # Only archive creation/extraction is simulated by Python; production
+                # manifest generation and validation run unchanged.
+                (fixture/'archive.py').write_text('''import sys,zipfile
+from pathlib import Path
+if sys.argv[1] == 'pack':
+    source, target = map(Path, sys.argv[2:])
+    with zipfile.ZipFile(target, 'w') as archive:
+        for path in source.rglob('*'):
+            if path.is_file(): archive.write(path, path.relative_to(source.parent).as_posix())
+else:
+    target = str(Path(sys.argv[3]).resolve())
+    if sys.platform == 'win32': target = chr(92)*2 + '?' + chr(92) + target
+    with zipfile.ZipFile(sys.argv[2]) as archive: archive.extractall(target)
+''', newline='\n')
+                prefix = r'''
+mode='MODE'
+test_python='PYTHON'
+export SIGN_IDENTITY=ABCDEF NOTARY_PROFILE=fixture-profile
+uname() { if [[ "$1" == -s ]]; then echo Darwin; else echo arm64; fi; }
+python3() {
+  if [[ "$1" == tests/ReleaseChecks/check.py ]]; then echo release-check >> actions; return; fi
+  command "$test_python" "$@"
+}
+git() {
+  if [[ "$1" == status ]]; then
+    if [[ "$mode" == dirty || ( "$mode" == source-changed && -f stapled ) ]]; then echo ' M source'; fi
+  else echo aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa; fi
+}
+security() {
+  if [[ "$mode" == development ]]; then echo '1) ABCDEF "Apple Development: Fixture"';
+  elif [[ "$mode" != no-identity ]]; then echo '1) ABCDEF "Developer ID Application: Fixture"'; fi
+}
+codesign() {
+  echo "codesign $1" >> actions
+  [[ "$mode" != bad-signature ]] || return 1
+  if [[ "$*" == *--verbose=4* ]]; then
+    if [[ "$mode" != no-runtime ]]; then echo 'flags=0x10000(runtime)'; fi
+    if [[ "$mode" != no-timestamp ]]; then echo 'Timestamp=fixture'; fi
+  elif [[ "$*" == *--entitlements* && "$mode" == debug ]]; then echo 'com.apple.security.get-task-allow'; fi
+  return 0
+}
+xcrun() {
+  echo "xcrun $1 $2" >> actions
+  if [[ "$1" == notarytool ]]; then
+    [[ "$mode" != notary-error ]] || return 1
+    if [[ "$mode" == notary-rejected ]]; then echo '{"status":"Invalid"}'; else echo '{"status":"Accepted"}'; fi
+  elif [[ "$2" == staple ]]; then
+    [[ "$mode" != staple-failed ]] || return 1
+    touch stapled
+    echo 'fixture stapled ticket' > "${@: -1}/Contents/CodeResources"
+  else [[ -f "${@: -1}/Contents/CodeResources" ]]; fi
+}
+spctl() { echo assess >> actions; }
+ditto() {
+  if [[ "$1" == -c ]]; then
+    echo pack >> actions
+    python3 archive.py pack "${@: -2:1}" "${@: -1}"
+  elif [[ "$1" == -x ]]; then
+    python3 archive.py unpack "${@: -2:1}" "${@: -1}"
+    if [[ "$mode" == extract-tampered ]]; then
+      rm "${@: -1}/LocalRemote-v0.1.1-macos-arm64/RemoteMacLAN.app/Contents/CodeResources"
+    fi
+  else cp -R "$1" "$2"; fi
+}
+'''.replace('MODE', mode).replace('PYTHON', Path(sys.executable).as_posix())
+                source = (root/'scripts/package-macos.sh').read_text(encoding='utf-8')
+                lines = source.splitlines(keepends=True)
+                # Insert mocks after set -euo so production logic and failure modes run.
+                fixture_script = ''.join(lines[:3]) + prefix + ''.join(lines[3:])
+                script = fixture/'scripts/package-macos.sh'
+                script.write_text(fixture_script, encoding='utf-8', newline='\n')
+                final = fixture/'dist'/name
+                if mode == 'existing-output':
+                    final.mkdir()
+                    (final/'existing').write_text('published artifact')
+                result = subprocess.run([args.bash, str(script), '0.1.1'], capture_output=True,
+                                        text=True, encoding='utf-8', timeout=40)
+                self.assertEqual(result.returncode == 0, mode == 'ok', result.stdout + result.stderr)
+                actions = (fixture/'actions').read_text() if (fixture/'actions').exists() else ''
+                if mode == 'ok':
+                    archive = final/(name + '.zip')
+                    checker.check_archive(archive, '0.1.1', commit)
+                    self.assertEqual((final/'SHA256SUMS.txt').read_text().split()[0], hashlib.sha256(archive.read_bytes()).hexdigest())
+                    self.assertEqual(actions.count('pack\n'), 2, 'Final archive must be recreated after stapling')
+                    self.assertIn('assess', actions)
+                elif mode == 'existing-output': self.assertEqual((final/'existing').read_text(), 'published artifact')
+                else: self.assertFalse(final.exists(), 'A rejected candidate must not create final release output')
+                if mode in ('dirty', 'wrong-version', 'no-identity', 'development', 'existing-output'):
+                    self.assertNotIn('startup-check', actions)
+                    self.assertNotIn('build\n', actions)
+                self.assertFalse(list((fixture/'dist').glob('.macos-release.*')))
+                print('PASS release pipeline (mock):', mode)
+
+
+unittest.main(argv=[sys.argv[0], *rest], verbosity=2)

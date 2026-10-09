@@ -34,6 +34,11 @@ Existing v0.1.0 tag and assets remain unchanged.
 
 ## Required before publishing v0.1.1
 
+- [ ] Run the Mac candidate pipeline with the real distribution identity/profile:
+  signed, Accepted notarization, stapled ticket, final ZIP extraction and assessment.
+  The pipeline and portable inventory/provenance checks are implemented and mocked,
+  not natively exercised. See [maintainer packaging](macos-signing.md#maintainer-packaging).
+
 - [ ] Actual Apple SDK compilation of the updated Host, including deprecated
   file-based Keychain compatibility APIs.
 - [ ] Real Mac first launch (zero startup credential calls in development),

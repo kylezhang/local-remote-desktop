@@ -1,0 +1,12 @@
+PASS configure-signing.sh: none
+PASS configure-signing.sh: certificate
+PASS build-app.sh: stable-missing
+PASS build-app.sh: invalid-saved
+PASS build-app.sh: certificate
+PASS build-app.sh: adhoc
+PASS build-app.sh: release-certificate
+PASS build-app.sh: release-development
+PASS build-app.sh: release-missing
+PASS build-app.sh: sign-failed
+PASS build-app.sh: move-failed
+PASS build-app.sh: interrupted-build

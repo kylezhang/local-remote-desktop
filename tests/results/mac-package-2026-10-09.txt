@@ -1,0 +1,23 @@
+test_archive_validation (__main__.PackageChecks.test_archive_validation) ... ok
+test_bundle_validation (__main__.PackageChecks.test_bundle_validation) ... ok
+test_pipeline (__main__.PackageChecks.test_pipeline) ... ok
+
+----------------------------------------------------------------------
+Ran 3 tests in 8.797s
+
+OK
+PASS release pipeline (mock): ok
+PASS release pipeline (mock): dirty
+PASS release pipeline (mock): wrong-version
+PASS release pipeline (mock): no-identity
+PASS release pipeline (mock): development
+PASS release pipeline (mock): bad-signature
+PASS release pipeline (mock): no-runtime
+PASS release pipeline (mock): no-timestamp
+PASS release pipeline (mock): debug
+PASS release pipeline (mock): notary-rejected
+PASS release pipeline (mock): notary-error
+PASS release pipeline (mock): staple-failed
+PASS release pipeline (mock): extract-tampered
+PASS release pipeline (mock): source-changed
+PASS release pipeline (mock): existing-output

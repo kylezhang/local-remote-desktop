@@ -6,6 +6,16 @@ Release environment: Windows x64, .NET SDK 8.0.425 and Desktop/Core runtime 8.0.
 
 ## Automated coverage
 
+- MacPackageChecks (2026-10-09): portable bundle/archive checks reject missing icons,
+  wrong version/CPU, development mode, extra files, malformed icons, unsafe ZIP entries,
+  modified content and wrong provenance. Mocked release cases cover invalid identity,
+  dirty/version-mismatched source, missing runtime/timestamp, debug entitlement,
+  notarization rejection/error, stapling/extracted-ticket failure, changed source and
+  no-overwrite output. The successful fixture recreates the ZIP after stapling and
+  verifies checksums. No Apple signing/notary/Gatekeeper operations were executed.
+  Signing mocks also check fresh bundles and old build-output recovery on failed move
+  or termination; these do not touch the installed app.
+
 - Latest development: MacStartupChecks compiles/executes production SharingPreparation
   on Ubuntu 22.04 with Swift 5.9.2. Seven scenarios cover permission failure without
   credential access, ordering/cache/recheck, standalone key reuse, failed read without
@@ -32,6 +42,7 @@ dotnet run --project tests/ClientChecks/ClientChecks.csproj -c Release
 python tests/InstallerChecks/check.py --bash "C:/Program Files/Git/bin/bash.exe" --work-dir work/installer-checks
 python tests/InstallerChecks/signing.py --bash "C:/Program Files/Git/bin/bash.exe" --work-dir work/signing-checks
 python tests/ReleaseChecks/check.py
+python tests/MacPackageChecks/check.py --bash "C:/Program Files/Git/bin/bash.exe" --work-dir work/mac-package-checks
 # macOS or Linux with Swift; Mac also compiles the whole Host:
 bash tests/MacStartupChecks/check.sh
 ```

@@ -4,6 +4,12 @@
 
 ## Unreleased
 
+- Added a maintainer-only Mac candidate pipeline with Developer ID-only release signing,
+  Hardened Runtime/timestamp, notarization and stapling, final ZIP extraction checks,
+  provenance, notices and checksums. Portable and mocked failure tests pass; no real Mac
+  candidate or notarization is claimed. Build bundles are now fresh and recover the old
+  build output on replacement failure/termination; installed applications are not touched.
+
 - Added a remembered Windows Shortcuts mode, enabled by default: Ctrl→Mac Command and Win→Control. Both modifier key codes and flags are converted, mode changes release held input, and native mapping remains available. This operates the Mac clipboard; cross-device clipboard sync is still planned.
 - Mac sharing now checks screen access before reading credentials. Standalone pairing-key access remains available; failed/cancelled startup does not retry or proceed. The production startup helper is compiled and exercised with Swift 5.9.2 on Linux. Keychain queries explicitly retain the existing file-based backend; system dialogs remain a native acceptance item.
 

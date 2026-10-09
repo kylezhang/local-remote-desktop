@@ -19,6 +19,12 @@ for mode, script_name, success in [
     ('invalid-saved', 'build-app.sh', False),
     ('certificate', 'build-app.sh', True),
     ('adhoc', 'build-app.sh', True),
+    ('release-certificate', 'build-app.sh', True),
+    ('release-development', 'build-app.sh', False),
+    ('release-missing', 'build-app.sh', False),
+    ('sign-failed', 'build-app.sh', False),
+    ('move-failed', 'build-app.sh', False),
+    ('interrupted-build', 'build-app.sh', False),
 ]:
     with tempfile.TemporaryDirectory(prefix='signing-', dir=work) as temporary:
         root = Path(temporary).resolve()
@@ -30,13 +36,28 @@ for mode, script_name, success in [
         (root/'icon.png').write_text('mock PNG icon')
         if mode == 'stable-missing': (root/'.require-stable-signature').touch()
         if mode == 'invalid-saved': (root/'.signing-identity').write_text('INVALID')
+        old = root/'build/RemoteMacLAN.app/Contents/obsolete-resource'
+        old.parent.mkdir(parents=True)
+        old.write_text('old bundle')
         prefix = '''
-unset SIGN_IDENTITY RML_REQUIRE_STABLE_SIGNATURE
+unset SIGN_IDENTITY RML_REQUIRE_STABLE_SIGNATURE RML_RELEASE_BUILD
 uname() { if [[ "$1" == -s ]]; then echo Darwin; else echo arm64; fi; }
-security() { if [[ MODE == certificate ]]; then echo '1) ABCDEF "Developer ID Application: Fixture"'; fi; }
-codesign() { echo "codesign $*" >> "$PWD/actions"; [[ "$*" != *INVALID* ]]; }
+security() {
+  if [[ MODE == certificate || MODE == release-certificate || MODE == sign-failed ]]; then echo '1) ABCDEF "Developer ID Application: Fixture"'; fi
+  if [[ MODE == release-development ]]; then echo '1) ABCDEF "Apple Development: Fixture"'; fi
+}
+codesign() { echo "codesign $*" >> "$PWD/actions"; [[ "$*" != *INVALID* && MODE != sign-failed ]]; }
 xcrun() { echo 'build' >> "$PWD/actions"; if [[ "$*" == *--show-bin-path* ]]; then echo "$PWD/bin"; fi; }
+mv() {
+  if [[ "$2" == "$PWD/build/RemoteMacLAN.app" && "$1" == */.bundle.*/RemoteMacLAN.app ]]; then
+    if [[ MODE == move-failed ]]; then return 1; fi
+    if [[ MODE == interrupted-build ]]; then builtin kill -TERM $$; return 1; fi
+  fi
+  command mv "$@"
+}
 '''.replace('MODE', mode)
+        if mode.startswith('release-'):
+            prefix += '\nexport RML_RELEASE_BUILD=1 SIGN_IDENTITY=ABCDEF\n'
         script = (source/script_name).read_text(encoding='utf-8')
         lines = script.splitlines(keepends=True)
         fixture = ''.join(lines[:2]) + prefix + ''.join(lines[2:])
@@ -60,5 +81,13 @@ xcrun() { echo 'build' >> "$PWD/actions"; if [[ "$*" == *--show-bin-path* ]]; th
         if mode == 'adhoc':
             assert not (root/'.require-stable-signature').exists()
             assert (root/'build/RemoteMacLAN.app/Contents/Resources/signing-mode.txt').read_text().strip() == 'ad-hoc'
+        if mode == 'release-certificate':
+            assert '--options runtime --timestamp' in actions
+            assert not (root/'.signing-identity').exists()
+            assert not (root/'.require-stable-signature').exists()
+        if mode in {'release-development', 'release-missing'}: assert not actions
+        if script_name == 'build-app.sh':
+            assert old.exists() != success, 'Old bundle must survive failure; stale resources must not survive success'
+            assert not list((root/'build').glob('.bundle.*'))
         assert not list(root.glob('.signing-probe.*'))
         print(f'PASS {script_name}: {mode}')

@@ -26,3 +26,33 @@
 
 屏幕录制、辅助功能仍需用户主动授权，安装器不能静默授予。稳定签名保持更新身份，但不保证系统永不再次询问。
 当前 Windows/Ubuntu 可验证 Windows 客户端及共享 Swift 逻辑；Apple SDK、TCC、钥匙串弹窗、采集、签名公证仍需原生 Mac 验收。
+
+## 维护者打包
+
+`scripts/package-macos.sh` 已实现候选包流程，需要 Apple Silicon Mac、Xcode 工具、
+Python 3、已有有效 Developer ID Application 身份及保存在钥匙串中的 notarytool 凭据配置。
+由维护者准备，用户不执行此流程；密码、私钥及证书导出不入库。
+
+统一公开版本并提交最终源码后执行：
+
+```bash
+export SIGN_IDENTITY='<有效 Developer ID Application 指纹>'
+export NOTARY_PROFILE='<已有 notarytool 钥匙串配置名称>'
+bash scripts/package-macos.sh 0.1.1
+```
+
+示例 0.1.1 是计划版本，当前源码仍是 0.1.0，因此目前请求 0.1.1 会被正确拒绝。
+源码必须提交且目录干净，两端版本一致。
+
+流程先完整编译 Host 并执行启动检查，构建全新应用包，用 Hardened Runtime 和安全时间戳签名，
+验证 Developer ID 要求并排除调试权限。提交公证并要求 Accepted，附加及校验票据、执行 Gatekeeper 检查，
+随后生成最终 ZIP，校验文件清单、版本、Apple Silicon 程序、图标、提交与散列，并解压再次验签及校验票据。
+依据 [Apple 公证要求](https://developer.apple.com/documentation/security/notarizing-macos-software-before-distribution)
+和[自定义流程](https://developer.apple.com/documentation/security/customizing-the-notarization-workflow)。
+
+输出位于 `dist/LocalRemote-vVERSION-macos-arm64/`：ZIP、SHA256SUMS.txt、release.json。
+包内含依赖声明、中英文启动指引和文件散列，不覆盖已有输出；检查失败清理临时候选包。
+流程不安装或打开应用、不重置隐私权限、不读取配对密钥、不改变本地签名固定配置，也不打 tag 或直接发布。
+
+便携测试验证包拒绝规则和模拟 Apple 工具的失败路径，不能代替真实签名、公证或授权验证。
+这里尚未原生产生 Mac 候选包；即使打包流程成功，v0.1.1 发布前仍需首次启动及连续两次升级的钥匙串/TCC 实机验收。

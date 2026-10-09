@@ -14,3 +14,11 @@ The release notes must distinguish implemented features, automated test coverage
 A Mac binary requires the [signing and distribution acceptance](macos-signing.md).
 Maintainers supply the Developer ID signing/notarization environment; end users
 should not need signing credentials. Shared Swift tests alone do not satisfy that gate.
+
+For Mac candidates, after committing aligned versions, use `scripts/package-macos.sh`
+with a Developer ID fingerprint and an existing Keychain notarytool profile as
+described in [maintainer packaging](macos-signing.md#maintainer-packaging).
+It checks the committed source, builds/signs/notarizes, validates the final extracted
+artifact, and writes an immutable candidate folder with provenance and checksums.
+It does not install the Host or publish a release. Pass native first-launch/update
+acceptance before tagging and uploading. This pipeline has only been mocked here.
