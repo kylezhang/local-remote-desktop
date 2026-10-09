@@ -77,7 +77,7 @@ Quality changes briefly reconnect the session. See the [user guide](docs/usage.m
 
 The goal is one application on each supported device, with a familiar way to connect or allow a connection. Next steps focus on reliable installation, English UI, easier pairing and device discovery, followed by Windows ↔ Mac control and mobile controllers.
 
-These are planned capabilities. See the [roadmap](docs/roadmap.md) for scope and priorities.
+Planned releases: **v0.1.1** installation/updates, **v0.1.2** input/responsiveness, **v0.2.0** discovery/clipboard/localization, **v0.3.0** desktop control in both directions, then **v1.0.0** stable desktop and **v1.1–v1.2** mobile controllers. See the [roadmap](docs/roadmap.md) for scope and release criteria; these features are not yet released.
 
 ## Background
 

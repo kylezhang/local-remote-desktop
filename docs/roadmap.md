@@ -2,24 +2,42 @@
 
 [简体中文](zh-CN/roadmap.md) · [README](../README.md)
 
-LocalRemote aims to become a single familiar LAN remote-control application on each supported platform. An installation may initiate or accept control; accepting requires explicit authorization. Discovery never implies trust. This is a direction, not a delivery-date promise.
+LocalRemote aims to provide one familiar LAN remote-control application per platform. Each desktop installation will eventually initiate or accept control, with explicit authorization. Discovery never implies trust.
 
-## v0.1.0 — first product release
+Only v0.1.0 is released. The versions below are targets, not completed features or delivery-date promises. Unreleased main-branch improvements will be packaged in the next release after validation.
 
-Windows→Apple Silicon Mac current-session control, paired/encrypted transport, remembered connection, full screen, reconnect, connected quality selection and Mac permission diagnostics. Product name/icon, bilingual documentation, cleaned native codebase and versioned release artifacts. Earlier development version numbers are superseded without rewriting Git history.
+## Version plan
 
-## Next — reliable daily use
+| Version | Focus | Planned scope | Release gate |
+|---|---|---|---|
+| v0.1.0 — released | First usable product | Windows → Apple Silicon Mac, paired/encrypted current-session control, remembered connection, full screen, reconnect, quality selection and diagnostics | Published baseline; see validation notes below |
+| v0.1.1 — next | Installation and update reliability | Confirmed cherry-red identity, icon packaging, clear permission actions, clean replacement/preserve-permissions options; improve signing and Keychain update behavior | Native Mac build and install/update tests; Windows package validated; signing/authorization behavior documented |
+| v0.1.2 | Input and responsiveness | Keyboard layouts and numeric keypad, focus/modifier release, disconnect cleanup, sleep/wake recovery; measure and reduce input/video delay | Repeatable real two-device tests, no stuck modifiers, measured latency baseline and verified recovery |
+| v0.2.0 | Easier daily use | LAN device discovery, explicit pairing/revocation, optional bounded text clipboard sync, English UI with Chinese localization | Discovery cannot bypass pairing; clipboard is opt-in with size limits; both languages tested |
+| v0.3.0 | Desktop control in both directions | Windows capture/input host, Mac viewer/controller, one app per desktop with Connect and Allow connections modes | Windows ↔ Mac verified on real hardware; authorization, disconnect release and session continuity pass |
+| v1.0.0 | Stable desktop release | Consolidate desktop features, reliable installers and upgrade paths, onboarding, supported-system matrix and regression coverage | Both desktop directions meet documented release criteria; native builds and signed distribution validated |
+| v1.1.0 | Mobile controller | Android controller first: connect to Windows/Mac, touch, text entry and small-screen navigation | Real phone-to-desktop tests and explicit authorization; mobile receiving control is outside this scope |
+| v1.2.0 | Broader mobile access | iOS/iPadOS controller, subject to platform validation; tablet interaction refinements | Feasibility and distribution requirements verified before committing the release scope |
 
-Prioritize reproducible macOS native build/testing, stable signing and packaging, TCC/Keychain update behavior, keyboard layouts and release-on-disconnect, sleep/wake recovery, and measured input/video latency. Add an English interface with Chinese localization, keeping labels consistent with the English-first documentation, before broader international distribution. Replace FFmpeg/WPF with hardware decode/render only when evidence supports the change. Add device discovery and an explicit pairing/revocation interface after the manual-IP path is stable. Evaluate bounded, opt-in text clipboard synchronization. Exit criterion: repeatable two-device validation, documented update behavior and no reliance on repeated permission resets.
+Linux is a later candidate; assign a release version only after desktop-session permissions and test hardware are evaluated. File transfer, multiple displays and audio are not assigned versions yet.
 
-## Then — Windows ↔ Mac
+## Verification and prerequisites
 
-Implement Windows desktop capture/input reception and a Mac viewing/control UI. Reuse the tested protocol boundaries where appropriate. Present “Connect to a device” and “Allow connections” in one application per platform; retain separation of privileges internally. Exit criterion: both directions verified on real hardware, including authorization, disconnect release and local-session continuity.
+The v0.1.0 Windows build and simulated-peer tests were validated; the user reported the Windows-to-Mac workflow usable. This does not substitute for an independently reproduced native Mac test matrix. See [build and test status](validation.md).
 
-## Later — mobile controllers and other desktops
+v0.1.1 must distinguish stable signed distribution from ad-hoc development builds. Stable signing needs an appropriate signing identity, and broader macOS distribution may need notarization. Changes to privacy permissions and Keychain behavior must be tested with the actual installed signature. The installer can reset only this app's decisions; it cannot automatically grant permissions or promise removal of visible Settings rows.
 
-Start mobile support as a controller for authorized desktop sessions, adapting touch, keyboard entry and small-screen navigation. Evaluate Linux based on desktop-session permissions and available test hardware. Do not assume that iOS/Android can accept unattended remote control; platform constraints require separate assessment.
+A goal for routine signed updates is to avoid unnecessary permission resets or repeated Keychain prompts. First-run authorization and macOS-required reauthorization remain possible. Hardware decode/render changes are justified by v0.1.2 measurements rather than bundled into a rewrite.
+
+## Version and release rules
+
+- Patch releases (v0.1.1, v0.1.2) improve the existing Windows → Mac workflow without adding a platform or knowingly breaking protocol/storage compatibility.
+- During v0.x, new capability groups use a minor version (v0.2.0, v0.3.0); any incompatible change must be called out and tested with a migration path.
+- From v1.0 onward: patches fix defects, minor versions add compatible features, and major versions carry incompatible changes.
+- Keep app versions, changelogs, AtomGit tags, release notes and artifact names aligned. Mac internal bundle build numbers may advance independently.
+- Never move an existing release tag or overwrite published artifacts. Label planned work and unreleased main changes accurately.
+- If a release gate fails, retain the target version and fix or explicitly revise its scope; do not claim completion. See the [release process](releasing.md).
 
 ## Boundaries
 
-LAN-first. No accounts, public traversal/relay, central cloud service or FileVault bypass. The current release does not add file transfer, multiple displays, audio, recording, camera or organization administration. Reconsider additions only when they serve the focused workflow and can be tested. Security and reliability take priority over claiming broad platform support.
+LAN-first: no accounts, public traversal/relay or central cloud service. Share the current logged-in desktop, not a separate remote session. Do not promise FileVault preboot bypass or universal lock/login-screen control. Mobile support initially means controlling an authorized desktop; it does not imply unattended control of the phone itself. Security and reliability take priority over platform count.
