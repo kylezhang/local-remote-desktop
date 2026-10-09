@@ -21,7 +21,10 @@ static class Program {
     }
     static void Assert(bool value,string message) { if(!value) throw new Exception(message); }
     static async Task Until(Func<bool> condition,string message,int ms=10000) {
-        var watch=Stopwatch.StartNew(); while(!condition()) { if(watch.ElapsedMilliseconds>ms) throw new TimeoutException(message); await Task.Delay(20); }
+        var watch=Stopwatch.StartNew(); while(!condition()) { if(watch.ElapsedMilliseconds>ms) {
+            var status=(Application.Current.MainWindow?.FindName("Status") as TextBlock)?.Text;
+            throw new TimeoutException($"{message}; client status: {status}");
+        } await Task.Delay(20); }
     }
     static async Task Check() {
         var directory=Path.Combine(Path.GetTempPath(),"rml-client-check-"+Guid.NewGuid().ToString("N")); Directory.CreateDirectory(directory);

@@ -104,9 +104,21 @@ final class HostModel: ObservableObject {
 }
 struct HostView: View {
     @ObservedObject var model: HostModel
+    private let cherry = Color(red: 161.0 / 255.0, green: 0, blue: 53.0 / 255.0)
+    private var brandIcon: NSImage? {
+        guard let url = Bundle.main.url(forResource: "LocalRemote", withExtension: "icns") else { return nil }
+        return NSImage(contentsOf: url)
+    }
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
-            Text("LocalRemote 0.1.0").font(.title)
+            HStack(spacing: 12) {
+                if let icon = brandIcon {
+                    Image(nsImage: icon).resizable().interpolation(.high).scaledToFit()
+                        .frame(width: 60, height: 60).accessibilityHidden(true)
+                }
+                Text("LocalRemote 0.1.0").font(.title)
+                    .foregroundStyle(Color(red: 75.0 / 255.0, green: 8.0 / 255.0, blue: 36.0 / 255.0))
+            }
             Text(model.status).textSelection(.enabled).frame(width: 450, alignment: .leading).fixedSize(horizontal: false, vertical: true)
             Text("在 Windows 填写此 Mac 的局域网 IP 和配对密钥。当前桌面会被共享；停止共享即可收回控制。").frame(width: 450, alignment: .leading)
             Toggle("显示配对密钥（仅交给自己的 Windows）", isOn: $model.revealSecret)
@@ -117,7 +129,7 @@ struct HostView: View {
             }
             if model.secret.isEmpty { Button("重试读取密钥") { model.retryPairing() } }
             HStack {
-                Button(model.starting ? "正在检查…" : model.active ? "停止共享" : "开始共享") { if model.active { model.stop() } else { model.start(requestPermission: true) } }.disabled(model.starting)
+                Button(model.starting ? "正在检查…" : model.active ? "停止共享" : "开始共享") { if model.active { model.stop() } else { model.start(requestPermission: true) } }.buttonStyle(.borderedProminent).disabled(model.starting)
                 Button("打开权限设置") { NSWorkspace.shared.open(URL(string:"x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture")!) }
                 Button("退出") { NSApplication.shared.terminate(nil) }
             }
@@ -125,6 +137,6 @@ struct HostView: View {
             Button("复制启动诊断") { model.copyDiagnostics() }
             if !model.inputTestResult.isEmpty { Text(model.inputTestResult).font(.caption).frame(width: 450, alignment: .leading).textSelection(.enabled) }
             Text("仅支持正常登录后的用户会话；不支持 FileVault 预启动解锁。\n端口 47980；不传输音频、不写录像文件。").font(.caption).foregroundStyle(.secondary)
-        }.padding(24)
+        }.padding(24).tint(cherry)
     }
 }

@@ -28,4 +28,6 @@ python scripts/generate-icons.py
 
 The script performs size and format conversion only. Preserve the master alpha channel; do not flatten transparent margins onto a black or white background. Windows and macOS builds already consume the generated ICO/ICNS files.
 
+Both application headers display the selected artwork. Windows embeds the PNG as a WPF resource, keeps the whole header inside the full-screen toolbar, and uses a cherry-red connection action. The Mac header loads the packaged ICNS and uses a matching sharing action.
+
 Brand imagery expresses the product vision. The current application supports Windows → Mac; reverse control and mobile support remain planned.

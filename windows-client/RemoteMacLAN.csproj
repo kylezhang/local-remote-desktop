@@ -10,5 +10,6 @@
   </PropertyGroup>
   <ItemGroup>
     <Resource Include="../assets/brand/LocalRemote.ico" Link="LocalRemote.ico" />
+    <Resource Include="../assets/brand/icon.png" Link="LocalRemote.png" />
   </ItemGroup>
 </Project>

@@ -19,4 +19,6 @@
 
 安装 Python 和 Pillow 后，在仓库根目录执行 `python scripts/generate-icons.py` 重新导出。脚本只做尺寸和格式转换，保留透明通道。两端构建已经接入 ICO/ICNS。
 
+两端应用顶部已使用正式图标。Windows 将 PNG 嵌入 WPF 资源，全屏时整个品牌工具栏隐藏，连接按钮采用车厘子红。Mac 顶部加载打包的 ICNS，开始共享按钮使用相同主色。
+
 当前功能仍为 Windows → Mac；双向控制和移动端属于规划。

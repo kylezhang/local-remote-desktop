@@ -5,6 +5,7 @@
 ## Unreleased
 
 - Finalized the screen-and-bidirectional-connection identity in luminous cherry red; retired black/navy alternatives and regenerated Windows/macOS icons from the approved transparent master.
+- Applied the selected icon to both app headers, with cherry-red primary actions; the Windows toolbar wraps on smaller windows and remains hidden in full screen.
 - Rewrote the English-first README and Chinese counterpart for users; moved detailed controls, quality settings and diagnostics to a dedicated user guide.
 - Added English UI/localization to the near-term roadmap. Existing release tags and archives remain unchanged.
 

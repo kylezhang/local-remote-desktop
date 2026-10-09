@@ -1,0 +1,24 @@
+LocalRemote application branding validation — 2026-10-09
+
+Windows .NET 8 self-contained x64 publish succeeded.
+PASS branded WPF image resource and 1280px layout
+PASS branded WPF image resource and 720px layout
+PASS full screen hides/restores the entire branded toolbar
+WPF-rendered previews were inspected; the pale chrome, cherry logo/actions,
+wrapped toolbar and black desktop viewport remain legible.
+
+ClientChecks passed against a local authenticated simulated Mac after allowing
+loopback access outside the sandbox. No real Mac or stored pairing key used.
+PASS real WPF client authenticates, receives H264 and creates displayed bitmap
+PASS routed letter, top-row/keypad digits, Enter, Ctrl/Alt/Win delivered in order
+PASS pointer conversion, outside drag, right click and routed wheel
+PASS focus loss sends release_all
+PASS Mac permission denial/recovery reflected by real client
+PASS connected quality change/reconnection and latest rapid selection
+PASS disconnect cleans video/transport and restores controls
+
+PASS ReleaseChecks: versions, documentation links, icon formats and hygiene
+PASS Swift syntax parser, including the updated HostView
+
+Limits: no macOS SDK build or native Mac UI verification on this Windows host.
+The simulated-peer checks do not prove physical Mac input or LAN performance.
