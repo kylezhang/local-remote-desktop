@@ -45,11 +45,11 @@ final class HostModel: ObservableObject {
     @Published var active = false
     @Published var starting = false
     @Published var screenCheck = "尚未检查"
+    @Published var keychainCheck = "尚未读取"
     // Avoid SwiftUI.State's SDK macro dependency in Command Line Tools builds.
     @Published var revealSecret = false
     private var host: Host?
     private var pairingKey: Data?
-    private var pairingAttempted = false
     private var startup: Task<Void, Never>?
     private let inputSelfTest = InputSelfTest()
     @Published var inputTestResult = ""
@@ -60,33 +60,43 @@ final class HostModel: ObservableObject {
         NSWorkspace.shared.open(URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility")!)
     }
     init() {}
-    private func loadPairingKey() {
-        guard !pairingAttempted else { return }
-        pairingAttempted = true
-        do {
-            let key = try Pairing.load(); pairingKey = key
-            secret = key.map { String(format:"%02x", $0) }.joined()
-        } catch { status = "无法读取 Keychain 配对密钥：\(error.localizedDescription)。不会自动重复请求；需要时点击重试读取密钥。" }
-    }
     func retryPairing() {
         guard host == nil, !starting, pairingKey == nil else { return }
-        pairingAttempted = false; start(requestPermission: true)
+        start(requestPermission: true)
     }
     func start(requestPermission: Bool = false) {
         guard host == nil, !starting else { return }
-        if pairingKey == nil { loadPairingKey() }
-        guard let key = pairingKey else { return }
-        // Do not trigger prompts on login. On an explicit click, ask the actual
-        // ScreenCaptureKit API even if the legacy CG preflight reports false.
-        if !requestPermission && !CGPreflightScreenCaptureAccess() {
-            status = "尚未启动：点击开始共享，检查屏幕访问。授权后只需退出重开，不要重新安装。"
-            return
-        }
-        starting = true; status = "正在通过 ScreenCaptureKit 检查屏幕访问…"
-        screenCheck = "ScreenCaptureKit 请求中"
+        starting = true; status = "正在读取配对密钥…"
         startup = Task { @MainActor [weak self] in
           guard let self else { return }
           defer { self.starting = false }
+          if self.pairingKey == nil {
+            self.keychainCheck = requestPermission ? "用户主动读取" : "启动静默读取"
+            do {
+              let key = try await Pairing.load(allowInteraction: requestPermission)
+              try Task.checkCancellation()
+              self.pairingKey = key
+              self.secret = key.map { String(format:"%02x", $0) }.joined()
+              self.keychainCheck = "读取成功（本次运行已缓存）"
+            } catch is CancellationError { return }
+            catch {
+              let e = error as NSError
+              self.keychainCheck = "\(e.domain) / \(e.code)"
+              self.status = requestPermission
+                ? "无法读取 Keychain 配对密钥：\(e.localizedDescription)。不会自动重复请求；需要时点击读取密钥并开始共享。"
+                : "配对密钥需要用户操作：点击开始共享或读取配对密钥。自动启动不会请求钥匙串密码。"
+              return
+            }
+          }
+          guard let key = self.pairingKey else { return }
+          // Explicit sharing checks ScreenCaptureKit even if the legacy
+          // preflight reports false. Login must not request screen permission.
+          if !requestPermission && !CGPreflightScreenCaptureAccess() {
+            self.status = "尚未启动：点击开始共享，检查屏幕访问。授权后只需退出重开，不要重新安装。"
+            return
+          }
+          self.status = "正在通过 ScreenCaptureKit 检查屏幕访问…"
+          self.screenCheck = "ScreenCaptureKit 请求中"
           do {
             let content = try await SCShareableContent.excludingDesktopWindows(false, onScreenWindowsOnly: true)
             try Task.checkCancellation()
@@ -116,6 +126,7 @@ final class HostModel: ObservableObject {
         Accessibility: \(AXIsProcessTrusted())
         Listening: \(active)
         Starting: \(starting)
+        Keychain: \(keychainCheck)
         KeychainReadAttempts: \(Pairing.readAttempts)
         KeychainCreateAttempts: \(Pairing.createAttempts)
         Status: \(status)
@@ -141,11 +152,11 @@ struct HostView: View {
             Text("在 Windows 填写此 Mac 的局域网 IP 和配对密钥。当前桌面会被共享；停止共享即可收回控制。").frame(width: 450, alignment: .leading)
             Toggle("显示配对密钥（仅交给自己的 Windows）", isOn: $model.revealSecret)
             if model.revealSecret {
-                Text(model.secret.isEmpty ? "密钥读取失败，请查看上方错误信息。" : model.secret)
+                Text(model.secret.isEmpty ? "密钥尚未读取，请查看上方提示。" : model.secret)
                     .font(.system(.caption, design: .monospaced)).textSelection(.enabled).frame(width: 450)
                 Button("复制配对密钥") { NSPasteboard.general.clearContents(); NSPasteboard.general.setString(model.secret, forType: .string) }.disabled(model.secret.isEmpty)
             }
-            if model.secret.isEmpty { Button("重试读取密钥") { model.retryPairing() } }
+            if model.secret.isEmpty { Button("读取密钥并开始共享") { model.retryPairing() }.disabled(model.starting) }
             HStack {
                 Button(model.starting ? "正在检查…" : model.active ? "停止共享" : "开始共享") { if model.active { model.stop() } else { model.start(requestPermission: true) } }.buttonStyle(.borderedProminent).disabled(model.starting)
                 Button("屏幕权限") { NSWorkspace.shared.open(URL(string:"x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture")!) }

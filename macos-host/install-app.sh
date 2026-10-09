@@ -24,16 +24,51 @@ stage_dir=""
 agent_was_loaded=false
 agent_removed=false
 installed=false
+replacement_started=false
+preserve_stage=false
 
 cleanup() {
   local code=$?
-  if [[ -n "$stage_dir" && "$stage_dir" == /Applications/.remote-mac-lan-install.* ]]; then rm -rf -- "$stage_dir"; fi
+  trap - EXIT
+  # Until the new bundle passes final verification, keep the complete old
+  # bundles in the private staging directory. Never merge old/new contents.
+  if [[ "$replacement_started" == true && "$installed" == false ]]; then
+    echo '新应用安装未完成，正在恢复旧应用包。' >&2
+    local backup destination
+    for backup in previous-system.app previous-user.app; do
+      destination="$target"
+      [[ "$backup" != previous-user.app ]] || destination="$user_target"
+      if [[ -e "$stage_dir/$backup" ]]; then
+        if [[ -L "$destination" ]]; then
+          preserve_stage=true
+        elif [[ -e "$destination" ]] && ! rm -rf -- "$destination"; then
+          preserve_stage=true
+        elif ! mv "$stage_dir/$backup" "$destination"; then
+          preserve_stage=true
+        fi
+      fi
+    done
+    # A failed first installation has no previous system bundle to restore.
+    if [[ "$new_at_target" == true && "$had_system_bundle" == false && -e "$target" && ! -L "$target" ]]; then
+      rm -rf -- "$target" || preserve_stage=true
+    fi
+    if [[ "$preserve_stage" == true ]]; then
+      echo "自动恢复未完成；完整备份保留在：$stage_dir。请勿删除此目录。" >&2
+    else
+      echo '安装恢复处理完成；已经重置的权限不会回滚，应用未自动启动。' >&2
+    fi
+  fi
+  if [[ -n "$stage_dir" && "$stage_dir" == /Applications/.remote-mac-lan-install.* && "$preserve_stage" == false ]]; then rm -rf -- "$stage_dir"; fi
   if [[ "$agent_removed" == true && "$installed" == false ]]; then
     echo '安装未完成；旧自启动暂时保持停止，避免启动不完整的应用。' >&2
   fi
   exit "$code"
 }
 trap cleanup EXIT
+trap 'exit 130' INT
+trap 'exit 143' TERM
+new_at_target=false
+had_system_bundle=false
 
 echo '[1/6] 构建最新版；构建失败时保留已安装的应用。'
 bash ./build-app.sh
@@ -106,13 +141,18 @@ else
   echo '保留辅助功能授权。'
 fi
 
-echo '[4/6] 完整删除旧应用包（包括其内部全部文件）。'
-if [[ -e "$target" ]]; then rm -rf -- /Applications/RemoteMacLAN.app; fi
-if [[ -e "$user_target" ]]; then rm -rf -- "$HOME/Applications/RemoteMacLAN.app"; fi
+echo '[4/6] 完整移除旧应用包；验证新版本前保留临时恢复副本。'
+replacement_started=true
+if [[ -e "$target" ]]; then
+  had_system_bundle=true
+  mv "$target" "$stage_dir/previous-system.app"
+fi
+if [[ -e "$user_target" ]]; then mv "$user_target" "$stage_dir/previous-user.app"; fi
 [[ ! -e "$target" && ! -e "$user_target" ]] || { echo '旧应用删除失败。' >&2; exit 1; }
 
 echo '[5/6] 安装并验证新应用。'
 mv "$stage_dir/RemoteMacLAN.app" "$target"
+new_at_target=true
 codesign --verify --strict "$target"
 version="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$target/Contents/Info.plist")"
 installed=true
@@ -121,9 +161,13 @@ touch "$target"
 echo '[6/6] 启动唯一的新版本。'
 if [[ "$agent_was_loaded" == true ]]; then
   [[ -f "$agent" ]] || { echo '新应用已安装；原登录自启动配置缺失，请重新安装 LaunchAgent。' >&2; exit 1; }
-  launchctl bootstrap "$domain" "$agent"
+  if ! launchctl bootstrap "$domain" "$agent"; then
+    echo "新应用已安装，但登录自启动失败；可手动打开 $target，之后重新配置 LaunchAgent。" >&2; exit 1
+  fi
 else
-  open "$target"
+  if ! open "$target"; then
+    echo "新应用已安装，但自动打开失败；请手动打开 $target。" >&2; exit 1
+  fi
 fi
 echo "安装完成：LocalRemote $version，位置 $target"
 echo '配对密钥保留；新图标会在启动时主动设置到程序坞。'

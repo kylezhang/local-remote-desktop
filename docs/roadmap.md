@@ -6,6 +6,8 @@ LocalRemote aims to provide one familiar LAN remote-control application per plat
 
 Only v0.1.0 is released. The versions below are targets, not completed features or delivery-date promises. Unreleased main-branch improvements will be packaged in the next release after validation.
 
+Track v0.1.1 implementation and remaining validation in the [release checklist](next-release.md).
+
 ## Version plan
 
 | Version | Focus | Planned scope | Release gate |

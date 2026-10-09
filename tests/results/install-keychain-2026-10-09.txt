@@ -1,0 +1,25 @@
+v0.1.1 development — installation and Keychain maintenance, 2026-10-09
+
+InstallerChecks: 13 test methods passed, including multiple fault scenarios.
+- Complete old-bundle removal; no resource merging; successful backup cleanup.
+- Scoped ScreenCapture/Accessibility resets and preserve-permissions option.
+- Build/staging failures preserve old apps.
+- Late move/signature/metadata failure and termination restore complete bundles.
+- Failed restoration retains a recoverable backup and reports its location.
+- Failed first installation removes the unverified bundle.
+- Launch failure retains the verified new bundle.
+- Rollback does not repeat resets or claim to restore privacy decisions.
+
+SigningChecks: six mocked signing/configuration scenarios passed.
+Swift syntax parsing: eight files passed, including App.swift and Pairing.swift.
+ReleaseChecks: public version/identity, document links, icons and hygiene passed.
+
+The Keychain implementation now runs on a serial background queue, temporarily
+sets file-based interaction policy and restores the previous setting, permits
+creation only on explicit action, and caches a successful key in HostModel.
+Its API signatures were inspected against Apple's documentation; Swift syntax
+checks do NOT type-check Apple SDK APIs or verify real authentication behavior.
+
+No real Keychain, TCC, launchd, Mac app or certificate was accessed during tests.
+No native Mac build or real Mac regression run was available. Public app version
+remains 0.1.0; Mac bundle build is 8. v0.1.1 has not been tagged or released.
