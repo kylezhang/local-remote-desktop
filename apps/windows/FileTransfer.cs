@@ -1,4 +1,5 @@
 using System.IO;
+using System.Diagnostics;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
@@ -76,7 +77,19 @@ public sealed class FileSink : IDisposable {
     }
     public void Dispose() { output?.Dispose(); digest?.Dispose(); if(stage!=null) { Directory.Delete(stage,true); stage=null; } }
 }
+// Cumulative pacing accounts for time already spent on disk/network work. A small
+// burst avoids per-chunk timer overhead without creating an unbounded send queue.
+public static class FilePacing {
+    public const long Rate=8L*1024*1024, Burst=512L*1024;
+    public static double DelaySeconds(long bytes,double elapsed)=>Math.Max(0,(bytes-Burst)/(double)Rate-Math.Max(0,elapsed));
+}
 public static class FileTransfer {
+    public static string ProgressText(string direction,long done,long total,double elapsed) {
+        if(done>=total) return "文件传输：正在校验并准备剪贴板…";
+        int percent=(int)Math.Clamp(done*100.0/Math.Max(1,total),0,99);
+        string speed=elapsed>=0.2 && done>0?$" · {done/1048576.0/elapsed:F1} MiB/s":"";
+        return $"{direction}文件：{percent}% · {done/1048576.0:F1} / {total/1048576.0:F1} MiB{speed}";
+    }
     static async Task<Wire> Connect(string ip,string key,CancellationToken ct,int port) {
         // Replacing a copy cancels the previous socket. Give its Host worker a
         // brief chance to finish cleanup before accepting the new connection.
@@ -105,7 +118,8 @@ public static class FileTransfer {
         if(!message.TryGetProperty("op",out var value) || value.GetString()!=op) throw new IOException("File transfer rejected or interrupted");
     }
     public static async Task Send(Wire wire,FileSource source,Action<long,long>? progress,CancellationToken ct) {
-        long total=source.Items.Sum(x=>x.size), done=0;
+        long total=source.Items.Sum(x=>x.size), done=0; var clock=Stopwatch.StartNew();
+        progress?.Invoke(0,total);
         for(int i=0;i<source.Items.Length;i++) {
             var current=FileSource.Prepare([source.Paths[i]]).Items[0];
             if(current!=source.Items[i]) throw new IOException("Source changed since copy");
@@ -117,11 +131,11 @@ public static class FileTransfer {
                 int length=await input.ReadAsync(buffer,ct); if(length==0) break;
                 count+=length; if(count>source.Items[i].size) throw new IOException("Source size changed");
                 hash.AppendData(buffer,0,length);
+                double delay=FilePacing.DelaySeconds(done+length,clock.Elapsed.TotalSeconds);
+                if(delay>=0.001) await Task.Delay(TimeSpan.FromSeconds(delay),ct);
                 await wire.Send(3,length==buffer.Length?buffer:buffer[..length],ct);
                 done+=length; progress?.Invoke(done,total);
-                // Bound file traffic to about 4 MiB/s; separate socket keeps it
-                // out of input/video queues, pacing also leaves LAN bandwidth.
-                await Task.Delay(8,ct);
+
             }
             if(count!=source.Items[i].size) throw new IOException("Source size changed");
             await wire.Json(new {op="file_end",index=i,sha256=Convert.ToHexString(hash.GetHashAndReset()).ToLowerInvariant()},ct);
@@ -130,6 +144,7 @@ public static class FileTransfer {
     }
     public static async Task<string[]> Receive(Wire wire,FileItem[] items,string root,Action<long,long>? progress,CancellationToken ct) {
         using var sink=new FileSink(root,items); long total=items.Sum(x=>x.size),done=0;
+        progress?.Invoke(0,total);
         for(int i=0;i<items.Length;i++) {
             var start=await Json(wire,ct); Expect(start,"file_start"); sink.Start(start.GetProperty("index").GetInt32());
             while(true) {
@@ -150,12 +165,13 @@ public static class FileTransfer {
         await Send(wire,source,progress,ct); var done=await Json(wire,ct); Expect(done,"file_done");
         return done.GetProperty("clipboardReady").GetBoolean();
     }
-    public static async Task<string[]> Download(string ip,string key,string token,long requestId,string offer,FileItem[] items,string root,Action<long,long>? progress,CancellationToken ct,int port=47981) {
+    public static async Task<string[]> Download(string ip,string key,string token,long requestId,string offer,FileItem[] items,string root,Action<long,long>? progress,CancellationToken ct,int port=47981,Func<string[],CancellationToken,Task<bool>>? publish=null) {
         using var wire=await Connect(ip,key,ct,port);
         await wire.Json(new {op="file_pull",session=token,requestId,offer},ct); var ready=await Json(wire,ct); Expect(ready,"file_ready");
         var declared=FileSource.Validate(ready.GetProperty("items").Deserialize<FileItem[]>()!);
         if(!declared.SequenceEqual(items)) throw new IOException("File offer changed");
         var paths=await Receive(wire,declared,root,progress,ct);
-        await wire.Json(new {op="file_done"},ct); return paths;
+        bool clipboardReady=publish!=null && await publish(paths,ct);
+        await wire.Json(new {op="file_done",clipboardReady},ct); return paths;
     }
 }

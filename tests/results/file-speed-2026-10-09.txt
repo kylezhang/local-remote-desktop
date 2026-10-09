@@ -1,0 +1,33 @@
+LocalRemote file pacing/readiness development checks — 2026-10-09
+Curated summary, not raw tool output. Public version 0.1.0 / Mac internal build 16.
+Exact self-contained Windows x64 candidate LocalRemote.dll SHA256:
+a5ed1779bad58f3c86b1558647af0af1e37ccb94347c3b43311fcf77d24a6fd9
+
+Independent encrypted-loopback benchmark: three uploads for each size and sender.
+Baseline: prior fixed 8 ms pause per 32 KiB. Candidate: cumulative monotonic-time
+budget of 8 MiB/s, 512 KiB initial allowance, no fixed per-chunk pause.
+Median full upload/authentication/readiness times:
+  256 KiB: 125.75 ms before; 3.09 ms after.
+  8 MiB: 4009.02 ms before; 954.35 ms after (about 4.2x faster in this fixture).
+Cold first small-file transfer: 170.6 ms before; 38.7 ms after.
+These are synthetic localhost results, NOT physical LAN/Mac throughput or latency.
+The benchmark peer buffers test files; production transfers remain chunked.
+
+PASS C# production source/sink/transport: pacing allowance and slow-IO accounting,
+  percentage/preparation status, filename/quota/hash/length safety, upload/download,
+  delayed clipboard publisher acknowledgement, headless receiver readiness=false,
+  paced-upload cancellation, partial cleanup and independent authentication timeout.
+PASS exact WPF candidate: input/video/shortcuts/quality/disconnect/close regression;
+  8 MB file input/video concurrency, paste withheld after byte completion until
+  remote clipboard confirmation; incoming publication retries, successful ready=true;
+  persistent busy clipboard ready=false fallback, no content overwrite;
+  cancel, newer copy priority, no echo and consent/recovery.
+PASS Swift 5.9.2 Linux: production transport/source/sink, actual paced 8 MiB
+  send/receive in 1.072 seconds, byte/hash verification; completion true/false/legacy
+  status and mocked Mac adapter consent/metadata/revoke/stop checks.
+  Linux CryptoKit fixture uses OpenSSL; mocks do not validate Apple frameworks.
+PASS 15 Swift source/package syntax checks; documentation/version/icon/hygiene.
+
+No native macOS SDK build, TCC/Keychain, real two-device clipboard readiness,
+physical LAN contention or long-duration throughput validation in this environment.
+No new tag/release. Existing pairing/protocol version and 32 KiB chunks preserved.

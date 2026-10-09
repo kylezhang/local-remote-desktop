@@ -2,8 +2,15 @@ using System.Security.Cryptography;
 using LocalRemote;
 static void Assert(bool condition,string message) { if(!condition) throw new Exception(message); }
 static void Reject(Action action,string message) { try { action(); } catch(IOException) { return; } throw new Exception(message); }
+if(Environment.GetEnvironmentVariable("LOCALREMOTE_FILE_BENCH") is { Length: >0 } benchmark) { await TransferBenchmark.Run(benchmark); return; }
 var root=Path.Combine(Path.GetTempPath(),"localremote-files-check-"+Guid.NewGuid().ToString("N")); Directory.CreateDirectory(root);
 try {
+    Assert(FilePacing.DelaySeconds(FilePacing.Burst,0)==0,"small transfer is deliberately delayed");
+    Assert(FilePacing.DelaySeconds(8*1024*1024,2)==0,"slow disk/network incurs additional pacing wait");
+    Assert(FilePacing.DelaySeconds(8*1024*1024,0.1)>0.8,"fast sender can exceed sustained budget");
+    Assert(FileTransfer.ProgressText("发送",10,10,1).Contains("正在校验") && !FileTransfer.ProgressText("发送",10,10,1).Contains("可"),"byte completion promises clipboard readiness");
+    Assert(FileTransfer.ProgressText("发送",5,10,1).Contains("50%"),"fractional progress missing");
+    Console.WriteLine("PASS small-file burst, slow-network accounting, sustained pacing and preparation-vs-ready status");
     foreach(string name in new[]{"../oops","a/b","a\\b","NUL.txt","COM1","COM¹.txt","CON .txt","CONIN$","LPT9.txt","a:","a.","a ","","..","e\u0301.txt"}) Assert(!FileSource.SafeName(name),"Unsafe name accepted: "+name);
     using(var error=System.Text.Json.JsonDocument.Parse("{\"op\":\"file_error\",\"code\":\"diskFull\"}")) {
         try { FileTransfer.Expect(error.RootElement,"file_ready"); throw new Exception("Host error ignored"); }
@@ -38,6 +45,11 @@ try {
         Assert(progress==content.Length && server.Uploaded.TryDequeue(out var sent) && sent[0].SequenceEqual(content) && sent[1].Length==0,"Encrypted upload corrupted");
         var paths=await FileTransfer.Download("127.0.0.1",Convert.ToHexString(key),token,7,server.OfferId,source.Items,receive,null,timeout.Token,server.Port);
         Assert(File.ReadAllBytes(paths[0]).SequenceEqual(content) && new FileInfo(paths[1]).Length==0,"Encrypted download corrupted");
+        await Task.Delay(50);
+        Assert(server.DownloadClipboardReady.TryDequeue(out var published) && !published,"bare receiver claimed OS clipboard publication");
+        var callbackPaths=await FileTransfer.Download("127.0.0.1",Convert.ToHexString(key),token,7,server.OfferId,source.Items,receive,null,timeout.Token,server.Port,async (_,ct)=> { await Task.Delay(150,ct); return true; });
+        await Task.Delay(50);
+        Assert(server.DownloadClipboardReady.TryDequeue(out published) && published,"successful clipboard callback not acknowledged");
         foreach(var request in new[]{(new string('0',64),7L),(token,8L)}) {
             bool denied=false; try { await FileTransfer.Upload("127.0.0.1",Convert.ToHexString(key),request.Item1,request.Item2,source,null,timeout.Token,server.Port); } catch(IOException) { denied=true; }
             Assert(denied,"Wrong session/request was accepted");
@@ -52,6 +64,14 @@ try {
         Assert(!Directory.GetDirectories(receive).Any(p=>Path.GetFileName(p).StartsWith(".incoming-")),"Cancelled download retained partial batch");
         server.Dispose(); await running;
     }
+    var pacedPath=Path.Combine(sources,"paced.bin"); File.WriteAllBytes(pacedPath,new byte[8*1024*1024]);
+    using(var server=new MockFileServer(key,token,_=>true)) {
+        var running=server.Run(); using var cancel=new CancellationTokenSource(200);
+        try { await FileTransfer.Upload("127.0.0.1",Convert.ToHexString(key),token,1,FileSource.Prepare([pacedPath]),null,cancel.Token,server.Port); throw new Exception("paced upload cancellation failed"); }
+        catch(OperationCanceledException) { }
+        Assert(server.Uploaded.IsEmpty,"cancelled paced upload completed"); server.Dispose(); await running;
+    }
+    Console.WriteLine("PASS cancellation interrupts paced upload");
     // A stalled handshake times out independently of an unbounded parent token.
     var listener=new System.Net.Sockets.TcpListener(System.Net.IPAddress.Loopback,0); listener.Start();
     try {

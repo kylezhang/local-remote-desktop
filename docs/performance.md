@@ -67,3 +67,16 @@ Use **Smooth** to reduce the target to 720p/30 when resources or responsiveness 
 constrained. Standard and High target up to 1080p/60 with different bitrates; actual
 dimensions preserve the Mac display aspect ratio. Full-session CPU, Mac energy use,
 sleep/wake, repeated reconnects and long-session behavior still require measurement.
+
+## File transfer pacing (development)
+
+Sending uses a cumulative 8 MiB/s budget with a 512 KiB initial allowance.
+Disk/network time counts toward the budget, avoiding fixed sleeps for each
+32 KiB chunk; there is no expanding send queue. In three encrypted loopback uploads,
+median 8 MiB completion fell from 4009 ms to 954 ms. Median 256 KiB completion fell
+from 126 ms to 3 ms; first-transfer cold times were 171 ms and 39 ms. These are
+synthetic local measurements, not physical LAN/Mac guarantees or contention tests.
+
+The optional `LOCALREMOTE_FILE_BENCH` environment variable names a JSON output
+file for `tests/FileChecks`; unset it to run the normal correctness checks.
+No real clipboard or user files are needed. See the [check record](../tests/results/file-speed-2026-10-09.txt).

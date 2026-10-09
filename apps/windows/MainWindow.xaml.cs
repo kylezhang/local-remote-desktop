@@ -106,7 +106,7 @@ public partial class MainWindow : Window
         if(key==System.Windows.Input.Key.V && !down && pasteSuppressed) { pasteSuppressed=false; e.Handled=true; return; }
         if(down && key==System.Windows.Input.Key.V && (mapped.Flags&8)!=0) {
             PollClipboard(); files.Poll();
-            if(!files.PasteReady) { pasteSuppressed=true; FileStatus.Text=files.Busy?"文件正在传输，完成后再粘贴":"文件未就绪，请重新复制文件后重试"; e.Handled=true; return; }
+            if(!files.PasteReady) { pasteSuppressed=true; FileNotice(files.Busy?"文件尚未就绪；看到可粘贴提示后再按 Ctrl+V":"文件未就绪，请重新复制文件后重试",files.Busy); e.Handled=true; return; }
         }
         Input(new {op="key_event",vk=mapped.VirtualKey,down,flags=mapped.Flags}); e.Handled=true;
     }

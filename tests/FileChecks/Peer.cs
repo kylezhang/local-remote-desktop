@@ -50,7 +50,8 @@ sealed class MockFileServer : IDisposable {
     public FileSource? Offer;
     public string OfferId=Guid.NewGuid().ToString("N");
     public readonly ConcurrentQueue<byte[][]> Uploaded=new();
-    public int DelayMilliseconds=5;
+    public readonly ConcurrentQueue<bool> DownloadClipboardReady=new();
+    public int DelayMilliseconds=5, CompletionDelayMilliseconds=0;
     public bool Stall {get;set;}
     public readonly ConcurrentQueue<string> Errors=new();
     public MockFileServer(byte[] key,string token,Func<long,bool> allowed) { this.key=key; this.token=token; this.allowed=allowed; listener.Start(); }
@@ -82,6 +83,7 @@ sealed class MockFileServer : IDisposable {
                             results.Add(content.ToArray());
                         }
                         FileTransfer.Expect(await peer.JsonRead(stop.Token),"file_complete"); Uploaded.Enqueue(results.ToArray());
+                        if(CompletionDelayMilliseconds>0) await Task.Delay(CompletionDelayMilliseconds,stop.Token);
                         await peer.Json(new {op="file_done",clipboardReady=true},stop.Token);
                     } else if(op=="file_pull" && request.GetProperty("offer").GetString()==OfferId && Offer!=null) {
                         var source=Offer; await peer.Json(new {op="file_ready",items=source.Items},stop.Token);
@@ -93,7 +95,8 @@ sealed class MockFileServer : IDisposable {
                             }
                             await peer.Json(new {op="file_end",index=i,sha256=Convert.ToHexString(SHA256.HashData(data)).ToLowerInvariant()},stop.Token);
                         }
-                        await peer.Json(new {op="file_complete"},stop.Token); FileTransfer.Expect(await peer.JsonRead(stop.Token),"file_done");
+                        await peer.Json(new {op="file_complete"},stop.Token); var done=await peer.JsonRead(stop.Token); FileTransfer.Expect(done,"file_done");
+                        DownloadClipboardReady.Enqueue(done.TryGetProperty("clipboardReady",out var ready) && ready.ValueKind==JsonValueKind.True);
                     }
                 } catch(Exception ex) when(ex is IOException or OperationCanceledException or SocketException) { Errors.Enqueue(ex.GetType().Name); }
                 finally { current=null; }

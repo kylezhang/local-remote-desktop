@@ -193,7 +193,8 @@ static class Program {
                 fileOption.IsChecked=true;
                 await Until(()=>fileStatus.Text.Contains("已启用"),"file consent failed");
                 Assert(fileBoard.Reads==0 && fileServer.Uploaded.IsEmpty,"enable sent existing files");
-                string file=Path.Combine(directory,"文件 📎.txt"); byte[] data=RandomNumberGenerator.GetBytes(2000003); File.WriteAllBytes(file,data);
+                string file=Path.Combine(directory,"文件 📎.txt"); byte[] data=RandomNumberGenerator.GetBytes(8000003); File.WriteAllBytes(file,data);
+                fileServer.CompletionDelayMilliseconds=400;
                 fileBoard.Copy([file]);
                 int pastes=host.Inputs.Count(x=>x.GetProperty("op").GetString()=="key_event" && x.GetProperty("vk").GetInt32()==86 && x.GetProperty("down").GetBoolean());
                 fakeModifiers=ModifierKeys.Control; Raise(Key.V,true); Raise(Key.V,false); fakeModifiers=ModifierKeys.None;
@@ -205,16 +206,33 @@ static class Program {
                 Assert(notice.Visibility==Visibility.Visible && !((Button)window.FindName("DismissFileNotice")).IsEnabled,"active transfer notice missing or dismissible");
                 await host.Video();
                 await Until(()=> (long)typeof(MainWindow).GetField("frames",System.Reflection.BindingFlags.NonPublic|System.Reflection.BindingFlags.Instance)!.GetValue(window)!>0,"video did not decode during file transfer");
+                await Until(()=>fileStatus.Text.Contains("正在校验"),"bytes-complete did not show clipboard preparation phase");
+                Assert(((Button)window.FindName("CancelFiles")).IsEnabled,"100% data incorrectly treated as ready");
+                int beforeReady=host.Inputs.Count(x=>x.GetProperty("op").GetString()=="key_event" && x.GetProperty("vk").GetInt32()==86 && x.GetProperty("down").GetBoolean());
+                fakeModifiers=ModifierKeys.Control; Raise(Key.V,true); Raise(Key.V,false); fakeModifiers=ModifierKeys.None;
+                await Task.Delay(40);
+                Assert(host.Inputs.Count(x=>x.GetProperty("op").GetString()=="key_event" && x.GetProperty("vk").GetInt32()==86 && x.GetProperty("down").GetBoolean())==beforeReady && notice.Visibility==Visibility.Visible,"paste accepted or waiting notice hidden before host ready");
                 await Until(()=>fileStatus.Text.Contains("文件已发送"),"automatic upload failed");
+                fileServer.CompletionDelayMilliseconds=0;
                 ((Button)window.FindName("DismissFileNotice")).RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
                 Assert(notice.Visibility==Visibility.Collapsed,"completed notice cannot be dismissed");
                 Assert(fileServer.Uploaded.TryDequeue(out var upload) && upload[0].SequenceEqual(data),"WPF upload bytes differ");
                 fakeModifiers=ModifierKeys.Control; Raise(Key.V,true); Raise(Key.V,false); fakeModifiers=ModifierKeys.None;
                 await Until(()=>host.Inputs.Count(x=>x.GetProperty("op").GetString()=="key_event" && x.GetProperty("vk").GetInt32()==86 && x.GetProperty("down").GetBoolean())==pastes+1,"completed-file paste blocked");
+                fileBoard.BusyWrites=3;
                 fileServer.Offer=FileSource.Prepare([file]); await host.FileOffer(fileServer.OfferId,fileServer.Offer.Items);
                 await Until(()=>fileBoard.Writes==1,"automatic download did not populate file clipboard");
                 Assert(File.ReadAllBytes(fileBoard.Paths![0]).SequenceEqual(data),"WPF received file corrupted");
+                await Until(()=>fileServer.DownloadClipboardReady.Count>0,"host not told clipboard readiness");
+                Assert(fileServer.DownloadClipboardReady.TryDequeue(out var published) && published && fileBoard.BusyWrites==0,"host-ready acknowledged before successful clipboard retry");
                 await Task.Delay(650); Assert(fileServer.Uploaded.IsEmpty,"received file echoed back");
+                fileBoard.BusyWrites=30; fileServer.DelayMilliseconds=0;
+                await host.FileOffer(fileServer.OfferId,fileServer.Offer.Items);
+                await Until(()=>fileStatus.Text.Contains("剪贴板忙"),"permanently busy clipboard did not show saved-file fallback");
+                await Until(()=>fileServer.DownloadClipboardReady.Count>0,"busy clipboard completion not acknowledged");
+                Assert(fileServer.DownloadClipboardReady.TryDequeue(out published) && !published && fileBoard.Writes==1,"busy clipboard reported ready or replaced existing content");
+                fileBoard.BusyWrites=0; fileServer.DelayMilliseconds=5;
+                Console.WriteLine("PASS file readiness waits for clipboard retry; persistent busy state acknowledges false and preserves received files");
                 // A new local clipboard copy wins over an in-progress download.
                 fileServer.DelayMilliseconds=30; await host.FileOffer(fileServer.OfferId,fileServer.Offer.Items);
                 await Until(()=>((Button)window.FindName("CancelFiles")).IsEnabled,"download did not start");
@@ -350,8 +368,8 @@ sealed class TestClipboard : ITextClipboard {
 }
 sealed class TestFileClipboard : IFileClipboard {
     public long Revision {get;private set;}
-    public string[]? Paths; public int Reads,Writes;
+    public string[]? Paths; public int Reads,Writes,BusyWrites;
     public void Copy(string[]? paths) { Paths=paths; Revision++; }
     public bool TryReadFiles(out string[]? paths) { Reads++; paths=Paths; return true; }
-    public bool TryWriteFiles(string[] paths) { Writes++; Copy(paths); return true; }
+    public bool TryWriteFiles(string[] paths) { if(BusyWrites>0) { BusyWrites--; return false; } Writes++; Copy(paths); return true; }
 }

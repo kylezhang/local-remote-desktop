@@ -184,7 +184,7 @@ struct HostView: View {
         !model.fileStatus.hasPrefix("文件同步：") || model.fileStatus.contains("不可用")
     }
     private var fileTransferring: Bool {
-        model.fileStatus.hasPrefix("文件传输：") || model.fileStatus.hasPrefix("文件已复制")
+        model.fileStatus.hasPrefix("文件传输：") || model.fileStatus.hasPrefix("发送文件：") || model.fileStatus.hasPrefix("接收文件：") || model.fileStatus.hasPrefix("文件已复制")
     }
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {

@@ -119,3 +119,12 @@ encrypted-peer input/video/text/file regressions. DPAPI checks cover fresh-on,
 explicit-off and corrupt preferences. Real Swift checks cover isolated Mac
 sharing preferences; full native SwiftUI/Apple SDK acceptance remains pending.
 See the [record](../tests/results/compact-ui-2026-10-09.txt).
+
+## File pacing and clipboard completion (development)
+
+C# transfer checks and the exact WPF candidate cover cumulative pacing, byte
+completion vs clipboard readiness, delayed/busy publication, false confirmation
+fallback, cancellation and existing control/video regressions. Real Swift
+compiler checks include a paced 8 MiB transport and legacy/missing confirmation.
+Native Apple SDK/clipboard and physical LAN contention remain pending.
+See the [benchmark and check record](../tests/results/file-speed-2026-10-09.txt).

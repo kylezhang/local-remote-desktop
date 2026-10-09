@@ -90,14 +90,17 @@ file chunks**, then file_end {index,sha256:64 lowercase hex}. Type 3 is used onl
 on the file socket. Chunks are nonempty and at most 32 KiB, lengths match declarations.
 Then file_complete terminates the batch. Receiver validates lengths and SHA-256
 before promoting its generated staging directory. For pushes, Host replies
-file_done with clipboardReady. For pulls, Client replies file_done after committing;
-Windows then publishes file paths if no newer local clipboard copy won.
+file_done with clipboardReady. For pulls, Client commits, then attempts Windows
+clipboard publication on the UI thread (up to two seconds of busy retries, without
+overriding a newer copy), and replies file_done with clipboardReady. Host reports
+paste-ready only for explicit true; missing/false from legacy or headless peers
+confirms transfer completion without claiming clipboard readiness.
 
 Both directions cap encrypted file records at 64 KiB, metadata at 32 items,
 each file at 4 GiB and total at 8 GiB. NFC portable basenames are at most 240 UTF-8
 bytes and unique ignoring case; separators/device names and trailing dots/spaces
 are rejected. Sources are regular files. Cancel uses connection closure. Send
-pacing is about 4 MiB/s before overhead; receive inactivity is 15 seconds, jobs
+pacing uses cumulative monotonic time at 8 MiB/s with a 512 KiB initial allowance; receive inactivity is 15 seconds, jobs
 one hour. Committed files are retained; uncommitted files are removed during normal
 cleanup. There is no automatic source deletion or arbitrary remote filesystem API.
 

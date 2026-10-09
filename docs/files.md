@@ -42,13 +42,18 @@ Windows itself; wait for the received-file status there too.
 Only one file job runs at a time. A new local copy can cancel it. Clipboard access
 stays on the UI thread; disk, hashing and network work run in the background.
 File contents use 32 KiB chunks rather than whole-file memory buffers. Traffic is
-paced to about 4 MiB/s before overhead to leave room for the desktop; this is a
-limit, not a measured throughput guarantee. A separate socket avoids inserting
+paced against elapsed time at a sustained target of 8 MiB/s, with a 512 KiB
+initial allowance for small files. Slow disk/network time counts toward the budget
+instead of adding a fixed pause after every chunk. This target and allowance
+are not a measured LAN throughput guarantee. A separate socket avoids inserting
 file bodies into the keyboard/video queue, but both still share LAN bandwidth.
 
 ## Progress, cancellation and received files
 
-Both apps show progress and have a cancel action. Cancel, disconnect or revoke
+Both apps show percentage, transferred size and average transfer speed, with a
+cancel action. Once bytes finish, the status stays at checking/clipboard preparation
+until the receiver confirms readiness. A busy Windows clipboard is retried for up
+to two seconds before reporting saved files rather than promising paste readiness. Cancel, disconnect or revoke
 consent closes the file connection; failed/incomplete batches are removed during
 normal cleanup. Operations have a 15-second receive timeout and a one-hour job
 deadline. The Mac socket also bounds individual send waits to three seconds.

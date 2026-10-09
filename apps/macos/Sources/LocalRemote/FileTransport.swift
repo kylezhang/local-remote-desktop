@@ -5,7 +5,20 @@ final class SHAFileDigest: FileDigest {
     func update(_ data: Data) { hash.update(data: data) }
     func finish() -> String { hash.finalize().map { String(format: "%02x", $0) }.joined() }
 }
+enum FilePacing {
+    static let rate: Double = 8 * 1048576, burst: Double = 512 * 1024
+    static func delay(_ bytes: Int64, elapsed: Double) -> Double { max(0, (Double(bytes) - burst) / rate - max(0, elapsed)) }
+}
 enum FileTransport {
+    static func completionText(_ message: [String: Any]) -> String {
+        message["clipboardReady"] as? Bool == true ? "文件已发送，可在 Windows 粘贴" : "文件已发送；Windows 未确认剪贴板就绪，请查看其提示或接收目录"
+    }
+    static func progressText(_ direction: String, done: Int64, total: Int64, elapsed: Double) -> String {
+        if done >= total { return "文件传输：正在校验并准备剪贴板…" }
+        let percent = Int(min(99, max(0, Double(done) * 100 / Double(max(1, total)))))
+        let speed = elapsed >= 0.2 && done > 0 ? String(format: " · %.1f MiB/s", Double(done) / 1048576 / elapsed) : ""
+        return String(format: "%@文件：%d%% · %.1f / %.1f MiB", direction, percent, Double(done) / 1048576, Double(total) / 1048576) + speed
+    }
     static func expect(_ message: [String: Any], _ op: String) throws { guard message["op"] as? String == op else { throw FileFailure.invalid } }
     static func items(_ value: Any?) throws -> [FileItem] {
         guard let value else { throw FileFailure.invalid }
@@ -14,6 +27,8 @@ enum FileTransport {
     static func metadata(_ items: [FileItem]) throws -> Any { try JSONSerialization.jsonObject(with: JSONEncoder().encode(items)) }
     static func send(_ source: FileSource, wire: Wire, progress: (Int64, Int64) -> Void = { _, _ in }) throws {
         let total = source.items.reduce(Int64(0), { $0 + $1.size }); var done: Int64 = 0
+        let started = ProcessInfo.processInfo.systemUptime
+        progress(0,total)
         for (index, item) in source.items.enumerated() {
             guard try FileSource(paths: [source.paths[index]]).items.first == item else { throw FileFailure.changed }
             try wire.json(["op":"file_start","index":index])
@@ -21,9 +36,11 @@ enum FileTransport {
             let hash = SHAFileDigest(); var count: Int64 = 0
             while let data = try input.read(upToCount: FileSource.chunk), !data.isEmpty {
                 count += Int64(data.count); guard count <= item.size else { throw FileFailure.changed }
-                hash.update(data); try wire.send(type: 3, payload: data)
+                hash.update(data)
+                let delay = FilePacing.delay(done + Int64(data.count), elapsed: ProcessInfo.processInfo.systemUptime - started)
+                if delay >= 0.001 { Thread.sleep(forTimeInterval: delay) }
+                try wire.send(type: 3, payload: data)
                 done += Int64(data.count); progress(done,total)
-                Thread.sleep(forTimeInterval: 0.008)
             }
             guard count == item.size else { throw FileFailure.changed }
             try wire.json(["op":"file_end","index":index,"sha256":hash.finish()])
@@ -33,6 +50,7 @@ enum FileTransport {
     static func receive(_ items: [FileItem], root: URL, wire: Wire, progress: (Int64, Int64) -> Void = { _, _ in }, canCommit: () -> Bool = { true }) throws -> [String] {
         let sink = try FileSink(root: root, items: items, digest: { SHAFileDigest() }); defer { sink.cancel() }
         let total = items.reduce(Int64(0), { $0 + $1.size }); var done: Int64 = 0
+        progress(0,total)
         for index in items.indices {
             let start = try wire.receive(); try expect(start,"file_start")
             guard start["index"] as? Int == index else { throw FileFailure.invalid }; try sink.start(index)

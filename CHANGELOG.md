@@ -4,6 +4,12 @@
 
 ## Unreleased
 
+- Faster file sending uses elapsed-time pacing at 8 MiB/s with a bounded small-file
+  allowance instead of fixed per-chunk sleeps. Progress shows percentage/rate;
+  byte completion stays separate from OS clipboard readiness, and Mac-to-Windows
+  completion acknowledges clipboard success after bounded UI-thread retries.
+  Mac internal build 16; public release assets unchanged.
+
 - Removed the repeated Windows toolbar logo; the native title bar retains the app icon.
 
 - Text/file sharing now defaults on for paired sessions and remembers explicit

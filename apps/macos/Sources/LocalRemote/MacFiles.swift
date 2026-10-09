@@ -104,11 +104,13 @@ final class MacFiles {
         deadline.schedule(deadline: .now() + .seconds(3600))
         deadline.setEventHandler { [weak wire] in wire?.close() }; deadline.resume()
         defer { deadline.cancel() }
-        var lastProgress = Date.distantPast
+        var lastProgress: Double = -.infinity
+        let started = ProcessInfo.processInfo.systemUptime
+        var direction = "传输"
         func progress(_ done: Int64, _ total: Int64) {
-            let now = Date(); guard now.timeIntervalSince(lastProgress) >= 0.25 || done == total else { return }
+            let now = ProcessInfo.processInfo.systemUptime; guard now - lastProgress >= 0.25 || done == total else { return }
             lastProgress = now
-            status(String(format: "文件传输：%.1f / %.1f MiB", Double(done) / 1048576, Double(total) / 1048576))
+            status(FileTransport.progressText(direction, done: done, total: total, elapsed: now - started))
         }
         defer { wire.close(); lock.lock(); if current === wire { current = nil }; lock.unlock() }
         var authenticated = false
@@ -120,6 +122,7 @@ final class MacFiles {
                   zip(supplied.utf8,session.utf8).reduce(UInt8(0), { $0 | ($1.0 ^ $1.1) }) == 0,
                   let id = message["requestId"] as? Int, valid(id) else { throw FileFailure.denied }
             if message["op"] as? String == "file_push" {
+                direction = "接收"
                 let items = try FileTransport.items(message["items"])
                 let baseline = DispatchQueue.main.sync { NSPasteboard.general.changeCount }
                 try wire.json(["op":"file_ready"])
@@ -134,12 +137,13 @@ final class MacFiles {
                 try wire.json(["op":"file_done","clipboardReady":ready])
                 status(ready ? "文件已接收，可在 Mac 粘贴" : "文件已接收；剪贴板已变化，可打开接收目录")
             } else if message["op"] as? String == "file_pull" {
+                direction = "发送"
                 lock.lock(); let candidate = offer; lock.unlock()
                 guard let candidate, message["offer"] as? String == candidate.0 else { throw FileFailure.changed }
                 try wire.json(["op":"file_ready","items":FileTransport.metadata(candidate.1.items)])
                 try FileTransport.send(candidate.1, wire: wire, progress: progress)
-                try FileTransport.expect(wire.receive(), "file_done")
-                status("文件已发送，可在 Windows 粘贴")
+                let completed = try wire.receive(); try FileTransport.expect(completed, "file_done")
+                status(FileTransport.completionText(completed))
             } else { throw FileFailure.invalid }
         } catch {
             if authenticated { try? wire.json(["op":"file_error","code":(error as? FileFailure)?.rawValue ?? "io"]) }

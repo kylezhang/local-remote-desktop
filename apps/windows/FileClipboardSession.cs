@@ -1,4 +1,5 @@
 using System.IO;
+using System.Diagnostics;
 using System.Text.Json;
 namespace LocalRemote;
 
@@ -70,22 +71,22 @@ public sealed class FileClipboardSession {
         long changed=board.Revision;
         if(!board.TryReadFiles(out var paths)) return;
         revision=changed;
-        if(paths==null) { Cancel(); remoteReady=true; return; }
+        if(paths==null) { bool wasBusy=Busy; Cancel(); remoteReady=true; if(wasBusy) status("文件传输已取消：剪贴板已更新",false); return; }
         Start(paths,null,null);
     }
     void Start(string[]? paths,string? offer,FileItem[]? items) {
         Cancel(); var owner=new CancellationTokenSource(TimeSpan.FromHours(1)); job=owner;
         long run=generation, baseline=board.Revision, request=requestId;
         string address=ip, secret=key, session=token;
-        remoteReady=paths==null; status(paths!=null?"正在发送文件…":"正在接收文件…",true);
+        remoteReady=paths==null; status(paths!=null?$"正在准备发送 {paths.Length} 个文件…":$"正在准备接收 {items!.Length} 个文件…",true);
         _=Run();
         async Task Run() {
             try {
-                long last=0;
+                long last=0; var clock=Stopwatch.StartNew();
                 void Progress(long done,long total) {
                     long now=Environment.TickCount64;
                     if(now-last<250 && done!=total) return; last=now;
-                    dispatch(()=> { if(run==generation && enabled) status($"{(paths!=null?"发送":"接收")}文件：{done/1048576.0:F1} / {total/1048576.0:F1} MiB",true); });
+                    dispatch(()=> { if(run==generation && enabled) status(FileTransfer.ProgressText(paths!=null?"发送":"接收",done,total,clock.Elapsed.TotalSeconds),true); });
                 }
                 if(paths!=null) {
                     bool ready=await Task.Run(async()=> {
@@ -94,15 +95,26 @@ public sealed class FileClipboardSession {
                     },owner.Token);
                     if(run==generation && enabled) { remoteReady=ready; status(ready?"文件已发送，可在 Mac 粘贴":"文件已保存到 Mac；其剪贴板已变化，请从接收目录取用",false); }
                 } else {
-                    var received=await Task.Run(()=>FileTransfer.Download(address,secret,session,request,offer!,items!,root,Progress,owner.Token,port),owner.Token);
-                    if(run==generation && enabled && board.Revision==baseline) {
-                        bool ready=false;
-                        for(int i=0;i<20 && !ready && board.Revision==baseline;i++) { ready=board.TryWriteFiles(received); if(!ready) await Task.Delay(100,owner.Token); }
-                        if(run==generation && enabled) {
-                            if(ready) revision=board.Revision;
-                            status(ready?"文件已接收，可在 Windows 粘贴":"文件已接收，剪贴板忙或已变化；可打开接收目录",false);
+                    bool published=false;
+                    async Task<bool> Publish(string[] received,CancellationToken ct) {
+                        for(int i=0;i<20;i++) {
+                            var result=new TaskCompletionSource<int>(TaskCreationOptions.RunContinuationsAsynchronously);
+                            dispatch(()=> {
+                                try {
+                                    if(ct.IsCancellationRequested || run!=generation || !enabled || board.Revision!=baseline) { result.TrySetResult(-1); return; }
+                                    if(!board.TryWriteFiles(received)) { result.TrySetResult(0); return; }
+                                    revision=board.Revision; result.TrySetResult(1);
+                                } catch(Exception ex) { result.TrySetException(ex); }
+                            });
+                            int attempt=await result.Task.WaitAsync(ct);
+                            if(attempt==1) { published=true; return true; }
+                            if(attempt<0) return false;
+                            await Task.Delay(100,ct);
                         }
+                        return false;
                     }
+                    await Task.Run(()=>FileTransfer.Download(address,secret,session,request,offer!,items!,root,Progress,owner.Token,port,Publish),owner.Token);
+                    if(run==generation && enabled) status(published?"文件已接收，可在 Windows 粘贴":"文件已接收，剪贴板忙或已变化；可打开接收目录",false);
                 }
             } catch(OperationCanceledException) { if(run==generation) status(owner.IsCancellationRequested?"文件传输已取消":"文件传输超时；重新复制可重试",false); }
             catch(Exception ex) { if(run==generation) status($"文件传输失败：{ex.Message}；重新复制可重试",false); }
