@@ -24,6 +24,11 @@ Preview scope: tested Windows package plus **Mac source only**. See
 
 ## Stable v0.2.0 gates
 
+Development main now targets **v0.2.0-beta.2**, adding nearby-device discovery
+and shared, remembered English/Chinese UI. This candidate is not the published
+beta.1 package. Mac internal build advances to 20; no new Mac binary is claimed.
+See the [language checks](../tests/results/localization-2026-10-10.txt).
+
 - [ ] Native Apple SDK build and real Mac interface/password editor acceptance.
 - [ ] Keychain authorization/denial/retry, explicit save, restart persistence and update behavior.
 - [ ] Real installed signature, clean/preserved permissions, icon/login-agent and recovery tests.

@@ -16,8 +16,10 @@ LocalRemote lets you view and control another computer's existing desktop over y
 
 [Download](https://atomgit.com/zkxw2008/LocalRemote/releases) · [Documentation](#documentation) · [Roadmap](docs/roadmap.md) · [Changelog](CHANGELOG.md)
 
-Unreleased main adds [nearby-device selection](docs/discovery.md). Native Mac
-Bonjour acceptance is pending; this does not replace the published preview.
+Unreleased main adds [nearby-device selection](docs/discovery.md) and remembered
+English/Chinese UI selection under Settings → Language, following the
+[shared interface conventions](docs/interface.md). Native Mac Bonjour/UI acceptance
+is pending; this does not replace the published preview.
 
 ## Features
 
@@ -34,7 +36,7 @@ Bonjour acceptance is pending; this does not replace the published preview.
 | Windows | Control a Mac | Windows 10/11, x64 |
 | macOS | Share the current desktop | macOS 13+, Apple Silicon |
 
-The current release supports one controller and one display. The Mac must be awake and logged in; FileVault unlock and control before login are not supported. Lock-screen control is not guaranteed. The application interface is currently Chinese; English UI is planned.
+The current release supports one controller and one display. The Mac must be awake and logged in; FileVault unlock and control before login are not supported. Lock-screen control is not guaranteed. Published packages use Chinese; development builds also offer English.
 
 ## Installation
 

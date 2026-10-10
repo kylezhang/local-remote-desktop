@@ -67,6 +67,7 @@ cp "$bin_dir/LocalRemote" "$app/Contents/MacOS/LocalRemote"
 cp Info.plist "$app/Contents/Info.plist"
 cp ../../assets/brand/LocalRemote.icns "$app/Contents/Resources/LocalRemote.icns"
 cp ../../assets/brand/icon.png "$app/Contents/Resources/LocalRemote.png"
+cp ../../assets/localization/strings.json "$app/Contents/Resources/strings.json"
 [[ -s "$app/Contents/Resources/LocalRemote.icns" && -s "$app/Contents/Resources/LocalRemote.png" ]] || {
   echo '图标资源缺失，构建中止。' >&2; exit 1
 }

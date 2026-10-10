@@ -40,6 +40,7 @@ def bundle(app):
     for source, target in [('LocalRemote.icns', 'LocalRemote.icns'), ('icon.png', 'LocalRemote.png')]:
         (app/'Contents/Resources'/target).write_bytes((root/'assets/brand'/source).read_bytes())
     (app/'Contents/Resources/signing-mode.txt').write_text('certificate\n')
+    (app/'Contents/Resources/strings.json').write_bytes((root/'assets/localization/strings.json').read_bytes())
     (app/'Contents/_CodeSignature/CodeResources').write_text('mock signature, not cryptographic verification')
 
 
@@ -50,11 +51,13 @@ class PackageChecks(unittest.TestCase):
         return Path(temporary.name).resolve()
 
     def test_bundle_validation(self):
-        for change in ('none', 'missing-icon', 'wrong-version', 'prerelease-as-stable', 'wrong-cpu', 'adhoc', 'extra-key', 'bad-icns'):
+        for change in ('none', 'missing-icon', 'missing-language', 'bad-language', 'wrong-version', 'prerelease-as-stable', 'wrong-cpu', 'adhoc', 'extra-key', 'bad-icns'):
             with self.subTest(change=change):
                 app = self.fixture()/'LocalRemote.app'
                 bundle(app)
                 if change == 'missing-icon': (app/'Contents/Resources/LocalRemote.png').unlink()
+                if change == 'missing-language': (app/'Contents/Resources/strings.json').unlink()
+                if change == 'bad-language': (app/'Contents/Resources/strings.json').write_text('{}')
                 if change == 'wrong-version':
                     info = plistlib.loads((app/'Contents/Info.plist').read_bytes())
                     info['CFBundleShortVersionString'] = '9.9.9'

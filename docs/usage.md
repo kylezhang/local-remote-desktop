@@ -4,7 +4,10 @@
 
 ## Interface labels
 
-The current UI is Chinese. English localization is planned. These labels help match the setup instructions to the application:
+Published v0.2.0-beta.1 uses Chinese. Development builds offer English and Chinese
+under Settings → Language. The initial choice follows your system; subsequent
+choices are remembered and apply without reconnecting. These labels help match
+the setup instructions to either interface:
 
 | Label | Meaning |
 |---|---|

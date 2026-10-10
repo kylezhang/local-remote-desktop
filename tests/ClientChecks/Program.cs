@@ -27,6 +27,8 @@ static class Program {
         } await Task.Delay(20); }
     }
     static async Task Check() {
+        UiText.Current.Use("zh-Hans");
+        await CheckLanguages();
         await CheckDiscovery();
         var directory=Path.Combine(Path.GetTempPath(),"localremote-client-check-"+Guid.NewGuid().ToString("N")); Directory.CreateDirectory(directory);
         var sample=Path.Combine(directory,"sample.h264");
@@ -317,6 +319,41 @@ static class Program {
             Assert(last.IsCancellationRequested,"window close left discovery running");
             Console.WriteLine("PASS actual WPF discovery menu: no auto-pair/credential overwrite, selection clears mismatched password, compact layout, manual fallback and close cancels scan");
         } finally { window.Close(); }
+    }
+    static async Task CheckLanguages() {
+        var window=new MainWindow(false,null) {Left=-20000,Top=-20000,ShowActivated=false,ShowInTaskbar=false,Width=720};
+        try {
+            window.Show(); var label=(TextBlock)window.FindName("TargetIpLabel");
+            var quality=(ComboBox)window.FindName("Quality"); var board=(MenuItem)window.FindName("ClipboardSync");
+            ((TextBox)window.FindName("Address")).Text="192.168.100.250";
+            ((PasswordBox)window.FindName("Secret")).Password="Local-test#42";
+            ((MenuItem)window.FindName("LanguageEnglish")).RaiseEvent(new RoutedEventArgs(MenuItem.ClickEvent));
+            await Until(()=>label.Text=="Target IP","English label/binding missing");
+            Assert(((Button)window.FindName("ConnectButton")).Content.ToString()=="Connect" && board.Header.ToString()=="Sync text","English controls not translated");
+            Assert(((ComboBoxItem)quality.Items[1]).Content.ToString()=="Standard","quality translation missing");
+            Assert(((Button)window.FindName("FullscreenButton")).ToolTip.ToString()!.StartsWith("F11:"),"tooltip translation missing");
+            Assert(((TextBox)window.FindName("Address")).ToolTip.ToString()!.StartsWith("Target device"),"long indexer key failed");
+            window.UpdateLayout(); var bar=(FrameworkElement)window.FindName("Toolbar");
+            Assert(bar.ActualHeight<40,"English toolbar wraps at minimum width");
+            var root=Environment.GetEnvironmentVariable("LOCALREMOTE_UI_SNAPSHOTS");
+            if(root!=null) {
+                Directory.CreateDirectory(root); var png=new System.Windows.Media.Imaging.PngBitmapEncoder();
+                var image=new System.Windows.Media.Imaging.RenderTargetBitmap((int)Math.Ceiling(bar.ActualWidth),(int)Math.Ceiling(bar.ActualHeight),96,96,System.Windows.Media.PixelFormats.Pbgra32);
+                var drawing=new System.Windows.Media.DrawingVisual();
+                using(var context=drawing.RenderOpen()) {
+                    var bounds=new Rect(0,0,bar.ActualWidth,bar.ActualHeight);
+                    context.DrawRectangle(window.Background,null,bounds);
+                    context.DrawRectangle(new System.Windows.Media.VisualBrush(bar),null,bounds);
+                }
+                image.Render(drawing); png.Frames.Add(System.Windows.Media.Imaging.BitmapFrame.Create(image));
+                using var stream=File.Create(Path.Combine(root,"english-720.png")); png.Save(stream);
+            }
+            ((MenuItem)window.FindName("LanguageChinese")).RaiseEvent(new RoutedEventArgs(MenuItem.ClickEvent));
+            await Until(()=>label.Text=="目标IP","Chinese switch did not refresh binding");
+            Assert(quality.SelectedIndex==0 && board.IsChecked && ((PasswordBox)window.FindName("Secret")).Password=="Local-test#42","language switch changed session settings or password");
+            Assert(((TextBox)window.FindName("Address")).Text=="192.168.100.250","language switch changed target");
+            Console.WriteLine("PASS actual WPF live English/Chinese labels, long tooltips, menu/quality, 720-wide layout and preserved credentials/settings");
+        } finally { window.Close(); UiText.Current.Use("zh-Hans"); }
     }
 }
 

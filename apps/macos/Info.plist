@@ -8,11 +8,11 @@
 <key>CFBundleName</key><string>LocalRemote</string>
 <key>CFBundleDisplayName</key><string>LocalRemote</string>
 <key>CFBundleIconFile</key><string>LocalRemote.icns</string>
-<key>CFBundleVersion</key><string>19</string>
+<key>CFBundleVersion</key><string>20</string>
 <key>CFBundleInfoDictionaryVersion</key><string>6.0</string>
 <key>NSPrincipalClass</key><string>NSApplication</string>
 <key>CFBundleShortVersionString</key><string>0.2.0</string>
-<key>LocalRemoteReleaseVersion</key><string>0.2.0-beta.1</string>
+<key>LocalRemoteReleaseVersion</key><string>0.2.0-beta.2</string>
 <key>CFBundlePackageType</key><string>APPL</string>
 <key>LSMinimumSystemVersion</key><string>13.0</string>
 <key>NSHighResolutionCapable</key><true/>

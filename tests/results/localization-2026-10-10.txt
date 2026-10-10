@@ -1,0 +1,34 @@
+LocalRemote shared desktop language checks — 2026-10-10
+
+Development candidate: v0.2.0-beta.2, Mac internal build 20.
+Published v0.2.0-beta.1 and stable v0.1.0 assets remain unchanged.
+Pre-commit self-contained Windows candidate DLL SHA256:
+9aef87498f4ac2a3445e5d25229a6ebf8ac0fd2e96c9f9f88643c6259a59acd5
+
+PASS Windows application and exact-candidate ClientChecks build, zero warnings/errors.
+PASS C# production translator: all 181 strings / 27 templates, English/Chinese,
+placeholder parity, opaque filenames/device values and invalid language rejection.
+PASS persisted explicit language survives reconfiguration in an isolated profile.
+PASS actual WPF live language switching: target/password/quality/menu labels,
+long tooltips, preserved IP/password/clipboard selections, 720-wide layout.
+PASS visual inspection of English minimum-width toolbar; no wrapping/second logo.
+PASS exact-candidate encrypted-peer regression in RMP1 and legacy RML1 modes:
+video, input, shortcuts, focus/permission reporting, text/file consent/readiness,
+revocation, quality reconnect, disconnect/window close and owned decoder cleanup.
+PASS Swift 5.9.2 production Foundation translation: all shared strings/templates,
+opaque captured values and Chinese fallback. Production HostModel checks pass
+with explicit services doubled, including sharing/password/discovery lifetime.
+PASS installer/signing regression fixtures; real build-app resource copy exercised
+with mocked Swift/signing commands. Mac archive checker requires a valid shared
+catalog and rejects absent/invalid resources. Mock signing is not Apple validation.
+PASS 20 Swift syntax checks and bilingual links/version/icon/tracked-file checks.
+
+Both apps use assets/localization/strings.json. Initial language follows the
+system; explicit English/Chinese choice is remembered. Windows embeds the catalog;
+Mac installs it in Contents/Resources. Changes update UI without reauthentication.
+User content, credentials, protocol and clipboard data are not translated.
+System dialogs and nested OS error details retain their native language.
+
+SKIP native macOS SDK/SwiftUI display, actual Keychain/TCC, Bonjour permissions,
+installed Mac language persistence and physical two-device interoperability.
+These require a native Mac environment and are not cleared by Linux fixtures.

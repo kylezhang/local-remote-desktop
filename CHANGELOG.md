@@ -4,6 +4,11 @@
 
 ## Unreleased
 
+- Added shared English/Chinese application strings and remembered language choice
+  on both desktops. Switching updates the interface without changing credentials,
+  clipboard settings or connections. Compact Windows settings/full-screen icons
+  keep the English toolbar usable at minimum width. Native Mac UI acceptance is pending.
+
 - Added Bonjour nearby-device selection to Target IP, keeping manual entry and
   pairing. Mac advertises only while sharing; Windows searches once or on refresh.
   Windows UDP/WPF and portable Mac lifecycle checks pass; native Mac LAN acceptance is pending.

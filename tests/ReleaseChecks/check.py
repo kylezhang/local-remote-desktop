@@ -2,6 +2,7 @@
 Uses stdlib only; this is not a security audit or macOS native validation.
 """
 from pathlib import Path
+import json
 import plistlib
 import re
 import struct
@@ -34,6 +35,15 @@ for path in root.rglob('*.md'):
         destination = (path.parent/target.split('#')[0]).resolve()
         assert destination.is_relative_to(root) and destination.exists(), (path,target)
 print('PASS documentation local links')
+
+catalog = json.loads((root/'assets/localization/strings.json').read_text(encoding='utf-8'))
+for source, english in catalog.items():
+    assert sorted(re.findall(r'\{(\d+)\}', source)) == sorted(re.findall(r'\{(\d+)\}', english)), source
+for key in re.findall(r"local:Translate Key='([^']+)'", (root/'apps/windows/MainWindow.xaml').read_text(encoding='utf-8')):
+    assert key in catalog, key
+assert 'strings.json' in (root/'apps/macos/build-app.sh').read_text(encoding='utf-8')
+assert 'LocalRemote.strings.json' in (root/'apps/windows/LocalRemote.csproj').read_text(encoding='utf-8')
+print('PASS shared language catalog placeholders, UI keys and bundle integration')
 
 ico = (root/'assets/brand/LocalRemote.ico').read_bytes()
 reserved, kind, count = struct.unpack('<HHH',ico[:6])

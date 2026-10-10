@@ -4,7 +4,8 @@
 
 # LocalRemote
 
-主分支开发更新加入[局域网设备选择](docs/zh-CN/discovery.md)；Mac 原生 Bonjour 验收仍待完成，不替换已发布测试包。
+主分支开发更新加入[局域网设备选择](docs/zh-CN/discovery.md)与可记忆的中英文切换（设置 → 语言），
+遵循[多端界面规范](docs/zh-CN/interface.md)。Mac 原生 Bonjour/界面验收仍待完成，不替换已发布测试包。
 
 **局域网内的跨设备远程控制。**
 
@@ -33,7 +34,7 @@ LocalRemote 让你通过局域网查看并操作另一台电脑当前的桌面�
 | Windows | 控制 Mac | Windows 10/11，x64 |
 | macOS | 共享当前桌面 | macOS 13+，Apple Silicon |
 
-当前支持单控制端、单显示器。Mac 需要保持唤醒并登录；不支持 FileVault 解锁及登录前控制，锁屏控制不保证。应用界面目前为中文，英文界面已列入计划。
+当前支持单控制端、单显示器。Mac 需要保持唤醒并登录；不支持 FileVault 解锁及登录前控制，锁屏控制不保证。已发布包为中文界面；主分支开发版可切换英文。
 
 ## 安装
 

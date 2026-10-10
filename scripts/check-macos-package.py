@@ -14,6 +14,7 @@ def check_files(files, version):
         'Contents/Info.plist', 'Contents/MacOS/LocalRemote',
         'Contents/Resources/LocalRemote.icns', 'Contents/Resources/LocalRemote.png',
         'Contents/Resources/signing-mode.txt', 'Contents/_CodeSignature/CodeResources',
+        'Contents/Resources/strings.json',
     }
     if not required.issubset(files):
         raise ValueError('Missing required application files')
@@ -22,6 +23,11 @@ def check_files(files, version):
     if set(files) - required - {'Contents/CodeResources'}:
         raise ValueError('Unexpected application files')
     info = plistlib.loads(files['Contents/Info.plist'])
+    catalog = json.loads(files['Contents/Resources/strings.json'])
+    if (not isinstance(catalog, dict) or catalog.get('开始共享') != 'Start sharing'
+            or catalog.get('目标IP') != 'Target IP'
+            or any(not isinstance(k, str) or not isinstance(v, str) for k, v in catalog.items())):
+        raise ValueError('Invalid shared language catalog')
     if (info.get('CFBundleIdentifier') != 'com.remotemaclan.host'
             or info.get('CFBundleShortVersionString') != version
             or info.get('LocalRemoteReleaseVersion', info.get('CFBundleShortVersionString')) != version

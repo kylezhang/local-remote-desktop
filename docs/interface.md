@@ -53,3 +53,16 @@ visible focus, password editing/cancel/error states, device selection without
 automatic trust, transfer progress, full screen and disconnect recovery on each
 native platform. A desktop screenshot or mocked platform check cannot stand in
 for another OS or phone/tablet acceptance.
+
+## Language
+
+Development builds offer Settings → Language → English / 简体中文 on both
+desktops. The initial choice follows the system language; an explicit choice is
+remembered and updates the open interface without disconnecting. Both apps use
+the same versioned catalog in `assets/localization/strings.json`.
+
+Translate controls and application messages, never pairing passwords, device
+names, file paths or clipboard contents. Native dialogs and underlying OS error
+details retain their system language. Windows uses a compact settings icon and
+full-screen icon with localized tooltips/accessibility names; Mac uses its native
+menu. Equivalent actions may have different native presentations.

@@ -8,6 +8,14 @@ Release environment: Windows x64, .NET SDK 8.0.425 and Desktop/Core runtime 8.0.
 
 ## Automated coverage
 
+- Shared language/discovery development (2026-10-10): exact Windows client checks
+  cover live English/Chinese labels, tooltips, minimum-width layout and preserved
+  credentials/settings in both pairing modes. Production C#/Swift translators
+  pass all 181 catalog entries/27 templates with opaque values; Windows language
+  persistence and Mac package resource checks pass. Native Mac UI/installed
+  preferences remain pending. See [language record](../tests/results/localization-2026-10-10.txt)
+  and [discovery record](../tests/results/discovery-2026-10-10.txt).
+
 - Mac password-flow development (2026-10-09): real Swift compiler executes the
   production HostModel/PairingEditor with explicit service doubles. Covered
   deliberate/cached reveal without sharing-status changes, bounded legacy display

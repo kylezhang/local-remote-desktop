@@ -35,6 +35,7 @@ for mode, script_name, success in [
         (root/'Info.plist').write_text('mock bundle metadata')
         (root/'LocalRemote.icns').write_text('mock icon')
         (root/'icon.png').write_text('mock PNG icon')
+        (root/'strings.json').write_text('{}')
         if mode == 'stable-missing': (root/'.require-stable-signature').touch()
         if mode == 'invalid-saved': (root/'.signing-identity').write_text('INVALID')
         if mode == 'legacy-pinned':
@@ -71,6 +72,7 @@ mv() {
         fixture = fixture.replace('$PWD/../../macos-host', '$PWD/legacy-signing')
         fixture = fixture.replace('../../assets/brand/LocalRemote.icns', 'LocalRemote.icns')
         fixture = fixture.replace('../../assets/brand/icon.png', 'icon.png')
+        fixture = fixture.replace('../../assets/localization/strings.json', 'strings.json')
         path = root/script_name
         path.write_text(fixture, encoding='utf-8', newline='\n')
         result = subprocess.run([args.bash, str(path)], capture_output=True, text=True, encoding='utf-8', timeout=20)

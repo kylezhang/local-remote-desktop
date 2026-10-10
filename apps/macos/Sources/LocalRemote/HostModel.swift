@@ -4,6 +4,9 @@ import AppKit
 import ApplicationServices
 import ScreenCaptureKit
 final class HostModel: ObservableObject {
+    @Published var languageCode = UiText.preferredLanguage { didSet {
+        UiText.language = languageCode; UserDefaults.standard.set(languageCode, forKey: "language")
+    } }
     @Published var status = "准备启动"
     @Published var secret = ""
     @Published var active = false
@@ -35,7 +38,7 @@ final class HostModel: ObservableObject {
         _ = AXIsProcessTrustedWithOptions(options)
         NSWorkspace.shared.open(URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility")!)
     }
-    init() {}
+    init() { UiText.language = languageCode }
     func cancelFiles() { host?.cancelFiles() }
     func openReceivedFiles() {
         let root = MacFiles.receivedDirectory
