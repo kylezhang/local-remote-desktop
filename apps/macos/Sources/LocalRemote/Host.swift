@@ -69,7 +69,7 @@ final class Host {
             if let startupError { throw startupError }
             var trusted = AXIsProcessTrusted()
             clipboard = MacClipboard(wire: wire, allowed: { [weak self] in self?.allowsClipboard() ?? false })
-            var capabilities: [String: Any] = ["op":"capabilities","accessibility":trusted,"clipboardText":true,"fileClipboard":false]
+            var capabilities: [String: Any] = ["op":"capabilities","platform":"macos","inputModel":"win-vk-mac-v1","accessibility":trusted,"clipboardText":true,"fileClipboard":false]
             do {
                 let fileSession = try MacFiles(key: key, passwordSalt: passwordSalt, control: wire, allowed: { [weak self] in self?.allowsFiles() ?? false }, status: fileStatus); files = fileSession
                 lock.lock(); let active = running; if active { currentFiles = fileSession }; lock.unlock()

@@ -24,10 +24,11 @@ Preview scope: tested Windows package plus **Mac source only**. See
 
 ## Stable v0.2.0 gates
 
-Development main now targets **v0.2.0-beta.2**, adding nearby-device discovery
-and shared, remembered English/Chinese UI. This candidate is not the published
-beta.1 package. Mac internal build advances to 20; no new Mac binary is claimed.
-See the [language checks](../tests/results/localization-2026-10-10.txt).
+The locally verified beta.2 checkpoint added discovery and remembered languages;
+see the [language checks](../tests/results/localization-2026-10-10.txt).
+Main now targets **v0.3.0-alpha.1 development**, Mac numeric version 0.3.0/build 21.
+It adds a [Windows sharing preview](windows-sharing.md), not the Mac controller.
+No new alpha release/tag or Mac binary is claimed. The native gates below remain.
 
 - [ ] Native Apple SDK build and real Mac interface/password editor acceptance.
 - [ ] Keychain authorization/denial/retry, explicit save, restart persistence and update behavior.

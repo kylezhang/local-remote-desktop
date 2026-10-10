@@ -21,14 +21,37 @@ public static class PairingPassword {
 // All writes pass one gate; counters are implicit, monotonic, and direction-specific.
 public sealed class Wire : IDisposable
 {
-    readonly TcpClient tcp = new() { NoDelay = true };
+    readonly TcpClient tcp;
     readonly SemaphoreSlim gate = new(1);
     NetworkStream stream = null!;
     byte[] tx = [], rx = [];
     ulong sent, received;
     readonly int maximumRead;
     readonly int ioTimeoutSeconds;
-    public Wire(int maximumRead=8*1024*1024,int ioTimeoutSeconds=0) { this.maximumRead=maximumRead; this.ioTimeoutSeconds=ioTimeoutSeconds; }
+    readonly int maximumWrite;
+    public Wire(int maximumRead=8*1024*1024,int ioTimeoutSeconds=0):this(new TcpClient(),maximumRead,ioTimeoutSeconds,65536) {}
+    Wire(TcpClient tcp,int maximumRead,int ioTimeoutSeconds,int maximumWrite) {
+        this.tcp=tcp; tcp.NoDelay=true; this.maximumRead=maximumRead;
+        this.ioTimeoutSeconds=ioTimeoutSeconds; this.maximumWrite=maximumWrite;
+    }
+    // A caller must reserve its one-controller slot and filter the peer before
+    // accepting. Capture/input start only after this mutual proof succeeds.
+    internal static async Task<Wire> Accept(TcpClient peer,byte[] key,byte[]? salt,CancellationToken ct) {
+        if(key.Length!=32 || (salt!=null && salt.Length!=16)) { peer.Dispose(); throw new ArgumentException("Invalid host credential"); }
+        var wire=new Wire(peer,65536,10,8*1024*1024);
+        using var deadline=CancellationTokenSource.CreateLinkedTokenSource(ct); deadline.CancelAfter(TimeSpan.FromSeconds(8));
+        try {
+            wire.stream=peer.GetStream(); var server=RandomNumberGenerator.GetBytes(32);
+            await wire.stream.WriteAsync(salt==null?Join("RML1"u8.ToArray(),server):Join("RMP1"u8.ToArray(),server,salt),deadline.Token);
+            var response=new byte[64]; await wire.stream.ReadExactlyAsync(response,deadline.Token);
+            var transcript=salt==null?Join(server,response[..32]):Join("RMP1"u8.ToArray(),salt,server,response[..32]);
+            if(!CryptographicOperations.FixedTimeEquals(response[32..],Mac(key,Join(Label("client"),transcript))))
+                throw new CryptographicException("Controller authentication failed");
+            await wire.stream.WriteAsync(Mac(key,Join(Label("server"),transcript)),deadline.Token);
+            wire.tx=Mac(key,Join(Label("h2c"),transcript)); wire.rx=Mac(key,Join(Label("c2h"),transcript));
+            return wire;
+        } catch { wire.Dispose(); throw; }
+    }
     CancellationTokenSource Timeout(CancellationToken ct) {
         var timeout=CancellationTokenSource.CreateLinkedTokenSource(ct);
         if(ioTimeoutSeconds>0) timeout.CancelAfter(TimeSpan.FromSeconds(ioTimeoutSeconds));
@@ -63,7 +86,7 @@ public sealed class Wire : IDisposable
     public async Task Send(byte type, byte[] payload, CancellationToken ct)
     {
         using var timeout=Timeout(ct); ct=timeout.Token;
-        if(payload.Length>65536-17) throw new IOException("Control/file record too large");
+        if(payload.Length>maximumWrite-17) throw new IOException("Outgoing record too large");
         await gate.WaitAsync(ct);
         try {
             var plain = Join([type], payload); var cipher = new byte[plain.Length]; var tag = new byte[16];

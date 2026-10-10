@@ -4,6 +4,11 @@ v0.2.0-beta.1 测试版采用当前最终 Windows 包回归、便携 Swift/状�
 
 [English](../validation.md)
 
+2026-10-10 Windows 共享端 alpha.1：独立认证、DPAPI、断开/故障清理及真实 WPF 检查通过。
+三档生成画面与短时真实 Windows 桌面均通过硬件编码→加密回环→解码链路。
+这不代表持续帧率或真实局域网验收。原生输入接受测试因系统拒绝前台焦点而跳过；Mac 控制端尚未实现。
+见[共享端记录](../../tests/results/windows-sharing-2026-10-10.txt)。
+
 环境：Windows x64，.NET SDK 8.0.425，桌面/Core 运行时 8.0.31，2026-10-08。最终构建的原始结果位于 tests/results/。
 
 2026-10-10 多端语言/发现：真实 Windows 客户端通过中英文动态切换、提示、最窄布局及凭据/设置保持检查，

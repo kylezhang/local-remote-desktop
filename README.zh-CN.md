@@ -4,8 +4,9 @@
 
 # LocalRemote
 
-主分支开发更新加入[局域网设备选择](docs/zh-CN/discovery.md)与可记忆的中英文切换（设置 → 语言），
-遵循[多端界面规范](docs/zh-CN/interface.md)。Mac 原生 Bonjour/界面验收仍待完成，不替换已发布测试包。
+主分支为 **v0.3.0-alpha.1 开发版**，加入 [Windows 共享预览](docs/zh-CN/windows-sharing.md)、
+[局域网设备选择](docs/zh-CN/discovery.md)与中英文切换，遵循[多端界面规范](docs/zh-CN/interface.md)。
+Mac 控制端是下一阶段，尚未实现；Mac 原生验收待完成，不替换已发布测试包。
 
 **局域网内的跨设备远程控制。**
 

@@ -90,7 +90,7 @@ struct HostView: View {
                     Image(nsImage: icon).resizable().interpolation(.high).scaledToFit()
                         .frame(width: 36, height: 36).accessibilityHidden(true)
                 }
-                Text(UiText.text("LocalRemote 0.2.0-beta.2")).font(.title2).foregroundStyle(brandText)
+                Text(UiText.text("LocalRemote 0.3.0-alpha.1")).font(.title2).foregroundStyle(brandText)
                 Spacer()
                 settingsMenu
             }

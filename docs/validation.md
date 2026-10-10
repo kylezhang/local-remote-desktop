@@ -102,6 +102,15 @@ bash tests/MacStartupChecks/check.sh
 bash tests/ClipboardChecks/check.sh
 ```
 
+## Windows sharing development checks — 2026-10-10
+
+Independent authentication, DPAPI, lifecycle and actual WPF checks passed.
+Generated video in all three profiles and brief actual Windows primary-desktop
+capture passed hardware encoding → encrypted loopback → decoding checks.
+This is not sustained FPS or physical-LAN acceptance. Native input acceptance was
+skipped because the OS refused foreground focus; Mac control remains pending.
+See [the record](../tests/results/windows-sharing-2026-10-10.txt).
+
 ## What these results do not prove
 
 Unreleased LAN discovery checks are recorded in

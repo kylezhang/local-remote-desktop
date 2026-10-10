@@ -39,8 +39,10 @@ print('PASS documentation local links')
 catalog = json.loads((root/'assets/localization/strings.json').read_text(encoding='utf-8'))
 for source, english in catalog.items():
     assert sorted(re.findall(r'\{(\d+)\}', source)) == sorted(re.findall(r'\{(\d+)\}', english)), source
-for key in re.findall(r"local:Translate Key='([^']+)'", (root/'apps/windows/MainWindow.xaml').read_text(encoding='utf-8')):
-    assert key in catalog, key
+for xaml in (root/'apps/windows').rglob('*.xaml'):
+    if any(p in {'bin','obj'} for p in xaml.parts): continue
+    for key in re.findall(r"local:Translate Key='([^']+)'", xaml.read_text(encoding='utf-8')):
+        assert key in catalog, (xaml,key)
 assert 'strings.json' in (root/'apps/macos/build-app.sh').read_text(encoding='utf-8')
 assert 'LocalRemote.strings.json' in (root/'apps/windows/LocalRemote.csproj').read_text(encoding='utf-8')
 print('PASS shared language catalog placeholders, UI keys and bundle integration')

@@ -13,7 +13,7 @@ using System.Windows.Input;
 using System.Windows.Threading;
 using LocalRemote;
 
-static class Program {
+static partial class Program {
     [STAThread] static int Main() {
         int exit=0; var app=new Application { ShutdownMode=ShutdownMode.OnExplicitShutdown };
         app.Startup+=async (_,_)=> { try { await Check(); } catch(Exception ex) { Console.Error.WriteLine(ex); exit=1; } finally { app.Shutdown(); } };
@@ -29,6 +29,7 @@ static class Program {
     static async Task Check() {
         UiText.Current.Use("zh-Hans");
         await CheckLanguages();
+        await CheckWindowsSharing();
         await CheckDiscovery();
         var directory=Path.Combine(Path.GetTempPath(),"localremote-client-check-"+Guid.NewGuid().ToString("N")); Directory.CreateDirectory(directory);
         var sample=Path.Combine(directory,"sample.h264");

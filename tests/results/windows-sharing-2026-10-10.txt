@@ -1,0 +1,51 @@
+LocalRemote Windows sharing development checkpoint — 2026-10-10
+Version: 0.3.0-alpha.1 (not a tag/release; Mac build 21, numeric 0.3.0)
+Environment: Windows x64, .NET SDK 8.0.425, runtime 8.0.31.
+Candidate LocalRemote.dll SHA256:
+7bbea34a52b22a1b6490f3e4fd1b18d622519fec247f6183d97d2dce748eecf2
+
+PASS WindowsHostChecks (actual production backend):
+- Bounded Annex B H264 access units at every split, 3/4-byte prefixes.
+- x64 INPUT ABI (40 bytes / union offset 8), VK/modifier/coordinate/wheel
+  validation, rejected/blocked events and release state; recording input adapter.
+- Actual current-user DPAPI isolated-path persistence and atomic replacement.
+- Independent fragmented RML1/RMP1 peer, mutual proof/direction keys,
+  100KiB video, wrong proof/tamper/replay and 64KiB input bounds.
+- Opt-in listener, no unauthenticated capture/input, one-controller enforcement,
+  reconnect, disconnect/fault cleanup and owned encoder process termination.
+- MF hardware H264/AUD -> encrypted TCP -> actual FFmpeg decoder:
+  generated Smooth 1280x720@30: 8 decoded frames / 21 units;
+  generated Standard 1920x1080@60: 16 frames / 39 units;
+  generated High 1920x1080@60: 19 frames / 51 units;
+  actual Windows primary desktop Smooth: 9 frames / 23 units, memory only.
+  Configuration FPS is not a sustained-frame-rate measurement.
+
+PASS ClientChecks against the exact candidate in RML1 and RMP1 modes:
+- Actual WPF sharing window, hidden password, draft/generation/cancel,
+  invalid/same input handling, failed-save preservation, successful revocation,
+  stop/close including closure during off-thread derivation.
+- Actual WPF viewer -> production Windows host -> generated H264 decoder,
+  target-aware Ctrl+C, coordinate-free wheel and exclusive sharing/viewing roles.
+- Existing Mac-target routed keys/keypad/shortcuts/mouse, permission report,
+  authenticated text/file transfer, consent/revocation/paste readiness,
+  quality change/reconnect, decoder shutdown and compact bilingual discovery UI.
+  Inputs and clipboard use isolated recording/fixture adapters.
+- Reviewed English sharing window capture with shared brand resources.
+
+PASS C# and Swift Foundation translation code: 199 strings, 28 templates,
+placeholder parity and opaque values. Isolated Windows language preference.
+PASS portable Swift HostModel/discovery lifecycle with explicit platform doubles.
+PASS syntax parsing of 20 Swift files; not Apple SDK compilation.
+
+SKIP native Windows SendInput acceptance: OS denied foreground focus to the
+test-owned window before injection. State/layout and encrypted routing passed,
+but input acceptance is not proved by recording adapters or submitted counters.
+No system user-input events were injected by these passing fixture tests.
+
+PENDING: Mac controller (alpha.2), native Mac SDK/runtime acceptance,
+physical-LAN Windows sharing/firewall, sustained performance and latency,
+native input acceptance and real Windows<->Mac control in both directions.
+Windows sharing preview has no clipboard/files or Bonjour advertisement yet;
+existing Mac-sharing control role retains its clipboard implementation.
+No login-screen, UAC secure-desktop or FileVault preboot support claim.
+No user desktop recordings, clipboard contents or credentials retained here.

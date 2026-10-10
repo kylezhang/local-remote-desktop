@@ -33,6 +33,9 @@ public partial class MainWindow : Window
     readonly object decoderGate=new();
     IVideoDecoder? activeDecoder;
     bool windowClosing;
+    SharingWindow? sharingWindow;
+    bool closingSharingOwner;
+    string targetPlatform="macos";
     readonly TextClipboardSync clipboard;
     readonly FileClipboardSession files;
     readonly int desktopPort;
@@ -95,13 +98,24 @@ public partial class MainWindow : Window
         Surface.LostKeyboardFocus+=(_,_)=>Input(new {op="release_all"}); Deactivated+=(_,_)=>Input(new {op="release_all"});
         Surface.LostMouseCapture+=(_,_)=> { if(Mouse.LeftButton==MouseButtonState.Pressed || Mouse.RightButton==MouseButtonState.Pressed || Mouse.MiddleButton==MouseButtonState.Pressed) Input(new {op="release_all"}); };
         PreviewKeyDown+=(_,e)=> { if(e.Key==System.Windows.Input.Key.F11) { ToggleFull(); e.Handled=true; } };
-        Closing+=(_,_)=> {
+        Closing+=(_,e)=> {
+            if(sharingWindow!=null) { e.Cancel=true; if(!closingSharingOwner) {closingSharingOwner=true; _=CloseSharingAndOwner();} return; }
             discoveryScan?.Cancel(); UiText.Current.LanguageChanged-=ApplyLanguage;
             render.Stop(); ResetClipboard(); ResetFiles(); session?.Cancel();
             // App shutdown can stop Dispatcher continuations before Run's
             // finally executes. Kill the owned decoder directly while closing.
             lock(decoderGate) { windowClosing=true; activeDecoder?.Dispose(); activeDecoder=null; }
         };
+    }
+    async Task CloseSharingAndOwner() {
+        var sharing=sharingWindow; if(sharing==null) return;
+        await sharing.Shutdown(); sharingWindow=null; Close();
+    }
+    void SharingClick(object sender,RoutedEventArgs e) {
+        if(session!=null) return;
+        if(sharingWindow!=null) { sharingWindow.Activate(); return; }
+        var sharing=new SharingWindow(active=>ConnectButton.IsEnabled=!active) {Owner=this};
+        sharingWindow=sharing; sharing.Closed+=(_,_)=> {if(ReferenceEquals(sharingWindow,sharing)) sharingWindow=null; if(session==null) ConnectButton.IsEnabled=true;}; sharing.Show();
     }
     void DiscoverClick(object sender,RoutedEventArgs e) {
         if(session!=null) return;
@@ -167,11 +181,11 @@ public partial class MainWindow : Window
         var modifiers=readModifiers();
         if(down && key==System.Windows.Input.Key.Escape && modifiers.HasFlag(ModifierKeys.Control) && modifiers.HasFlag(ModifierKeys.Alt)) { Input(new {op="release_all"}); ConnectButton.Focus(); e.Handled=true; return; }
         int flags=(modifiers.HasFlag(ModifierKeys.Shift)?1:0)|(modifiers.HasFlag(ModifierKeys.Control)?2:0)|(modifiers.HasFlag(ModifierKeys.Alt)?4:0)|(modifiers.HasFlag(ModifierKeys.Windows)?8:0);
-        var mapped=KeyboardMapping.Map(KeyInterop.VirtualKeyFromKey(key),flags,WindowsShortcuts.IsChecked==true);
+        var mapped=KeyboardMapping.Map(KeyInterop.VirtualKeyFromKey(key),flags,WindowsShortcuts.IsChecked==true && targetPlatform!="windows");
         // Queue a fresh local clipboard change ahead of the Mac paste key.
         // Both messages use the same encrypted writer/input ordering.
         if(key==System.Windows.Input.Key.V && !down && pasteSuppressed) { pasteSuppressed=false; e.Handled=true; return; }
-        if(down && key==System.Windows.Input.Key.V && (mapped.Flags&8)!=0) {
+        if(down && key==System.Windows.Input.Key.V && (mapped.Flags&(targetPlatform=="windows"?2:8))!=0) {
             PollClipboard(); files.Poll();
             if(!files.PasteReady) { pasteSuppressed=true; FileNotice(files.Busy?"文件尚未就绪；看到可粘贴提示后再按 Ctrl+V":"文件未就绪，请重新复制文件后重试",files.Busy); e.Handled=true; return; }
         }
@@ -237,10 +251,12 @@ public partial class MainWindow : Window
     }
     void Input(object message) {
         if(!connected || inputs==null) return;
+        if(bitmap==null && System.Text.Json.JsonSerializer.SerializeToElement(message).GetProperty("op").GetString()!="release_all") return;
         if(inputs.TryWrite(message)) Interlocked.Increment(ref inputsQueued);
         else { SetStatus("输入队列拥堵，已断开以避免按键卡住"); session?.Cancel(); }
     }
     async void ConnectClick(object sender,RoutedEventArgs e) {
+        if(sharingWindow?.Sharing==true) return;
         if(session!=null) { session.Cancel(); return; }
         var ip=Address.Text.Trim(); var secret=Secret.Password.Trim(); int quality=Quality.SelectedIndex;
         try {
@@ -250,10 +266,11 @@ public partial class MainWindow : Window
         } catch(Exception ex) { SetStatus($"无法记住连接：{ex.Message}"); return; }
         requestedQuality=quality; qualityChangePending=false;
         discoveryScan?.Cancel();
+        targetPlatform="macos"; AllowConnections.IsEnabled=false;
         session=new(); render.Start(); ConnectButton.Content=UiText.Text("断开"); DiscoverButton.IsEnabled=Address.IsEnabled=Secret.IsEnabled=ForgetButton.IsEnabled=false;
         ConnectionFields.Visibility=Visibility.Collapsed; ConnectionTarget.Text=$"Mac · {ip}"; ConnectionTarget.Visibility=Visibility.Visible;
         runner=Run(ip,secret,session.Token);
-        try { await runner; } finally { render.Stop(); ResetClipboard(); ResetFiles(); connected=false; session.Dispose(); session=null; ConnectButton.Content=UiText.Text("连接"); DiscoverButton.IsEnabled=Address.IsEnabled=Secret.IsEnabled=Quality.IsEnabled=ForgetButton.IsEnabled=true; ConnectionFields.Visibility=Visibility.Visible; ConnectionTarget.Visibility=Visibility.Collapsed; Desktop.Source=null; bitmap=null; width=height=0; }
+        try { await runner; } finally { render.Stop(); ResetClipboard(); ResetFiles(); connected=false; session.Dispose(); session=null; AllowConnections.IsEnabled=true; ConnectButton.Content=UiText.Text("连接"); DiscoverButton.IsEnabled=Address.IsEnabled=Secret.IsEnabled=Quality.IsEnabled=ForgetButton.IsEnabled=true; ConnectionFields.Visibility=Visibility.Visible; ConnectionTarget.Visibility=Visibility.Collapsed; Desktop.Source=null; bitmap=null; width=height=0; }
     }
     async Task Run(string ip,string secret,CancellationToken ct) {
         bool paired=false;
@@ -286,6 +303,11 @@ public partial class MainWindow : Window
                     var packet=await wire.Read(timeout.Token);
                     if(packet.type==1) {
                         using var json=JsonDocument.Parse(packet.data); var root=json.RootElement;
+                        if(root.TryGetProperty("platform",out var platform)) {
+                            var name=platform.GetString(); if(name is not ("windows" or "macos")) throw new IOException("Unsupported target platform");
+                            if(!root.TryGetProperty("inputModel",out var model) || model.GetString()!=(name=="windows"?"win-vk-v1":"win-vk-mac-v1")) throw new IOException("Unsupported target input model");
+                            await Dispatcher.InvokeAsync(()=> { targetPlatform=name; ConnectionTarget.Text=$"{(name=="windows"?"Windows":"Mac")} · {ip}"; });
+                        }
                         if(root.GetProperty("op").GetString() is "capabilities" or "clipboard_sync" or "clipboard_text" or "file_sync" or "file_offer")
                             await Dispatcher.InvokeAsync(()=> { ClipboardControl(root); files.Control(root); });
                         if(root.GetProperty("op").GetString()=="video_header") {
@@ -306,6 +328,7 @@ public partial class MainWindow : Window
                             });
                         } else if(root.GetProperty("op").GetString()=="metrics") Interlocked.Exchange(ref encodeMs,root.GetProperty("encodeMs").GetDouble());
                         if(root.TryGetProperty("accessibility",out var permission)) inputAllowed=permission.GetBoolean();
+                        if(targetPlatform=="windows" && root.TryGetProperty("inputEnabled",out var enabled)) inputAllowed=enabled.GetBoolean();
                         if(root.TryGetProperty("inputReceived",out var received)) { Interlocked.Exchange(ref hostReceived,received.GetInt64()); hostReportsInput=true; }
                         if(root.TryGetProperty("inputPosted",out var posted)) Interlocked.Exchange(ref hostPosted,posted.GetInt64());
                         if(root.TryGetProperty("inputBlocked",out var blocked)) Interlocked.Exchange(ref hostBlocked,blocked.GetInt64());
@@ -333,17 +356,18 @@ public partial class MainWindow : Window
         var pixels=Interlocked.Exchange(ref latest,null);
         if(pixels!=null && bitmap!=null && pixels.Length==width*height*4) bitmap.WritePixels(new Int32Rect(0,0,width,height),pixels,width*4,0);
         if(connected && bitmap!=null && stats.ElapsedMilliseconds>=1000) {
-            string inputStatus=!inputAllowed?"Mac 辅助功能未授权：只能查看":Surface.IsKeyboardFocusWithin?"键盘已启用；Ctrl+Alt+Esc 释放":"点击画面启用键盘";
+            string inputStatus=!inputAllowed?(targetPlatform=="windows"?"目标设备未允许输入：只能查看":"Mac 辅助功能未授权：只能查看"):Surface.IsKeyboardFocusWithin?"键盘已启用；Ctrl+Alt+Esc 释放":"点击画面启用键盘";
             inputStatus=UiText.Text(inputStatus);
-            string feedback=hostReportsInput?$"Mac 收到 {Interlocked.Read(ref hostReceived)} / 已提交 {Interlocked.Read(ref hostPosted)}":"Mac 当前版本未回报输入诊断";
+            string feedback=hostReportsInput?$"目标设备收到 {Interlocked.Read(ref hostReceived)} / 已提交 {Interlocked.Read(ref hostPosted)}":"目标设备未回报输入诊断";
             feedback=UiText.Text(feedback);
             double sec=stats.Elapsed.TotalSeconds, fps=Interlocked.Exchange(ref frames,0)/sec, mbps=Interlocked.Exchange(ref bytes,0)*8/sec/1e6;
-            SetStatus(ShowPerformance.IsChecked?$"{width}×{height} | {UiText.Text("解码")} {fps:F1} fps | {UiText.Text("接收")} {mbps:F2} Mbps | {UiText.Text("Mac 编码")} {Volatile.Read(ref encodeMs):F1} ms | {inputStatus} | {UiText.Text("输入 已发")} {Interlocked.Read(ref inputsSent)} / {feedback}":$"{UiText.Text("已连接")} · {inputStatus}"); stats.Restart();
+            string encoding=targetPlatform=="windows"?UiText.Text("Windows 编码耗时未测量"):$"{UiText.Text("Mac 编码")} {Volatile.Read(ref encodeMs):F1} ms";
+            SetStatus(ShowPerformance.IsChecked?$"{width}×{height} | {UiText.Text("解码")} {fps:F1} fps | {UiText.Text("接收")} {mbps:F2} Mbps | {encoding} | {inputStatus} | {UiText.Text("输入 已发")} {Interlocked.Read(ref inputsSent)} / {feedback}":$"{UiText.Text("已连接")} · {inputStatus}"); stats.Restart();
         }
     }
     void FullscreenClick(object sender,RoutedEventArgs e)=>ToggleFull();
     void DiagnosticsClick(object sender,RoutedEventArgs e) {
-        Clipboard.SetText($"LocalRemote input diagnostics\nConnected: {connected}\nKeyboardFocus: {Surface.IsKeyboardFocusWithin}\nWindowsShortcuts: {WindowsShortcuts.IsChecked==true}\nAccessibility: {inputAllowed}\nHostReportsInput: {hostReportsInput}\nQueued: {Interlocked.Read(ref inputsQueued)}\nSent: {Interlocked.Read(ref inputsSent)}\nHostReceived: {Interlocked.Read(ref hostReceived)}\nHostPosted: {Interlocked.Read(ref hostPosted)}\nHostBlocked: {Interlocked.Read(ref hostBlocked)}\nHostRejected: {Interlocked.Read(ref hostRejected)}\nHostError: {hostInputError}\nPosted means submitted to CGEvent, not confirmed application acceptance.");
+        Clipboard.SetText($"LocalRemote input diagnostics\nConnected: {connected}\nKeyboardFocus: {Surface.IsKeyboardFocusWithin}\nWindowsShortcuts: {WindowsShortcuts.IsChecked==true}\nTargetPlatform: {targetPlatform}\nInputAllowed: {inputAllowed}\nHostReportsInput: {hostReportsInput}\nQueued: {Interlocked.Read(ref inputsQueued)}\nSent: {Interlocked.Read(ref inputsSent)}\nHostReceived: {Interlocked.Read(ref hostReceived)}\nHostPosted: {Interlocked.Read(ref hostPosted)}\nHostBlocked: {Interlocked.Read(ref hostBlocked)}\nHostRejected: {Interlocked.Read(ref hostRejected)}\nHostError: {hostInputError}\nPosted means submitted to native OS input, not confirmed application acceptance.");
         SetStatus("诊断已复制（不包含密钥、IP 或输入内容）");
     }
     void ForgetClick(object sender,RoutedEventArgs e) {

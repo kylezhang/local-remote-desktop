@@ -65,7 +65,9 @@ rules and compatibility fixtures. Swift and C# still need their own platform
 implementations; reuse of a specification is not reuse of a single binary module.
 Discovery cannot authorize control, and enabling one sharing direction must not
 automatically open a reverse control session. Simultaneous reciprocal control is
-not an initial acceptance target. These milestones are planned, not implemented.
+not an initial acceptance target. Alpha.1 Windows sharing is implemented on main;
+see the [preview scope and checks](windows-sharing.md). Mac controller and later
+role interoperability remain planned. No stable v0.3.0 readiness claim follows.
 
 The v0.1.0 Windows build and simulated-peer tests were validated; the user reported the Windows-to-Mac workflow usable. This does not substitute for an independently reproduced native Mac test matrix. See [build and test status](validation.md).
 

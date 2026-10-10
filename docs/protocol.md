@@ -55,12 +55,35 @@ Type 1 is UTF-8 JSON. Type 2 is one Annex B H.264 access unit, without timestamp
 | key_event | C→H | Windows virtual key vk, down, flags |
 | release_all | C→H | release held keys/buttons |
 | heartbeat | both | Client every 3 seconds, Host responds; 15-second timeout |
-| capabilities | H→C | accessibility bool; also reported in newer heartbeats |
+| capabilities | H→C | accessibility bool on Mac; optional platform, inputModel, inputEnabled, clipboardText, fileClipboard |
 | clipboard_sync | C→H request / H→C acknowledgement | enabled bool, requestId positive monotonic integer |
 | clipboard_text | both, only while mutually enabled | requestId, encoding=utf8-base64url, text=canonical padded base64url of UTF-8 |
 | disconnect | C→H | normal disconnect; EOF also closes |
 
-Flags: Shift=1, Control=2, Option=4, Command=8. Includes left/right modifier VK mapping and numeric-pad VK 96..111 with CGEvent numeric-pad flag. Num Lock-off navigation is not converted into digits. No Windows Unicode IME composition; Mac input methods can process physical events. Unknown operations are ignored; malformed JSON closes; non-finite coordinates are rejected.
+Flags: Shift=1, Control=2, Option=4, Command=8. Includes left/right modifier VK mapping and numeric-pad VK 96..111 with CGEvent numeric-pad flag. Num Lock-off navigation is not converted into digits. No Windows Unicode IME composition; Mac input methods can process physical events. Mac hosts ignore unknown operations; malformed JSON closes; non-finite coordinates are rejected.
+
+### Desktop roles in v0.3.0-alpha.1
+
+The Windows sharing role uses the same authenticated encrypted records and
+version=1. Before video_header and frames it sends capabilities:
+`platform=windows`, `inputModel=win-vk-v1`, `inputEnabled=true`,
+`clipboardText=false`, `fileClipboard=false`. New Mac hosts identify as
+`platform=macos`, `inputModel=win-vk-mac-v1`; legacy peers without a platform retain
+historical Mac-target behavior. Controllers validate platform/inputModel together
+and select shortcut semantics before accepting input.
+
+For Windows targets, Windows VK identities and explicit modifier down/up events
+are used without mapping Control to Command. Flags are bounded to 0–15 but do not
+synthesize missing modifier edges. Scroll retains Windows wheel units (±1200);
+optional x/y reposition the cursor, otherwise the current position is retained.
+Invalid/unsupported input is rejected. Unknown operations close Windows sharing
+sessions, except clipboard_sync/file_sync requests, which cannot enable unsupported
+features. Windows sharing credentials use separate current-user DPAPI storage.
+Saving a replacement stops old sharing and requires an explicit new start.
+SendInput operates within ordinary integrity-level limits; posted counts successful
+submission, not application acceptance. Disconnect releases held input before
+encoder shutdown. Primary logged-in desktop only; no secure-desktop/pre-login
+guarantee. See [preview scope](windows-sharing.md).
 
 Heartbeat input diagnostics are cumulative for the current connection: inputReceived (recognized messages), inputPosted (CGEvent post calls), inputBlocked (permission denied), inputRejected (invalid/unsupported or event creation failure), inputError (latest non-content error code). Release-all may post multiple events. Posted is not confirmation of application acceptance. Diagnostics omit key content and pairing secrets.
 

@@ -16,9 +16,10 @@ LocalRemote lets you view and control another computer's existing desktop over y
 
 [Download](https://atomgit.com/zkxw2008/LocalRemote/releases) · [Documentation](#documentation) · [Roadmap](docs/roadmap.md) · [Changelog](CHANGELOG.md)
 
-Unreleased main adds [nearby-device selection](docs/discovery.md) and remembered
-English/Chinese UI selection under Settings → Language, following the
-[shared interface conventions](docs/interface.md). Native Mac Bonjour/UI acceptance
+Unreleased main is **v0.3.0-alpha.1 development**: a [Windows sharing preview](docs/windows-sharing.md),
+[nearby-device selection](docs/discovery.md) and remembered English/Chinese UI.
+The Mac controller is the next alpha milestone and is not ready yet. Both roles
+follow the [shared interface conventions](docs/interface.md). Native Mac acceptance
 is pending; this does not replace the published preview.
 
 ## Features

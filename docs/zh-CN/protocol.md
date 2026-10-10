@@ -35,6 +35,19 @@ Mac 后台派生并缓存，Windows 后台派生。显式保存更新同一个�
 迭代只增加猜测成本：捕获握手仍可离线猜密码，没有 PAKE/前向保密。推荐自动生成随机密码，仅用于可信局域网。
 两端更新后才能使用短密码；新 Windows 仍兼容旧 RML1。实现细节及来源见英文规范。
 
+## v0.3.0-alpha.1 桌面角色
+
+Windows 共享角色沿用认证、加密帧及 version=1。画面前声明 platform=windows、
+inputModel=win-vk-v1、inputEnabled=true，文字/文件能力为 false。
+新 Mac 声明 platform=macos、inputModel=win-vk-mac-v1；旧端缺少平台字段时保留 Mac 行为。
+控制端核对平台及输入模型后选择快捷键语义。Windows 目标保留原生 Ctrl，要求修饰键显式按下/抬起；
+flags 只校验 0–15，不合成缺失的修饰键。滚轮为 Windows 单位（±1200），可不带坐标而保留鼠标位置。
+Windows Host 拒绝非法输入，断线时先释放按键，再等待编码器退出。
+共享密码独立以当前用户 DPAPI 存储，替换后停止旧共享，需主动重新开始。
+未知操作关闭 Windows 共享会话；clipboard_sync/file_sync 请求不会开启未支持的功能。
+SendInput 受正常权限级别限制，post 不是目标应用接受确认；仅支持登录后的主显示器。
+完整范围见 [Windows 共享预览](windows-sharing.md)。下述文件能力目前仍属于 Mac 共享端。
+
 ## 可选文件剪贴板
 
 capabilities 声明 fileClipboard、filePort=47981 和每次桌面连接新生成的 fileSession（64 hex）。file_sync 独立于文本允许，使用递增 requestId 和匹配确认；撤销即关闭文件连接。选择会记住，但开启/重连不发送已有剪贴板。

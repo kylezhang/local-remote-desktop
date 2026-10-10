@@ -17,6 +17,9 @@ static class SecretStore
             var result=new byte[output.Length]; Marshal.Copy(output.Data, result, 0, result.Length); return result;
         } finally { Marshal.FreeHGlobal(input.Data); if(output.Data!=IntPtr.Zero) LocalFree(output.Data); }
     }
+    internal static byte[] Protect(byte[] value)=>Transform(value,true);
+    internal static byte[] Unprotect(byte[] value)=>Transform(value,false);
+    internal static string HostCredentialPath()=>Path.Combine(DirectoryPath(),"host-credential.dpapi");
     static string DirectoryPath() {
         var dir=Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),"LocalRemote"); Directory.CreateDirectory(dir);
         MigrateLegacyDirectory(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),"RemoteMacLAN"),dir);

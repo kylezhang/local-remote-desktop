@@ -4,6 +4,16 @@
 
 ## Unreleased
 
+- Development version advances to v0.3.0-alpha.1 with the Windows sharing role:
+  opt-in native page, separate DPAPI credential, explicit password save/revocation,
+  authenticated one-controller TCP, GDI capture/MF hardware H.264 with optional
+  software encoding, bounded access units, native input adapter and teardown.
+  Windows targets keep Control shortcuts; Mac targets retain their mapping.
+  Shared Windows style resources keep the primary actions consistent. Real Windows
+  desktop/encrypted-loopback/decode and WPF flow checks pass; actual OS event
+  acceptance is unverified because the guarded test could not obtain focus.
+  Mac controller, sharing-role clipboard/discovery and physical LAN remain pending.
+
 - Added shared English/Chinese application strings and remembered language choice
   on both desktops. Switching updates the interface without changing credentials,
   clipboard settings or connections. Compact Windows settings/full-screen icons
