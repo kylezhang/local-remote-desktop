@@ -35,3 +35,30 @@ No new release/tag and no Mac binary published for this rename. Mac controller,
 native Mac build/runtime and bidirectional physical-LAN acceptance are pending.
 Final committed-build hash and Windows deployment are recorded separately below
 after completion.
+
+Final committed Windows build and deployment:
+Source commit: 6e9725fea9b550a7215fa4d362118a7586477d8f
+Self-contained win-x64 release publish: succeeded, no warnings or errors.
+LocalRemoteDesktop.dll SHA256:
+e5c5696855c794e10a56132d19206fb8508c9a6cd61486cc803fd57b374a32a9
+PASS full WPF ClientChecks RML1 and RMP1 against this exact final assembly.
+PASS NamingChecks against this final and the actual prior assembly.
+PASS WindowsHostChecks: bounded framing, recorded input/layout, isolated DPAPI,
+fragmented mutual authentication, rejection, listener/capture cleanup and all
+three generated-video quality profiles through MF hardware encoding/decoding.
+No new physical desktop capture or native SendInput acceptance claim here.
+
+PASS identical DLL hashes and self-contained runtime in all three local outputs:
+- outputs/local-remote-desktop/apps/windows/bin/Release/net8.0-windows/win-x64
+- outputs/LocalRemote/apps/windows/bin/Release/net8.0-windows/win-x64
+- outputs/remote-mac-lan/windows-client/bin/Release/net8.0-windows/win-x64
+The canonical directory has LocalRemoteDesktop.exe. Each former shortcut
+location has one LocalRemote.exe compatibility apphost which loads the current
+LocalRemoteDesktop.dll. Old product DLLs and duplicate launchers are removed;
+runtime helper executables remain. No running client was stopped or opened.
+Local repository moved to outputs/local-remote-desktop; the old LocalRemote
+folder now contains only the compatibility program output, not another checkout.
+AtomGit main and README were verified through MCP after the rename push.
+Mac diagnostic checks now report only the installed bundle's declared icon
+resources, avoiding misleading MISSING messages for retired brand filenames.
+Native Mac acceptance remains pending; existing released assets unchanged.

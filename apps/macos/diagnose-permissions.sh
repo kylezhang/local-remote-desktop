@@ -7,9 +7,10 @@ echo 'Installed application signature:'
 codesign --verify --strict "$app"
 codesign -d -r- --verbose=2 "$app" 2>&1
 echo 'Installed icon declaration:'
-/usr/libexec/PlistBuddy -c 'Print :CFBundleIconFile' "$app/Contents/Info.plist"
+icon_file="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIconFile' "$app/Contents/Info.plist")"
+echo "$icon_file"
 echo 'Installed icon resources:'
-for icon in LocalRemoteDesktop.icns LocalRemoteDesktop.png LocalRemote.icns LocalRemote.png; do
+for icon in "$icon_file" "${icon_file%.icns}.png"; do
   if [[ -s "$app/Contents/Resources/$icon" ]]; then shasum -a 256 "$app/Contents/Resources/$icon"
   else echo "MISSING: $icon"; fi
 done
