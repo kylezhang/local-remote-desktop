@@ -1,0 +1,20 @@
+Windows device address wording — 2026-10-10
+
+Post-release main source: 3e0c0f0d5f51d817461e3195ed915d160ecb45a3
+This is a development update after v0.2.0-beta.1; published tag/assets unchanged.
+LocalRemote.dll SHA256:
+85792d482613dfe2eb04dbdecda78563621ea6b69e8e661f3d65ff842bec99e3
+
+Device address label, accessible name, LAN guidance, empty-input and forget
+messages now describe the remote device. Local-IP default and saved-address
+behavior are preserved. Current support is still Windows -> Mac.
+
+PASS self-contained win-x64 publish; ClientChecks build zero warnings/errors.
+PASS actual candidate DLL, RMP1 encrypted independent peer: minimum-width
+single-row toolbar, connection/H264 bitmap/input/shortcut/focus, permission
+feedback, text/files/readiness/busy handling/no echo/cancel, quality reconnect,
+disconnect and owned FFmpeg exit. Test clipboards/credentials were isolated.
+PASS visual review of exported 720-wide disconnected toolbar: readable one row.
+PASS ReleaseChecks versions/local links/assets/tracked hygiene.
+PASS candidate deployed to both client directories; stopped only one matching
+client and restored one. No Mac changes or native Mac validation for this update.
