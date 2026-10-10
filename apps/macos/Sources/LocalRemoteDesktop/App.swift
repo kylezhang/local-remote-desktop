@@ -16,10 +16,12 @@ enum AppBrand {
 @main
 struct LocalRemoteDesktopApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) var delegate
-    var body: some Scene { WindowGroup("Local Remote Desktop") { HostView(model: delegate.model) }.windowResizability(.contentSize) }
+    var body: some Scene { WindowGroup("Local Remote Desktop") { HostView(model: delegate.model, connect: { delegate.openController() }) }.windowResizability(.contentSize) }
 }
 final class AppDelegate: NSObject, NSApplicationDelegate {
     let model = HostModel()
+    private lazy var controller = ControllerCoordinator(host: model)
+    func openController() { controller.open() }
     func applicationDidFinishLaunching(_ notification: Notification) {
         // A LaunchAgent starts the executable directly, independently of Finder.
         // Resolve duplicate GUI instances before either one accesses Keychain.
@@ -34,11 +36,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         AppBrand.applyDockIcon()
         model.start()
     }
-    func applicationWillTerminate(_ notification: Notification) { model.stop() }
+    func applicationWillTerminate(_ notification: Notification) { controller.stop(); model.stop() }
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool { false }
 }
 struct HostView: View {
     @ObservedObject var model: HostModel
+    var connect: () -> Void = {}
     private let blueberry = Color(red: 82.0 / 255.0, green: 101.0 / 255.0, blue: 236.0 / 255.0)
     private let brandText = Color(nsColor: NSColor(name: nil) { appearance in
         if appearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua {
@@ -62,6 +65,8 @@ struct HostView: View {
     }
     private var settingsMenu: some View {
         Menu(UiText.text("设置")) {
+            Button(UiText.text("连接设备（预览）…"), action: connect)
+            Divider()
             Section(UiText.text("剪贴板")) {
                 Toggle(UiText.text("同步文字"), isOn: $model.allowClipboard)
                 Toggle(UiText.text("同步文件"), isOn: $model.allowFiles)
@@ -90,7 +95,7 @@ struct HostView: View {
                     Image(nsImage: icon).resizable().interpolation(.high).scaledToFit()
                         .frame(width: 36, height: 36).accessibilityHidden(true)
                 }
-                Text(UiText.text("Local Remote Desktop 0.3.0-alpha.1")).font(.title2).foregroundStyle(brandText)
+                Text(UiText.text("Local Remote Desktop 0.3.0-alpha.2")).font(.title2).foregroundStyle(brandText)
                 Spacer()
                 settingsMenu
             }
@@ -104,7 +109,7 @@ struct HostView: View {
             }.frame(maxWidth: .infinity, alignment: .leading)
             Button(UiText.text(model.starting ? "正在启动…" : model.active ? "停止共享" : "开始共享")) {
                 if model.active { model.stop() } else { model.start(requestPermission: true) }
-            }.buttonStyle(.borderedProminent).disabled(model.credentialBusy)
+            }.buttonStyle(.borderedProminent).disabled(model.credentialBusy || model.controlling)
             Divider()
             VStack(alignment: .leading, spacing: 10) {
                 HStack {

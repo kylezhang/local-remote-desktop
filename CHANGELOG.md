@@ -4,6 +4,14 @@
 
 ## Unreleased
 
+- Development v0.3.0-alpha.2 adds the Mac controller source preview: native
+  VideoToolbox decode/AppKit input, paired Windows connections, target-aware Mac
+  shortcuts, full screen, latest-only presentation and bounded outgoing input.
+  Quality changes wait for old-session cleanup; disconnect/close cancels retries.
+  Portable production Swift core/model/wire/session checks pass. Native Apple SDK,
+  Mac display/input and real two-device acceptance remain pending; no stable release
+  or verified Mac binary is claimed. Mac internal build advances to 23.
+
 - Adopt GPL-3.0-or-later for the project's original code, documentation and brand assets.
   Future binary packages include the license and matching committed source with
   build instructions; third-party licenses and existing release artifacts remain unchanged.

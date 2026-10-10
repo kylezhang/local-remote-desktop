@@ -10,6 +10,7 @@ final class HostModel: ObservableObject {
     @Published var status = "准备启动"
     @Published var secret = ""
     @Published var active = false
+    @Published var controlling = false
     @Published var starting = false
     @Published var screenCheck = "尚未检查"
     @Published var keychainCheck = "尚未读取"
@@ -124,6 +125,7 @@ final class HostModel: ObservableObject {
         status = "无法读取配对密码：\(e.localizedDescription)。请在“当前密码”旁点击“查看”重试。"
     }
     func start(requestPermission: Bool = false) {
+        guard !controlling else { status = "正在控制其他设备；请先断开连接，再共享这台 Mac。"; return }
         guard host == nil, !credentialBusy else { return }
         if !requestPermission && pairingKey == nil && !Pairing.permitsAutomaticRead {
             keychainCheck = "等待用户操作（启动未访问钥匙串）"

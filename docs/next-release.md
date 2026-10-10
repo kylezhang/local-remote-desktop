@@ -26,8 +26,10 @@ Preview scope: tested Windows package plus **Mac source only**. See
 
 The locally verified beta.2 checkpoint added discovery and remembered languages;
 see the [language checks](../tests/results/localization-2026-10-10.txt).
-Main now targets **v0.3.0-alpha.1 development**, Mac numeric version 0.3.0/build 22.
-It adds a [Windows sharing preview](windows-sharing.md), not the Mac controller.
+Main now targets **v0.3.0-alpha.2 development**, Mac numeric version 0.3.0/build 23.
+It includes the Windows sharing role and a [Mac controller source preview](mac-controller.md).
+Portable Swift controller/model/session and independent encrypted-peer checks pass;
+native Mac compilation, display/input and real Mac → Windows acceptance remain pending.
 No new alpha release/tag or Mac binary is claimed. The native gates below remain.
 
 - [ ] Native Apple SDK build and real Mac interface/password editor acceptance.

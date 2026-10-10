@@ -5,7 +5,8 @@
 v0.3.0-alpha.1 开发版加入 Windows 共享角色。在原应用中打开“设置 → 允许连接（预览）”，
 开始后共享当前正常登录桌面的主显示器。仅打开页面不会开启监听或采集。
 
-Mac 控制端属于 alpha.2，本阶段尚未实现；可用 Windows 控制端手填目标IP验证 Windows 共享，
+alpha.2 已加入 [Mac 控制端源码预览](mac-controller.md)，便携传输/状态检查通过，Mac 原生验收待完成。
+可用 Windows 控制端手填目标IP验证 Windows 共享，
 这不代表 Mac → Windows 已可用。原 Windows → Mac 及该控制角色中的剪贴板功能继续保留。
 
 ## 使用与密码

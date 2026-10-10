@@ -86,11 +86,12 @@ dotnet run --project apps/windows/LocalRemoteDesktop.csproj -c Release
 bash apps/macos/build-app.sh
 ```
 
-主分支为 **v0.3.0-alpha.1**，包含 [Windows 共享预览](docs/zh-CN/windows-sharing.md)。Mac 控制端是下一阶段，尚未实现。Mac 原生构建与运行验收仍待完成；开发分支不替换已有发布包。准备发版前请查看 [验证状态](docs/zh-CN/validation.md)与 [参与维护](CONTRIBUTING.md)。
+主分支为 **v0.3.0-alpha.2**，包含 [Windows 共享预览](docs/zh-CN/windows-sharing.md)。[Mac 控制端预览](docs/zh-CN/mac-controller.md)已在源码中实现，并完成传输与状态自动检查；Mac 原生控制端构建、画面及真实 Mac → Windows 验收仍待完成。Mac 原生构建与运行验收仍待完成；开发分支不替换已有发布包。准备发版前请查看 [验证状态](docs/zh-CN/validation.md)与 [参与维护](CONTRIBUTING.md)。
 
 ## 文档
 
 - [使用指南](docs/zh-CN/usage.md) · [文件剪贴板](docs/zh-CN/files.md)
+- [Mac 控制端预览](docs/zh-CN/mac-controller.md) · [Windows 共享预览](docs/zh-CN/windows-sharing.md)
 - [Mac 安装与排障](docs/zh-CN/macos.md) · [Windows 源码构建](apps/windows/BUILD.zh-CN.md)
 - [路线图与版本规划](docs/zh-CN/roadmap.md) · [更新日志](CHANGELOG.zh-CN.md)
 - [架构](docs/zh-CN/architecture.md) · [协议](docs/zh-CN/protocol.md) · [性能](docs/zh-CN/performance.md)

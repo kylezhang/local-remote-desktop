@@ -23,8 +23,9 @@ v0.1.0 tag 和附件保持不变。本次增加密码/剪贴板功能，因此�
 ## 正式 v0.2.0 门槛
 
 已验证本地 beta.2 候选的发现/语言功能，见[语言记录](../../tests/results/localization-2026-10-10.txt)。
-主分支推进到 **v0.3.0-alpha.1 开发版**，Mac 数字版本 0.3.0/内部构建 22，
-加入 [Windows 共享预览](windows-sharing.md)，Mac 控制端仍待实现。
+主分支推进到 **v0.3.0-alpha.2 开发版**，Mac 数字版本 0.3.0/内部构建 23，
+包含 Windows 共享角色与 [Mac 控制端源码预览](mac-controller.md)。
+便携 Swift 控制端规则、状态、会话及独立加密端检查通过；Mac 原生构建、显示/输入及真实 Mac → Windows 验收仍待完成。
 尚未创建新 alpha release/tag 或 Mac 二进制包；下列原生验收门槛仍有效。
 
 - [ ] 原生 Apple SDK 构建及真实 Mac 界面/密码编辑验收。

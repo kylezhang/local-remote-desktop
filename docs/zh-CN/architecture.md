@@ -28,8 +28,12 @@ Mac 在凭据队列派生并缓存，Windows 在界面线程外派生；显式�
 反向链路新增 Windows 采集/编码/输入注入及 Mac 解码/显示/输入采集。
 Windows 候选是 [DXGI 桌面采集](https://learn.microsoft.com/en-us/windows/win32/direct3ddxgi/desktop-dup-api)及
 [SendInput](https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-sendinput)；输入受进程权限等级约束，
-不承诺 UAC 安全桌面或登录前控制。Mac 可评估 [VideoToolbox 解码](https://developer.apple.com/documentation/videotoolbox/vtdecompressionsession-api-collection)。
-上述仍是待原生验证的候选，尚未实现。
+不承诺 UAC 安全桌面或登录前控制。alpha.2 Mac 控制端源码已实现
+[VideoToolbox 解码](https://developer.apple.com/documentation/videotoolbox/vtdecompressionsession-api-collection)
+和 AppKit 输入采集：ControllerSession 管理认证连接及有界发送线程，ControllerModel 只呈现
+最新画面，取消过期回调及重连。原生解码、呈现和输入仍待验收。
+Windows 当前通过 FFmpeg GDI/Media Foundation 硬件编码及 SendInput 实现共享，尚非直接 DXGI 采集。
+范围与检查见 [Mac 控制端预览](mac-controller.md)。
 
 认证和数据格式按共享/控制角色复用；现有辅助功能字段、Mac 修饰键及 Windows 键码不能直接视为平台无关，
 需明确能力协商和兼容处理。每次调整都验证原有方向；实现顺序见[路线图](roadmap.md#v030-实现顺序)。

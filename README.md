@@ -86,11 +86,12 @@ Build the Mac application on macOS:
 bash apps/macos/build-app.sh
 ```
 
-Main is **v0.3.0-alpha.1**, with a [Windows sharing preview](docs/windows-sharing.md). The Mac controller is the next milestone and is not implemented yet. Native Mac build and runtime acceptance remain pending; development changes do not replace existing release downloads. Check [validation status](docs/validation.md) and [Contributing](CONTRIBUTING.md) before preparing a release.
+Main is **v0.3.0-alpha.2**, with a [Windows sharing preview](docs/windows-sharing.md). A [Mac controller preview](docs/mac-controller.md) is implemented in source with automated transport and state checks. Native Mac viewer/build and real Mac → Windows acceptance remain pending. Native Mac build and runtime acceptance remain pending; development changes do not replace existing release downloads. Check [validation status](docs/validation.md) and [Contributing](CONTRIBUTING.md) before preparing a release.
 
 ## Documentation
 
 - [User guide](docs/usage.md) · [File clipboard](docs/files.md)
+- [Mac controller preview](docs/mac-controller.md) · [Windows sharing preview](docs/windows-sharing.md)
 - [Mac installation and troubleshooting](docs/macos.md) · [Windows source build](apps/windows/BUILD.md)
 - [Roadmap and version plan](docs/roadmap.md) · [Changelog](CHANGELOG.md)
 - [Architecture](docs/architecture.md) · [Protocol](docs/protocol.md) · [Performance](docs/performance.md)

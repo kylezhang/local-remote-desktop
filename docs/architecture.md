@@ -27,7 +27,7 @@ Metrics are decoded FPS and incoming H.264 Mbps on Windows, plus mean Mac encodi
 
 Development builds support manual/generated passwords with salted PBKDF2-HMAC-SHA256 (600000 iterations); legacy raw PSKs remain compatible. Mac derives on its credential queue and caches the key; Windows derives off the UI thread. Explicit save updates the existing Keychain item and disconnects old controllers. Keychain/DPAPI protect stored credentials. The PSK authenticates each connection; independent direction keys protect video and input. Protocol limits and diagnostics are documented separately. Application files and source names use Local Remote Desktop; stable bundle/Keychain identities and the wire protocol remain compatible. See [naming migration](naming.md).
 
-## Planned desktop roles
+## Desktop role implementation
 
 The current Mac Host and Windows controller are platform-specific. Windows
 `MainWindow` also owns connection lifetime, input, rendering and clipboard wiring;
@@ -38,9 +38,14 @@ The reverse path adds Windows desktop capture/encoding/input injection and Mac
 decode/render/input collection. Evaluate native [DXGI desktop duplication](https://learn.microsoft.com/en-us/windows/win32/direct3ddxgi/desktop-dup-api)
 for capture and [SendInput](https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-sendinput)
 for ordinary input; SendInput is limited by integrity levels, so UAC secure desktop
-and login-screen control are not promised. Mac decoding can use
-[VideoToolbox decompression](https://developer.apple.com/documentation/videotoolbox/vtdecompressionsession-api-collection).
-These are candidates requiring native validation, not implemented components.
+and login-screen control are not promised. The alpha.2 Mac controller implements
+[VideoToolbox decompression](https://developer.apple.com/documentation/videotoolbox/vtdecompressionsession-api-collection)
+and native AppKit input collection in source. ControllerSession owns the authenticated
+transport and one bounded writer; ControllerModel presents only the latest image
+and cancels stale callbacks/retries. Native decode/render/input acceptance remains
+pending. The Windows adapter currently uses FFmpeg GDI capture/Media Foundation
+hardware encoding and SendInput, rather than direct DXGI capture. See the
+[Mac controller preview](mac-controller.md) for scope and checks.
 
 Authentication/framing remain host/controller-relative. New capability and keyboard
 semantics require explicit compatibility handling; the existing accessibility field,

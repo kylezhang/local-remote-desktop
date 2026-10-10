@@ -7,7 +7,8 @@ Development v0.3.0-alpha.1 adds the missing Windows sharing role. Open
 Starting it shares the primary display of the current logged-in Windows desktop.
 Opening the page alone does not start a listener or capture.
 
-The Mac controller belongs to alpha.2 and is not implemented in this checkpoint.
+The [Mac controller source preview](mac-controller.md) is added in alpha.2, with
+portable transport/state checks; native Mac acceptance remains pending.
 The Windows viewer can use this host through a manually entered Target IP;
 this preview is not a claim that Mac → Windows is ready. The existing Windows →
 Mac workflow and clipboard implementation remain available in the control role.

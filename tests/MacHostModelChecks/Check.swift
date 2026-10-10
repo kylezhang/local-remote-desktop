@@ -9,6 +9,9 @@ func require(_ value: @autoclosure () -> Bool, _ message: String) {
 @main enum Check {
     @MainActor static func main() async throws {
         let model = HostModel()
+        model.controlling = true; model.start(requestPermission: true)
+        require(!model.active && !model.starting && Pairing.readAttempts == 0, "sharing started while controlling another desktop")
+        model.controlling = false
         model.start()
         require(Pairing.readAttempts == 0 && !model.active, "development launch read credentials")
         model.openPasswordEditor(); model.generatePassword()

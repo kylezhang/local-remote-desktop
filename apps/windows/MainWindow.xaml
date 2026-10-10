@@ -1,4 +1,4 @@
-<Window x:Class="LocalRemoteDesktop.MainWindow" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:local="clr-namespace:LocalRemoteDesktop" Title="Local Remote Desktop · 0.3.0-alpha.1" Icon="LocalRemoteDesktop.ico" Width="1280" Height="760" MinWidth="720" MinHeight="480" Background="#F7F8FF" Foreground="#282C67" FontFamily="Segoe UI">
+<Window x:Class="LocalRemoteDesktop.MainWindow" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:local="clr-namespace:LocalRemoteDesktop" Title="Local Remote Desktop · 0.3.0-alpha.2" Icon="LocalRemoteDesktop.ico" Width="1280" Height="760" MinWidth="720" MinHeight="480" Background="#F7F8FF" Foreground="#282C67" FontFamily="Segoe UI">
  <Window.Resources><ResourceDictionary><ResourceDictionary.MergedDictionaries><ResourceDictionary Source="/LocalRemoteDesktop;component/BrandResources.xaml"/></ResourceDictionary.MergedDictionaries></ResourceDictionary></Window.Resources>
  <DockPanel>
   <DockPanel x:Name="Toolbar" DockPanel.Dock="Top" Margin="10,6,10,6">

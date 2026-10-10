@@ -56,7 +56,8 @@ Linux 和 HarmonyOS 都是版本目标，尚未支持。HarmonyOS 桌面控制�
 并非共用一个二进制模块。发现设备不能直接授权控制；开启共享不自动建立反向控制连接。
 首轮不以两台互相同时控制为验收目标。alpha.1 的 Windows 共享端已在主分支实现，
 实际桌面加密回环及界面回归通过；原生输入接受、Mac 控制端与两机局域网验收尚未完成。
-详见 [Windows 共享预览](windows-sharing.md)。alpha.2 及后续阶段仍是规划。
+详见 [Windows 共享预览](windows-sharing.md)。alpha.2 已加入 [Mac 控制端源码预览](mac-controller.md)
+及传输/状态自动检查；真实两机的原生验收与后续角色互通仍待完成。
 
 v0.1.0 已验证 Windows 构建及模拟被控端测试，用户反馈真实 Windows→Mac 流程可用；这不能代替独立复现的 Mac 原生测试。详见[构建与验证状态](../validation.md)。
 
