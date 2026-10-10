@@ -2,7 +2,7 @@
 
 [简体中文](zh-CN/next-release.md) · [Roadmap](roadmap.md)
 
-2026-10-10: **v0.2.0-beta.1 preview candidate**. Windows and Mac display the beta
+2026-10-10: **v0.2.0-beta.1 preview published** on [AtomGit](https://atomgit.com/zkxw2008/LocalRemote/releases). Windows and Mac display the beta
 identifier; Mac numeric bundle version is 0.2.0, internal build 19. The existing
 v0.1.0 tag/assets stay unchanged. Earlier v0.1.1/v0.1.2 patch plans are consolidated
 because this checkpoint also adds password and clipboard capabilities.
@@ -16,11 +16,11 @@ because this checkpoint also adds password and clipboard capabilities.
 - [x] Synthetic Windows decoder checks, 120 seconds per quality, cleanup and samples recorded.
 - [x] Mac package validation rejects beta metadata presented as a stable binary; mocks pass.
 - [x] English/Chinese scope, limitations, changelog and version labels aligned.
-- [ ] Final build from the release commit, exact final-package regression and ZIP/checksum verification.
-- [ ] AtomGit annotated tag, prerelease, attached Windows ZIP/checksums and download verification.
+- [x] Final build from the release commit, exact final-package regression and ZIP/checksum verification.
+- [x] AtomGit annotated tag, prerelease, attached Windows ZIP/checksums and download verification.
 
 Preview scope: tested Windows package plus **Mac source only**. See
-[release notes](release-v0.2.0-beta.1.md). No unverified signed Mac binary is published.
+[release notes](release-v0.2.0-beta.1.md) and [delivery verification](../tests/results/release-v0.2.0-beta.1-2026-10-10.txt). No unverified signed Mac binary is published.
 
 ## Stable v0.2.0 gates
 

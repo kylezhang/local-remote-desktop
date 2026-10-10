@@ -96,6 +96,12 @@ bash tests/ClipboardChecks/check.sh
 
 ## What these results do not prove
 
+The v0.2.0-beta.1 preview was published on 2026-10-10. Its final Windows
+package was rebuilt from the tagged commit, tested in both pairing modes,
+uploaded and downloaded again with identical SHA256. See the
+[delivery record](../tests/results/release-v0.2.0-beta.1-2026-10-10.txt).
+The preview includes Mac source only; native Mac acceptance remains pending.
+
 The user reports that the real Windows→Mac workflow now meets most needs. This is user feedback, not a reproducible two-machine lab measurement. The release environment cannot build/run macOS; final branding/icon bundle changes are unverified natively, and there is no Mac binary release asset. TCC, Keychain prompts, real display capture, hardware encoding, secure/lock-screen input, sleep/wake, long sessions and end-to-end 1080p60 remain hardware acceptance items.
 
 An earlier controlled FFmpeg buffering comparison is retained as `decoder-latency-comparison.json`. It is a synthetic decoder-path observation, not LAN input-to-display latency or a performance promise.

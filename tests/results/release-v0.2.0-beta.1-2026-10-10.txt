@@ -1,0 +1,42 @@
+LocalRemote v0.2.0-beta.1 delivery verification — 2026-10-10
+
+Scope: tested self-contained Windows x64 package and Mac source only.
+AtomGit repository remains private. Existing v0.1.0 tag/assets unchanged.
+Release source: 28cf9d7c5e83b97d7936f6ff333bb083955a9745
+Annotated tag object: dcc5a4997973b43b74dbd021390eb1bdf0074ad2
+Release API: target_commitish matches source; prerelease=true; release_status=pre.
+Attachments: LocalRemote-v0.2.0-beta.1-windows-x64.zip and SHA256SUMS.txt.
+ZIP size: 72365122 bytes
+ZIP SHA256: f7e8b4f4a5c0fbdaafd788e9eb2f5ebb1ad15e287ad8151424f8d4b8ee5dc201
+LocalRemote.dll SHA256: 21bd2203a34b6d83d0d89b6afc2971f46264ec6f4d238f8ba42e5d04b262418c
+ProductVersion: 0.2.0-beta.1+28cf9d7c5e83b97d7936f6ff333bb083955a9745
+
+PASS: final self-contained publish from clean committed source.
+PASS: ClientChecks compiled against byte-identical final package DLL; both
+      legacy RML1 and short-password RMP1 encrypted peers exercised WPF video,
+      input/shortcuts, quality reconnect, text/files, cancellation, clipboard
+      readiness, busy handling/no echo, disconnect and decoder process exit.
+PASS: ProtocolChecks password derivation vector/policy, authentication failures,
+      replay/tamper/size rejection, decoding, DPAPI and input mapping/queue.
+PASS: production Swift HostModel checks with platform doubles and Swift syntax.
+PASS: MacPackageChecks portable/mocked pipeline, including rejection of beta
+      metadata as a stable binary. Native Apple SDK validation skipped.
+PASS: release versions, bilingual links, branding assets and tracked-file hygiene.
+PASS: final ZIP safe names, executable/runtime/notices/licenses, no legacy
+      duplicate launcher or credentials; ZIP-extracted DLL matches tested DLL.
+PASS: uploads HTTP 200 for both attachments; authenticated streaming downloads
+      reproduce byte-identical SHA256 for ZIP and checksum file.
+PASS: verified DLL deployed to canonical and user's existing Windows directory;
+      only the one matching client process was stopped and one restored.
+
+ResourceChecks: 120 seconds per 720p30 / 1080p60 synthetic decode case, recorded
+in resources-2026-10-10.json and docs/performance.md. Not a full-session soak or
+physical LAN/input-to-display benchmark.
+
+Pending: native Mac SDK/UI/Keychain/TCC/signature/capture/input, two-device LAN
+acceptance, signed/notarized Mac binary, full-session soak, discovery and UI
+localization. No claim of permanently fixed authorization prompts.
+
+The AtomGit MCP prerelease argument did not set the platform status. The
+documented API release_status=pre corrected it; final read-back confirmed both
+prerelease=true and release_status=pre. Signed URLs and credentials are omitted.
