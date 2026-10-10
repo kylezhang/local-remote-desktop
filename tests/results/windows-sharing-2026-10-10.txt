@@ -60,3 +60,19 @@ the role/lifecycle-fixed candidate DLL SHA256:
 8c6c6844a157fe6741a69edd9c5ad493986fdaa12c9581c5eb4f95defe47c527
 PASS portable Mac package validation and release-pipeline refusal fixtures;
 all Apple signing/notarization commands are mocked, not native acceptance.
+
+Final committed Windows candidate and local delivery:
+Source commit: 0036d6ab428f4b3e82844a27eed7f6817887a708
+Self-contained win-x64 release build: 0 warnings / 0 errors.
+LocalRemote.dll SHA256:
+7abc83d18e155decd1d676fab5cdaf0264cfdbc9957200fe5397f8b4c2d928b0
+PASS complete ClientChecks in RML1 and RMP1 modes against this exact DLL.
+PASS matching DLL hashes in test output, published candidate and both deployed
+Windows directories: canonical apps/windows output and existing legacy shortcut
+directory. Each directory has one product launcher, LocalRemote.exe; obsolete
+RemoteMacLAN product launcher files removed. Runtime helper programs are retained.
+No running client was stopped and no additional application window was opened.
+The user configuration was preserved; tests used isolated profiles/fixtures.
+The name decision is recorded separately in docs/product-name.md. Repository and
+application branding still use LocalRemote until the planned migration.
+No new tag/release was published for this alpha checkpoint.
