@@ -27,6 +27,7 @@ static class Program {
         } await Task.Delay(20); }
     }
     static async Task Check() {
+        await CheckDiscovery();
         var directory=Path.Combine(Path.GetTempPath(),"localremote-client-check-"+Guid.NewGuid().ToString("N")); Directory.CreateDirectory(directory);
         var sample=Path.Combine(directory,"sample.h264");
         var start=new ProcessStartInfo("ffmpeg.exe") { UseShellExecute=false,CreateNoWindow=true,RedirectStandardError=true };
@@ -284,6 +285,38 @@ static class Program {
             await fileRunner;
             try { await server; } catch(Exception ex) when(ex is OperationCanceledException or IOException or ObjectDisposedException or SocketException) {}
         } finally { Directory.Delete(directory,true); }
+    }
+    static async Task CheckDiscovery() {
+        var first=new TaskCompletionSource<IReadOnlyList<LanDevice>>(TaskCreationOptions.RunContinuationsAsynchronously);
+        int attempts=0; CancellationToken last=default;
+        async Task<IReadOnlyList<LanDevice>> Browse(CancellationToken ct) {
+            attempts++; last=ct;
+            if(attempts==1) return await first.Task.WaitAsync(ct);
+            if(attempts==2) throw new IOException("test discovery unavailable");
+            await Task.Delay(Timeout.Infinite,ct); return [];
+        }
+        var window=new MainWindow(false,null,discovery:Browse) {Left=-20000,Top=-20000,ShowActivated=false,ShowInTaskbar=false,Width=720};
+        try {
+            var address=(TextBox)window.FindName("Address"); var password=(PasswordBox)window.FindName("Secret");
+            address.Text="192.168.7.20"; password.Password="Local-test#42"; window.Show();
+            await Until(()=>attempts==1,"initial scan missing");
+            Assert(address.Text=="192.168.7.20" && password.Password=="Local-test#42","scan overwrote manual credentials");
+            first.SetResult(new[]{new LanDevice("Office Mac","192.168.7.10","macos",47980)});
+            var button=(Button)window.FindName("DiscoverButton");
+            await Until(()=>button.ContextMenu.Items[0] is MenuItem m && m.Header?.ToString()?.Contains("Office Mac")==true,"device list not populated");
+            Assert(address.Text=="192.168.7.20","device discovery auto-selected target");
+            ((MenuItem)button.ContextMenu.Items[0]).RaiseEvent(new RoutedEventArgs(MenuItem.ClickEvent));
+            Assert(address.Text=="192.168.7.10" && password.Password.Length==0,"selection retained another device's password");
+            Assert(((TextBlock)window.FindName("ConnectionTarget")).Visibility==Visibility.Collapsed,"selection started control");
+            window.UpdateLayout(); Assert(((FrameworkElement)window.FindName("Toolbar")).ActualHeight<40,"discovery widened toolbar");
+            ((MenuItem)button.ContextMenu.Items[2]).RaiseEvent(new RoutedEventArgs(MenuItem.ClickEvent));
+            await Until(()=>attempts==2 && button.ContextMenu.Items[0] is MenuItem m && m.Header?.ToString()?.Contains("不可用")==true,"discovery error did not preserve fallback");
+            Assert(address.IsEnabled && address.Text=="192.168.7.10","failed scan blocked manual connection");
+            ((MenuItem)button.ContextMenu.Items[2]).RaiseEvent(new RoutedEventArgs(MenuItem.ClickEvent));
+            await Until(()=>attempts==3,"refresh missing"); window.Close();
+            Assert(last.IsCancellationRequested,"window close left discovery running");
+            Console.WriteLine("PASS actual WPF discovery menu: no auto-pair/credential overwrite, selection clears mismatched password, compact layout, manual fallback and close cancels scan");
+        } finally { window.Close(); }
     }
 }
 

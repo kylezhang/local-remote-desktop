@@ -20,6 +20,7 @@ final class HostModel: ObservableObject {
     @Published var allowFiles = SharingPreferences.enabled("fileClipboardAllowed") { didSet { UserDefaults.standard.set(allowFiles, forKey: "fileClipboardAllowed"); host?.setFilesAllowed(allowFiles) } }
     @Published var fileStatus = "文件同步：等待连接"
     private var host: Host?
+    private let discovery = HostDiscovery()
     private let preparation = SharingPreparation<PairingCredential>()
     private var pairingKey: PairingCredential? { preparation.cachedKey }
     private var startup: Task<Void, Never>?
@@ -66,7 +67,7 @@ final class HostModel: ObservableObject {
                 // Persistence succeeded. Adopt it even if stop/quit cancelled the
                 // waiting task; cancellation must never restart sharing afterward.
                 self.hostGeneration = nil
-                self.host?.stop(); self.host = nil; self.active = false
+                self.discovery.stop(); self.host?.stop(); self.host = nil; self.active = false
                 self.preparation.replaceCachedKey(credential); self.displayPairingKey(credential)
                 self.revealSecret = false
                 self.passwordEditor.reset(); self.editingPassword = false
@@ -162,7 +163,7 @@ final class HostModel: ObservableObject {
                     guard let self, self.hostGeneration == generation else { return }
                     self.status = text
                 } }
-            try h.start(); self.host = h; self.active = true
+            try h.start(); self.host = h; self.active = true; self.discovery.start()
             self.status = trusted ? "共享已启动，等待 Windows 连接 · TCP 47980" : "共享已启动（只能查看）· 辅助功能权限未被认可"
           } catch is CancellationError { }
           catch {
@@ -177,7 +178,7 @@ final class HostModel: ObservableObject {
     }
     func stop() {
         startup?.cancel(); pairingOperation?.cancel(); passwordOperation?.cancel()
-        hostGeneration = nil; host?.stop(); host = nil; active = false
+        discovery.stop(); hostGeneration = nil; host?.stop(); host = nil; active = false
         revealSecret = false; status = "已停止"; fileStatus = "文件同步：等待连接"
     }
     func copyDiagnostics() {
@@ -192,6 +193,7 @@ final class HostModel: ObservableObject {
         ScreenCaptureKit: \(screenCheck)
         Accessibility: \(AXIsProcessTrusted())
         Listening: \(active)
+        Discovery: \(discovery.state)
         Starting: \(starting)
         Keychain: \(keychainCheck)
         KeychainBackend: file-based (existing pairing-v1 item)

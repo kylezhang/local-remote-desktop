@@ -4,6 +4,11 @@
 
 ## Unreleased
 
+- Added Bonjour nearby-device selection to Target IP, keeping manual entry and
+  pairing. Mac advertises only while sharing; Windows searches once or on refresh.
+  Windows UDP/WPF and portable Mac lifecycle checks pass; native Mac LAN acceptance is pending.
+- Documented shared cross-platform interface conventions and staged v0.3.0 desktop roles.
+
 - Renamed the Windows connection field to “Target IP”, with clearer local
   IPv4 guidance. Remembered addresses and the local-IP default are preserved.
   This wording anticipates future platforms; current control remains Windows → Mac.

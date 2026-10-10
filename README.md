@@ -16,6 +16,9 @@ LocalRemote lets you view and control another computer's existing desktop over y
 
 [Download](https://atomgit.com/zkxw2008/LocalRemote/releases) · [Documentation](#documentation) · [Roadmap](docs/roadmap.md) · [Changelog](CHANGELOG.md)
 
+Unreleased main adds [nearby-device selection](docs/discovery.md). Native Mac
+Bonjour acceptance is pending; this does not replace the published preview.
+
 ## Features
 
 - **Work on the current desktop** — view the screen and use your keyboard and mouse.

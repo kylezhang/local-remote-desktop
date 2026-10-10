@@ -1,0 +1,33 @@
+LocalRemote LAN discovery development checks — 2026-10-10
+
+Target-IP wording update source: 979f71f; tested self-contained DLL SHA256:
+93314ee972b1d0fda80f36a8fcfd8d6a610e22a10dae55ccfc40740b83420410
+PASS existing actual WPF encrypted-peer suite; deployed to both Windows directories.
+
+Discovery candidate WPF DLL SHA256:
+3d15b225cee744e859c25521abced4dba22ee6754fc52e662a04d2e5df0f0363
+PASS Windows application/DiscoveryChecks/ClientChecks builds, zero warnings/errors.
+PASS independently generated DNS-SD/compressed records, foreign transaction,
+platform/TCP-port/LAN filters, TTL goodbye, duplicate IP, truncation, compression
+cycle and 5000 arbitrary malformed packets.
+PASS actual UDP query/reply with independent loopback responder, split PTR/SRV/
+TXT/A resolution, bounded followup sends, cancellation and socket cleanup.
+PASS actual candidate WPF device menu: opening/search does not overwrite address
+or credentials, selection clears another target's password, no automatic pairing,
+minimum-width layout, manual fallback on discovery error, closing cancels scan.
+PASS existing video/input/shortcut/focus/permission/text/files/busy clipboard/
+readiness/reconnect/quality/disconnect/FFmpeg cleanup regression in RMP1 mode.
+PASS 720-wide toolbar image review; arrow inside existing target-IP field.
+PASS Swift 5.9.2 production HostDiscovery lifecycle with NetService double:
+publish/restart/stop, no credentials in TXT, bounded UTF-8 hostname, stale callback
+and publish failure behavior. Production HostModel lifecycle checks passed,
+including stop/password rotation shutting down discovery.
+PASS 19 Swift file syntax checks; bilingual links/version/assets/tracked hygiene.
+
+Protocol: Bonjour _localremote._tcp.local, no custom discovery server or DNS changes.
+Manual connection/authentication remains unchanged. Discovery is not trust.
+Automatic search once at window load; explicit refresh; each scan lasts 3 seconds.
+
+SKIP native macOS SDK/Foundation Bonjour, local-network permission and physical
+multicast/network-isolation behavior. Linux Swift doubles are not native evidence.
+This update is on development main; published v0.2.0-beta.1 tag/assets unchanged.

@@ -3,6 +3,7 @@ using System.IO;
 using System.Text.Json;
 using System.Threading.Channels;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
@@ -33,6 +34,11 @@ public partial class MainWindow : Window
     readonly TextClipboardSync clipboard;
     readonly FileClipboardSession files;
     readonly int desktopPort;
+    CancellationTokenSource? discoveryScan;
+    readonly Func<CancellationToken,Task<IReadOnlyList<LanDevice>>> browse;
+    IReadOnlyList<LanDevice> discovered=[];
+    long discoveryFinished;
+    string discoveryStatus="尚未搜索";
     bool pasteSuppressed;
     readonly DispatcherTimer fileTimer=new() { Interval=TimeSpan.FromMilliseconds(500) };
     readonly DispatcherTimer fileNoticeTimer=new() { Interval=TimeSpan.FromSeconds(6) };
@@ -43,12 +49,15 @@ public partial class MainWindow : Window
     readonly DispatcherTimer render = new() { Interval=TimeSpan.FromMilliseconds(16) };
     public MainWindow():this(true) {}
     internal MainWindow(bool remember):this(remember,null) {}
-    internal MainWindow(bool remember, Func<ModifierKeys>? modifiers, ITextClipboard? board=null, IFileClipboard? fileBoard=null, string? fileRoot=null, int desktopPort=47980, int filePort=47981) {
+    internal MainWindow(bool remember, Func<ModifierKeys>? modifiers, ITextClipboard? board=null, IFileClipboard? fileBoard=null, string? fileRoot=null, int desktopPort=47980, int filePort=47981, Func<CancellationToken,Task<IReadOnlyList<LanDevice>>>? discovery=null) {
         rememberConnection=remember;
         this.desktopPort=desktopPort;
+        browse=discovery??MdnsDiscovery.Scan;
         readModifiers=modifiers ?? (()=>Keyboard.Modifiers);
         clipboard=new TextClipboardSync(board ?? (remember?new WindowsClipboard():new DisabledClipboard()));
         InitializeComponent(); var savedHost=remember?SecretStore.LastHost():""; Address.Text=savedHost.Length>0?savedHost:LocalAddress.Find(); Secret.Password=remember?SecretStore.Load(Address.Text):"";
+        DiscoverButton.ContextMenu=new(); RebuildDeviceMenu();
+        if(remember || discovery!=null) Loaded+=(_,_)=>RefreshDevices();
         files=new FileClipboardSession(fileBoard ?? (remember?new WindowsFileClipboard():new DisabledFileClipboard()),ClipboardMessage,
             FileNotice, action=>Dispatcher.BeginInvoke(action),fileRoot,filePort);
         fileNoticeTimer.Tick+=(_,_)=> { fileNoticeTimer.Stop(); if(!files.Busy) TransferNotice.Visibility=Visibility.Collapsed; };
@@ -84,11 +93,50 @@ public partial class MainWindow : Window
         Surface.LostMouseCapture+=(_,_)=> { if(Mouse.LeftButton==MouseButtonState.Pressed || Mouse.RightButton==MouseButtonState.Pressed || Mouse.MiddleButton==MouseButtonState.Pressed) Input(new {op="release_all"}); };
         PreviewKeyDown+=(_,e)=> { if(e.Key==System.Windows.Input.Key.F11) { ToggleFull(); e.Handled=true; } };
         Closing+=(_,_)=> {
+            discoveryScan?.Cancel();
             render.Stop(); ResetClipboard(); ResetFiles(); session?.Cancel();
             // App shutdown can stop Dispatcher continuations before Run's
             // finally executes. Kill the owned decoder directly while closing.
             lock(decoderGate) { windowClosing=true; activeDecoder?.Dispose(); activeDecoder=null; }
         };
+    }
+    void DiscoverClick(object sender,RoutedEventArgs e) {
+        if(session!=null) return;
+        RebuildDeviceMenu(); DiscoverButton.ContextMenu.PlacementTarget=DiscoverButton; DiscoverButton.ContextMenu.IsOpen=true;
+        if(discoveryScan==null && (discoveryFinished==0 || Environment.TickCount64-discoveryFinished>10000)) RefreshDevices();
+    }
+    void RebuildDeviceMenu() {
+        var menu=DiscoverButton.ContextMenu; menu.Items.Clear();
+        if(discovered.Count==0) menu.Items.Add(new MenuItem {Header=discoveryStatus,IsEnabled=false});
+        foreach(var device in discovered) {
+            var item=new MenuItem {Header=device.ToString(),ToolTip="只填写地址；连接仍需配对密码",IsEnabled=session==null};
+            item.Click+=(_,_)=> {
+                if(session!=null) return;
+                Address.Text=device.Address; Secret.Password=rememberConnection?SecretStore.Load(device.Address):"";
+                Status.Text=$"已选择 {device.Name}，填写配对密码后连接。"; Secret.Focus();
+            };
+            menu.Items.Add(item);
+        }
+        menu.Items.Add(new Separator());
+        var refresh=new MenuItem {Header="刷新设备",IsEnabled=discoveryScan==null && session==null};
+        refresh.Click+=(_,_)=>RefreshDevices(); menu.Items.Add(refresh);
+        menu.Items.Add(new MenuItem {Header="也可以直接输入目标IP",IsEnabled=false});
+    }
+    async void RefreshDevices() {
+        if(windowClosing || session!=null || discoveryScan!=null) return;
+        using var scan=new CancellationTokenSource(); discoveryScan=scan;
+        discovered=[]; discoveryStatus="正在搜索局域网设备…"; RebuildDeviceMenu();
+        try {
+            var devices=await browse(scan.Token);
+            if(windowClosing || scan.IsCancellationRequested) return;
+            discovered=devices.Take(32).ToArray(); discoveryStatus=discovered.Count==0?"未发现设备；请确认 Mac 已开始共享":"已发现设备";
+        } catch(OperationCanceledException) { return; }
+        catch { discoveryStatus="发现不可用；仍可手动填写目标IP"; }
+        finally {
+            if(ReferenceEquals(discoveryScan,scan)) discoveryScan=null;
+            discoveryFinished=Environment.TickCount64;
+            if(!windowClosing) RebuildDeviceMenu();
+        }
     }
     static int Button(MouseButton b)=>b==MouseButton.Right?1:b==MouseButton.Middle?2:0;
     internal void SendPointerMove(Point point,bool captured) { if(Position(point,captured) is {} p) Input(new {op="mouse_move",p.x,p.y}); }
@@ -182,10 +230,11 @@ public partial class MainWindow : Window
             if(rememberConnection) SecretStore.Remember(ip,secret);
         } catch(Exception ex) { Status.Text=$"无法记住连接：{ex.Message}"; return; }
         requestedQuality=quality; qualityChangePending=false;
-        session=new(); render.Start(); ConnectButton.Content="断开"; Address.IsEnabled=Secret.IsEnabled=ForgetButton.IsEnabled=false;
+        discoveryScan?.Cancel();
+        session=new(); render.Start(); ConnectButton.Content="断开"; DiscoverButton.IsEnabled=Address.IsEnabled=Secret.IsEnabled=ForgetButton.IsEnabled=false;
         ConnectionFields.Visibility=Visibility.Collapsed; ConnectionTarget.Text=$"Mac · {ip}"; ConnectionTarget.Visibility=Visibility.Visible;
         runner=Run(ip,secret,session.Token);
-        try { await runner; } finally { render.Stop(); ResetClipboard(); ResetFiles(); connected=false; session.Dispose(); session=null; ConnectButton.Content="连接"; Address.IsEnabled=Secret.IsEnabled=Quality.IsEnabled=ForgetButton.IsEnabled=true; ConnectionFields.Visibility=Visibility.Visible; ConnectionTarget.Visibility=Visibility.Collapsed; Desktop.Source=null; bitmap=null; width=height=0; }
+        try { await runner; } finally { render.Stop(); ResetClipboard(); ResetFiles(); connected=false; session.Dispose(); session=null; ConnectButton.Content="连接"; DiscoverButton.IsEnabled=Address.IsEnabled=Secret.IsEnabled=Quality.IsEnabled=ForgetButton.IsEnabled=true; ConnectionFields.Visibility=Visibility.Visible; ConnectionTarget.Visibility=Visibility.Collapsed; Desktop.Source=null; bitmap=null; width=height=0; }
     }
     async Task Run(string ip,string secret,CancellationToken ct) {
         bool paired=false;

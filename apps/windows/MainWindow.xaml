@@ -49,7 +49,10 @@
    <WrapPanel VerticalAlignment="Center">
     <StackPanel x:Name="ConnectionFields" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,8,0">
      <TextBlock Text="目标IP" VerticalAlignment="Center" Margin="0,0,5,0" FontSize="12"/>
-     <TextBox x:Name="Address" Width="126" Padding="4,4" AutomationProperties.Name="目标IP" ToolTip="目标设备的局域网 IPv4（当前支持 Mac）。优先恢复上次地址；首次显示本机 IP，需改成目标 IP。"/>
+     <Grid Width="126">
+      <TextBox x:Name="Address" Padding="4,4,23,4" AutomationProperties.Name="目标IP" ToolTip="目标设备的局域网 IPv4（当前支持 Mac）。优先恢复上次地址；首次显示本机 IP，需改成目标 IP。"/>
+      <Button x:Name="DiscoverButton" Content="⌄" Width="20" Margin="1" HorizontalAlignment="Right" Click="DiscoverClick" ToolTip="选择局域网设备" AutomationProperties.Name="选择局域网设备" Background="Transparent" BorderThickness="0"/>
+     </Grid>
      <TextBlock Text="密码" VerticalAlignment="Center" Margin="8,0,5,0" FontSize="12"/>
      <PasswordBox x:Name="Secret" Width="128" Padding="4,4" ToolTip="粘贴 Mac 上显示的配对密码"/>
     </StackPanel>

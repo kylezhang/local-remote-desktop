@@ -61,6 +61,8 @@ func require(_ value: @autoclosure () -> Bool, _ message: String) {
         await until { !model.passwordEditor.saving }
         require(!model.active && !model.starting && Host.instances.count == 2 && model.status == "已停止", "stop during save restarted sharing")
         print("PASS busy dismissal guard and stop/quit during persistence never restarts sharing")
+        require(HostDiscovery.starts == 2 && HostDiscovery.stops >= 2, "discovery not tied to sharing/password lifecycle")
+        print("PASS discovery starts with successful sharing, stops on password replacement and stop")
         print("SKIP native SwiftUI/Apple SDK/Keychain: production model compiled with explicit service doubles.")
     }
 }

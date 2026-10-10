@@ -96,6 +96,11 @@ bash tests/ClipboardChecks/check.sh
 
 ## What these results do not prove
 
+Unreleased LAN discovery checks are recorded in
+[discovery-2026-10-10.txt](../tests/results/discovery-2026-10-10.txt).
+Windows DNS/UDP and WPF selection regressions passed; Mac publication lifecycle
+uses explicit NetService doubles. Actual Mac Bonjour and LAN multicast remain pending.
+
 The v0.2.0-beta.1 preview was published on 2026-10-10. Its final Windows
 package was rebuilt from the tagged commit, tested in both pairing modes,
 uploaded and downloaded again with identical SHA256. See the

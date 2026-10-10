@@ -32,6 +32,12 @@ enum AppBrand { static var icon: Int? { nil } }
 enum SharingPreferences { static func enabled(_ key: String) -> Bool { true } }
 enum MacFiles { static var receivedDirectory: URL { FileManager.default.temporaryDirectory } }
 final class InputSelfTest { func run(_ done: (String) -> Void) { done("test") } }
+final class HostDiscovery {
+    static var starts = 0, stops = 0
+    var state = "stopped"
+    func start() { Self.starts += 1; state = "published" }
+    func stop() { Self.stops += 1; state = "stopped" }
+}
 func randomBytes(_ count: Int) -> Data { Data((0..<count).map { UInt8($0) }) }
 enum StoreFailure: Error { case rejected }
 enum Pairing {

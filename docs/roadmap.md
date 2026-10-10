@@ -14,6 +14,9 @@ this does not change the published release or declare the v0.2.0 feature set com
 
 ## Version plan
 
+Cross-platform interaction follows the [interface conventions](interface.md):
+shared vocabulary/flows, with native controls and platform-specific shortcuts.
+
 | Version | Focus | Planned scope | Release gate |
 |---|---|---|---|
 | v0.1.0 — released | First usable product | Windows → Apple Silicon Mac, paired/encrypted current-session control, remembered connection, full screen, reconnect, quality selection and diagnostics | Published baseline; see validation notes below |
