@@ -4,6 +4,10 @@
 
 ## Unreleased
 
+- Renamed the Windows connection field to “Device address”, with clearer local
+  IPv4 guidance. Remembered addresses and the local-IP default are preserved.
+  This wording anticipates future platforms; current control remains Windows → Mac.
+
 ## 0.2.0-beta.1 — 2026-10-10
 
 Preview checkpoint: Windows package plus Mac source. Includes the changes below since v0.1.0; native Mac acceptance and the complete v0.2.0 roadmap remain pending. Not a stable release.

@@ -48,8 +48,8 @@
    </StackPanel>
    <WrapPanel VerticalAlignment="Center">
     <StackPanel x:Name="ConnectionFields" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,8,0">
-     <TextBlock Text="Mac IP" VerticalAlignment="Center" Margin="0,0,5,0" FontSize="12"/>
-     <TextBox x:Name="Address" Width="126" Padding="4,4" ToolTip="Mac 的局域网 IPv4；优先填写上次记住的地址"/>
+     <TextBlock Text="设备地址" VerticalAlignment="Center" Margin="0,0,5,0" FontSize="12"/>
+     <TextBox x:Name="Address" Width="126" Padding="4,4" AutomationProperties.Name="设备地址" ToolTip="被控设备的局域网 IPv4（当前支持 Mac）。优先恢复上次地址；首次显示本机 IP，需改成对端地址。"/>
      <TextBlock Text="密码" VerticalAlignment="Center" Margin="8,0,5,0" FontSize="12"/>
      <PasswordBox x:Name="Secret" Width="128" Padding="4,4" ToolTip="粘贴 Mac 上显示的配对密码"/>
     </StackPanel>
@@ -65,7 +65,7 @@
     </StackPanel>
     <TextBlock x:Name="FileStatus" Text="文件同步：等待连接" FontSize="12" VerticalAlignment="Center" TextWrapping="Wrap"/>
    </DockPanel>
-  <TextBlock x:Name="Status" DockPanel.Dock="Bottom" Text="输入 Mac 地址和配对密码，连接后点击画面开始操作。" Margin="12,8" TextWrapping="Wrap"/>
+  <TextBlock x:Name="Status" DockPanel.Dock="Bottom" Text="输入被控设备的局域网地址和配对密码，连接后点击画面开始操作。" Margin="12,8" TextWrapping="Wrap"/>
   <Border x:Name="Surface" Background="Black" Focusable="True" ClipToBounds="True" InputMethod.IsInputMethodEnabled="False" KeyboardNavigation.TabNavigation="None"><Image x:Name="Desktop" Stretch="Uniform"/></Border>
  </DockPanel>
 </Window>
