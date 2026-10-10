@@ -9,7 +9,9 @@ PASS password draft generation, cancel preserves original, save applies draft
 PASS missing screen permission prevents simulated sharing
 PASS clipboard consent toggle and in-session quality selection
 PASS transfer cancel and paused-picture reconnect/retry
-PASS mobile controller-only navigation and keyboard/options
+PASS initial mobile controller-only navigation and keyboard/options
+Later review revision: mobile Share is a future view-only capability proposal;
+controller-first scope does not permanently exclude screen sharing.
 PASS six platform references × English/Chinese × 1440/740/390 viewport widths
 PASS no JavaScript exceptions or outer-page horizontal overflow
 PASS inspected desktop, dark Chinese settings and phone screenshots

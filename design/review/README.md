@@ -14,7 +14,8 @@ is needed. This is a review artifact, not application code.
 
 All state is ephemeral. No credential storage, capture, input injection, network
 connection or actual transfer occurs. Linux and mobile selectors are future
-platform design references, not implemented support. The prototype uses the
+platform design references, not implemented support. Mobile Share illustrates
+view-only screen sharing; it does not claim remote input or current support. The prototype uses the
 approved repository icon rather than introducing a new brand.
 
 See [English specification](../../docs/design.md),

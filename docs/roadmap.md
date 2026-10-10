@@ -36,6 +36,10 @@ shared vocabulary/flows, with native controls and platform-specific shortcuts.
 
 Linux and HarmonyOS are versioned targets, not current support claims. HarmonyOS desktop control requires a separate feasibility assessment; the v1.4.0 target covers phone/tablet controllers only. Regular-file clipboard sharing belongs to v0.2.0; folder/virtual-file support, multiple displays and audio are not assigned versions yet.
 
+Mobile screen sharing and authorized receiving-control feasibility are additional
+capability studies, with no release number assigned. Controller-first milestones
+do not permanently exclude mobile sharing; see [mobile sharing](mobile-sharing.md).
+
 ## Verification and prerequisites
 
 ### v0.3.0 implementation sequence

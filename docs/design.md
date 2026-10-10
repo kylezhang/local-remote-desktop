@@ -25,7 +25,15 @@ will end. Never automatically turn on sharing after connecting elsewhere.
 Share is separate from connection state. Screen permission is needed to share a
 Mac, Accessibility to accept input. Missing Accessibility permits clearly labeled
 view-only sharing; connecting as a viewer does not require sharing permissions.
-System dialogs stay native. Mobile controller designs omit desktop sharing.
+System dialogs stay native. Mobile designs retain a Share entry for future
+screen-sharing capability. Sharing a picture and accepting remote input are
+separate capabilities; the mobile proposal defaults to view-only and does not
+promise full remote control. The actual app shows only implemented, validated
+capabilities. See the [mobile feasibility note](mobile-sharing.md).
+
+Routine screens do not repeat LAN-only badges or scope slogans. Explain network
+requirements in setup/help and project documentation; reserve status indicators
+for device reachability, sharing and the active connection.
 
 ## Remote control
 

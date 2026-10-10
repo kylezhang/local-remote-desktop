@@ -42,7 +42,10 @@ Returning to the controlled computer continues the same working session.
 Windows ↔ macOS is the next desktop milestone. Linux follows as a desktop role;
 Android, iOS/iPadOS and HarmonyOS initially control authorized desktops. Platform
 capability determines available actions: a mobile app is not a promise that the
-phone itself can accept unattended remote control. See the versioned roadmap.
+phone itself can accept unattended remote control. Screen sharing and receiving
+input are assessed separately; controller-first milestones do not permanently
+exclude mobile sharing. See the versioned roadmap and
+[mobile feasibility note](mobile-sharing.md).
 
 The product shares the current logged-in desktop. FileVault preboot, universal
 login/lock-screen control, secure desktop bypass and new remote login sessions
