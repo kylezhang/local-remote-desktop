@@ -4,9 +4,9 @@
 
 LocalRemote aims to provide one familiar LAN remote-control application per platform. Each desktop installation will eventually initiate or accept control, with explicit authorization. Discovery never implies trust.
 
-Only v0.1.0 is released. The versions below are targets, not completed features or delivery-date promises. Unreleased main-branch improvements will be packaged in the next release after validation.
+v0.1.0 remains the stable baseline. The current preview is v0.2.0-beta.1: a tested Windows package and Mac source, with native Mac acceptance still pending. It consolidates the earlier patch plans with new clipboard/password capabilities. A preview is not completion of the v0.2.0 feature set or a stable-release date promise.
 
-Track v0.1.1 implementation and remaining validation in the [release checklist](next-release.md).
+Track preview packaging and stable-release gates and remaining validation in the [release checklist](next-release.md).
 
 The v0.2.0 optional text and regular-file clipboard prototypes are implemented on main with
 portable/Windows encrypted-peer tests. Native Mac acceptance remains pending;
@@ -17,8 +17,9 @@ this does not change the published release or declare the v0.2.0 feature set com
 | Version | Focus | Planned scope | Release gate |
 |---|---|---|---|
 | v0.1.0 — released | First usable product | Windows → Apple Silicon Mac, paired/encrypted current-session control, remembered connection, full screen, reconnect, quality selection and diagnostics | Published baseline; see validation notes below |
-| v0.1.1 — next | Installation and update reliability | Confirmed blueberry identity, icon packaging, clear permission actions, clean replacement/preserve-permissions options; improve signing and Keychain update behavior | Native Mac build and install/update tests; Windows package validated; signing/authorization behavior documented |
-| v0.1.2 | Input and responsiveness | Keyboard layouts and numeric keypad, focus/modifier release, disconnect cleanup, sleep/wake recovery; measure and reduce input/video delay | Repeatable real two-device tests, no stuck modifiers, measured latency baseline and verified recovery |
+| v0.1.1 plan — consolidated into beta | Installation and update reliability | Confirmed blueberry identity, icon packaging, clear permission actions, clean replacement/preserve-permissions options; improve signing and Keychain update behavior | Native Mac build and install/update tests; Windows package validated; signing/authorization behavior documented |
+| v0.1.2 plan — consolidated into beta | Input and responsiveness | Keyboard layouts and numeric keypad, focus/modifier release, disconnect cleanup, sleep/wake recovery; measure and reduce input/video delay | Repeatable real two-device tests, no stuck modifiers, measured latency baseline and verified recovery |
+| v0.2.0-beta.1 — preview | Current implementation checkpoint | Windows package; Mac source; short/manual passwords, text/file clipboard, input and UI improvements | Windows final-package regression/checksums pass; limitations explicit; no unverified Mac binary |
 | v0.2.0 | Easier daily use | LAN device discovery, explicit pairing/revocation, optional bounded text and regular-file clipboard sharing, English UI with Chinese localization | Discovery cannot bypass pairing; clipboard defaults on for paired sessions, remembers revocation and has size limits; both languages tested |
 | v0.3.0 | Desktop control in both directions | Windows capture/input host, Mac viewer/controller, one app per desktop with Connect and Allow connections modes | Windows ↔ Mac verified on real hardware; authorization, disconnect release and session continuity pass |
 | v1.0.0 | Stable desktop release | Consolidate desktop features, reliable installers and upgrade paths, onboarding, supported-system matrix and regression coverage | Both desktop directions meet documented release criteria; native builds and signed distribution validated |
@@ -33,7 +34,7 @@ Linux and HarmonyOS are versioned targets, not current support claims. HarmonyOS
 
 The v0.1.0 Windows build and simulated-peer tests were validated; the user reported the Windows-to-Mac workflow usable. This does not substitute for an independently reproduced native Mac test matrix. See [build and test status](validation.md).
 
-v0.1.1 must distinguish stable signed distribution from ad-hoc development builds. Stable signing needs an appropriate signing identity, and broader macOS distribution may need notarization. Changes to privacy permissions and Keychain behavior must be tested with the actual installed signature. The installer can reset only this app's decisions; it cannot automatically grant permissions or promise removal of visible Settings rows.
+Stable v0.2.0 must distinguish stable signed distribution from ad-hoc development builds. Stable signing needs an appropriate signing identity, and broader macOS distribution may need notarization. Changes to privacy permissions and Keychain behavior must be tested with the actual installed signature. The installer can reset only this app's decisions; it cannot automatically grant permissions or promise removal of visible Settings rows.
 
 A goal for routine signed updates is to avoid unnecessary permission resets or repeated Keychain prompts. First-run authorization and macOS-required reauthorization remain possible. Hardware decode/render changes are justified by v0.1.2 measurements rather than bundled into a rewrite.
 

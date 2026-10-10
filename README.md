@@ -10,6 +10,8 @@ LocalRemote lets you view and control another computer's existing desktop over y
 
 **Currently available: Windows → Mac.** Two-way desktop control and mobile controllers are planned.
 
+**Preview: v0.2.0-beta.1** — shorter pairing passwords, text/file clipboard sharing and a simpler Mac interface. Windows is packaged; Mac is source-only. Native Mac acceptance is pending. The latest stable release remains v0.1.0.
+
 **English** | [简体中文](README.zh-CN.md)
 
 [Download](https://atomgit.com/zkxw2008/LocalRemote/releases) · [Documentation](#documentation) · [Roadmap](docs/roadmap.md) · [Changelog](CHANGELOG.md)
@@ -83,7 +85,7 @@ Quality changes briefly reconnect the session. See the [user guide](docs/usage.m
 
 The goal is one application on each supported device, with a familiar way to connect or allow a connection. Next steps focus on reliable installation, English UI, easier pairing and device discovery, followed by Windows ↔ Mac control and mobile controllers.
 
-Planned releases: **v0.1.1** installation/updates, **v0.1.2** input/responsiveness, **v0.2.0** discovery/clipboard/localization, **v0.3.0** desktop control in both directions, then **v1.0.0** stable desktop, **v1.1–v1.2** Android/iOS controllers, **v1.3.0** Linux desktop and **v1.4.0** HarmonyOS phone/tablet controllers. See the [roadmap](docs/roadmap.md) for scope and release criteria; these features are not yet released.
+The installation/input improvements originally planned for v0.1.1/v0.1.2 are consolidated into the **v0.2.0-beta.1** preview. **v0.2.0** targets validated discovery/clipboard/localization, **v0.3.0** desktop control in both directions, then **v1.0.0** stable desktop, **v1.1–v1.2** Android/iOS controllers, **v1.3.0** Linux desktop and **v1.4.0** HarmonyOS phone/tablet controllers. See the [roadmap](docs/roadmap.md) for scope and release criteria; these features are not yet released.
 
 ## Background
 

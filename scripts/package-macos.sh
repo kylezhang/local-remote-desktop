@@ -17,6 +17,8 @@ commit="$(git rev-parse HEAD)"
 python3 tests/ReleaseChecks/check.py
 actual_version="$(python3 -c 'import plistlib; print(plistlib.load(open("apps/macos/Info.plist", "rb"))["CFBundleShortVersionString"])')"
 [[ "$version" == "$actual_version" ]] || fail 'Requested version does not match the committed application version.'
+release_version="$(python3 -c 'import plistlib; i=plistlib.load(open("apps/macos/Info.plist", "rb")); print(i.get("LocalRemoteReleaseVersion", i["CFBundleShortVersionString"]))')"
+[[ "$version" == "$release_version" ]] || fail 'Do not package a prerelease source as a stable Mac binary.'
 identities="$(security find-identity -v -p codesigning)"
 [[ -n "$(printf '%s\n' "$identities" | awk -v selected="$SIGN_IDENTITY" '$2 == selected && /"Developer ID Application:/ { print $2; exit }')" ]] || fail 'The selected fingerprint is not a valid Developer ID Application identity.'
 

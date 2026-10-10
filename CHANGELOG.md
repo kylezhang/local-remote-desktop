@@ -4,6 +4,10 @@
 
 ## Unreleased
 
+## 0.2.0-beta.1 — 2026-10-10
+
+Preview checkpoint: Windows package plus Mac source. Includes the changes below since v0.1.0; native Mac acceptance and the complete v0.2.0 roadmap remain pending. Not a stable release.
+
 - Simplified Mac sharing/password layout: fixed-width main window, hidden current
   password with explicit legacy-key label, separate change-password editor and
   inline validation/errors. Viewing credentials does not change sharing status;

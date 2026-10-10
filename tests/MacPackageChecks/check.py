@@ -32,6 +32,7 @@ def bundle(app):
     (app/'Contents/_CodeSignature').mkdir()
     info = plistlib.loads((root/'apps/macos/Info.plist').read_bytes())
     info['CFBundleShortVersionString'] = '0.1.1'
+    info['LocalRemoteReleaseVersion'] = '0.1.1'
     (app/'Contents/Info.plist').write_bytes(plistlib.dumps(info))
     executable = app/'Contents/MacOS/LocalRemote'
     executable.write_bytes(struct.pack('<II', 0xFEEDFACF, 0x0100000C) + bytes(24))
@@ -49,7 +50,7 @@ class PackageChecks(unittest.TestCase):
         return Path(temporary.name).resolve()
 
     def test_bundle_validation(self):
-        for change in ('none', 'missing-icon', 'wrong-version', 'wrong-cpu', 'adhoc', 'extra-key', 'bad-icns'):
+        for change in ('none', 'missing-icon', 'wrong-version', 'prerelease-as-stable', 'wrong-cpu', 'adhoc', 'extra-key', 'bad-icns'):
             with self.subTest(change=change):
                 app = self.fixture()/'LocalRemote.app'
                 bundle(app)
@@ -59,6 +60,10 @@ class PackageChecks(unittest.TestCase):
                     info['CFBundleShortVersionString'] = '9.9.9'
                     (app/'Contents/Info.plist').write_bytes(plistlib.dumps(info))
                 if change == 'wrong-cpu': (app/'Contents/MacOS/LocalRemote').write_bytes(bytes(32))
+                if change == 'prerelease-as-stable':
+                    info = plistlib.loads((app/'Contents/Info.plist').read_bytes())
+                    info['LocalRemoteReleaseVersion'] = '0.1.1-beta.1'
+                    (app/'Contents/Info.plist').write_bytes(plistlib.dumps(info))
                 if change == 'adhoc': (app/'Contents/Resources/signing-mode.txt').write_text('ad-hoc')
                 if change == 'extra-key': (app/'Contents/Resources/secret.key').write_text('fixture')
                 if change == 'bad-icns': (app/'Contents/Resources/LocalRemote.icns').write_bytes(b'icns0000')

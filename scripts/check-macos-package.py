@@ -24,6 +24,7 @@ def check_files(files, version):
     info = plistlib.loads(files['Contents/Info.plist'])
     if (info.get('CFBundleIdentifier') != 'com.remotemaclan.host'
             or info.get('CFBundleShortVersionString') != version
+            or info.get('LocalRemoteReleaseVersion', info.get('CFBundleShortVersionString')) != version
             or info.get('CFBundleExecutable') != 'LocalRemote'
             or info.get('CFBundleIconFile') != 'LocalRemote.icns'
             or not re.fullmatch(r'[1-9][0-9]*', str(info.get('CFBundleVersion', '')))):

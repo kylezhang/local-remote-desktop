@@ -182,7 +182,7 @@ final class HostModel: ObservableObject {
     }
     func copyDiagnostics() {
         let text = """
-        LocalRemote \(Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "unknown")
+        LocalRemote \(Bundle.main.object(forInfoDictionaryKey: "LocalRemoteReleaseVersion") as? String ?? Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "unknown")
         Build: \(Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "unknown")
         macOS: \(ProcessInfo.processInfo.operatingSystemVersionString)
         InstalledAtApplications: \(Bundle.main.bundlePath == "/Applications/LocalRemote.app")

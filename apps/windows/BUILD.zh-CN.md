@@ -20,7 +20,7 @@ FFmpeg 不打包，按 [官方入口](https://ffmpeg.org/download.html) 安装�
 
 点击画面获得键盘焦点，F11 全屏、Ctrl+Alt+Esc 释放输入。点击诊断按钮后 KeyboardFocus=false 正常，HostPosted 是 CGEvent 提交数量，不是目标接受确认。远程画面禁用 Windows IME 组合输入，物理事件交给 Mac 输入法。
 
-开发构建默认启用“Windows 快捷键”：Ctrl→Command、Win→Control，同时转换按键与修饰标志；取消勾选恢复原生映射。选择用 DPAPI 本地记忆，物理 Ctrl+Alt+Esc 在两种模式下都用于释放。此修复只需更新 Windows，兼容现有 Mac 协议；跨设备剪贴板尚未同步。
+开发构建默认启用“Windows 快捷键”：Ctrl→Command、Win→Control，同时转换按键与修饰标志；取消勾选恢复原生映射。选择用 DPAPI 本地记忆，物理 Ctrl+Alt+Esc 在两种模式下都用于释放。此修复只需更新 Windows，兼容现有 Mac 协议；此快捷键映射本身不增加跨设备同步；测试版另有记忆的文字/文件共享开关，见使用指南。
 
 连接中可切画质，约三秒按新档位自动认证重连，快速切换采用最后选择，关闭自动重连也可切换；单独使用此功能无需更新 Mac 协议。
 

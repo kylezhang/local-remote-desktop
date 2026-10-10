@@ -1,4 +1,6 @@
-# v0.1.0 validation
+# Validation
+
+The v0.2.0-beta.1 preview uses the current final-package Windows checks, portable Swift/model checks and 2026-10-10 decoder samples. Mac source is provided without a native SDK/runtime claim. Earlier v0.1.0 records remain as historical baseline.
 
 [简体中文](zh-CN/validation.md)
 

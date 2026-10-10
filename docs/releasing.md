@@ -9,6 +9,8 @@
 5. Commit source/documents and push main to AtomGit. Use an annotated `vX.Y.Z` tag pointing at the exact release commit. Create the AtomGit Release, upload ZIP/checksum assets, then verify tag commit, release body and downloadable assets. Tags and release artifacts are immutable: fix mistakes in a new patch release rather than retargeting a tag.
 6. The existing local Windows executable path remains a deployment target. Close only that instance before replacing it, then reopen one instance. Do not copy build output into Git or remove saved connections.
 
+For a clearly labeled beta, a tested Windows ZIP plus Mac source may be published before native Mac acceptance. Set prerelease=true, disclose unverified Mac SDK/UI/Keychain and two-device behavior prominently, and attach no Mac binary. This exception does not authorize a stable release or satisfy Mac binary signing/notarization gates. Candidate scope must be explicit; a beta does not imply every roadmap feature is complete.
+
 The release notes must distinguish implemented features, automated test coverage, user-reported real-device behavior and unverified platforms. A 0.x release can be published as a normal release while explicitly documenting its early-product limits. Do not change repository privacy or select an open-source license implicitly.
 
 A Mac binary requires the [signing and distribution acceptance](macos-signing.md).

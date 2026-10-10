@@ -1,91 +1,39 @@
-# v0.1.1 release checklist
+# Release checkpoint
 
 [简体中文](zh-CN/next-release.md) · [Roadmap](roadmap.md)
 
-Status on 2026-10-09: development on main. **Not released.** Public app versions
-remain 0.1.0 until release preparation; Mac internal build number is 18.
-Existing v0.1.0 tag and assets remain unchanged.
+2026-10-10: **v0.2.0-beta.1 preview candidate**. Windows and Mac display the beta
+identifier; Mac numeric bundle version is 0.2.0, internal build 19. The existing
+v0.1.0 tag/assets stay unchanged. Earlier v0.1.1/v0.1.2 patch plans are consolidated
+because this checkpoint also adds password and clipboard capabilities.
 
-## Implemented and locally checked
+## Preview delivery
 
-- [x] Manual/generated pairing passwords (RMP1), legacy-key compatibility and Windows DPAPI remembering. Exact Windows WPF regression passed in both modes; portable Swift credential checks passed. Native Mac SDK/Keychain editor/save/restart acceptance remains required.
+- [x] Windows package prepared with .NET runtime/notices and accurate setup instructions.
+- [x] Packaged-DLL WPF/encrypted-peer checks in both RML1 and RMP1 modes.
+- [x] Short/manual passwords, keyboard shortcuts, text/files, compact controls and Mac editor.
+- [x] Portable Swift credential/startup/HostModel checks; no native SDK claim.
+- [x] Synthetic Windows decoder checks, 120 seconds per quality, cleanup and samples recorded.
+- [x] Mac package validation rejects beta metadata presented as a stable binary; mocks pass.
+- [x] English/Chinese scope, limitations, changelog and version labels aligned.
+- [ ] Final build from the release commit, exact final-package regression and ZIP/checksum verification.
+- [ ] AtomGit annotated tag, prerelease, attached Windows ZIP/checksums and download verification.
 
+Preview scope: tested Windows package plus **Mac source only**. See
+[release notes](release-v0.2.0-beta.1.md). No unverified signed Mac binary is published.
 
+## Stable v0.2.0 gates
 
-- [x] Optional text clipboard implementation on main: both-platform portable
-  state, mocked Mac adapter and exact Windows WPF/encrypted-peer checks passed.
-  Both apps default on for paired sessions and remember explicit off choices; native Mac and two-device acceptance remain pending.
-  Clipboard is a roadmap v0.2.0 feature under development, not a released claim.
+- [ ] Native Apple SDK build and real Mac interface/password editor acceptance.
+- [ ] Keychain authorization/denial/retry, explicit save, restart persistence and update behavior.
+- [ ] Real installed signature, clean/preserved permissions, icon/login-agent and recovery tests.
+- [ ] Windows → Mac keyboard/mouse, text/files, consent/revoke, reconnect and sleep/wake regression.
+- [ ] Longer complete-session resource/latency checks; current decoder samples are not a soak.
+- [ ] Discovery and English/Chinese UI, or an explicit revision of stable feature scope.
+- [ ] For a Mac binary: actual Developer ID signing, accepted notarization/stapling and extracted-package checks.
+- [ ] Final stable versions, packages, checksums, release notes and immutable tag.
 
-- [x] Bounded Windows decoder diagnostics, idempotent disposal and direct cleanup
-  on connected window close; disconnected display timer stops. Production decoder
-  passed short resource checks; exact rebuilt DLL passed WPF regression. Full-session
-  allocation/CPU optimization and long runs remain pending; see [performance](performance.md).
-
-- [x] LocalRemote source/project/artifact naming and platform layout; Windows build,
-  encrypted storage migration and mock-peer regression passed. Mac legacy bundle,
-  signing-pin and login-path migrations passed mocks, with native verification pending.
-
-- [x] Confirmed vector identity and platform icon exports; Windows built/rendered.
-- [x] Installer validates staged signature and icons before replacement.
-- [x] Complete replacement without merging old resources; keep/reset-permissions
-  choices remain scoped to this app.
-- [x] Bundle rollback on late installation failure or interrupt/termination;
-  backup retained and reported if recovery fails. Verified in disposable mocks.
-- [x] Launch failure keeps the verified new bundle and gives recovery guidance.
-- [x] Preserve-permissions updates check equal designated requirements and
-  verify both bundles before stopping the old Host or touching permissions.
-  Incompatible/unreadable/invalid signatures fail safely in mock scenarios.
-- [x] Keychain access moved off the UI thread onto a serial queue. Ad-hoc or
-  unmarked builds defer every credential call until a user action. Certificate
-  builds use scoped legacy interaction control on the explicitly file-based store.
-  Explicit authentication/creation and process-memory reuse remain.
-  Implementation and syntax checked only; native behavior is pending.
-- [x] English/Chinese documentation, hygiene and release sanity checks.
-- [x] Screen access checked before credentials; standalone key viewing preserved.
-  Production ordering/cache/failure/cancellation logic compiled and executed with
-  Swift 5.9.2 on Ubuntu. Apple framework/system-dialog checks remain pending.
-- [x] Remembered Windows shortcut mode converts Ctrl→Command and Win→Control,
-  releases held keys on change and retains native mapping. Actual WPF shortcut
-  chords passed through the encrypted mock peer. Real Mac application acceptance
-  is pending; clipboard synchronization has separate, remembered settings and now defaults on for paired sessions.
-
-## Required before publishing v0.1.1
-
-- [ ] Any candidate containing the clipboard prototype needs native Mac pasteboard
-  build/runtime and real two-device copy/paste tests, consent/revoke, busy clipboard,
-  Unicode/size boundaries, reconnect and no echo; do not publish it as validated
-  from mock tests alone. Reconcile the candidate scope with the version roadmap.
-
-- [ ] Run the Mac candidate pipeline with the real distribution identity/profile:
-  signed, Accepted notarization, stapled ticket, final ZIP extraction and assessment.
-  The pipeline and portable inventory/provenance checks are implemented and mocked,
-  not natively exercised. See [maintainer packaging](macos-signing.md#maintainer-packaging).
-
-- [ ] Actual Apple SDK compilation of the updated Host, including deprecated
-  file-based Keychain compatibility APIs.
-- [ ] Real Mac first launch (zero startup credential calls in development),
-  certificate-build silent read with trusted/locked/changed-signature
-  Keychain states, denial/cancellation, retry, restart and unchanged pairing key.
-  No UI hang, automatic retry loop or secret-bearing diagnostic output.
-- [ ] Real Mac replacement, preserve-permissions update, clean reset update,
-  installed icon, login agent and recovery behavior.
-- [ ] Existing valid signing identity and stable-signature update tests;
-  document ad-hoc limitations. No signing credentials are committed.
-- [ ] Windows → Mac ordinary session, view/control permissions and reconnect
-  regression against the final Host. Lock/FileVault boundaries remain unchanged.
-- [ ] Align public versions, titles and changelogs; build/test final Windows
-  package, licenses and checksums; tag exact release commit and create AtomGit
-  Release only after these checks pass.
-
-User feedback on 2026-10-09 reports repeated two-password groups and needing
-to remove both permission entries manually after a preserve-permissions update.
-This is an unresolved acceptance failure, not a successful permissions test.
-Installer guards passed mocks; the shared startup helper now runs with a real
-Swift compiler. Neither proves native Keychain/TCC behavior. See the
-[signing and distribution plan](macos-signing.md).
-
-There is no native Mac build or independently reproduced Keychain/TCC validation
-in the current Windows environment. Do not describe permissions as permanently
-fixed or system password prompts as eliminated. Installer rollback restores
-bundle files, not prior privacy decisions, running processes or power-loss state.
+There is currently no native Mac environment attached to this Windows workspace.
+A stable release date depends on those checks; repeating local mocks cannot clear
+them. Do not claim repeated Keychain prompts/TCC issues permanently fixed. A beta
+is an implementation checkpoint, not evidence that these native gates passed.

@@ -7,7 +7,7 @@ $ErrorActionPreference = 'Stop'
 $projectRoot = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
 [xml]$project = Get-Content -LiteralPath (Join-Path $projectRoot 'apps/windows/LocalRemote.csproj')
 $version = [string]$project.Project.PropertyGroup.Version
-if ($version -notmatch '^\d+\.\d+\.\d+$') { throw 'Invalid project version' }
+if ($version -notmatch '^\d+\.\d+\.\d+(?:-(?:alpha|beta|rc)\.[1-9][0-9]*)?$') { throw 'Invalid project version' }
 $releaseRoot = if ([IO.Path]::IsPathRooted($OutputDirectory)) { [IO.Path]::GetFullPath($OutputDirectory) } else { [IO.Path]::GetFullPath((Join-Path $projectRoot $OutputDirectory)) }
 $packageName = "LocalRemote-v$version-windows-x64"
 $package = Join-Path $releaseRoot $packageName
@@ -54,18 +54,26 @@ Run LocalRemote.exe. Keep this folder together; .NET Desktop Runtime is included
 FFmpeg is NOT included: install a complete H.264-capable build and expose ffmpeg.exe on PATH,
 or place it and all its required DLLs beside the app. https://ffmpeg.org/download.html
 Mac must be logged in, running the Host and authorized for screen capture/Accessibility.
-Enter Mac LAN IPv4 and its 64-character pairing key. Click the picture to type.
+Enter Mac LAN IPv4 and its pairing password (legacy 64-character keys also work).
+Mac: Change Password opens an editor; generated passwords take effect only after Save.
+Update both apps for short-password authentication. Click the picture to type.
 F11: full screen. Ctrl+Alt+Esc: release input. Quality changes briefly reconnect.
 Windows Shortcuts defaults on: Ctrl is Mac Command, Win is Control. Disable for native mapping.
-Copy/paste uses the Mac clipboard; cross-device clipboard synchronization is not included.
+Text/regular-file clipboard sync defaults on for paired sessions; explicit off is remembered.
+Wait for enabled status, then copy again. Files use TCP 47981, with progress/cancel.
+Folders and image clipboard formats are not supported. See the repository user guide.
 
 运行 LocalRemote.exe，保持完整目录；无需另装 .NET。
 FFmpeg 需单独完整安装并配置 PATH；现有正常安装可继续用。
-Mac 正常登录并开启共享、完成权限；填写 IP 和配对密钥，点击画面后输入。
+Mac 正常登录并开启共享、完成权限；填写 IP 和配对密码，点击画面后输入。
+修改密码在独立窗口操作，保存才生效；短密码需更新两端。
+文字/普通文件默认同步；在设置中可关闭，等启用后重新复制。文件需 TCP 47981。
 
 Repository: https://atomgit.com/zkxw2008/LocalRemote
 Runtime: .NET $coreVersion / Desktop $desktopVersion; SDK $sdkVersion.
-Final Mac branding update was not natively built in this Windows release environment.
+Beta scope: Windows build/automated tests are verified; Mac source is provided.
+Current Apple SDK build, native UI/Keychain/TCC and real two-device acceptance are pending.
+No Mac binary is included. No FileVault unlock or guaranteed lock-screen control.
 "@ | Set-Content -LiteralPath (Join-Path $package 'START-HERE.txt') -Encoding utf8
 Compress-Archive -LiteralPath $package -DestinationPath $archive -CompressionLevel Optimal
 $hash = (Get-FileHash -LiteralPath $archive -Algorithm SHA256).Hash.ToLowerInvariant()

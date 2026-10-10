@@ -68,6 +68,16 @@ constrained. Standard and High target up to 1080p/60 with different bitrates; ac
 dimensions preserve the Mac display aspect ratio. Full-session CPU, Mac energy use,
 sleep/wake, repeated reconnects and long-session behavior still require measurement.
 
+## Extended decoder samples: 2026-10-10
+
+The same synthetic driver ran each quality for 120 seconds: 720p/30 decoded
+29.91 fps, driver/FFmpeg private memory 25.7–37.0/57.3–57.7 MiB, average normalized
+CPU 0.59%/0.50%; 1080p/60 decoded 59.82 fps, memory 123.3–147.3/76.1–84.4 MiB,
+CPU 1.70%/1.54%. Both decoders exited after repeated disposal. The second case
+shares the driver process; other build activity occurred on the same machine.
+This is a four-minute decoder check, without Mac capture, LAN or WPF rendering,
+not proof of leak-free hours-long sessions. [Raw samples](../tests/results/resources-2026-10-10.json).
+
 ## File transfer pacing (development)
 
 Sending uses a cumulative 8 MiB/s budget with a 512 KiB initial allowance.

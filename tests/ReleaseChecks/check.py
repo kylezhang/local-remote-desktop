@@ -10,9 +10,10 @@ import xml.etree.ElementTree as ET
 
 root = Path(__file__).resolve().parents[2]
 version = ET.parse(root/'apps/windows/LocalRemote.csproj').findtext('./PropertyGroup/Version')
-assert re.fullmatch(r'\d+\.\d+\.\d+', version)
+assert re.fullmatch(r'\d+\.\d+\.\d+(?:-(?:alpha|beta|rc)\.[1-9][0-9]*)?', version)
 plist = plistlib.loads((root/'apps/macos/Info.plist').read_bytes())
-assert plist['CFBundleShortVersionString'] == version
+assert plist['CFBundleShortVersionString'] == version.split('-')[0]
+assert plist.get('LocalRemoteReleaseVersion', plist['CFBundleShortVersionString']) == version
 assert plist['CFBundleIdentifier'] == 'com.remotemaclan.host'
 assert plist['CFBundleIconFile'] == 'LocalRemote.icns'
 assert plist['CFBundleExecutable'] == 'LocalRemote'

@@ -1,4 +1,4 @@
-<Window x:Class="LocalRemote.MainWindow" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" Title="LocalRemote · 0.1.0" Icon="LocalRemote.ico" Width="1280" Height="760" MinWidth="720" MinHeight="480" Background="#F7F8FF" Foreground="#282C67" FontFamily="Segoe UI">
+<Window x:Class="LocalRemote.MainWindow" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" Title="LocalRemote · 0.2.0-beta.1" Icon="LocalRemote.ico" Width="1280" Height="760" MinWidth="720" MinHeight="480" Background="#F7F8FF" Foreground="#282C67" FontFamily="Segoe UI">
  <Window.Resources>
   <SolidColorBrush x:Key="{x:Static SystemColors.HighlightBrushKey}" Color="#5265EC"/>
   <SolidColorBrush x:Key="{x:Static SystemColors.HighlightTextBrushKey}" Color="White"/>
