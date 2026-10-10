@@ -43,3 +43,9 @@ exactly eight characters. These fixtures are not usable real-device credentials.
 Latest review details: [manual target information](manual-address.jpg),
 [password editor](password-edit.jpg), and
 [device added after simulated authentication](manual-connected.jpg).
+
+Share → This device’s name → Change name demonstrates local display-name editing.
+Default names are fictional OS fixtures. Edits last only for the current preview;
+no OS settings, disk storage or real LAN announcements are changed. Cancel and
+Use system name operate on the draft; saving retains sharing and the password.
+See the [name editor](local-name.jpg).

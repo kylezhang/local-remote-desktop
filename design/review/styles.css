@@ -25,3 +25,5 @@ input:not([type=checkbox]),select{border:1px solid #cbd0dd;border-radius:7px;bac
 
 /* Explicit secondary action; Save remains the dialog’s primary action. */
 .generate-button{border-color:var(--accent);color:var(--accent);background:var(--selection);font-weight:600;gap:7px;min-height:36px;padding:8px 12px}.generate-button:hover{background:var(--accent);color:#fff}.manual-peer{display:flex;align-items:center;gap:10px;padding:11px 12px;border:1px solid var(--line);border-radius:8px;background:var(--soft)}.manual-peer strong{display:block;font-size:13px;font-weight:600}.manual-peer span:not(.device-symbol){display:block;font-size:11px;color:var(--muted);margin-top:5px}.manual-peer .device-symbol{width:34px;height:34px}.manual-peer .icon{width:22px;height:22px}
+
+.address-name{display:flex;align-items:center;justify-content:space-between;gap:12px;min-width:0}.address-name>span{overflow-wrap:anywhere;color:var(--ink)!important}.address-name button{flex-shrink:0;margin-top:-7px;margin-bottom:-7px}.rail-caption{overflow-wrap:anywhere}

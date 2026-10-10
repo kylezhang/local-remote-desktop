@@ -1,0 +1,22 @@
+Local Remote Desktop — local display-name proposal, awaiting user review
+
+Scope: offline interactive design and aligned English/Chinese documentation.
+No native client, real machine name, credential, permission, package or release
+changed. System names are fixtures; there is no actual two-device propagation.
+
+PASS browser: Share name has an accessible Change name action on desktop/mobile
+PASS browser: editor prefilled with current local name and explains list display
+PASS browser: empty/whitespace-only and 33-character names rejected
+PASS browser: saved Chinese name trims surrounding spaces and updates Share/rail
+PASS browser: saving retains sharing and original fictional password
+PASS browser: Cancel preserves name; Use system name changes draft only
+PASS browser: Save after Use system name restores the default
+PASS browser: page/language switches retain name; platform fixtures are separate
+PASS browser: local rename does not change selected remote target Studio Mac
+PASS browser: future mobile frame has no horizontal overflow, edit target >=44px
+
+Native follow-up: persist an app-local override, publish it in discovery, return
+it after authentication, update existing remote records without losing credentials.
+Current Mac publication reads hostname; authenticated platform reporting exists,
+but manual-IP device-name metadata and native name editing are not implemented.
+No real Bonjour, rename propagation, native input or runtime acceptance claimed.

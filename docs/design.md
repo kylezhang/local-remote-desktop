@@ -48,6 +48,14 @@ New passwords use exactly eight characters without spaces, both manually and
 automatically. Generate is a clearly bordered secondary action. Existing native
 passwords remain usable until explicitly changed; updates must not truncate them.
 
+Share → This device’s name → Change name edits the app’s advertised display name.
+The default comes from the local system; Use system name fills the draft, Cancel
+preserves the saved value, and Save updates it without ending sharing or changing
+the password. The name is the same in discovery and authenticated connection
+metadata; the target app reports its platform automatically. Renaming does not
+rename the OS computer, create another device record or discard saved credentials.
+The native name editor and authenticated name field still need implementation.
+
 The current one-role restriction has an explicit Stop sharing & connect action
 after target validation. Cancel preserves the existing sharing session; do not
 silently stop it on device selection. Future concurrent roles need separate

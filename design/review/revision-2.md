@@ -61,6 +61,18 @@ behavior**, not claims of implementation in the current alpha.
   not imply that capability.
 - Share distinguishes Off, Available and In use. Navigation does not stop sharing.
   Stop sharing is visible locally and ends the active remote session.
+- Share → This device’s name has a Change name action. Default to the local
+  system name; a saved override belongs to this app, not OS computer settings.
+  Edit opens a prefilled draft; Cancel preserves the name and Use system name
+  fills the draft only. Save accepts 1–32 Unicode characters without controls,
+  trims surrounding whitespace and updates the local name without stopping
+  sharing or changing pairing. Use the same name in discovery and authenticated
+  peer metadata; platform is app-reported and cannot be edited as a name.
+  The current Mac advertisement uses its system hostname and Windows parses
+  its DNS-SD name plus platform TXT record. Configurable names and manual-IP
+  authenticated names remain proposed native work, not completed capabilities.
+  Native propagation must refresh one existing record, retaining credentials;
+  do not use a mutable display name as the saved-password identity.
 - Permission recovery belongs to Share. Screen denial blocks sharing; missing
   input permission allows a clearly labeled view-only session. Opening Connect
   does not trigger these permissions. The preview never opens system settings.
