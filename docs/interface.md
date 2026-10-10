@@ -66,3 +66,8 @@ names, file paths or clipboard contents. Native dialogs and underlying OS error
 details retain their system language. Windows uses a compact settings icon and
 full-screen icon with localized tooltips/accessibility names; Mac uses its native
 menu. Equivalent actions may have different native presentations.
+
+## Design review
+
+[Product direction](product.md) and the [interactive UI proposal](design.md) define
+the next interface iteration. The proposal awaits review; it is not current app UI.

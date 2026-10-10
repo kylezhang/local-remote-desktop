@@ -86,9 +86,11 @@ Build the Mac application on macOS:
 bash apps/macos/build-app.sh
 ```
 
-Main is **v0.3.0-alpha.2**, with a [Windows sharing preview](docs/windows-sharing.md). A [Mac controller preview](docs/mac-controller.md) is implemented in source with automated transport and state checks. Native Mac viewer/build and real Mac → Windows acceptance remain pending. Native Mac build and runtime acceptance remain pending; development changes do not replace existing release downloads. Check [validation status](docs/validation.md) and [Contributing](CONTRIBUTING.md) before preparing a release.
+Main is **v0.3.0-alpha.2**, with a [Windows sharing preview](docs/windows-sharing.md). A [Mac controller preview](docs/mac-controller.md) is implemented in source with automated transport and state checks. Native Apple SDK compilation and VideoToolbox fixture decoding passed. Installed UI, real Mac → Windows input and update acceptance remain pending; development changes do not replace existing release downloads. Check [validation status](docs/validation.md) and [Contributing](CONTRIBUTING.md) before preparing a release.
 
 ## Documentation
+
+- [Product direction](docs/product.md) · [v0.3.0 delivery plan](docs/v0.3.0-plan.md) · [UI design proposal](docs/design.md)
 
 - [User guide](docs/usage.md) · [File clipboard](docs/files.md)
 - [Mac controller preview](docs/mac-controller.md) · [Windows sharing preview](docs/windows-sharing.md)

@@ -29,10 +29,13 @@ see the [language checks](../tests/results/localization-2026-10-10.txt).
 Main now targets **v0.3.0-alpha.2 development**, Mac numeric version 0.3.0/build 23.
 It includes the Windows sharing role and a [Mac controller source preview](mac-controller.md).
 Portable Swift controller/model/session and independent encrypted-peer checks pass;
-native Mac compilation, display/input and real Mac → Windows acceptance remain pending.
+native Apple SDK compilation and VideoToolbox fixture decoding now pass. Installed
+interface/input and real Mac → Windows acceptance remain pending. See the
+[current delivery plan](v0.3.0-plan.md).
 No new alpha release/tag or Mac binary is claimed. The native gates below remain.
 
-- [ ] Native Apple SDK build and real Mac interface/password editor acceptance.
+- [x] Native Apple SDK production build and VideoToolbox color-frame decoding.
+- [ ] Real installed Mac interface/password editor and native input acceptance.
 - [ ] Keychain authorization/denial/retry, explicit save, restart persistence and update behavior.
 - [ ] Real installed signature, clean/preserved permissions, icon/login-agent and recovery tests.
 - [ ] Windows → Mac keyboard/mouse, text/files, consent/revoke, reconnect and sleep/wake regression.
@@ -41,7 +44,7 @@ No new alpha release/tag or Mac binary is claimed. The native gates below remain
 - [ ] For a Mac binary: actual Developer ID signing, accepted notarization/stapling and extracted-package checks.
 - [ ] Final stable versions, packages, checksums, release notes and immutable tag.
 
-There is currently no native Mac environment attached to this Windows workspace.
-A stable release date depends on those checks; repeating local mocks cannot clear
-them. Do not claim repeated Keychain prompts/TCC issues permanently fixed. A beta
+Native Mac build/fixture checks have now run through SSH in an isolated checkout.
+The installed app and permissions were not changed by those checks. A stable
+release date depends on the remaining gates; repeating mocks cannot clear them. Do not claim repeated Keychain prompts/TCC issues permanently fixed. A beta
 is an implementation checkpoint, not evidence that these native gates passed.

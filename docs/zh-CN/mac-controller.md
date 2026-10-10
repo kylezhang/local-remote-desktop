@@ -44,7 +44,8 @@ Annex B 解析并转换 SPS/PPS 与访问单元供原生 VideoToolbox 解码；�
 
 [检查及精确范围](../../tests/MacControllerChecks/README.md)使用独立 Python AES-GCM 测试端、
 生产 Swift 传输/会话/状态代码及明确的平台适配替身。Linux 通过 OpenSSL 适配器替代
-原生 CryptoKit/CoreGraphics，不代表真实解码或系统输入已验收。
+原生 CryptoKit/CoreGraphics，不代表系统输入已验收。后续 Apple SDK 原生构建与 VideoToolbox 色块样例通过；
+安装后界面与完整两机输入仍未验收。
 剩余门槛见[验证状态](validation.md)。
 
 ## 范围

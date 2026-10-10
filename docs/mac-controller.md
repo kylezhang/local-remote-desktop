@@ -59,7 +59,9 @@ Only one decoded image waits for presentation; old images are replaced, not queu
 [Checks and exact coverage](../tests/MacControllerChecks/README.md) use independent
 Python AES-GCM peers, production Swift transport/session/model code and explicit
 platform adapters. Linux uses OpenSSL adapters in place of native CryptoKit and
-CoreGraphics. Passing them does not establish native decode or input acceptance.
+CoreGraphics. These portable results do not establish native input acceptance. Subsequent
+Apple SDK compilation and native VideoToolbox color-frame fixtures passed; the
+installed viewer and complete two-device input remain unverified.
 See [validation status](validation.md) for the remaining gates.
 
 ## Boundaries

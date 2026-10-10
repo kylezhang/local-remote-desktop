@@ -1,0 +1,27 @@
+# Product and development guardrails
+
+Read [product direction](docs/product.md), [delivery scope](docs/v0.3.0-plan.md)
+and [interface conventions](docs/interface.md) before changing product behavior.
+
+- Local Remote Desktop is one native application per supported platform. Desktop
+  Connect and Share are session roles, not separate user-facing products.
+- Focus on LAN direct access to the current logged-in desktop. Do not add accounts,
+  cloud infrastructure, public traversal or a transport rewrite without a concrete
+  authorized need. Do not promise pre-login/FileVault or secure-desktop bypass.
+- Keep the usable Windows → Mac path covered while completing the reverse role.
+  Discovery is not authorization; clipboard/files belong to paired session roles.
+- Make routine use simple: remembered secure pairing, clear sharing/stop actions,
+  compact session controls, native shortcuts and predictable updates.
+- The current UI proposal is in `design/review/`. Apply it to native apps only
+  after user review. Future platform mockups are not support claims.
+- Prefer background/headless checks. Do not open foreground test windows, take
+  keyboard focus or inject real OS input during the user's work. Native input
+  acceptance needs an agreed test period and a dedicated target.
+- Record native builds, fixture checks and real two-device acceptance separately.
+  Do not treat generated code, mocks or screenshots as runtime acceptance.
+- Keep English primary and Chinese documentation aligned. Retain the approved
+  brand. Avoid incidental identity, Keychain or permission changes during UI work.
+- Keep secrets, personal device data, local test logs and build outputs out of Git.
+  Follow GPL-3.0-or-later notices and the documented immutable-release process.
+
+See [中文产品方向](docs/zh-CN/product.md) and [中文交付计划](docs/zh-CN/v0.3.0-plan.md).

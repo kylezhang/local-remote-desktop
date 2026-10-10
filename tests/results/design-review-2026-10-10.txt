@@ -1,0 +1,27 @@
+Local Remote Desktop UI proposal — 2026-10-10
+Scope: design/review/index.html, bilingual product/design/delivery documents.
+This record is about a simulated design prototype, not native product acceptance.
+
+Headless Edge / Playwright, separate disposable browser profile:
+PASS remembered connection and first pairing/error/retry
+PASS manual IPv4 rejection, Escape closes dialog
+PASS password draft generation, cancel preserves original, save applies draft
+PASS missing screen permission prevents simulated sharing
+PASS clipboard consent toggle and in-session quality selection
+PASS transfer cancel and paused-picture reconnect/retry
+PASS mobile controller-only navigation and keyboard/options
+PASS six platform references × English/Chinese × 1440/740/390 viewport widths
+PASS no JavaScript exceptions or outer-page horizontal overflow
+PASS inspected desktop, dark Chinese settings and phone screenshots
+PASS phone remote picture retains desktop proportions; does not reflow target apps
+
+The approved existing brand vector is embedded for offline use. Example devices,
+addresses, password, picture and transfer values are fictional. No real network,
+clipboard, input injection, capture or credential storage is used by the prototype.
+No foreground test windows were opened. Future mobile/Linux views are design
+references. Native UI/accessibility, OS permissions, real touch/keyboard behavior
+and actual two-device operation remain separate acceptance gates.
+
+Static ReleaseChecks: aligned versions/license, bilingual local links, catalog,
+brand containers, tracked-file hygiene and naming checks PASS.
+No release tag, application binary or production UI changed for this proposal.

@@ -4,6 +4,26 @@ The v0.2.0-beta.1 preview uses the current final-package Windows checks, portabl
 
 [简体中文](zh-CN/validation.md)
 
+## Native development checkpoint — 2026-10-10
+
+An isolated Mac checkout at `b651e760a1baca8b28571614b170e2f788be7b5a`
+passed the Apple SDK production build. Production Swift models, native
+CryptoKit/CommonCrypto and Darwin-socket fixtures passed; VideoToolbox decoded
+nine 320×180 H.264 color frames with pixel checks and dimension-change rejection.
+The compiler/OS were Swift 6.4 and macOS 27.0.1 on Apple Silicon. This updates
+earlier build-pending statements below; those dated entries retain their original scope.
+
+The live LAN experiment decoded 46 frames but did **not** establish Windows
+application input acceptance. Installed Mac GUI, Keychain/TCC update behavior,
+bidirectional clipboard/files and complete two-device input acceptance remain
+open. No installed Mac app or permissions were changed by the isolated checks.
+No new release is implied. See the [current scope and remaining gates](v0.3.0-plan.md).
+
+Foreground input tests are manual opt-in and scheduled, following the user
+report that test windows interrupted their work. Background checks do not clear
+the native input gate.
+
+
 Release environment: Windows x64, .NET SDK 8.0.425 and Desktop/Core runtime 8.0.31. Date: 2026-10-08. Results are captured in `tests/results/` after the final release build.
 
 ## Automated coverage
