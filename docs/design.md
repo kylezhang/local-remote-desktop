@@ -2,81 +2,104 @@
 
 [简体中文](zh-CN/design.md) · [Product direction](product.md) · [Delivery plan](v0.3.0-plan.md)
 
-**Reviewed on 2026-10-10; native implementation is underway.** The desktop
-navigation and session layout are now in source. Windows passed an unshown WPF
-layout/lifecycle check; the updated Mac UI awaits a native SDK build because the
-development Mac is currently unreachable. Discovery and reverse clipboard/files
-remain next-stage work. This prototype also includes future platform references. Open
-[the interactive prototype](../design/review/index.html) in a browser. It runs
-offline with fictional devices, passwords and desktop content. It never connects,
-captures, transfers or stores credentials. Platform selectors include future
-design references. Preview controls outside the app are not product controls.
+**Revision 2 — awaiting review.** This proposal responds to feedback about settings
+organization, page logic, inconsistent executable naming and the gap between the
+mockup and native appearance. It changes the design preview only. Current native
+source and installed builds still reflect the previous reviewed iteration; see
+[native UI progress](native-ui.md) for their validation status.
 
-## Layout decision
+Open the [interactive proposal](../design/review/index.html). It runs offline using
+fictional devices, passwords and content, with no networking, clipboard, storage
+or system actions. Windows/macOS are the desktop design targets; Linux/mobile
+selectors are future references. Preview controls outside the app are review
+tools, not product navigation. The [implementation contract](../design/review/revision-2.md)
+records state rules, setting scope, visual tokens and acceptance steps.
 
-One app, two explicit desktop actions: **Connect** and **Share this device**.
-Settings is a third navigation item. A narrow desktop navigation rail supports
-device browsing; it disappears during remote control. Device rows show meaningful
-identity, system, reachability and remembered pairing, rather than a dashboard
-of cards. Manual Target IP is a secondary action when discovery is unavailable.
+## The everyday flow
 
-First pairing uses a small dialog. Returning connections reuse secure stored
-credentials; discovery is never trust. The password stays masked on the sharing
-page, with Reveal/Copy and an explicit edit dialog. Generation fills a draft;
-Save applies it, Cancel changes nothing. Save explains that current connections
-will end. Never automatically turn on sharing after connecting elsewhere.
+**Open → choose a device → connect → work.** One app provides Connect and Share
+this device. Desktop navigation places those two tasks at the top, Settings at
+the bottom, and disappears during remote control. Use a readable device list and
+a focused selected-device pane rather than a dashboard of cards. No permanent
+LAN slogans, repeated logos or credential toolbar around the remote picture.
 
-Share is separate from connection state. Screen permission is needed to share a
-Mac, Accessibility to accept input. Missing Accessibility permits clearly labeled
-view-only sharing; connecting as a viewer does not require sharing permissions.
-System dialogs stay native. Mobile designs retain a Share entry for future
-screen-sharing capability. Sharing a picture and accepting remote input are
-separate capabilities; the mobile proposal defaults to view-only and does not
-promise full remote control. The actual app shows only implemented, validated
-capabilities. See the [mobile feasibility note](mobile-sharing.md).
+An online remembered device connects with one action using its saved password.
+A new target has an inline pairing form; a wrong password stays available to
+correct. Manual Target IP and password share one dialog. Offline remembered
+devices remain identifiable without claiming that they are ready. Discovery
+does not authenticate a device. Forget password affects only the selected
+target's saved credential, not all application preferences or the local key.
 
-Routine screens do not repeat LAN-only badges or scope slogans. Explain network
-requirements in setup/help and project documentation; reserve status indicators
-for device reachability, sharing and the active connection.
+Share this device owns the local name, IP, masked password, availability/in-use
+state and visible stop action. Changing pages preserves sharing. Change password
+opens a draft: Generate fills it, Cancel changes nothing, Save explains that
+sharing stops and the current connection ends. Recovery from missing screen or
+input permission belongs here, never in the connection-to-another-device flow.
+View-only sharing is labeled when input permission is missing.
 
-## Remote control
+The current one-role restriction has an explicit Stop sharing & connect action
+after target validation. Cancel preserves the existing sharing session; do not
+silently stop it on device selection. Future concurrent roles need separate
+implementation and acceptance.
 
-Use one 40-pixel desktop session bar: target/status, quality, full screen, options
-and Disconnect. No second logo, credential fields or permanent diagnostics panel.
-Reconnect keeps the last picture visibly dimmed with an explicit reconnect state
-and Cancel; never present stale pixels as a live connection. Transfers have a
-temporary progress/cancel notice. The prototype's transfer and permission states
-are scenarios, not evidence of implementation.
+## Settings with clear scope
 
-Mobile uses the same connection/pairing flow, bottom navigation before a session
-and a compact bottom control dock during one. Direct touch and touchpad modes,
-keyboard and session options replace desktop-only interaction. Safe areas and
-44-pixel touch targets are required. Tablet layouts can use a list/detail split.
-Linux/Android/iOS/HarmonyOS implementation follows their existing roadmap gates.
+| Category | Contents |
+|---|---|
+| General | Language, proposed theme selection |
+| Connection | Quality, reconnect and shortcut defaults for new connections |
+| Clipboard | Global local consent for text/files; received-file folder |
+| About | Version, GPL license and expandable troubleshooting |
 
-## Visual system
+Permissions and the local sharing password stay on Share this device. Saved
+target passwords are managed in Connect. Troubleshooting is secondary; developer
+counters do not dominate routine screens.
 
-Retain the approved blueberry icon. Accent **#5265EC**, pressed **#4238AF**,
-support **#643AC2**, brand ink **#282C67**, pale surface **#F7F8FF**. Gradient is
-reserved for the existing brand asset. Use quiet white surfaces, fine separators,
-modest selection tint and semantic status colors; avoid decorative glow.
+The remote toolbar owns picture quality, full screen, session options and
+Disconnect. Session options temporarily restrict text/files and set shortcut
+mapping. They cannot override a disabled global clipboard permission. Disabling
+global sharing immediately stops the corresponding active sync; both devices'
+consent is required. Defaults for later connections and changes for this logical
+session must remain distinct, including through quality changes and reconnects.
 
-Native system typography: Segoe UI on Windows, San Francisco on Apple systems,
-platform default on Linux/mobile. Body 14–15px, secondary 12–13px, page heading
-24px. Spacing follows 4/8px steps. Inputs/dialogs have modest corner radii;
-top-level app windows retain native chrome. Desktop minimum design width 720px;
-below that use the narrow-screen layout rather than clipping translated controls.
+Reconnect dims the last frame and labels it paused; Cancel ends retries and
+disconnects. Transfer notices are temporary and contain progress/cancel.
+Cancelling a transfer does not disconnect the desktop.
 
-English is the primary catalog with Chinese equivalents. Copy names an action
-and its result, with a useful next step for errors. Device names/passwords/files
-are not translated. Keyboard focus is visible; dialogs trap focus and return it
-on close. Respect Escape, screen-reader names, reduced motion and OS theme.
+## Appearance that can be implemented
 
-## Review and implementation gates
+Retain the approved blueberry icon and accent #5265EC. Use neutral text #202435,
+secondary #697183, white content, a #F6F7FA navigation surface and #E5E8F0 separators.
+Reserve brand gradients for the icon. Use consistent line icons rather than
+unrelated glyphs, a restrained selection tint and native window chrome.
 
-Review device selection, remembered connection, manual IP, pairing failure,
-sharing permissions, password edit/cancel, a live-looking session, reconnect,
-transfer and phone control. The visual review does not replace native QA.
-After approval, extract shared vocabulary/tokens into the interface specification
-and implement the two desktop UIs incrementally. Keep security, storage and
-native permission behavior out of unrelated layout changes.
+Windows uses Segoe UI Variable/Segoe UI, Apple systems their native font. Body is
+14px, secondary 12px, headings 25px; spacing follows 4/8px steps. Main content has
+32–36px padding; settings controls align to a stable column, not the far window
+edge. A roughly 174px rail and 42px session toolbar preserve room for the task.
+Small controls, selection marks and dialogs use distinct but consistent radii.
+Stack list/details at narrow widths instead of clipping fields. Preserve visible
+focus, translated text, reduced motion, native dark colors and OS scaling.
+
+Mobile retains Connect/Share/Settings in bottom navigation and uses a session dock
+for touchpad/direct touch, keyboard and options. Touch targets are at least 44px.
+Its sharing proposal is view-only and requires system confirmation; it does not
+promise full unattended input. See [mobile feasibility](mobile-sharing.md).
+
+## Implement only after review
+
+The proposed theme choice, remembered Mac controller credentials, reverse
+discovery/clipboard/files and diagnostics redaction need implementation and
+verification. A simulated working control is not evidence of platform support.
+
+After approval, extract shared tokens/strings/states, implement native Windows and
+Mac screens incrementally, and compare actual screenshots at supported sizes,
+languages and scaling. Keep bundle identity, Keychain, signing and TCC unchanged
+in this layout work. Normalize the Windows launcher to `LocalRemoteDesktop.exe`,
+remove the local compatibility rename to `LocalRemote.exe` and update shortcuts
+without deleting preferences or creating duplicate executables. Do not interrupt
+an active session for deployment.
+
+Native builds and actual two-device pairing/input/clipboard/files/reconnect checks
+remain release gates. Browser visual review cannot replace those checks. No new
+tag or release is implied by this revision.

@@ -1,28 +1,35 @@
-# UI review prototype
+# Local Remote Desktop design review
 
-Open `index.html` in a browser. No install, server, account or external dependency
-is needed. This is a review artifact, not application code.
+Revision 2 is **awaiting user review**. Native applications have not been updated
+to this revision. See [English specification](../../docs/design.md),
+[中文说明](../../docs/zh-CN/design.md) and the [implementation contract](revision-2.md).
 
-- Choose a platform, language and light/dark theme in the outer preview controls.
-- Explore Connect, Share this device, Remote desktop and Settings.
-- Use Preview state buttons to inspect pairing, missing permissions, transfer,
-  reconnect and empty-device scenarios.
-- Studio Mac demonstrates a remembered connection. Office PC demonstrates first
-  pairing; use the fictional password `Blueberry482`. Any other value shows an error.
-- Try manual Target IP, password generation/save/cancel, disconnect and mobile
-  controls. Native system/clipboard actions only show a simulation notice.
+Open `index.html` in a browser, or serve this repository locally and open
+`design/review/index.html`. The preview consists of HTML/CSS/JavaScript plus the
+approved [brand SVG](../../assets/brand/icon.svg); it uses no external fonts,
+services or packages. All devices, credentials, desktop content and files are
+fictional. No network connection, clipboard access, persistent storage, permission
+request or file transfer occurs.
 
-All state is ephemeral. No credential storage, capture, input injection, network
-connection or actual transfer occurs. Linux and mobile selectors are future
-platform design references, not implemented support. Mobile Share illustrates
-view-only screen sharing; it does not claim remote input or current support. The prototype uses the
-approved repository icon rather than introducing a new brand.
+Use the outside preview toolbar to select a platform/language/page. The native
+app inside has Connect, Share this device and Settings. Settings has General,
+Connection, Clipboard and About tabs. Session options have a distinct scope from
+defaults and cannot override disabled global clipboard permission.
 
-See [English specification](../../docs/design.md),
-[中文设计规范](../../docs/zh-CN/design.md) and [delivery plan](../../docs/v0.3.0-plan.md).
+Preview scenarios cover first/remembered/manual pairing, wrong password, no
+devices, offline saved devices, role conflict, sharing/input permissions, active
+sharing, temporary transfer and reconnect. The fictional target password is
+`Blueberry482`; the local sharing password can be edited independently. Copy,
+folder/settings and diagnostic actions only show simulated feedback.
 
-## 中文
+Linux, Android, iOS and HarmonyOS are future design references. Mobile Share is
+view-only and subject to platform consent/feasibility; these mockups do not claim
+implemented support. Browser checks do not establish native runtime acceptance.
 
-浏览器打开 `index.html` 即可。外部工具栏切换平台、语言和主题，下方预览状态可查看
-首次配对、权限不足、重连、传输等流程。首次配对的示例密码是 `Blueberry482`。
-全部交互为模拟，刷新清空状态；不会访问系统或保存凭据。设计确认后才应用到原生客户端。
+## Review images
+
+[Overview](overview.png) · [Connect](connect.jpg) · [Settings](settings.jpg) ·
+[Mac sharing](sharing.jpg) · [Remote desktop](session.jpg) ·
+[Future mobile sharing](mobile-share.jpg)
+
+These are browser captures of revision 2, not native client screenshots.

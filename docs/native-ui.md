@@ -1,5 +1,9 @@
 # Native interface progress
 
+The [second design revision](design.md) is awaiting review. This document describes
+the previous native implementation; no client changes or rebuilds were performed
+for that design revision.
+
 [简体中文](zh-CN/native-ui.md) · [Design](design.md) · [Delivery plan](v0.3.0-plan.md)
 
 The desktop design was reviewed on 2026-10-10. This is an incremental development

@@ -1,0 +1,28 @@
+Local Remote Desktop — second interface proposal, awaiting user review
+
+Scope: offline fictional HTML/CSS/JS design. No native app source, credential,
+installer, executable, package, tag or release changed.
+
+PASS JavaScript syntax check using Node.js
+PASS existing release/static checks: bilingual links, versions, license/catalog,
+     icon formats, tracked-file hygiene/basic secret indicators
+PASS browser: manual IP/password in one form; wrong password retains address
+     and draft; one error shown; corrected fictional password enters session
+PASS browser: saved offline device has disabled Connect
+PASS browser: cancel role switch preserves current sharing
+PASS browser: generate/edit/cancel preserves original password and sharing
+PASS browser: global files disabled cannot be overridden by session switch
+PASS browser: cancelling file transfer preserves desktop connection
+PASS browser: reconnect visibly labels last picture paused
+PASS browser: settings category selection; English/Chinese display
+PASS browser: Mac view-only permission recovery has actionable context
+PASS browser: future mobile sharing is labeled view-only, visible buttons have
+     >=44px height, no horizontal overflow inside mobile app frame
+PASS browser: default desktop page no horizontal overflow, brand images loaded
+PASS browser: no captured JavaScript warnings/errors
+
+Design preview only. No native runtime, real peer discovery/pairing, clipboard,
+file transfer, permission, OS input, latency or performance acceptance claimed.
+No viewport/OS scaling/native dark-theme acceptance performed in this revision.
+The visible review page was retained; interaction checks used a separate hidden
+tab and did not open, stop or focus a native client window.
