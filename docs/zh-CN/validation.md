@@ -82,3 +82,15 @@ C# 传输及最终 WPF 候选检查覆盖按实际耗时控速、字节完成与
 工程、界面与打包已统一为 Local Remote Desktop / LocalRemoteDesktop。
 Windows 构建、实际 WPF 回归及旧 DPAPI 数据兼容检查通过；Mac 仅完成便携检查，
 尚未原生验证安装、TCC 和钥匙串行为。见 [检查记录](../../tests/results/product-rename-2026-10-10.txt)。
+
+## Mac 控制端源码预览 — 2026-10-10
+
+v0.3.0-alpha.2 Windows 候选已通过实际构建、WPF 加密模拟端回归及产品 Windows
+桌面采集、编码和解码检查。Swift 控制端核心、模型、传输及会话在 Linux 上使用
+平台和解码适配通过检查；这不等于 Apple SDK 构建或真实 Mac 解码、桌面输入验收。
+Windows 可选原生输入检查因系统拒绝测试窗口获得焦点而跳过。
+见[完整检查记录](../../tests/results/mac-controller-2026-10-10.txt)。
+
+发布前仍需 Mac 原生及两机验收。SSH 接入已登录的开发 Mac 后可以远程构建、
+执行测试并收集日志；macOS 隐私授权仍须由用户在系统界面完成。Mac CI 可自动
+构建，但无桌面构建不能证明权限、画面渲染或输入接受正常。

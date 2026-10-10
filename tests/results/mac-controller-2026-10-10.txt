@@ -1,0 +1,42 @@
+Local Remote Desktop v0.3.0-alpha.2 source-preview checks
+Date: 2026-10-10
+Source commit: 9c96d1e92b491dfe75ce2c3eebdc60c80ad217f7
+Windows DLL SHA256: 68F56BE7EBF66B41BCA1508A3A5EFAE35200849C9EFE6C0AAC93512A04368CB4
+Local Windows ZIP SHA256: 325d433d0b8e75f38ba363bf3b66081d76916c1d4e0c5ac153c8cb751724ea91
+Embedded source ZIP SHA256: ee6cb1e001b21b2192e966f1b0c92c05b17474b02f04c3cdea95622c57782e4f
+
+PASS: Windows self-contained build/package using .NET SDK 8.0.425.
+PASS: Exact Windows DLL WPF regressions with independent encrypted RML1 and
+RMP1 peers: real H264 decoding, keyboard/mouse protocol, focus release,
+permission diagnostics, text/file clipboard fixtures, quality changes,
+latest-selection precedence, reconnect and owned-process cleanup.
+SKIP: Optional Windows native input acceptance check: OS refused test-window
+focus. Protocol input checks passed; application input acceptance is unproven.
+PASS: Production Windows host with independent encrypted peers, credential
+isolation, unauthorized/replayed/malformed rejection, one controller,
+disconnect/reconnect and capture-failure cleanup.
+PASS: MF hardware H264 -> encrypted TCP -> real decoding, including the current
+Windows primary desktop in memory only. Short checks, not sustained FPS or
+input-to-display latency measurements; no recordings or system input injection.
+PASS: Swift 5.9.2 production controller core/model checks on Linux: LAN address,
+capabilities/header validation, letterboxing, physical keys/keypad/modifiers,
+bounded outbox, malformed AnnexB and early excessive-NAL rejection, role
+exclusivity, latest-frame presentation, stale callbacks, failure/retry policy,
+quality debounce and timer cleanup. AppKit/SwiftUI/image services are fixtures.
+PASS: Production Wire and ControllerSession with independent Python peers:
+RMP1/RML1 mutual authentication, fragmented AES-GCM records, heartbeat and ordered
+input, wrong proof/replay/oversize denial, duplicate start, one completion,
+capability rejection and stop interrupting reads. Linux uses OpenSSL crypto and
+Darwin-to-Glibc adapters; session decoder is a fixture, not VideoToolbox.
+PASS: Existing Swift discovery/localization/sharing-model checks, 218 strings.
+PASS: Syntax parse of 24 Swift source files; release metadata/hygiene checks.
+PASS: ZIP checksum, GPL/runtime notices, and embedded 218-file source snapshot
+byte-equal to git archive of the binary's full source commit.
+PASS: Deployment to canonical and historical Windows launch directories;
+each contains one application launcher and the exact tested DLL.
+
+PENDING: Full native Apple SDK build; real VideoToolbox decode/render; installed
+Mac Keychain/TCC/update behavior; Mac -> Windows two-machine input acceptance;
+native clipboard/file interaction, physical LAN latency and long-session use.
+No Mac binary produced. Candidate ZIP is local only. No tag or release created.
+Release decision: hold pending native Mac and bidirectional acceptance.

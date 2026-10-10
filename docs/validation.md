@@ -181,3 +181,19 @@ Current code and packaging use **Local Remote Desktop / LocalRemoteDesktop**.
 Old data and protocol identities remain compatible. Actual Windows/WPF and
 DPAPI migration checks passed; native Mac installation and TCC/Keychain
 acceptance remain pending. See the [rename check record](../tests/results/product-rename-2026-10-10.txt).
+
+## Mac controller source preview — 2026-10-10
+
+The v0.3.0-alpha.2 Windows candidate passed actual build, WPF encrypted-peer
+regressions and production Windows desktop capture/encode/decode checks.
+Production Swift controller core, model, transport and session checks passed
+on Linux with platform/decoder adapters. These do not establish an Apple SDK
+build or actual Mac decoding and desktop input acceptance. The optional native
+Windows input check was skipped because the OS refused test-window focus.
+See the [full check record](../tests/results/mac-controller-2026-10-10.txt).
+
+Native Mac and two-machine acceptance are required before releasing this work.
+SSH to a logged-in development Mac can run native builds and collect test logs;
+macOS privacy approval remains an interactive system operation. A Mac CI runner
+can automate builds, but a headless build does not validate desktop permissions,
+rendering or input acceptance.
