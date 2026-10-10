@@ -45,6 +45,12 @@ behavior**, not claims of implementation in the current alpha.
   retain the input for correction. Selection never starts control.
 - Manual connection has **one dialog** containing Target IP, password and the
   remember choice; it does not split into an address dialog followed by pairing.
+  A matching discovery or saved record also shows its name and platform there.
+  Without a record, show only the address and say device information follows
+  connection; never derive a name or platform from an IP. After authentication,
+  refresh the list and session label from peer-supplied metadata. Cancel or failed
+  authentication must not create/rename a record; matching addresses must not
+  create duplicate rows. Discovery labels help recognition, not authorization.
 - Saved-but-offline devices remain visible with a disabled Connect action and a
   concrete recovery hint. Never mark an offline device as ready.
 - Forget password removes only that target's saved credential after an explicit
@@ -63,6 +69,11 @@ behavior**, not claims of implementation in the current alpha.
   consequences are stated: current behavior stops sharing and disconnects, then
   the user starts sharing again. Do not promise preservation without implementing
   and testing it. Routine startup does not regenerate the password.
+- Newly created passwords are exactly **8 characters**, without whitespace,
+  whether typed or generated. Generate is a visible bordered secondary button
+  with a refresh icon; Save remains primary. Existing native long passwords must
+  remain usable until explicitly changed, rather than being truncated or rotated
+  during an update. This preview policy is not yet a native authentication change.
 - Connection defaults apply to **new logical connections**. Session controls have
   a distinct scope and survive temporary quality reconnects. The active session
   does not silently adopt edited future defaults.
@@ -105,6 +116,10 @@ reduced motion and use native dark colors rather than simply inverting images.
 1. Extract shared tokens, strings and interaction/state rules. Do not change
    Keychain service names, Mac bundle identity, signing, TCC or transport as part
    of visual work. Capability gaps remain independently tracked.
+   Authenticated device-name metadata still needs a protocol implementation:
+   the current capabilities include platform but not the peer's device name.
+   Bound and validate display metadata, escape it, and fall back to IP / unknown
+   system when absent. A display name is not a cryptographic device identity.
 2. Implement the Windows shell/styles/settings and the relevant Mac native views
    in separate increments. Native controls keep OS conventions, while spacing,
    structure and action scope follow this contract.

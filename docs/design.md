@@ -30,12 +30,23 @@ devices remain identifiable without claiming that they are ready. Discovery
 does not authenticate a device. Forget password affects only the selected
 target's saved credential, not all application preferences or the local key.
 
+Names and platforms come from device announcements or saved records, never from
+the IP itself. A manual-IP dialog shows a matching record when available;
+otherwise it shows the address until connection succeeds. Authenticated peer
+metadata then updates the list and session label, without duplicate rows.
+Adding the peer's device name to the authenticated protocol remains implementation
+work; the offline preview simulates it. Failed pairing or Cancel adds no device.
+
 Share this device owns the local name, IP, masked password, availability/in-use
 state and visible stop action. Changing pages preserves sharing. Change password
 opens a draft: Generate fills it, Cancel changes nothing, Save explains that
 sharing stops and the current connection ends. Recovery from missing screen or
 input permission belongs here, never in the connection-to-another-device flow.
 View-only sharing is labeled when input permission is missing.
+
+New passwords use exactly eight characters without spaces, both manually and
+automatically. Generate is a clearly bordered secondary action. Existing native
+passwords remain usable until explicitly changed; updates must not truncate them.
 
 The current one-role restriction has an explicit Stop sharing & connect action
 after target validation. Cancel preserves the existing sharing session; do not

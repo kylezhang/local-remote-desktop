@@ -19,7 +19,7 @@ defaults and cannot override disabled global clipboard permission.
 Preview scenarios cover first/remembered/manual pairing, wrong password, no
 devices, offline saved devices, role conflict, sharing/input permissions, active
 sharing, temporary transfer and reconnect. The fictional target password is
-`Blueberry482`; the local sharing password can be edited independently. Copy,
+`Blue482X`; the local sharing password can be edited independently. Copy,
 folder/settings and diagnostic actions only show simulated feedback.
 
 Linux, Android, iOS and HarmonyOS are future design references. Mobile Share is
@@ -33,3 +33,13 @@ implemented support. Browser checks do not establish native runtime acceptance.
 [Future mobile sharing](mobile-share.jpg)
 
 These are browser captures of revision 2, not native client screenshots.
+
+Manual-IP fixtures: `192.168.1.24` matches the nearby Studio Mac (macOS).
+`192.168.1.70` is initially undiscovered: its name and Windows platform appear
+only after simulated authentication. Other IPs remain IP / unknown system;
+the preview never guesses a platform. Generated and newly saved passwords are
+exactly eight characters. These fixtures are not usable real-device credentials.
+
+Latest review details: [manual target information](manual-address.jpg),
+[password editor](password-edit.jpg), and
+[device added after simulated authentication](manual-connected.jpg).

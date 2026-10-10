@@ -1,0 +1,29 @@
+Local Remote Desktop — design review 2 follow-up, awaiting user review
+
+Scope: offline design prototype and bilingual design documentation only.
+No native client, real credential, installer, package, tag or release modified.
+
+Browser interaction checks on fictional fixtures:
+PASS requested Chinese copy replacements and removed two sharing footer hints
+PASS corresponding English copy; sharing masks exactly eight characters
+PASS Generate is a bordered secondary button with refresh icon; two generated
+     draft examples are different and each has exactly eight characters
+PASS password save rejects seven/nine characters and eight with a space
+PASS manual eight-character password saves; Generate then Cancel preserves it
+PASS known manual IP .24 previews Studio Mac / macOS from its discovery record
+PASS unknown manual IP .70 initially shows no guessed name or system
+PASS wrong password and Cancel leave three original device rows unchanged
+PASS successful simulated .70 authentication displays Meeting PC / Windows
+     in session and selected-device detail, then adds one device row
+PASS reconnecting .24 adds no duplicate Studio Mac row
+PASS absent peer metadata falls back to address / unknown system (.90)
+PASS previously connected .70 metadata is labeled previously connected,
+     rather than claiming it was found by nearby discovery
+PASS future mobile sharing has no horizontal overflow in its app frame
+
+These checks validate simulated UI behavior only. Peer device-name metadata
+and the new-password policy still require native protocol/client implementation.
+Existing native long passwords must be retained until explicitly changed.
+No actual discovery, authentication, OS permissions, remote input, clipboard,
+file transfer or remote-desktop performance acceptance claimed.
+Checks used hidden browser tabs; no native client window was launched or focused.
