@@ -6,8 +6,6 @@
 
 **English** | [简体中文](README.zh-CN.md)
 
-[Download](https://atomgit.com/zkxw2008/local-remote-desktop/releases) · [Documentation](#documentation) · [Roadmap](docs/roadmap.md)
-
 ## Background
 
 This project started with an everyday office need: control a Mac from a Windows PC. After trying several tools, I still hadn't found a client that felt right. Some were awkward to use, others were dated, and some required payment. For a simple personal setup connecting my own two computers over the LAN, I wanted a lightweight, convenient tool without an additional cost.
