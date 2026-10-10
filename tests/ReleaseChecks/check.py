@@ -14,9 +14,9 @@ license_text = (root/'LICENSE').read_text(encoding='utf-8')
 assert 'GNU GENERAL PUBLIC LICENSE' in license_text and 'Version 3, 29 June 2007' in license_text
 assert 'END OF TERMS AND CONDITIONS' in license_text and len(license_text) > 30000
 for document in ('README.md', 'README.zh-CN.md', 'NOTICE.md', 'CONTRIBUTING.md'):
-    assert 'GPL-3.0-only' in (root/document).read_text(encoding='utf-8'), document
-assert ET.parse(root/'apps/windows/LocalRemoteDesktop.csproj').findtext('./PropertyGroup/PackageLicenseExpression') == 'GPL-3.0-only'
-print('PASS GPL-3.0-only license and bilingual project declarations')
+    assert 'GPL-3.0-or-later' in (root/document).read_text(encoding='utf-8'), document
+assert ET.parse(root/'apps/windows/LocalRemoteDesktop.csproj').findtext('./PropertyGroup/PackageLicenseExpression') == 'GPL-3.0-or-later'
+print('PASS GPL-3.0-or-later license and bilingual project declarations')
 version = ET.parse(root/'apps/windows/LocalRemoteDesktop.csproj').findtext('./PropertyGroup/Version')
 assert re.fullmatch(r'\d+\.\d+\.\d+(?:-(?:alpha|beta|rc)\.[1-9][0-9]*)?', version)
 plist = plistlib.loads((root/'apps/macos/Info.plist').read_bytes())

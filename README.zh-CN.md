@@ -99,6 +99,6 @@ bash apps/macos/build-app.sh
 
 ## 许可
 
-Local Remote Desktop 采用 [GNU 通用公共许可证第 3 版](LICENSE)（`GPL-3.0-only`）。允许使用、修改和再分发，包括商业使用；分发受 GPL 约束的修改版本或二进制时，需遵守相应源码提供及同许可证要求。
+Local Remote Desktop 采用 [GNU 通用公共许可证第 3 版或更高版本](LICENSE)（`GPL-3.0-or-later`）。允许使用、修改和再分发，包括商业使用；分发受 GPL 约束的修改版本或二进制时，需遵守相应源码提供及同许可证要求。
 
 第三方组件保留各自许可证。版权、依赖与分发说明见 [NOTICE](NOTICE.md)。

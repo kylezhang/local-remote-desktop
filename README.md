@@ -99,6 +99,6 @@ Main is **v0.3.0-alpha.1**, with a [Windows sharing preview](docs/windows-sharin
 
 ## License
 
-Local Remote Desktop is licensed under the [GNU General Public License v3.0](LICENSE) (`GPL-3.0-only`). You may use, modify and redistribute it, including commercially. When distributing covered modified versions or binaries, follow GPL's corresponding-source and same-license requirements.
+Local Remote Desktop is licensed under the [GNU General Public License v3.0 or later](LICENSE) (`GPL-3.0-or-later`). You may use, modify and redistribute it, including commercially. When distributing covered modified versions or binaries, follow GPL's corresponding-source and same-license requirements.
 
 Third-party components retain their own licenses. See [NOTICE](NOTICE.md) for copyright, dependency and distribution information.

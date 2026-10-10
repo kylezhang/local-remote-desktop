@@ -4,7 +4,7 @@
 
 ## Unreleased
 
-- Adopt GPL-3.0-only for the project's original code, documentation and brand assets.
+- Adopt GPL-3.0-or-later for the project's original code, documentation and brand assets.
   Future binary packages include the license and matching committed source with
   build instructions; third-party licenses and existing release artifacts remain unchanged.
 

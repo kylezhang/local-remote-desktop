@@ -8,7 +8,7 @@
     <AssemblyName>LocalRemoteDesktop</AssemblyName>
     <RootNamespace>LocalRemoteDesktop</RootNamespace>
     <Description>Local-first remote desktop</Description>
-    <PackageLicenseExpression>GPL-3.0-only</PackageLicenseExpression>
+    <PackageLicenseExpression>GPL-3.0-or-later</PackageLicenseExpression>
     <ApplicationIcon>../../assets/brand/LocalRemoteDesktop.ico</ApplicationIcon>
   </PropertyGroup>
   <ItemGroup>

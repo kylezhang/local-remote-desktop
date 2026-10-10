@@ -137,7 +137,7 @@ def check_archive(archive, version, commit):
             or b'Version 3, 29 June 2007' not in license_text):
         raise ValueError('GPL version 3 license missing')
     source_notice = files[folder + '/SOURCE.txt'].decode('utf-8-sig')
-    if commit not in source_notice or 'GPL-3.0-only' not in source_notice:
+    if commit not in source_notice or 'GPL-3.0-or-later' not in source_notice:
         raise ValueError('Corresponding source notice mismatch')
     check_source_archive(files[folder + '/source.zip'], commit, license_text)
     check_files({n[len(app_prefix):]: b for n, b in files.items() if n.startswith(app_prefix)}, version)

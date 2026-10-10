@@ -70,7 +70,7 @@ cp LICENSE "$payload/LICENSE"
 git archive --format=zip --prefix="LocalRemoteDesktop-source-$commit/" --output="$payload/source.zip" "$commit"
 cat > "$payload/SOURCE.txt" <<EOF
 Local Remote Desktop — corresponding source
-License: GNU GPL version 3 only (GPL-3.0-only); see LICENSE.
+License: GNU GPL version 3 or any later version (GPL-3.0-or-later); see LICENSE.
 Source commit: $commit
 Source archive: source.zip (included here; repository access is not required)
 Extract source.zip and follow README.md and apps/macos/build-app.sh on macOS.
@@ -96,7 +96,7 @@ A development-to-distribution signing change can require new permission approval
 从开发签名切换到发布签名时，可能需要重新授权。
 
 Repository: https://atomgit.com/zkxw2008/local-remote-desktop
-License: GPL-3.0-only; see LICENSE. Corresponding source: source.zip and SOURCE.txt.
+License: GPL-3.0-or-later; see LICENSE. Corresponding source: source.zip and SOURCE.txt.
 Source commit: $commit
 EOF
 python3 scripts/check-macos-package.py --app "$app" --version "$version" --commit "$commit" --manifest-output "$payload/release.json"

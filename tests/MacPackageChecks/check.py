@@ -97,7 +97,7 @@ class PackageChecks(unittest.TestCase):
         bundle(payload/'Local Remote Desktop.app')
         for doc in ('NOTICE.md', 'START-HERE.txt'): (payload/doc).write_text('fixture documentation')
         (payload/'LICENSE').write_bytes((root/'LICENSE').read_bytes())
-        (payload/'SOURCE.txt').write_text(f'GPL-3.0-only\nSource commit: {commit}\n')
+        (payload/'SOURCE.txt').write_text(f'GPL-3.0-or-later\nSource commit: {commit}\n')
         (payload/'source.zip').write_bytes(source_archive())
         hashes = {p.relative_to(payload).as_posix(): hashlib.sha256(p.read_bytes()).hexdigest()
                   for p in payload.rglob('*') if p.is_file()}

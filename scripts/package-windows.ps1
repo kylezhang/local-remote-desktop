@@ -58,7 +58,7 @@ $sourceArchive = Join-Path $package 'source.zip'
 if ($LASTEXITCODE -ne 0) { throw 'Corresponding source archive failed.' }
 @"
 Local Remote Desktop — corresponding source
-License: GNU GPL version 3 only (GPL-3.0-only); see LICENSE.
+License: GNU GPL version 3 or any later version (GPL-3.0-or-later); see LICENSE.
 Source commit: $commit
 Source archive: source.zip (inside this package, not dependent on repository access)
 Extract the source archive and follow README.md and apps/windows/BUILD.md.
@@ -91,7 +91,7 @@ Mac 正常登录并开启共享、完成权限；填写 IP 和配对密码，点
 文字/普通文件默认同步；在设置中可关闭，等启用后重新复制。文件需 TCP 47981。
 
 Repository: https://atomgit.com/zkxw2008/local-remote-desktop
-License: GPL-3.0-only; see LICENSE. Corresponding source: source.zip and SOURCE.txt.
+License: GPL-3.0-or-later; see LICENSE. Corresponding source: source.zip and SOURCE.txt.
 Source commit: $commit
 Runtime: .NET $coreVersion / Desktop $desktopVersion; SDK $sdkVersion.
 Beta scope: Windows build/automated tests are verified; Mac source is provided.
