@@ -6,6 +6,8 @@ Do not commit build output, runtime binaries, release archives, credentials, pai
 
 For changes to transport/input, run ProtocolChecks and ClientChecks on Windows with FFmpeg. For installer/signing changes, run isolated mock checks and obtain native Mac validation before claiming real TCC/signing behavior. See [validation](docs/validation.md) and [release process](docs/releasing.md).
 
-Do not reset permissions, rotate keys, change bundle identity or alter credential storage incidentally while fixing unrelated behavior. Keep release tags immutable and publish runtime notices/checksums alongside artifacts. No open-source license has been chosen; repository privacy and licensing are owner-controlled decisions, not changed by this maintenance workflow.
+Do not reset permissions, rotate keys, change bundle identity or alter credential storage incidentally while fixing unrelated behavior. Keep release tags immutable and publish license files, corresponding source, runtime notices and checksums alongside artifacts. Repository privacy remains an owner-controlled decision.
 
-中文：提交应小而明确，采用 feat/fix/docs/test/chore 等前缀；英文文档变更同步中文。不要提交构建产物、日志、私钥、密钥或个人连接信息。忽略规则不会自动移除已跟踪文件。传输/输入改动运行协议和客户端测试；Mac 脚本模拟测试不能代替真实权限验证。不要为无关修复重置权限或改变凭据身份，发布 tag 保持不可变。
+Contributions to the project's original code and documentation must be available under [GPL-3.0-only](LICENSE). Only submit work you have the right to contribute; preserve third-party license and copyright notices and identify any imported code and its license.
+
+中文：提交应小而明确，采用 feat/fix/docs/test/chore 等前缀；英文文档变更同步中文。不要提交构建产物、日志、私钥、密钥或个人连接信息。忽略规则不会自动移除已跟踪文件。传输/输入改动运行协议和客户端测试；Mac 脚本模拟测试不能代替真实权限验证。不要为无关修复重置权限或改变凭据身份，发布 tag 保持不可变。原创代码和文档贡献须可按 GPL-3.0-only 提供；仅提交有权贡献的内容，保留第三方版权与许可说明，注明引入代码及其许可证。

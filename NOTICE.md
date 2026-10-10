@@ -1,6 +1,10 @@
-# Dependencies and distribution
+# Copyright, license and distribution
 
-Local Remote Desktop currently has no declared project-wide open-source license. The repository remains private; this release does not change visibility or license rights.
+Copyright (C) 2026 zkxw2008 and contributors.
+
+Local Remote Desktop's original source code, documentation and brand assets are licensed under the GNU General Public License, version 3 only (`SPDX-License-Identifier: GPL-3.0-only`), unless a file explicitly states otherwise. The full license is in [LICENSE](LICENSE). This program is distributed without any warranty, including the implied warranties of merchantability or fitness for a particular purpose. The project's name and logo do not imply endorsement of modified distributions.
+
+Future binary packages include LICENSE, this notice, SOURCE.txt identifying the exact source commit and a source.zip snapshot containing the project's corresponding source and build scripts. A private repository link alone is not the source-delivery mechanism. Existing release artifacts and repository visibility are not changed by adopting this license.
 
 Windows self-contained packages include Microsoft .NET 8 and Windows Desktop runtime components. The release packager copies the runtime licenses and third-party notices from the exact installed .NET runtime packs/SDK used for that build. They must remain with redistributed packages. Runtime versions are recorded in release validation.
 
@@ -8,4 +12,4 @@ FFmpeg is launched as a separate executable and is not included in this release.
 
 The Local Remote Desktop icon is an original repository-owned vector asset, with no downloaded fonts or artwork. Regeneration uses Python/Pillow as a development tool; Pillow is not a runtime dependency.
 
-中文：仓库保持私有，尚未选择项目开源许可证。Windows 包包含 .NET/桌面运行时，必须保留相应许可证与第三方说明。FFmpeg 不包含在本次包中，用户单独安装并遵守所选构建许可。图标为本项目原创矢量设计；Pillow 仅用于开发生成，不是运行依赖。
+中文：本项目原创代码、文档与品牌素材采用 GPL-3.0-only，除非文件另有声明；完整条款见 LICENSE，软件不提供担保。后续二进制包附许可证、声明、标明精确提交的 SOURCE.txt，以及含项目相应源码和构建脚本的 source.zip；不依赖私有仓库链接提供源码。既有发布附件及仓库可见性不变。Windows 包中的 .NET/桌面运行时及其他第三方组件保留各自许可。FFmpeg 仍单独安装，其许可取决于所选构建；Pillow 仅用于开发生成图标。

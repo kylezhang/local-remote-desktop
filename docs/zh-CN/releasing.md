@@ -5,7 +5,7 @@
 1. 确定范围与版本，从 v0.1.0 开始，后续按大/小/修订版本语义维护；两端版本、窗口与更新日志一致，Mac 内部 build number 递增。
 2. 同步英文/中文文档；检查已跟踪文件、Git 忽略、差异与敏感信息，不提交构建产物、日志、凭据或证书。不随意改变兼容身份。
 3. Windows Release 构建，运行协议、客户端及受影响脚本测试，记录实际范围。Mac 原生验证需要 Mac，没有时明确说明。
-4. 用 scripts/package-windows.ps1 打包，保留 .NET 许可证和第三方说明、启动指南，生成 SHA-256。确认 ZIP 含测试过的程序集、图标和桌面运行时；FFmpeg 外置，不发布未验证 Mac 二进制。
+4. 从已提交、干净的源码运行 scripts/package-windows.ps1 打包。附项目 GPL-3.0-only 的 LICENSE、NOTICE.md、SOURCE.txt 和 source.zip，同时保留 .NET 许可证、第三方说明和启动指南。source.zip 包含精确提交的源码、构建脚本与文档，接收者无需访问私有仓库即可取得相应源码。生成 SHA-256，确认 ZIP 含测试过的程序集、图标、桌面运行时及匹配源码；FFmpeg 外置，不发布未验证 Mac 二进制。
 5. 提交并推送 AtomGit，在精确提交上创建注释 tag vX.Y.Z，创建 Release、上传 ZIP/校验文件，并核验 tag、说明及下载附件。已发布 tag 和产物不改指向，错误发修订版。
 6. 继续更新用户固定 Windows 程序目录，先关闭该实例再替换，最后仅启动一个；不清除连接记忆。
 
@@ -17,4 +17,5 @@ Mac 二进制另须通过[签名与分发验收](macos-signing.md)。由维护�
 
 统一版本并提交后，用 `scripts/package-macos.sh`、Developer ID 指纹及已有钥匙串公证配置生成 Mac 候选包，详见[维护者打包](macos-signing.md#维护者打包)。
 流程检查已提交源码，构建、签名、公证并校验最终解压产物，输出不覆盖的候选目录、来源和校验值。
+Mac 候选包同样附 LICENSE、NOTICE.md、SOURCE.txt 和该精确提交的 source.zip。
 不会安装 Host 或发布；仍需原生首次启动和升级验收后才能打 tag、上传。这里仅完成模拟验证。

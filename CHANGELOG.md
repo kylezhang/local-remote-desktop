@@ -4,6 +4,10 @@
 
 ## Unreleased
 
+- Adopt GPL-3.0-only for the project's original code, documentation and brand assets.
+  Future binary packages include the license and matching committed source with
+  build instructions; third-party licenses and existing release artifacts remain unchanged.
+
 - Rename the product to Local Remote Desktop and its existing private AtomGit
   repository to local-remote-desktop. Update native source/assembly names, app
   titles, resources and build/package documentation. Preserve credential stores,

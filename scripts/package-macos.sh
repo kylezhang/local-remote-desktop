@@ -66,6 +66,19 @@ xcrun stapler validate "$app"
 check_native_signature "$app"
 spctl --assess --type execute "$app"
 cp NOTICE.md "$payload/NOTICE.md"
+cp LICENSE "$payload/LICENSE"
+git archive --format=zip --prefix="LocalRemoteDesktop-source-$commit/" --output="$payload/source.zip" "$commit"
+cat > "$payload/SOURCE.txt" <<EOF
+Local Remote Desktop — corresponding source
+License: GNU GPL version 3 only (GPL-3.0-only); see LICENSE.
+Source commit: $commit
+Source archive: source.zip (included here; repository access is not required)
+Extract source.zip and follow README.md and apps/macos/build-app.sh on macOS.
+For distribution signing, see docs/macos-signing.md. Third-party licenses: NOTICE.md.
+
+相应源码已附在 source.zip，提交为 $commit；解压后按 README.zh-CN.md
+和 apps/macos/build-app.sh 构建。分发签名见 docs/zh-CN/macos-signing.md。
+EOF
 cat > "$payload/START-HERE.txt" <<EOF
 Local Remote Desktop $version — macOS Apple Silicon
 
@@ -83,6 +96,7 @@ A development-to-distribution signing change can require new permission approval
 从开发签名切换到发布签名时，可能需要重新授权。
 
 Repository: https://atomgit.com/zkxw2008/local-remote-desktop
+License: GPL-3.0-only; see LICENSE. Corresponding source: source.zip and SOURCE.txt.
 Source commit: $commit
 EOF
 python3 scripts/check-macos-package.py --app "$app" --version "$version" --commit "$commit" --manifest-output "$payload/release.json"

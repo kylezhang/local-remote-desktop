@@ -1,12 +1,39 @@
 """Portable package checks. These do not verify Apple signatures or notarization."""
 import argparse
 import hashlib
+import io
 import json
 from pathlib import Path, PurePosixPath
 import plistlib
 import re
 import struct
 import zipfile
+
+
+def check_source_archive(content, commit, license_text):
+    prefix = f'LocalRemoteDesktop-source-{commit}/'
+    required = {
+        'LICENSE', 'NOTICE.md', 'README.md', 'README.zh-CN.md',
+        'apps/macos/Package.swift', 'apps/macos/build-app.sh',
+        'apps/windows/LocalRemoteDesktop.csproj', 'apps/windows/BUILD.md',
+    }
+    with zipfile.ZipFile(io.BytesIO(content)) as source:
+        if source.comment != commit.encode('ascii'):
+            raise ValueError('Corresponding source commit mismatch')
+        if sum(i.file_size for i in source.infolist()) > 512 * 1024 * 1024:
+            raise ValueError('Source snapshot exceeds size limit')
+        seen = set()
+        for entry in source.infolist():
+            name = entry.filename
+            if (name in seen or not name.startswith(prefix) or '\\' in name
+                    or '..' in PurePosixPath(name).parts or ':' in name
+                    or ((entry.external_attr >> 16) & 0o170000) == 0o120000):
+                raise ValueError('Unsafe or duplicate source entry')
+            seen.add(name)
+        if not {prefix + p for p in required}.issubset(seen):
+            raise ValueError('Corresponding source or build instructions missing')
+        if source.read(prefix + 'LICENSE') != license_text:
+            raise ValueError('Source and binary license mismatch')
 
 
 def check_files(files, version):
@@ -69,7 +96,8 @@ def check_archive(archive, version, commit):
         raise ValueError('A full source commit is required')
     folder = f'LocalRemoteDesktop-v{version}-macos-arm64'
     app_prefix = folder + '/Local Remote Desktop.app/'
-    required_docs = {folder + '/' + name for name in ('NOTICE.md', 'START-HERE.txt', 'release.json')}
+    required_docs = {folder + '/' + name for name in (
+        'LICENSE', 'NOTICE.md', 'SOURCE.txt', 'source.zip', 'START-HERE.txt', 'release.json')}
     files = {}
     with zipfile.ZipFile(archive) as package:
         if sum(i.file_size for i in package.infolist()) > 512 * 1024 * 1024:
@@ -104,6 +132,14 @@ def check_archive(archive, version, commit):
             files[name] = package.read(entry)
     if not required_docs.issubset(files):
         raise ValueError('Missing release documentation')
+    license_text = files[folder + '/LICENSE']
+    if (b'GNU GENERAL PUBLIC LICENSE' not in license_text
+            or b'Version 3, 29 June 2007' not in license_text):
+        raise ValueError('GPL version 3 license missing')
+    source_notice = files[folder + '/SOURCE.txt'].decode('utf-8-sig')
+    if commit not in source_notice or 'GPL-3.0-only' not in source_notice:
+        raise ValueError('Corresponding source notice mismatch')
+    check_source_archive(files[folder + '/source.zip'], commit, license_text)
     check_files({n[len(app_prefix):]: b for n, b in files.items() if n.startswith(app_prefix)}, version)
     manifest = json.loads(files[folder + '/release.json'])
     if manifest.get('version') != version or manifest.get('commit') != commit:

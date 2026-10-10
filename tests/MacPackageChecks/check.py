@@ -1,6 +1,7 @@
 """Portable package validation and mocked Mac release flow. No Apple service/keys/TCC."""
 import argparse
 import hashlib
+import io
 import importlib.util
 import json
 from pathlib import Path
@@ -24,6 +25,22 @@ checker = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(checker)
 commit = 'a' * 40
 name = 'LocalRemoteDesktop-v0.1.1-macos-arm64'
+
+
+def source_archive(change='none'):
+    content = io.BytesIO()
+    prefix = f'LocalRemoteDesktop-source-{commit}/'
+    with zipfile.ZipFile(content, 'w') as source:
+        source.comment = (('b' * 40) if change == 'wrong-source-commit' else commit).encode('ascii')
+        for relative in ('LICENSE', 'NOTICE.md', 'README.md', 'README.zh-CN.md',
+                         'apps/macos/Package.swift', 'apps/macos/build-app.sh',
+                         'apps/windows/LocalRemoteDesktop.csproj', 'apps/windows/BUILD.md'):
+            if change == 'missing-build-script' and relative == 'apps/macos/build-app.sh': continue
+            data = (root/relative).read_bytes()
+            if change == 'wrong-source-license' and relative == 'LICENSE': data = b'wrong license'
+            source.writestr(prefix + relative, data)
+        if change == 'source-traversal': source.writestr(prefix + '../escape', b'fixture')
+    return content.getvalue()
 
 
 def bundle(app):
@@ -79,17 +96,26 @@ class PackageChecks(unittest.TestCase):
         payload = fixture/name
         bundle(payload/'Local Remote Desktop.app')
         for doc in ('NOTICE.md', 'START-HERE.txt'): (payload/doc).write_text('fixture documentation')
+        (payload/'LICENSE').write_bytes((root/'LICENSE').read_bytes())
+        (payload/'SOURCE.txt').write_text(f'GPL-3.0-only\nSource commit: {commit}\n')
+        (payload/'source.zip').write_bytes(source_archive())
         hashes = {p.relative_to(payload).as_posix(): hashlib.sha256(p.read_bytes()).hexdigest()
                   for p in payload.rglob('*') if p.is_file()}
         (payload/'release.json').write_text(json.dumps({'version': '0.1.1', 'commit': commit, 'sha256': hashes}))
-        for change in ('none', 'traversal', 'extra', 'symlink', 'tampered', 'wrong-commit', 'appledouble', 'orphan-appledouble'):
+        for change in ('none', 'traversal', 'extra', 'symlink', 'tampered', 'wrong-commit',
+                       'appledouble', 'orphan-appledouble', 'missing-license', 'missing-source',
+                       'wrong-source-commit', 'wrong-source-license', 'missing-build-script', 'source-traversal'):
             with self.subTest(change=change):
                 archive = fixture/(change + '.zip')
                 with zipfile.ZipFile(archive, 'w') as z:
                     for path in payload.rglob('*'):
                         if path.is_file():
+                            if change == 'missing-license' and path.name == 'LICENSE': continue
+                            if change == 'missing-source' and path.name == 'source.zip': continue
                             content = path.read_bytes()
                             if change == 'tampered' and path.name == 'NOTICE.md': content = b'changed'
+                            if change in ('wrong-source-commit', 'wrong-source-license', 'missing-build-script', 'source-traversal') and path.name == 'source.zip':
+                                content = source_archive(change)
                             z.writestr(path.relative_to(fixture).as_posix(), content)
                     if change == 'traversal': z.writestr(name + '/../escape', b'fixture')
                     if change == 'extra': z.writestr(name + '/unexpected.token', b'fixture')
@@ -116,6 +142,8 @@ class PackageChecks(unittest.TestCase):
                     (fixture/directory).mkdir(parents=True)
                 bundle(fixture/'template/Local Remote Desktop.app')
                 (fixture/'NOTICE.md').write_text('fixture notices')
+                (fixture/'LICENSE').write_bytes((root/'LICENSE').read_bytes())
+                (fixture/'fixture-source.zip').write_bytes(source_archive())
                 (fixture/'apps/macos/Info.plist').write_bytes((fixture/'template/Local Remote Desktop.app/Contents/Info.plist').read_bytes())
                 if mode == 'wrong-version':
                     info = plistlib.loads((fixture/'apps/macos/Info.plist').read_bytes())
@@ -154,7 +182,11 @@ python3() {
   command "$test_python" "$@"
 }
 git() {
-  if [[ "$1" == status ]]; then
+  if [[ "$1" == archive ]]; then
+    for argument in "$@"; do
+      if [[ "$argument" == --output=* ]]; then cp fixture-source.zip "${argument#--output=}"; fi
+    done
+  elif [[ "$1" == status ]]; then
     if [[ "$mode" == dirty || ( "$mode" == source-changed && -f stapled ) ]]; then echo ' M source'; fi
   else echo aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa; fi
 }
