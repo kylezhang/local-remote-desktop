@@ -23,7 +23,7 @@ spec = importlib.util.spec_from_file_location('package_check', root/'scripts/che
 checker = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(checker)
 commit = 'a' * 40
-name = 'LocalRemote-v0.1.1-macos-arm64'
+name = 'LocalRemoteDesktop-v0.1.1-macos-arm64'
 
 
 def bundle(app):
@@ -32,12 +32,12 @@ def bundle(app):
     (app/'Contents/_CodeSignature').mkdir()
     info = plistlib.loads((root/'apps/macos/Info.plist').read_bytes())
     info['CFBundleShortVersionString'] = '0.1.1'
-    info['LocalRemoteReleaseVersion'] = '0.1.1'
+    info['LocalRemoteDesktopReleaseVersion'] = '0.1.1'
     (app/'Contents/Info.plist').write_bytes(plistlib.dumps(info))
-    executable = app/'Contents/MacOS/LocalRemote'
+    executable = app/'Contents/MacOS/LocalRemoteDesktop'
     executable.write_bytes(struct.pack('<II', 0xFEEDFACF, 0x0100000C) + bytes(24))
     executable.chmod(0o755)
-    for source, target in [('LocalRemote.icns', 'LocalRemote.icns'), ('icon.png', 'LocalRemote.png')]:
+    for source, target in [('LocalRemoteDesktop.icns', 'LocalRemoteDesktop.icns'), ('icon.png', 'LocalRemoteDesktop.png')]:
         (app/'Contents/Resources'/target).write_bytes((root/'assets/brand'/source).read_bytes())
     (app/'Contents/Resources/signing-mode.txt').write_text('certificate\n')
     (app/'Contents/Resources/strings.json').write_bytes((root/'assets/localization/strings.json').read_bytes())
@@ -53,23 +53,23 @@ class PackageChecks(unittest.TestCase):
     def test_bundle_validation(self):
         for change in ('none', 'missing-icon', 'missing-language', 'bad-language', 'wrong-version', 'prerelease-as-stable', 'wrong-cpu', 'adhoc', 'extra-key', 'bad-icns'):
             with self.subTest(change=change):
-                app = self.fixture()/'LocalRemote.app'
+                app = self.fixture()/'Local Remote Desktop.app'
                 bundle(app)
-                if change == 'missing-icon': (app/'Contents/Resources/LocalRemote.png').unlink()
+                if change == 'missing-icon': (app/'Contents/Resources/LocalRemoteDesktop.png').unlink()
                 if change == 'missing-language': (app/'Contents/Resources/strings.json').unlink()
                 if change == 'bad-language': (app/'Contents/Resources/strings.json').write_text('{}')
                 if change == 'wrong-version':
                     info = plistlib.loads((app/'Contents/Info.plist').read_bytes())
                     info['CFBundleShortVersionString'] = '9.9.9'
                     (app/'Contents/Info.plist').write_bytes(plistlib.dumps(info))
-                if change == 'wrong-cpu': (app/'Contents/MacOS/LocalRemote').write_bytes(bytes(32))
+                if change == 'wrong-cpu': (app/'Contents/MacOS/LocalRemoteDesktop').write_bytes(bytes(32))
                 if change == 'prerelease-as-stable':
                     info = plistlib.loads((app/'Contents/Info.plist').read_bytes())
-                    info['LocalRemoteReleaseVersion'] = '0.1.1-beta.1'
+                    info['LocalRemoteDesktopReleaseVersion'] = '0.1.1-beta.1'
                     (app/'Contents/Info.plist').write_bytes(plistlib.dumps(info))
                 if change == 'adhoc': (app/'Contents/Resources/signing-mode.txt').write_text('ad-hoc')
                 if change == 'extra-key': (app/'Contents/Resources/secret.key').write_text('fixture')
-                if change == 'bad-icns': (app/'Contents/Resources/LocalRemote.icns').write_bytes(b'icns0000')
+                if change == 'bad-icns': (app/'Contents/Resources/LocalRemoteDesktop.icns').write_bytes(b'icns0000')
                 if change == 'none': checker.check_app(app, '0.1.1')
                 else:
                     with self.assertRaises(ValueError): checker.check_app(app, '0.1.1')
@@ -77,7 +77,7 @@ class PackageChecks(unittest.TestCase):
     def test_archive_validation(self):
         fixture = self.fixture()
         payload = fixture/name
-        bundle(payload/'LocalRemote.app')
+        bundle(payload/'Local Remote Desktop.app')
         for doc in ('NOTICE.md', 'START-HERE.txt'): (payload/doc).write_text('fixture documentation')
         hashes = {p.relative_to(payload).as_posix(): hashlib.sha256(p.read_bytes()).hexdigest()
                   for p in payload.rglob('*') if p.is_file()}
@@ -114,9 +114,9 @@ class PackageChecks(unittest.TestCase):
                 fixture = self.fixture()
                 for directory in ('scripts', 'apps/macos', 'tests/MacStartupChecks', 'dist'):
                     (fixture/directory).mkdir(parents=True)
-                bundle(fixture/'template/LocalRemote.app')
+                bundle(fixture/'template/Local Remote Desktop.app')
                 (fixture/'NOTICE.md').write_text('fixture notices')
-                (fixture/'apps/macos/Info.plist').write_bytes((fixture/'template/LocalRemote.app/Contents/Info.plist').read_bytes())
+                (fixture/'apps/macos/Info.plist').write_bytes((fixture/'template/Local Remote Desktop.app/Contents/Info.plist').read_bytes())
                 if mode == 'wrong-version':
                     info = plistlib.loads((fixture/'apps/macos/Info.plist').read_bytes())
                     info['CFBundleShortVersionString'] = '0.1.0'
@@ -127,7 +127,7 @@ set -eu
 [[ "$LOCALREMOTE_RELEASE_BUILD" == 1 && "$SIGN_IDENTITY" == ABCDEF ]]
 echo build >> actions
 mkdir -p apps/macos/build
-cp -R template/LocalRemote.app apps/macos/build/LocalRemote.app
+cp -R "template/Local Remote Desktop.app" "apps/macos/build/Local Remote Desktop.app"
 ''', newline='\n')
                 (fixture/'tests/MacStartupChecks/check.sh').write_text('echo startup-check >> actions\n', newline='\n')
                 # Only archive creation/extraction is simulated by Python; production
@@ -190,7 +190,7 @@ ditto() {
   elif [[ "$1" == -x ]]; then
     python3 archive.py unpack "${@: -2:1}" "${@: -1}"
     if [[ "$mode" == extract-tampered ]]; then
-      rm "${@: -1}/LocalRemote-v0.1.1-macos-arm64/LocalRemote.app/Contents/CodeResources"
+      rm "${@: -1}/LocalRemoteDesktop-v0.1.1-macos-arm64/Local Remote Desktop.app/Contents/CodeResources"
     fi
   else cp -R "$1" "$2"; fi
 }

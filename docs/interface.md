@@ -2,7 +2,7 @@
 
 [简体中文](zh-CN/interface.md)
 
-LocalRemote uses one product vocabulary and familiar workflows across platforms,
+Local Remote Desktop uses one product vocabulary and familiar workflows across platforms,
 with native controls, typography, permissions and keyboard conventions. These
 rules apply to the v0.2.0 interface work and v0.3.0 desktop roles; planned roles
 must not appear as usable actions before implementation.

@@ -1,6 +1,6 @@
 using System.Text;
 using System.Text.Json;
-using LocalRemote;
+using LocalRemoteDesktop;
 static void Assert(bool value,string message) { if(!value) throw new Exception(message); }
 foreach(var text in new[]{"", "hello", "中文 🎉\r\nsecond line\t", new string('?',32768), new string('\uffff',10922)}) {
     var payload=TextClipboardSync.Encode(text)!;

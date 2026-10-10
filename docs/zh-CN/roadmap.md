@@ -1,7 +1,7 @@
 # 路线图
 
-新产品名已确定为 **Local Remote Desktop**，计划仓库名为 `local-remote-desktop`。
-见[命名决定](product-name.md)；单独迁移完成前，当前仓库名保持不变。
+产品与仓库已更名为 **Local Remote Desktop** / `local-remote-desktop`。
+见[命名与兼容说明](product-name.md)。
 
 [English](../roadmap.md) · [README](../../README.zh-CN.md)
 

@@ -11,7 +11,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Threading;
-using LocalRemote;
+using LocalRemoteDesktop;
 
 static partial class Program {
     [STAThread] static int Main() {

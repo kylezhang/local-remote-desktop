@@ -1,7 +1,7 @@
 import Foundation
 @main enum PreferenceCheck {
     static func main() {
-        let suite = "LocalRemotePreferenceCheck." + UUID().uuidString
+        let suite = "LocalRemoteDesktopPreferenceCheck." + UUID().uuidString
         let defaults = UserDefaults(suiteName: suite)!
         defer { defaults.removePersistentDomain(forName: suite) }
         for key in ["textClipboardAllowed", "fileClipboardAllowed"] {

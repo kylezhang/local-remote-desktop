@@ -1,8 +1,8 @@
 <p align="center">
-  <img src="assets/brand/icon.png" alt="LocalRemote" width="112" />
+  <img src="assets/brand/icon.png" alt="Local Remote Desktop" width="112" />
 </p>
 
-# LocalRemote
+# Local Remote Desktop
 
 主分支为 **v0.3.0-alpha.1 开发版**，加入 [Windows 共享预览](docs/zh-CN/windows-sharing.md)、
 [局域网设备选择](docs/zh-CN/discovery.md)与中英文切换，遵循[多端界面规范](docs/zh-CN/interface.md)。
@@ -10,7 +10,7 @@ Mac 控制端是下一阶段，尚未实现；Mac 原生验收待完成，不替
 
 **局域网内的跨设备远程控制。**
 
-LocalRemote 让你通过局域网查看并操作另一台电脑当前的桌面。设备直接连接，无需账号或云中转；回到被控电脑时，继续同一个工作现场。
+Local Remote Desktop 让你通过局域网查看并操作另一台电脑当前的桌面。设备直接连接，无需账号或云中转；回到被控电脑时，继续同一个工作现场。
 
 **当前支持 Windows → Mac。** 双向桌面控制和手机控制端正在规划中。
 
@@ -18,7 +18,7 @@ LocalRemote 让你通过局域网查看并操作另一台电脑当前的桌面�
 
 [English](README.md) | **简体中文**
 
-[下载](https://atomgit.com/zkxw2008/LocalRemote/releases) · [文档](#文档) · [路线图](docs/zh-CN/roadmap.md) · [更新日志](CHANGELOG.zh-CN.md)
+[下载](https://atomgit.com/zkxw2008/local-remote-desktop/releases) · [文档](#文档) · [路线图](docs/zh-CN/roadmap.md) · [更新日志](CHANGELOG.zh-CN.md)
 
 ## 功能
 
@@ -41,19 +41,19 @@ LocalRemote 让你通过局域网查看并操作另一台电脑当前的桌面�
 
 ### Windows
 
-1. 从 [Releases](https://atomgit.com/zkxw2008/LocalRemote/releases) 下载 Windows x64 ZIP 并解压。
+1. 从 [Releases](https://atomgit.com/zkxw2008/local-remote-desktop/releases) 下载 Windows x64 ZIP 并解压。
 2. 完整安装支持 H.264 解码的 [FFmpeg 构建](https://ffmpeg.org/download.html)，并加入 PATH。
-3. 运行解压目录中的 `LocalRemote.exe`（已有 v0.1.0 发版中仍为 `RemoteMacLAN.exe`）。
+3. 运行所下载版本的程序：v0.2.0-beta.1 为 `LocalRemote.exe`，v0.1.0 为 `RemoteMacLAN.exe`；当前源码构建为 `LocalRemoteDesktop.exe`。
 
-发布包包含 .NET Desktop Runtime。已有能正常使用的 FFmpeg 可继续沿用。程序文件名暂时保留兼容名称。
+发布包包含 .NET Desktop Runtime。已有能正常使用的 FFmpeg 可继续沿用。旧发布包保留当时的程序文件名；当前源码和后续发布包使用 LocalRemoteDesktop.exe。
 
 ### macOS
 
 准备 Xcode Command Line Tools（需要时执行 `xcode-select --install`），然后构建安装：
 
 ```sh
-git clone https://atomgit.com/zkxw2008/LocalRemote.git
-cd LocalRemote
+git clone https://atomgit.com/zkxw2008/local-remote-desktop.git
+cd local-remote-desktop
 bash apps/macos/install-app.sh
 ```
 
@@ -65,7 +65,7 @@ Mac 当前提供源码安装。签名、升级、权限与排障见 [Mac 指南]
 
 ## 使用
 
-1. 在 Mac 打开 LocalRemote，开始共享并复制配对密钥。
+1. 在 Mac 打开 Local Remote Desktop，开始共享并复制配对密钥。
 2. 在 Windows 填写 Mac 的局域网 IP 与配对密钥，点击连接。
 3. 点击远程画面后操作桌面，用完断开；Mac 会话保持打开。
 

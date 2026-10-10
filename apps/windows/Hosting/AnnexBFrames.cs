@@ -1,5 +1,5 @@
 using System.IO;
-namespace LocalRemote;
+namespace LocalRemoteDesktop;
 
 // The encoder inserts AUDs. Emit one bounded access unit, not arbitrary pipe reads.
 internal sealed class AnnexBFrames {

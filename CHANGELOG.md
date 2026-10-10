@@ -4,6 +4,12 @@
 
 ## Unreleased
 
+- Rename the product to Local Remote Desktop and its existing private AtomGit
+  repository to local-remote-desktop. Update native source/assembly names, app
+  titles, resources and build/package documentation. Preserve credential stores,
+  Mac privacy/Keychain/login identities and discovery compatibility. Mac installers
+  migrate both earlier bundle names with rollback; released assets keep their names.
+
 - Development version advances to v0.3.0-alpha.1 with the Windows sharing role:
   opt-in native page, separate DPAPI credential, explicit password save/revocation,
   authenticated one-controller TCP, GDI capture/MF hardware H.264 with optional

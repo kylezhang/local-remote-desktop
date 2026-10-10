@@ -2,7 +2,7 @@
 
 [简体中文](zh-CN/performance.md)
 
-Sharing a desktop continuously uses CPU, memory and network bandwidth. LocalRemote
+Sharing a desktop continuously uses CPU, memory and network bandwidth. Local Remote Desktop
 does not yet have an end-to-end hardware benchmark or an hours-long soak result.
 The current implementation is not a guarantee against every hang or memory leak.
 

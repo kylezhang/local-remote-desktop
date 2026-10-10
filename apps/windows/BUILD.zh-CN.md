@@ -5,12 +5,12 @@
 Windows 10/11 x64，开发需要 .NET 8 SDK，无第三方 NuGet 包。仓库根目录执行：
 
 ```powershell
-dotnet build apps/windows/LocalRemote.csproj -c Release
-dotnet run --project apps/windows/LocalRemote.csproj -c Release
-dotnet publish apps/windows/LocalRemote.csproj -c Release -r win-x64 --self-contained true -o dist/windows
+dotnet build apps/windows/LocalRemoteDesktop.csproj -c Release
+dotnet run --project apps/windows/LocalRemoteDesktop.csproj -c Release
+dotnet publish apps/windows/LocalRemoteDesktop.csproj -c Release -r win-x64 --self-contained true -o dist/windows
 ```
 
-publish 独立包包含 .NET Desktop Runtime，普通 build 程序仍依赖安装的运行时。保持完整输出目录，运行 LocalRemote.exe。已发布 v0.1.0 压缩包仍使用 RemoteMacLAN.exe，旧发版附件不修改。
+publish 独立包包含 .NET Desktop Runtime，普通 build 程序仍依赖安装的运行时。保持完整输出目录，运行 LocalRemoteDesktop.exe。已发布 v0.1.0 压缩包仍使用 RemoteMacLAN.exe，旧发版附件不修改。
 
 FFmpeg 不打包，按 [官方入口](https://ffmpeg.org/download.html) 安装含 H.264 解码器的完整构建并配置 PATH，或将程序及所需 DLL 放到客户端旁。已有正常安装不必重复配置。尚无硬件解码和 D3D11。
 

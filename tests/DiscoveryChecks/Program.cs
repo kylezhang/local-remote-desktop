@@ -2,7 +2,7 @@ using System.Buffers.Binary;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
-using LocalRemote;
+using LocalRemoteDesktop;
 
 static class Check {
     const string Service="_localremote._tcp.local",Instance="Office Mac."+Service,Host="office.local";

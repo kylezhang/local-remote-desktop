@@ -1,6 +1,6 @@
 using System.Runtime.InteropServices;
 using System.Windows;
-namespace LocalRemote;
+namespace LocalRemoteDesktop;
 public sealed class WindowsClipboard : ITextClipboard {
     [DllImport("user32.dll")] static extern uint GetClipboardSequenceNumber();
     public long Revision=>GetClipboardSequenceNumber();

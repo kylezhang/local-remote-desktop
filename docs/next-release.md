@@ -2,7 +2,7 @@
 
 [简体中文](zh-CN/next-release.md) · [Roadmap](roadmap.md)
 
-2026-10-10: **v0.2.0-beta.1 preview published** on [AtomGit](https://atomgit.com/zkxw2008/LocalRemote/releases). Windows and Mac display the beta
+2026-10-10: **v0.2.0-beta.1 preview published** on [AtomGit](https://atomgit.com/zkxw2008/local-remote-desktop/releases). Windows and Mac display the beta
 identifier; Mac numeric bundle version is 0.2.0, internal build 19. The existing
 v0.1.0 tag/assets stay unchanged. Earlier v0.1.1/v0.1.2 patch plans are consolidated
 because this checkpoint also adds password and clipboard capabilities.
@@ -26,7 +26,7 @@ Preview scope: tested Windows package plus **Mac source only**. See
 
 The locally verified beta.2 checkpoint added discovery and remembered languages;
 see the [language checks](../tests/results/localization-2026-10-10.txt).
-Main now targets **v0.3.0-alpha.1 development**, Mac numeric version 0.3.0/build 21.
+Main now targets **v0.3.0-alpha.1 development**, Mac numeric version 0.3.0/build 22.
 It adds a [Windows sharing preview](windows-sharing.md), not the Mac controller.
 No new alpha release/tag or Mac binary is claimed. The native gates below remain.
 

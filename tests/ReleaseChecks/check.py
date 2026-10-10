@@ -10,20 +10,27 @@ import subprocess
 import xml.etree.ElementTree as ET
 
 root = Path(__file__).resolve().parents[2]
-version = ET.parse(root/'apps/windows/LocalRemote.csproj').findtext('./PropertyGroup/Version')
+version = ET.parse(root/'apps/windows/LocalRemoteDesktop.csproj').findtext('./PropertyGroup/Version')
 assert re.fullmatch(r'\d+\.\d+\.\d+(?:-(?:alpha|beta|rc)\.[1-9][0-9]*)?', version)
 plist = plistlib.loads((root/'apps/macos/Info.plist').read_bytes())
 assert plist['CFBundleShortVersionString'] == version.split('-')[0]
-assert plist.get('LocalRemoteReleaseVersion', plist['CFBundleShortVersionString']) == version
+assert plist.get('LocalRemoteDesktopReleaseVersion', plist['CFBundleShortVersionString']) == version
 assert plist['CFBundleIdentifier'] == 'com.remotemaclan.host'
-assert plist['CFBundleIconFile'] == 'LocalRemote.icns'
-assert plist['CFBundleExecutable'] == 'LocalRemote'
-project = ET.parse(root/'apps/windows/LocalRemote.csproj')
-assert project.findtext('./PropertyGroup/AssemblyName') == 'LocalRemote'
-assert project.findtext('./PropertyGroup/RootNamespace') == 'LocalRemote'
-assert 'name: "LocalRemote"' in (root/'apps/macos/Package.swift').read_text(encoding='utf-8')
-assert f'LocalRemote · {version}' in (root/'apps/windows/MainWindow.xaml').read_text(encoding='utf-8')
-assert f'LocalRemote {version}' in (root/'apps/macos/Sources/LocalRemote/App.swift').read_text(encoding='utf-8')
+assert plist['CFBundleIconFile'] == 'LocalRemoteDesktop.icns'
+assert plist['CFBundleExecutable'] == 'LocalRemoteDesktop'
+assert plist['CFBundleName'] == plist['CFBundleDisplayName'] == 'Local Remote Desktop'
+project = ET.parse(root/'apps/windows/LocalRemoteDesktop.csproj')
+assert project.findtext('./PropertyGroup/AssemblyName') == 'LocalRemoteDesktop'
+assert project.findtext('./PropertyGroup/RootNamespace') == 'LocalRemoteDesktop'
+assert project.findtext('./PropertyGroup/Product') == 'Local Remote Desktop'
+assert not (root/'apps/windows/LocalRemote.csproj').exists()
+assert not (root/'apps/macos/Sources/LocalRemote').exists()
+assert ',"LocalRemote"' in (root/'apps/windows/SecretStore.cs').read_text(encoding='utf-8')
+assert ',"LocalRemote","language.txt"' in (root/'apps/windows/UiText.cs').read_text(encoding='utf-8')
+assert '"LocalRemote/ReceivedFiles"' in (root/'apps/macos/Sources/LocalRemoteDesktop/MacFiles.swift').read_text(encoding='utf-8')
+assert 'name: "LocalRemoteDesktop"' in (root/'apps/macos/Package.swift').read_text(encoding='utf-8')
+assert f'Local Remote Desktop · {version}' in (root/'apps/windows/MainWindow.xaml').read_text(encoding='utf-8')
+assert f'Local Remote Desktop {version}' in (root/'apps/macos/Sources/LocalRemoteDesktop/App.swift').read_text(encoding='utf-8')
 assert not (root/'experiments').exists()
 print('PASS aligned public versions, legacy Mac identity and removed experiment')
 
@@ -44,14 +51,14 @@ for xaml in (root/'apps/windows').rglob('*.xaml'):
     for key in re.findall(r"local:Translate Key='([^']+)'", xaml.read_text(encoding='utf-8')):
         assert key in catalog, (xaml,key)
 assert 'strings.json' in (root/'apps/macos/build-app.sh').read_text(encoding='utf-8')
-assert 'LocalRemote.strings.json' in (root/'apps/windows/LocalRemote.csproj').read_text(encoding='utf-8')
+assert 'LocalRemoteDesktop.strings.json' in (root/'apps/windows/LocalRemoteDesktop.csproj').read_text(encoding='utf-8')
 print('PASS shared language catalog placeholders, UI keys and bundle integration')
 
-ico = (root/'assets/brand/LocalRemote.ico').read_bytes()
+ico = (root/'assets/brand/LocalRemoteDesktop.ico').read_bytes()
 reserved, kind, count = struct.unpack('<HHH',ico[:6])
 assert (reserved,kind)==(0,1) and count>=6
 assert b'\x00\x00' in ico[6:6+16*count]
-icns = (root/'assets/brand/LocalRemote.icns').read_bytes()
+icns = (root/'assets/brand/LocalRemoteDesktop.icns').read_bytes()
 assert icns[:4]==b'icns' and struct.unpack('>I',icns[4:8])[0]==len(icns)
 master = (root/'assets/brand/icon-master.png').read_bytes()
 assert master.startswith(b'\x89PNG\r\n\x1a\n')
@@ -66,6 +73,7 @@ legacy_migration_files = {
     'apps/macos/install-app.sh', 'apps/macos/diagnose-permissions.sh',
     'apps/windows/SecretStore.cs', 'tests/InstallerChecks/check.py',
     'tests/ProtocolChecks/Program.cs',
+    'tests/NamingChecks/Program.cs',
 }
 for relative in filter(None,tracked):
     path=root/relative
@@ -80,4 +88,4 @@ for relative in filter(None,tracked):
         content = path.read_text(encoding='utf-8')
         assert 'RemoteMacLAN' not in content or relative in legacy_migration_files or relative == 'tests/ReleaseChecks/check.py', ('Unexpected legacy source name', relative)
 print('PASS tracked-file hygiene and basic secret indicators (not a security audit)')
-print('PASS LocalRemote source naming; legacy names restricted to migration code')
+print('PASS LocalRemoteDesktop source naming; legacy names restricted to migration code')

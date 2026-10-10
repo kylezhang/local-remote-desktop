@@ -2,7 +2,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Security.Cryptography;
 using System.Text;
-using LocalRemote;
+using LocalRemoteDesktop;
 static class PasswordChecks {
     static void Require(bool value,string message) { if(!value) throw new Exception(message); }
     static byte[] Join(params byte[][] values)=>values.SelectMany(x=>x).ToArray();

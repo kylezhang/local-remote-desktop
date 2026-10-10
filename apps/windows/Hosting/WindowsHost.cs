@@ -3,7 +3,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Security.Cryptography;
 using System.Text.Json;
-namespace LocalRemote;
+namespace LocalRemoteDesktop;
 
 // Not a second application: the sharing role's lifetime is owned by the GUI.
 // The listener remains opt-in; construction alone never opens a socket.

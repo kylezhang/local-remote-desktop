@@ -4,7 +4,7 @@ import ApplicationServices
 enum AppBrand {
     static let icon: NSImage? = {
         for ext in ["png", "icns"] {
-            if let url = Bundle.main.url(forResource: "LocalRemote", withExtension: ext),
+            if let url = Bundle.main.url(forResource: "LocalRemoteDesktop", withExtension: ext),
                let image = NSImage(contentsOf: url), image.isValid { return image }
         }
         return nil
@@ -14,9 +14,9 @@ enum AppBrand {
     }
 }
 @main
-struct LocalRemoteApp: App {
+struct LocalRemoteDesktopApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) var delegate
-    var body: some Scene { WindowGroup("LocalRemote") { HostView(model: delegate.model) }.windowResizability(.contentSize) }
+    var body: some Scene { WindowGroup("Local Remote Desktop") { HostView(model: delegate.model) }.windowResizability(.contentSize) }
 }
 final class AppDelegate: NSObject, NSApplicationDelegate {
     let model = HostModel()
@@ -80,7 +80,7 @@ struct HostView: View {
                 Button(UiText.text("复制启动诊断")) { model.copyDiagnostics() }
             }
             Divider()
-            Button(UiText.text("退出 LocalRemote")) { NSApplication.shared.terminate(nil) }
+            Button(UiText.text("退出 Local Remote Desktop")) { NSApplication.shared.terminate(nil) }
         }.fixedSize()
     }
     var body: some View {
@@ -90,7 +90,7 @@ struct HostView: View {
                     Image(nsImage: icon).resizable().interpolation(.high).scaledToFit()
                         .frame(width: 36, height: 36).accessibilityHidden(true)
                 }
-                Text(UiText.text("LocalRemote 0.3.0-alpha.1")).font(.title2).foregroundStyle(brandText)
+                Text(UiText.text("Local Remote Desktop 0.3.0-alpha.1")).font(.title2).foregroundStyle(brandText)
                 Spacer()
                 settingsMenu
             }

@@ -1,7 +1,7 @@
 using System.Diagnostics;
 using System.IO;
 using System.Runtime.InteropServices;
-namespace LocalRemote;
+namespace LocalRemoteDesktop;
 
 internal readonly record struct CaptureArea(int X,int Y,int Width,int Height) {
     [DllImport("user32.dll")] static extern int GetSystemMetrics(int index);

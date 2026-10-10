@@ -50,7 +50,7 @@ bash scripts/package-macos.sh 0.1.1
 依据 [Apple 公证要求](https://developer.apple.com/documentation/security/notarizing-macos-software-before-distribution)
 和[自定义流程](https://developer.apple.com/documentation/security/customizing-the-notarization-workflow)。
 
-输出位于 `dist/LocalRemote-vVERSION-macos-arm64/`：ZIP、SHA256SUMS.txt、release.json。
+输出位于 `dist/LocalRemoteDesktop-vVERSION-macos-arm64/`：ZIP、SHA256SUMS.txt、release.json。
 包内含依赖声明、中英文启动指引和文件散列，不覆盖已有输出；检查失败清理临时候选包。
 流程不安装或打开应用、不重置隐私权限、不读取配对密钥、不改变本地签名固定配置，也不打 tag 或直接发布。
 

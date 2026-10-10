@@ -8,12 +8,12 @@ struct PairingCredential {
     let salt: Data?
     static func validate(_ password: String) throws {
         guard (8...64).contains(password.utf8.count), password.utf8.allSatisfy({ $0 > 32 && $0 < 127 }) else {
-            throw NSError(domain: "LocalRemote.Pairing", code: 1, userInfo: [NSLocalizedDescriptionKey:"密码需为 8–64 位英文字母、数字或符号，不含空格。"])
+            throw NSError(domain: "LocalRemoteDesktop.Pairing", code: 1, userInfo: [NSLocalizedDescriptionKey:"密码需为 8–64 位英文字母、数字或符号，不含空格。"])
         }
     }
     static func password(_ text: String, salt: Data) throws -> PairingCredential {
         try validate(text)
-        guard salt.count == 16 else { throw NSError(domain: "LocalRemote.Pairing", code: 2) }
+        guard salt.count == 16 else { throw NSError(domain: "LocalRemoteDesktop.Pairing", code: 2) }
         var key = Data(count: 32)
         let result = key.withUnsafeMutableBytes { output in
             salt.withUnsafeBytes { saltBytes in
@@ -25,14 +25,14 @@ struct PairingCredential {
                 }
             }
         }
-        guard result == kCCSuccess else { throw NSError(domain: "LocalRemote.Pairing", code: Int(result)) }
+        guard result == kCCSuccess else { throw NSError(domain: "LocalRemoteDesktop.Pairing", code: Int(result)) }
         return PairingCredential(text: text, key: key, salt: salt)
     }
     static func decode(_ data: Data) throws -> PairingCredential {
         if data.count == 32 { return PairingCredential(text: data.map { String(format:"%02x",$0) }.joined(), key: data, salt: nil) }
         guard data.starts(with: marker), data.count > marker.count + 16,
               let text = String(data: data.dropFirst(marker.count + 16), encoding: .utf8) else {
-            throw NSError(domain: "LocalRemote.Pairing", code: 3, userInfo: [NSLocalizedDescriptionKey:"已保存的配对信息无效，不会自动替换。"])
+            throw NSError(domain: "LocalRemoteDesktop.Pairing", code: 3, userInfo: [NSLocalizedDescriptionKey:"已保存的配对信息无效，不会自动替换。"])
         }
         return try password(text, salt: Data(data.dropFirst(marker.count).prefix(16)))
     }

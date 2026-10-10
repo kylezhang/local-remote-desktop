@@ -49,7 +49,7 @@ Release environment: Windows x64, .NET SDK 8.0.425 and Desktop/Core runtime 8.0.
   ProtocolChecks; the exact rebuilt DLL passed WPF ClientChecks, including closing a connected window
   and stopping the disconnected display timer. See [resource scope and results](performance.md).
 
-- Naming migration (2026-10-09): LocalRemote Windows project/assembly built and
+- Naming migration (2026-10-09): Local Remote Desktop Windows project/assembly built and
   packaged self-contained; the exact packaged DLL passed WPF mock-peer regression.
   Protocol tests exercised opaque DPAPI migration, decryptability, newer-setting
   priority, retained originals and no resurrection after forgetting. Mac installer
@@ -174,3 +174,10 @@ fallback, cancellation and existing control/video regressions. Real Swift
 compiler checks include a paced 8 MiB transport and legacy/missing confirmation.
 Native Apple SDK/clipboard and physical LAN contention remain pending.
 See the [benchmark and check record](../tests/results/file-speed-2026-10-09.txt).
+
+## Product rename (development)
+
+Current code and packaging use **Local Remote Desktop / LocalRemoteDesktop**.
+Old data and protocol identities remain compatible. Actual Windows/WPF and
+DPAPI migration checks passed; native Mac installation and TCC/Keychain
+acceptance remain pending. See the [rename check record](../tests/results/product-rename-2026-10-10.txt).

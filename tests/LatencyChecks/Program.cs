@@ -1,6 +1,6 @@
 using System.Diagnostics;
 using System.Text.Json;
-using LocalRemote;
+using LocalRemoteDesktop;
 
 var directory=Path.Combine(Path.GetTempPath(),"localremote-latency-"+Guid.NewGuid().ToString("N")); Directory.CreateDirectory(directory);
 try {

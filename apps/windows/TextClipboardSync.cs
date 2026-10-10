@@ -1,5 +1,5 @@
 using System.Text;
-namespace LocalRemote;
+namespace LocalRemoteDesktop;
 
 // Used only on the UI thread. The adapter is injectable so tests never touch
 // the user's system clipboard. Network negotiation is owned by MainWindow.

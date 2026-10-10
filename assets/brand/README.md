@@ -1,10 +1,10 @@
-# LocalRemote identity
+# Local Remote Desktop identity
 
 [简体中文](README.zh-CN.md)
 
 The approved blueberry identity combines a white screen outline, two opposing arrows and a compact pointer. The screen represents a live desktop, the arrows express reciprocal connection, and the pointer makes remote interaction explicit. The geometry is flat: no glow, bevel, shadow or grain texture.
 
-![LocalRemote blueberry identity](identity-board.png)
+![Local Remote Desktop blueberry identity](identity-board.png)
 
 ## Palette
 
@@ -22,8 +22,8 @@ Windows uses the same blue for text selection, dropdown highlights and checked r
 - `symbol.svg`: same screen/arrows/pointer in solid blue for light backgrounds.
 - `icon-master.png`: 2048px RGBA export.
 - `icon.png`: 1024px app/header icon.
-- `LocalRemote.ico`: Windows sizes from 16px through 256px.
-- `LocalRemote.icns`: macOS representations.
+- `LocalRemoteDesktop.ico`: Windows sizes from 16px through 256px.
+- `LocalRemoteDesktop.icns`: macOS representations.
 - `identity-board.png`: symbol, wordmark and app icon presentation.
 
 The pointer and frame use the refined B approved by the user: pointer scale 0.76, screen stroke 56, overall screen scale 1.06 and arrow scale 1.08. The pointer is optically centered slightly upward/left. The SVG is the production source of truth; all platform icons derive from it. Earlier cherry-red explorations have been superseded. Initial brand exploration used built-in image_gen; this refinement edits the established vector artwork.

@@ -2,7 +2,7 @@
 
 [English](../next-release.md) · [路线图](roadmap.md)
 
-2026-10-10：**v0.2.0-beta.1 测试版已发布**到 [AtomGit](https://atomgit.com/zkxw2008/LocalRemote/releases)。两端显示测试版标识；Mac 数字版本 0.2.0、内部构建 19。
+2026-10-10：**v0.2.0-beta.1 测试版已发布**到 [AtomGit](https://atomgit.com/zkxw2008/local-remote-desktop/releases)。两端显示测试版标识；Mac 数字版本 0.2.0、内部构建 19。
 v0.1.0 tag 和附件保持不变。本次增加密码/剪贴板功能，因此原 v0.1.1/v0.1.2 补丁计划并入次版本测试版。
 
 ## 测试版交付
@@ -23,7 +23,7 @@ v0.1.0 tag 和附件保持不变。本次增加密码/剪贴板功能，因此�
 ## 正式 v0.2.0 门槛
 
 已验证本地 beta.2 候选的发现/语言功能，见[语言记录](../../tests/results/localization-2026-10-10.txt)。
-主分支推进到 **v0.3.0-alpha.1 开发版**，Mac 数字版本 0.3.0/内部构建 21，
+主分支推进到 **v0.3.0-alpha.1 开发版**，Mac 数字版本 0.3.0/内部构建 22，
 加入 [Windows 共享预览](windows-sharing.md)，Mac 控制端仍待实现。
 尚未创建新 alpha release/tag 或 Mac 二进制包；下列原生验收门槛仍有效。
 

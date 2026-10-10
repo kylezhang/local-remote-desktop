@@ -3,7 +3,7 @@ using System.Net;
 using System.Text.Json;
 using System.Windows;
 using System.Windows.Controls;
-using LocalRemote;
+using LocalRemoteDesktop;
 static partial class Program {
     static async Task CheckWindowsSharing() {
         var credential=HostCredential.Create("Office-LAN#42"); bool failSave=false; int creates=0; bool enabled=false;

@@ -186,10 +186,10 @@ final class HostModel: ObservableObject {
     }
     func copyDiagnostics() {
         let text = """
-        LocalRemote \(Bundle.main.object(forInfoDictionaryKey: "LocalRemoteReleaseVersion") as? String ?? Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "unknown")
+        LocalRemoteDesktop \(Bundle.main.object(forInfoDictionaryKey: "LocalRemoteDesktopReleaseVersion") as? String ?? Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "unknown")
         Build: \(Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "unknown")
         macOS: \(ProcessInfo.processInfo.operatingSystemVersionString)
-        InstalledAtApplications: \(Bundle.main.bundlePath == "/Applications/LocalRemote.app")
+        InstalledAtApplications: \(Bundle.main.bundlePath == "/Applications/Local Remote Desktop.app")
         AppIconLoaded: \(AppBrand.icon != nil)
         BuildSigningMode: \(Pairing.buildSigningMode)
         LegacyScreenPreflight: \(CGPreflightScreenCaptureAccess())

@@ -70,7 +70,7 @@ another signature/ticket/assessment check. Apple describes these requirements in
 [notarization requirements](https://developer.apple.com/documentation/security/notarizing-macos-software-before-distribution)
 and the [custom workflow](https://developer.apple.com/documentation/security/customizing-the-notarization-workflow).
 
-Outputs go into `dist/LocalRemote-vVERSION-macos-arm64/`: ZIP, SHA256SUMS.txt and
+Outputs go into `dist/LocalRemoteDesktop-vVERSION-macos-arm64/`: ZIP, SHA256SUMS.txt and
 release.json. The ZIP includes notices, a bilingual launch guide and file hashes.
 Existing outputs are never overwritten; failed checks remove temporary candidates.
 The script does not install/open the app, reset privacy permissions, read pairing

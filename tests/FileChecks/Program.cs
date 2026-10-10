@@ -1,5 +1,5 @@
 using System.Security.Cryptography;
-using LocalRemote;
+using LocalRemoteDesktop;
 static void Assert(bool condition,string message) { if(!condition) throw new Exception(message); }
 static void Reject(Action action,string message) { try { action(); } catch(IOException) { return; } throw new Exception(message); }
 if(Environment.GetEnvironmentVariable("LOCALREMOTE_FILE_BENCH") is { Length: >0 } benchmark) { await TransferBenchmark.Run(benchmark); return; }

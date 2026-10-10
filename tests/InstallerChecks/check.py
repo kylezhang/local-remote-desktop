@@ -17,7 +17,7 @@ work = Path(options.work_dir).resolve()
 work.mkdir(parents=True, exist_ok=True)
 
 class InstallerChecks(unittest.TestCase):
-    def run_case(self, mode='normal', loaded=False, duplicate=False, option=None, legacy=False):
+    def run_case(self, mode='normal', loaded=False, duplicate=False, option=None, legacy=False, prior_brand=False):
         temporary = tempfile.TemporaryDirectory(prefix='installer-', dir=work)
         root = Path(temporary.name).resolve()
         self.assertTrue(root.is_relative_to(work))
@@ -28,17 +28,24 @@ class InstallerChecks(unittest.TestCase):
             (path/'Contents/MacOS').mkdir(parents=True)
             (path/'Contents/Info.plist').write_text(identifier, encoding='utf-8')
             (path/'Contents/Resources').mkdir()
-            for name in ('LocalRemote.icns', 'LocalRemote.png'):
+            for name in ('LocalRemoteDesktop.icns', 'LocalRemoteDesktop.png'):
                 (path/'Contents/Resources'/name).write_text('new icon' if not old else 'old icon')
-            executable = path/'Contents/MacOS/LocalRemote'
+            executable = path/'Contents/MacOS/LocalRemoteDesktop'
             executable.write_text('#!/bin/sh\n# new executable\n' if not old else '#!/bin/sh\n# old executable\n', encoding='utf-8')
             executable.chmod(0o755)
             if old: (path/'Contents/obsolete-resource').write_text('must disappear')
-        bundle(project/'build/LocalRemote.app')
-        if mode=='missing-icon': (project/'build/LocalRemote.app/Contents/Resources/LocalRemote.png').unlink()
-        if mode not in ('first-install-verification-fail', 'legacy-only', 'legacy-only-verification-fail'):
-            bundle(apps/'LocalRemote.app', old=True, identifier='other.app' if mode=='wrong-id' else 'com.remotemaclan.host')
-        if duplicate: bundle(personal/'LocalRemote.app', old=True)
+        bundle(project/'build/Local Remote Desktop.app')
+        if mode=='missing-icon': (project/'build/Local Remote Desktop.app/Contents/Resources/LocalRemoteDesktop.png').unlink()
+        if mode not in ('first-install-verification-fail', 'legacy-only', 'legacy-only-verification-fail', 'prior-brand-only', 'prior-brand-only-verification-fail'):
+            bundle(apps/'Local Remote Desktop.app', old=True, identifier='other.app' if mode=='wrong-id' else 'com.remotemaclan.host')
+        if duplicate: bundle(personal/'Local Remote Desktop.app', old=True)
+        if prior_brand:
+            for folder in (apps,personal):
+                old=folder/'LocalRemote.app'
+                bundle(old,old=True)
+                (old/'Contents/MacOS/LocalRemoteDesktop').rename(old/'Contents/MacOS/LocalRemote')
+                for ext in ('icns','png'):
+                    (old/f'Contents/Resources/LocalRemoteDesktop.{ext}').rename(old/f'Contents/Resources/LocalRemote.{ext}')
         if legacy:
             bundle(apps/'RemoteMacLAN.app', old=True, identifier='other.app' if mode == 'wrong-legacy-id' else 'com.remotemaclan.host')
             bundle(personal/'RemoteMacLAN.app', old=True)
@@ -66,7 +73,7 @@ plist_read() {
     [[ "$_mode" != installed-metadata-fail ]] || return 1
     echo 0.1.0
   elif [[ "$*" == *CFBundleIconFile* ]]; then
-    if [[ "$_mode" == bad-icon-metadata ]]; then echo wrong.icns; else echo LocalRemote.icns; fi
+    if [[ "$_mode" == bad-icon-metadata ]]; then echo wrong.icns; else echo LocalRemoteDesktop.icns; fi
   else cat "${@: -1}"; fi
 }
 plutil() { :; }
@@ -74,11 +81,11 @@ codesign() {
   [[ "$_mode" != bad-signature ]] || return 1
   if [[ "$1" == -d ]]; then
     [[ "$_mode" != unreadable-requirement ]] || return 1
-    if [[ "$_mode" == changed-adhoc && "${@: -1}" == */build/LocalRemote.app ]]; then
+    if [[ "$_mode" == changed-adhoc && "${@: -1}" == */build/"Local Remote Desktop.app" ]]; then
       echo 'designated => cdhash H"new"'
     elif [[ "$_mode" == changed-adhoc ]]; then
       echo 'designated => cdhash H"old"'
-    elif [[ "$_mode" == changed-user-identity && "${@: -1}" == */personal-apps/LocalRemote.app ]]; then
+    elif [[ "$_mode" == changed-user-identity && "${@: -1}" == */personal-apps/"Local Remote Desktop.app" ]]; then
       echo 'designated => identifier "com.remotemaclan.host" and anchor other'
     elif [[ "$_mode" == unchanged-adhoc ]]; then
       echo 'designated => cdhash H"same"'
@@ -92,22 +99,22 @@ codesign() {
     [[ "$_mode" != requirement-rejected ]] || return 1
     return 0
   fi
-  if [[ "${@: -1}" == "$_test_root/apps/LocalRemote.app" ]]; then
+  if [[ "${@: -1}" == "$_test_root/apps/Local Remote Desktop.app" ]]; then
     case "$_mode" in
-      installed-signature-fail|restore-fail|first-install-verification-fail|legacy-only-verification-fail) return 1;;
+      installed-signature-fail|restore-fail|first-install-verification-fail|legacy-only-verification-fail|prior-brand-only-verification-fail) return 1;;
       interrupted-install) builtin kill -TERM $$; return 1;;
     esac
   fi
 }
 mv() {
-  if [[ "$2" == "$_test_root/apps/LocalRemote.app" && "$1" == */LocalRemote.app && "$_mode" == install-move-fail ]]; then return 1; fi
+  if [[ "$2" == "$_test_root/apps/Local Remote Desktop.app" && "$1" == */"Local Remote Desktop.app" && "$_mode" == install-move-fail ]]; then return 1; fi
   if [[ "$1" == */previous-system.app && "$_mode" == restore-fail ]]; then return 1; fi
-  if [[ "$1" == "$_test_root/personal-apps/LocalRemote.app" && "$_mode" == user-backup-fail ]]; then return 1; fi
+  if [[ "$1" == "$_test_root/personal-apps/Local Remote Desktop.app" && "$_mode" == user-backup-fail ]]; then return 1; fi
   command mv "$@"
 }
 ditto() {
   cp -R "$1" "$2"
-  if [[ "$_mode" == bad-stage-icon ]]; then echo tampered > "$2/Contents/Resources/LocalRemote.png"; fi
+  if [[ "$_mode" == bad-stage-icon ]]; then echo tampered > "$2/Contents/Resources/LocalRemoteDesktop.png"; fi
 }
 pgrep() { [[ -f "$_test_root/process" ]] || return 1; cat "$_test_root/process"; }
 kill() {
@@ -145,15 +152,31 @@ open() { echo "open $*" >> "$_test_root/actions"; [[ "$_mode" != launch-fail ]];
         actions = (root/'actions').read_text() if (root/'actions').exists() else ''
         return root, result, actions
 
+    def test_previous_product_name_migration_and_rollback(self):
+        root,result,actions=self.run_case('prior-brand-only',prior_brand=True,loaded=True,option='--keep-permissions')
+        self.assertEqual(result.returncode,0,result.stdout+result.stderr)
+        self.assertTrue((root/'apps/Local Remote Desktop.app/Contents/MacOS/LocalRemoteDesktop').exists())
+        self.assertFalse((root/'apps/LocalRemote.app').exists())
+        self.assertFalse((root/'personal-apps/LocalRemote.app').exists())
+        self.assertIn('Local Remote Desktop.app/Contents/MacOS/LocalRemoteDesktop',actions)
+        self.assertNotIn('tccutil reset',actions)
+        root,result,actions=self.run_case('prior-brand-only-verification-fail',prior_brand=True,option='--keep-permissions')
+        self.assertNotEqual(result.returncode,0,result.stdout+result.stderr)
+        self.assertFalse((root/'apps/Local Remote Desktop.app').exists())
+        for folder in ('apps','personal-apps'):
+            self.assertTrue((root/folder/'LocalRemote.app/Contents/MacOS/LocalRemote').exists())
+            self.assertTrue((root/folder/'LocalRemote.app/Contents/obsolete-resource').exists())
+        self.assertNotIn('open ',actions)
+
     def test_complete_replace_and_duplicate_removal(self):
         root, result, actions = self.run_case(duplicate=True)
         self.assertEqual(result.returncode, 0, result.stdout+result.stderr)
-        self.assertFalse((root/'apps/LocalRemote.app/Contents/obsolete-resource').exists())
-        self.assertFalse((root/'personal-apps/LocalRemote.app').exists())
-        self.assertEqual((root/'apps/LocalRemote.app/Contents/MacOS/LocalRemote').read_text(), '#!/bin/sh\n# new executable\n')
+        self.assertFalse((root/'apps/Local Remote Desktop.app/Contents/obsolete-resource').exists())
+        self.assertFalse((root/'personal-apps/Local Remote Desktop.app').exists())
+        self.assertEqual((root/'apps/Local Remote Desktop.app/Contents/MacOS/LocalRemoteDesktop').read_text(), '#!/bin/sh\n# new executable\n')
         self.assertIn('tccutil reset ScreenCapture com.remotemaclan.host', actions)
         self.assertIn('tccutil reset Accessibility com.remotemaclan.host', actions)
-        self.assertEqual((root/'apps/LocalRemote.app/Contents/Resources/LocalRemote.png').read_text(), 'new icon')
+        self.assertEqual((root/'apps/Local Remote Desktop.app/Contents/Resources/LocalRemoteDesktop.png').read_text(), 'new icon')
         self.assertEqual(actions.count('open '), 1)
         self.assertFalse(list((root/'apps').glob('.localremote-install.*')))
 
@@ -164,7 +187,7 @@ open() { echo "open $*" >> "$_test_root/actions"; [[ "$_mode" != launch-fail ]];
         self.assertIn('launchctl bootout', actions)
         self.assertIn('launchctl bootstrap', actions)
         self.assertNotIn('open ', actions)
-        self.assertIn('LocalRemote.app/Contents/MacOS/LocalRemote', actions)
+        self.assertIn('Local Remote Desktop.app/Contents/MacOS/LocalRemoteDesktop', actions)
 
     def test_legacy_bundle_migration_and_rollback(self):
         for mode in ('normal', 'legacy-only', 'installed-signature-fail', 'legacy-only-verification-fail'):
@@ -177,9 +200,9 @@ open() { echo "open $*" >> "$_test_root/actions"; [[ "$_mode" != launch-fail ]];
                     self.assertEqual(legacy.exists(), not success)
                 self.assertNotIn('tccutil ', actions)
                 if success:
-                    self.assertTrue((root/'apps/LocalRemote.app/Contents/MacOS/LocalRemote').exists())
+                    self.assertTrue((root/'apps/Local Remote Desktop.app/Contents/MacOS/LocalRemoteDesktop').exists())
                 self.assertFalse(list((root/'apps').glob('.localremote-install.*')))
-                if mode == 'legacy-only-verification-fail': self.assertFalse((root/'apps/LocalRemote.app').exists())
+                if mode == 'legacy-only-verification-fail': self.assertFalse((root/'apps/Local Remote Desktop.app').exists())
 
     def test_wrong_legacy_bundle_is_never_removed(self):
         root, result, actions = self.run_case('wrong-legacy-id', legacy=True)
@@ -190,7 +213,7 @@ open() { echo "open $*" >> "$_test_root/actions"; [[ "$_mode" != launch-fail ]];
     def test_failed_agent_path_update_keeps_verified_app(self):
         root, result, actions = self.run_case('agent-path-fail', loaded=True)
         self.assertNotEqual(result.returncode, 0)
-        self.assertFalse((root/'apps/LocalRemote.app/Contents/obsolete-resource').exists())
+        self.assertFalse((root/'apps/Local Remote Desktop.app/Contents/obsolete-resource').exists())
         self.assertNotIn('launchctl bootstrap', actions)
         self.assertIn('install-launch-agent.sh', result.stderr)
 
@@ -214,7 +237,7 @@ open() { echo "open $*" >> "$_test_root/actions"; [[ "$_mode" != launch-fail ]];
                 root, result, actions = self.run_case(mode, loaded=True, duplicate=True, option='--keep-permissions')
                 self.assertNotEqual(result.returncode, 0, result.stdout+result.stderr)
                 for folder in ('apps', 'personal-apps'):
-                    self.assertTrue((root/folder/'LocalRemote.app/Contents/obsolete-resource').exists())
+                    self.assertTrue((root/folder/'Local Remote Desktop.app/Contents/obsolete-resource').exists())
                 self.assertTrue((root/'process').exists())
                 self.assertTrue((root/'loaded').exists())
                 for forbidden in ('kill ', 'launchctl ', 'tccutil ', 'open '):
@@ -251,7 +274,7 @@ open() { echo "open $*" >> "$_test_root/actions"; [[ "$_mode" != launch-fail ]];
             with self.subTest(mode=mode):
                 root, result, actions = self.run_case(mode)
                 self.assertNotEqual(result.returncode, 0, result.stdout+result.stderr)
-                self.assertTrue((root/'apps/LocalRemote.app/Contents/obsolete-resource').exists())
+                self.assertTrue((root/'apps/Local Remote Desktop.app/Contents/obsolete-resource').exists())
                 self.assertNotIn('open ', actions)
                 if mode not in ('reset-fail','accessibility-reset-fail'): self.assertNotIn('tccutil reset', actions)
                 self.assertFalse(list((root/'apps').glob('.localremote-install.*')))
@@ -262,9 +285,9 @@ open() { echo "open $*" >> "$_test_root/actions"; [[ "$_mode" != launch-fail ]];
                 root, result, actions = self.run_case(mode, duplicate=True, loaded=True, option='--keep-permissions')
                 self.assertNotEqual(result.returncode, 0, result.stdout+result.stderr)
                 for folder in ('apps', 'personal-apps'):
-                    old = root/folder/'LocalRemote.app/Contents'
+                    old = root/folder/'Local Remote Desktop.app/Contents'
                     self.assertTrue((old/'obsolete-resource').exists(), result.stdout+result.stderr)
-                    self.assertEqual((old/'Resources/LocalRemote.png').read_text(), 'old icon')
+                    self.assertEqual((old/'Resources/LocalRemoteDesktop.png').read_text(), 'old icon')
                 self.assertNotIn('open ', actions)
                 self.assertNotIn('launchctl bootstrap', actions)
                 self.assertFalse(list((root/'apps').glob('.localremote-install.*')))
@@ -283,13 +306,13 @@ open() { echo "open $*" >> "$_test_root/actions"; [[ "$_mode" != launch-fail ]];
         self.assertNotEqual(result.returncode, 0)
         resets=[line for line in actions.splitlines() if line.startswith('tccutil ')]
         self.assertEqual(resets, ['tccutil reset ScreenCapture com.remotemaclan.host', 'tccutil reset Accessibility com.remotemaclan.host'])
-        self.assertTrue((root/'apps/LocalRemote.app/Contents/obsolete-resource').exists())
+        self.assertTrue((root/'apps/Local Remote Desktop.app/Contents/obsolete-resource').exists())
         self.assertIn('权限不会回滚', result.stderr)
 
     def test_failed_first_install_removes_unverified_bundle(self):
         root, result, actions = self.run_case('first-install-verification-fail')
         self.assertNotEqual(result.returncode, 0)
-        self.assertFalse((root/'apps/LocalRemote.app').exists())
+        self.assertFalse((root/'apps/Local Remote Desktop.app').exists())
         self.assertFalse(list((root/'apps').glob('.localremote-install.*')))
         self.assertNotIn('open ', actions)
 
@@ -298,9 +321,9 @@ open() { echo "open $*" >> "$_test_root/actions"; [[ "$_mode" != launch-fail ]];
             with self.subTest(loaded=loaded):
                 root, result, actions = self.run_case('launch-fail', loaded=loaded)
                 self.assertNotEqual(result.returncode, 0)
-                app=root/'apps/LocalRemote.app/Contents'
+                app=root/'apps/Local Remote Desktop.app/Contents'
                 self.assertFalse((app/'obsolete-resource').exists())
-                self.assertEqual((app/'Resources/LocalRemote.png').read_text(), 'new icon')
+                self.assertEqual((app/'Resources/LocalRemoteDesktop.png').read_text(), 'new icon')
                 self.assertFalse(list((root/'apps').glob('.localremote-install.*')))
 
 if __name__ == '__main__':

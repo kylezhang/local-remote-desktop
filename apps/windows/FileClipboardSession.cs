@@ -1,7 +1,7 @@
 using System.IO;
 using System.Diagnostics;
 using System.Text.Json;
-namespace LocalRemote;
+namespace LocalRemoteDesktop;
 
 public interface IFileClipboard {
     long Revision { get; }

@@ -1,6 +1,6 @@
 using System.Runtime.InteropServices;
 using System.Text.Json;
-namespace LocalRemote;
+namespace LocalRemoteDesktop;
 
 [StructLayout(LayoutKind.Sequential)] internal struct NativeInput {
     internal uint Type; internal InputUnion Data;

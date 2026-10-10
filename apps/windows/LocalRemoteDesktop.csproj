@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType><TargetFramework>net8.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF><Nullable>enable</Nullable><ImplicitUsings>enable</ImplicitUsings>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks><PlatformTarget>x64</PlatformTarget>
+    <Version>0.3.0-alpha.1</Version>
+    <Product>Local Remote Desktop</Product>
+    <AssemblyName>LocalRemoteDesktop</AssemblyName>
+    <RootNamespace>LocalRemoteDesktop</RootNamespace>
+    <Description>Local-first remote desktop</Description>
+    <ApplicationIcon>../../assets/brand/LocalRemoteDesktop.ico</ApplicationIcon>
+  </PropertyGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="../../assets/localization/strings.json" LogicalName="LocalRemoteDesktop.strings.json"/>
+    <Resource Include="../../assets/brand/LocalRemoteDesktop.ico" Link="LocalRemoteDesktop.ico" />
+    <Resource Include="../../assets/brand/icon.png" Link="LocalRemoteDesktop.png" />
+  </ItemGroup>
+</Project>

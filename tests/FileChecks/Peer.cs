@@ -6,7 +6,7 @@ using System.Net.Sockets;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
-using LocalRemote;
+using LocalRemoteDesktop;
 
 // Independent server framing fixture: real PSK mutual authentication and AES-GCM,
 // synthetic files only. No real clipboard/credentials or Apple APIs are accessed.

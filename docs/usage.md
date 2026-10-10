@@ -98,7 +98,7 @@ opted in; use a trusted paired device.
 Change detection runs every 500 ms, suppresses echo and retries busy writes for
 at most two seconds. A newer local copy cancels a pending remote write. Simultaneous
 copies can race; this is not clipboard history. Avoid immediately pasting after
-a remote copy or while the clipboard is busy. LocalRemote does not log or store
+a remote copy or while the clipboard is busy. Local Remote Desktop does not log or store
 text clipboard contents. Windows UI/transport and portable Swift state/adapter tests
 pass; native AppKit and real two-device paste acceptance remain pending.
 

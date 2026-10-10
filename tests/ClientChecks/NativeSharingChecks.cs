@@ -4,7 +4,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Interop;
-using LocalRemote;
+using LocalRemoteDesktop;
 static partial class Program {
     [DllImport("user32.dll")] static extern nint GetForegroundWindow();
     [DllImport("user32.dll")] static extern bool SetForegroundWindow(nint window);
@@ -19,8 +19,8 @@ static partial class Program {
         if(new[]{1,2,16,17,18,91,92}.Any(vk=>(GetAsyncKeyState(vk)&0x8000)!=0)) { Console.WriteLine("SKIP native input: local modifiers/buttons are held"); return; }
         var previous=GetForegroundWindow(); GetCursorPos(out var previousPoint);
         var field=new TextBox {Margin=new Thickness(12),MinHeight=44}; InputMethod.SetIsInputMethodEnabled(field,false);
-        var panel=new StackPanel(); panel.Children.Add(new TextBlock {Text="LocalRemote isolated input check",Margin=new Thickness(12)}); panel.Children.Add(field);
-        var window=new Window {Title="LocalRemote · Input check",Content=panel,Width=360,Height=150,Left=50,Top=50,ShowInTaskbar=false,ResizeMode=ResizeMode.NoResize};
+        var panel=new StackPanel(); panel.Children.Add(new TextBlock {Text="LocalRemoteDesktop isolated input check",Margin=new Thickness(12)}); panel.Children.Add(field);
+        var window=new Window {Title="LocalRemoteDesktop · Input check",Content=panel,Width=360,Height=150,Left=50,Top=50,ShowInTaskbar=false,ResizeMode=ResizeMode.NoResize};
         var seen=new List<int>(); int clicks=0,wheels=0; field.PreviewKeyDown+=(_,e)=>seen.Add(KeyInterop.VirtualKeyFromKey(e.Key)); field.PreviewMouseDown+=(_,_)=>clicks++; field.PreviewMouseWheel+=(_,_)=>wheels++;
         nint hwnd=0; Point? moved=null;
         WindowsHost? host=null; Wire? client=null; WindowsInput? input=null;

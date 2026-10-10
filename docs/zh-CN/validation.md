@@ -34,7 +34,7 @@ Apple SDK、原生钥匙串保存/授权与重启持久化仍待验收。详见�
 2026-10-09 Windows ResourceChecks：产品解码器分别输入 720p/30、1080p/60 各 40 秒，采样 CPU/专用内存，验证固定缓冲错误流、取消、尺寸拒绝和进程退出。
 重新构建的 Windows DLL 通过协议及真实 WPF 模拟端检查，包括连接中关闭窗口和断开后停止刷新。见[资源测试范围与结果](performance.md)。
 
-2026-10-09 命名迁移：LocalRemote Windows 工程/程序集实际构建并打独立包，最终包内 DLL 通过 WPF 模拟端回归。
+2026-10-09 命名迁移：Local Remote Desktop Windows 工程/程序集实际构建并打独立包，最终包内 DLL 通过 WPF 模拟端回归。
 协议测试验证 DPAPI 原密文迁移、可解密、不覆盖新设置、保留原文件、忘记后不复活。Mac 旧应用位置、回退、自启动路径及忽略的签名配置迁移通过模拟。
 共享 Swift 启动检查仍以 Linux 真实编译器执行；Apple SDK 和原生安装仍待验收。历史结果记录保留当时源码和产物名称。
 
@@ -76,3 +76,9 @@ Swift 5.9.2 在 Linux 编译执行产品文件模型/传输，Wire 使用替身�
 ## 文件速率与就绪确认（开发更新）
 
 C# 传输及最终 WPF 候选检查覆盖按实际耗时控速、字节完成与剪贴板就绪分离、忙时重试/未就绪回报、取消及原有远控回归；真实 Swift 编译检查包含 8 MiB 控速传输和旧端缺失确认处理。Apple SDK/原生剪贴板和真实局域网竞争待验证。见[基准及检查记录](../../tests/results/file-speed-2026-10-09.txt)。
+
+## 产品更名（开发版本）
+
+工程、界面与打包已统一为 Local Remote Desktop / LocalRemoteDesktop。
+Windows 构建、实际 WPF 回归及旧 DPAPI 数据兼容检查通过；Mac 仅完成便携检查，
+尚未原生验证安装、TCC 和钥匙串行为。见 [检查记录](../../tests/results/product-rename-2026-10-10.txt)。

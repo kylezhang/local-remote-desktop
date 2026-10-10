@@ -1,6 +1,6 @@
 using System.IO;
 using System.Runtime.InteropServices;
-namespace LocalRemote;
+namespace LocalRemoteDesktop;
 // Current-user DPAPI; no plaintext keys on disk, no NuGet dependency.
 static class SecretStore
 {
@@ -45,7 +45,7 @@ static class SecretStore
                     }
                 }
             }
-            File.WriteAllText(marker,"LocalRemote encrypted settings migration completed.\n");
+            File.WriteAllText(marker,"LocalRemoteDesktop encrypted settings migration completed.\n");
         }
     }
     static string PathFor(string host) => Path.Combine(DirectoryPath(),Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(host)))+".dpapi");

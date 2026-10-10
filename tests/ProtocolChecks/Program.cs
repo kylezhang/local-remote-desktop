@@ -4,7 +4,7 @@ using System.Net.Sockets;
 using System.Security.Cryptography;
 using System.Text;
 using System.Diagnostics;
-using LocalRemote;
+using LocalRemoteDesktop;
 static byte[] Join(params byte[][] a)=>a.SelectMany(x=>x).ToArray();
 static byte[] H(byte[] k,string label,byte[] transcript)=>HMACSHA256.HashData(k,Join(Encoding.ASCII.GetBytes(label),transcript));
 static byte[] N(ulong n) { var r=new byte[12]; BinaryPrimitives.WriteUInt64BigEndian(r.AsSpan(4),n); return r; }
@@ -86,7 +86,7 @@ try {
     File.Delete(Path.Combine(current,blobName));
     SecretStore.MigrateLegacyDirectory(legacy,current);
     Assert(!File.Exists(Path.Combine(current,blobName)),"forgotten connection was resurrected by migration");
-    Console.WriteLine("PASS LocalRemote encrypted storage migration: decryptable blobs, no overwrite, legacy retained, no resurrection");
+    Console.WriteLine("PASS LocalRemoteDesktop encrypted storage migration: decryptable blobs, no overwrite, legacy retained, no resurrection");
 } finally { Directory.Delete(migrationRoot,true); }
 
 // Input floods must not drop button/key transitions or move across them.

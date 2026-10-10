@@ -17,8 +17,8 @@ with Image.open(brand / 'icon-master.png') as master:
     icon = master.resize((1024, 1024), Image.Resampling.LANCZOS)
 
 icon.save(brand / 'icon.png')
-icon.save(brand / 'LocalRemote.ico', sizes=[
+icon.save(brand / 'LocalRemoteDesktop.ico', sizes=[
     (16, 16), (24, 24), (32, 32), (48, 48), (64, 64), (128, 128), (256, 256)
 ])
-icon.save(brand / 'LocalRemote.icns')
+icon.save(brand / 'LocalRemoteDesktop.icns')
 print('Generated PNG, multi-size ICO and ICNS from the approved PNG master')

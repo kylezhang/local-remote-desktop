@@ -1,10 +1,10 @@
-# LocalRemote 品牌图形
+# Local Remote Desktop 品牌图形
 
 [English](README.md)
 
 正式采用用户确认的蓝莓蓝紫方案：纯白屏幕轮廓、双向箭头和小指针。屏幕代表真实桌面，箭头表达双向连接，指针突出远程操作。图形保持平面，不含发光、浮雕、阴影或颗粒纹理。
 
-![LocalRemote 蓝莓方案](identity-board.png)
+![Local Remote Desktop 蓝莓方案](identity-board.png)
 
 ## 配色
 
@@ -21,7 +21,7 @@ Windows 的文字选择、下拉选中高亮和自动重连勾选统一蓝色。
 - `icon.svg`：已确认的可编辑矢量母版，含透明边距。
 - `symbol.svg`：浅色背景使用的纯蓝标识，屏幕、箭头与指针共用母版。
 - `icon-master.png`、`icon.png`：2048px 透明母版导出及 1024px 应用图标。
-- `LocalRemote.ico`、`LocalRemote.icns`：Windows、macOS 图标。
+- `LocalRemoteDesktop.ico`、`LocalRemoteDesktop.icns`：Windows、macOS 图标。
 - `identity-board.png`：图形、文字及应用图标展示。
 
 采用协调后的 B：指针缩放 0.76、边框线宽 56、屏幕整体缩放 1.06、箭头缩放 1.08，指针略向左上做视觉居中。SVG 为正式制作源，各平台图标统一从它导出。此前车厘子红稿已被替代；最初探索使用内置 image_gen，本次沿用并调整既有矢量文件。

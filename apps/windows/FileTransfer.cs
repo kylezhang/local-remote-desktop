@@ -3,7 +3,7 @@ using System.Diagnostics;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
-namespace LocalRemote;
+namespace LocalRemoteDesktop;
 
 public record FileItem(string name,long size);
 public sealed class FileSource {

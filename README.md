@@ -1,12 +1,12 @@
 <p align="center">
-  <img src="assets/brand/icon.png" alt="LocalRemote" width="112" />
+  <img src="assets/brand/icon.png" alt="Local Remote Desktop" width="112" />
 </p>
 
-# LocalRemote
+# Local Remote Desktop
 
 **Remote control across your local network.**
 
-LocalRemote lets you view and control another computer's existing desktop over your LAN. Connect directly, without an account or a cloud relay, and continue the same work when you return to that computer.
+Local Remote Desktop lets you view and control another computer's existing desktop over your LAN. Connect directly, without an account or a cloud relay, and continue the same work when you return to that computer.
 
 **Currently available: Windows → Mac.** Two-way desktop control and mobile controllers are planned.
 
@@ -14,7 +14,7 @@ LocalRemote lets you view and control another computer's existing desktop over y
 
 **English** | [简体中文](README.zh-CN.md)
 
-[Download](https://atomgit.com/zkxw2008/LocalRemote/releases) · [Documentation](#documentation) · [Roadmap](docs/roadmap.md) · [Changelog](CHANGELOG.md)
+[Download](https://atomgit.com/zkxw2008/local-remote-desktop/releases) · [Documentation](#documentation) · [Roadmap](docs/roadmap.md) · [Changelog](CHANGELOG.md)
 
 Unreleased main is **v0.3.0-alpha.1 development**: a [Windows sharing preview](docs/windows-sharing.md),
 [nearby-device selection](docs/discovery.md) and remembered English/Chinese UI.
@@ -43,19 +43,19 @@ The current release supports one controller and one display. The Mac must be awa
 
 ### Windows
 
-1. Download the Windows x64 ZIP from [Releases](https://atomgit.com/zkxw2008/LocalRemote/releases) and extract it.
+1. Download the Windows x64 ZIP from [Releases](https://atomgit.com/zkxw2008/local-remote-desktop/releases) and extract it.
 2. Install a complete [FFmpeg build](https://ffmpeg.org/download.html) with H.264 decoding and add it to PATH.
-3. Run `LocalRemote.exe` from the extracted folder (`RemoteMacLAN.exe` in the existing v0.1.0 release).
+3. Run the executable in that archive: `LocalRemote.exe` in v0.2.0-beta.1, or `RemoteMacLAN.exe` in v0.1.0. Current source builds use `LocalRemoteDesktop.exe`.
 
-The ZIP includes the .NET Desktop Runtime. If FFmpeg already works on your machine, you can keep that installation. The executable retains its original name for compatibility.
+The ZIP includes the .NET Desktop Runtime. If FFmpeg already works on your machine, you can keep that installation. Existing released archives retain their original filenames; the current source and repository use the new product name.
 
 ### macOS
 
 Install Xcode Command Line Tools if needed (`xcode-select --install`), then build and install:
 
 ```sh
-git clone https://atomgit.com/zkxw2008/LocalRemote.git
-cd LocalRemote
+git clone https://atomgit.com/zkxw2008/local-remote-desktop.git
+cd local-remote-desktop
 bash apps/macos/install-app.sh
 ```
 
@@ -67,11 +67,11 @@ macOS is currently distributed as source. See the [Mac guide](docs/macos.md) for
 
 ## Usage
 
-1. Open LocalRemote on the Mac, start sharing, and copy its pairing key.
+1. Open Local Remote Desktop on the Mac, start sharing, and copy its pairing key.
 2. On Windows, enter the Mac's LAN IP address and pairing key, then connect.
 3. Click the remote picture to control the desktop. Disconnect when finished; your Mac session stays open.
 
-Both devices must be reachable on the same network. Allow TCP **47980** to the Mac. Keep the pairing key private and use LocalRemote on a trusted LAN.
+Both devices must be reachable on the same network. Allow TCP **47980** to the Mac. Keep the pairing key private and use Local Remote Desktop on a trusted LAN.
 
 | Shortcut | Action |
 |---|---|
@@ -95,7 +95,7 @@ The installation/input improvements originally planned for v0.1.1/v0.1.2 are con
 
 ## Background
 
-LocalRemote began with a practical frustration: finding a Windows-to-Mac client that fit an everyday office workflow. The tools I tried felt awkward, were dated, or required payment. AI-assisted development made it practical to build a focused alternative, starting with the devices I use every day.
+Local Remote Desktop began with a practical frustration: finding a Windows-to-Mac client that fit an everyday office workflow. The tools I tried felt awkward, were dated, or required payment. AI-assisted development made it practical to build a focused alternative, starting with the devices I use every day.
 
 ## Documentation
 

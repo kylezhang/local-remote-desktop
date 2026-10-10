@@ -5,17 +5,17 @@
 Windows 10/11 x64, .NET 8 SDK for development, and FFmpeg with an H.264 decoder. No third-party NuGet packages. Run from the repository root:
 
 ```powershell
-dotnet build apps/windows/LocalRemote.csproj -c Release
-dotnet run --project apps/windows/LocalRemote.csproj -c Release
+dotnet build apps/windows/LocalRemoteDesktop.csproj -c Release
+dotnet run --project apps/windows/LocalRemoteDesktop.csproj -c Release
 ```
 
 For a release package that includes the .NET Desktop Runtime:
 
 ```powershell
-dotnet publish apps/windows/LocalRemote.csproj -c Release -r win-x64 --self-contained true -o dist/windows
+dotnet publish apps/windows/LocalRemoteDesktop.csproj -c Release -r win-x64 --self-contained true -o dist/windows
 ```
 
-Runtime packs must be available during restore. See [Microsoft deployment documentation](https://learn.microsoft.com/en-us/dotnet/core/deploying/). Keep the complete output directory together and run `LocalRemote.exe`. Published v0.1.0 archives still contain `RemoteMacLAN.exe`; existing release assets are unchanged. A normal build, unlike the release ZIP, needs .NET Desktop Runtime installed.
+Runtime packs must be available during restore. See [Microsoft deployment documentation](https://learn.microsoft.com/en-us/dotnet/core/deploying/). Keep the complete output directory together and run `LocalRemoteDesktop.exe`. Published v0.1.0 archives still contain `RemoteMacLAN.exe`; existing release assets are unchanged. A normal build, unlike the release ZIP, needs .NET Desktop Runtime installed.
 
 FFmpeg is not bundled. Use the [official download entry point](https://ffmpeg.org/download.html), install its complete required files and expose ffmpeg.exe on PATH or beside this executable. Respect the chosen FFmpeg build's license. Media Foundation/hardware decode and D3D11 rendering are not implemented.
 

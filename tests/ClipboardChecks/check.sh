@@ -4,8 +4,8 @@ root="$(cd "$(dirname "$0")/../.." && pwd)"
 compiler="${SWIFTC:-swiftc}"
 stage="$(mktemp -d "${TMPDIR:-/tmp}/localremote-clipboard-check.XXXXXX")"
 trap 'rm -rf -- "$stage"' EXIT
-"$compiler" -parse-as-library "$root/apps/macos/Sources/LocalRemote/TextClipboardSync.swift" "$root/tests/ClipboardChecks/Check.swift" -o "$stage/check"
-"$compiler" -parse-as-library "$root/apps/macos/Sources/LocalRemote/SharingPreferences.swift" "$root/tests/ClipboardChecks/PreferenceCheck.swift" -o "$stage/preferences"
+"$compiler" -parse-as-library "$root/apps/macos/Sources/LocalRemoteDesktop/TextClipboardSync.swift" "$root/tests/ClipboardChecks/Check.swift" -o "$stage/check"
+"$compiler" -parse-as-library "$root/apps/macos/Sources/LocalRemoteDesktop/SharingPreferences.swift" "$root/tests/ClipboardChecks/PreferenceCheck.swift" -o "$stage/preferences"
 "$stage/preferences"
 "$stage/check"
 if [[ "$(uname -s)" == Darwin ]]; then
@@ -13,7 +13,7 @@ if [[ "$(uname -s)" == Darwin ]]; then
 else
     "$compiler" -emit-library -emit-module -module-name AppKit -emit-module-path "$stage/AppKit.swiftmodule" "$root/tests/ClipboardChecks/MockAppKit.swift" -o "$stage/libAppKit.so"
     "$compiler" -parse-as-library -I "$stage" -L "$stage" -lAppKit -Xlinker -rpath -Xlinker "$stage" \
-        "$root/apps/macos/Sources/LocalRemote/TextClipboardSync.swift" "$root/apps/macos/Sources/LocalRemote/MacClipboard.swift" "$root/tests/ClipboardChecks/AdapterCheck.swift" -o "$stage/adapter"
+        "$root/apps/macos/Sources/LocalRemoteDesktop/TextClipboardSync.swift" "$root/apps/macos/Sources/LocalRemoteDesktop/MacClipboard.swift" "$root/tests/ClipboardChecks/AdapterCheck.swift" -o "$stage/adapter"
     "$stage/adapter"
     echo 'SKIP AppKit/Apple SDK: macOS required. Production clipboard state ran with the real Swift compiler.'
 fi

@@ -4,7 +4,7 @@ root="$(cd "$(dirname "$0")/../.." && pwd)"
 compiler="${SWIFTC:-swiftc}"
 stage="$(mktemp -d "${TMPDIR:-/tmp}/localremote-startup-check.XXXXXX")"
 trap 'rm -rf -- "$stage"' EXIT
-"$compiler" -parse-as-library "$root/apps/macos/Sources/LocalRemote/SharingPreparation.swift" "$root/tests/MacStartupChecks/Check.swift" -o "$stage/check"
+"$compiler" -parse-as-library "$root/apps/macos/Sources/LocalRemoteDesktop/SharingPreparation.swift" "$root/tests/MacStartupChecks/Check.swift" -o "$stage/check"
 "$stage/check"
 if [[ "$(uname -s)" == Darwin ]]; then
     # Apple SDK compile gate. Does not sign/install/open the app or reset TCC.

@@ -4,7 +4,7 @@ using System.IO;
 using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
-namespace LocalRemote;
+namespace LocalRemoteDesktop;
 
 // The shared catalog maps existing UI messages to English, preserving opaque values.
 public sealed class UiText : INotifyPropertyChanged {
@@ -17,7 +17,7 @@ public sealed class UiText : INotifyPropertyChanged {
     public event Action? LanguageChanged;
     public string this[string text]=>Translate(text);
     UiText() {
-        using var stream=typeof(UiText).Assembly.GetManifestResourceStream("LocalRemote.strings.json")??throw new InvalidDataException("Missing UI catalog");
+        using var stream=typeof(UiText).Assembly.GetManifestResourceStream("LocalRemoteDesktop.strings.json")??throw new InvalidDataException("Missing UI catalog");
         catalog=JsonSerializer.Deserialize<Dictionary<string,string>>(stream)??throw new InvalidDataException("Invalid UI catalog");
         templates=catalog.Where(pair=>pair.Key.Contains("{0}"))
             .OrderByDescending(pair=>Regex.Replace(pair.Key,@"\{\d+\}","").Length)

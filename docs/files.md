@@ -68,12 +68,12 @@ Use **接收目录** on Windows or **打开接收目录** on Mac to open saved f
 
 | Platform | Location |
 |---|---|
-| Windows | `%LOCALAPPDATA%\LocalRemote\ReceivedFiles` |
+| Windows | `%LOCALAPPDATA%\LocalRemoteDesktop\ReceivedFiles` |
 | Mac | `~/Library/Application Support/LocalRemote/ReceivedFiles` |
 
 Each batch has its own folder. Remove files there when no longer needed; retained
 files consume disk space and are not automatically deleted. A crash/forced OS
-termination can leave `.incoming-*` folders; after quitting LocalRemote on that
+termination can leave `.incoming-*` folders; after quitting Local Remote Desktop on that
 device, those incomplete folders may be removed. Completed batches remain usable.
 Clipboard file drops represent **copy**, never a request to delete the source.
 
@@ -89,7 +89,7 @@ advertise file sharing; desktop control still works.
 Selected file bytes and names go only to the paired peer. File names are needed
 for transfer but full source paths are not sent, and file-drop paths are excluded
 from text sync. No file contents are logged. Receiving files necessarily saves
-them to disk; they are not encrypted at rest by LocalRemote. Text clipboard and
+them to disk; they are not encrypted at rest by LocalRemoteDesktop. Text clipboard and
 file clipboard have separate permissions. This borrows the idea of metadata
 preparation followed by content transfer; it does not implement LocalSend protocol
 interoperability. See [protocol](protocol.md) and [validation](validation.md).

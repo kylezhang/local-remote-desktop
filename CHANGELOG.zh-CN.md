@@ -4,6 +4,10 @@
 
 ## 未发布
 
+- 产品更名为 Local Remote Desktop，原 AtomGit 私有仓库改为 local-remote-desktop；
+  更新工程、程序集、应用名称、资源与打包文档。保留凭据存储、Mac 权限/钥匙串/自启动身份及发现兼容。
+  安装脚本迁移两种旧包名并支持失败恢复；已有发布产物保持原名。
+
 - 开发版本推进到 v0.3.0-alpha.1：Windows 原生共享页面默认关闭，独立 DPAPI 密码、明确保存/撤销、
   单控制端加密认证、GDI 采集/Media Foundation 硬件 H.264（可选软件）、有界帧与输入清理。
   Windows 目标保留 Ctrl 快捷键，Mac 目标保持原映射；Windows 控制/共享页共用样式资源。

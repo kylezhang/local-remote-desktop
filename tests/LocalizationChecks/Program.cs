@@ -2,9 +2,9 @@ using System.Globalization;
 using System.Reflection;
 using System.Text.Json;
 using System.Text.RegularExpressions;
-using LocalRemote;
+using LocalRemoteDesktop;
 
-using var stream=Assembly.GetExecutingAssembly().GetManifestResourceStream("LocalRemote.strings.json")!;
+using var stream=Assembly.GetExecutingAssembly().GetManifestResourceStream("LocalRemoteDesktop.strings.json")!;
 var catalog=JsonSerializer.Deserialize<Dictionary<string,string>>(stream)!;
 UiText.Current.Use("en");
 int templates=0;

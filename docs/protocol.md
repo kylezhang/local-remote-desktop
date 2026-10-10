@@ -1,4 +1,4 @@
-# LocalRemote protocol (RML1 / RMP1)
+# Local Remote Desktop protocol (RML1 / RMP1)
 
 [简体中文](zh-CN/protocol.md)
 
@@ -160,5 +160,5 @@ Authenticated Host failures may send file_error {code}; stable codes are invalid
 changed, incomplete, checksum, denied, diskFull and io. No source paths or secrets
 are included. Connection loss can prevent error delivery.
 
-This is LocalRemote's extension, not LocalSend protocol compatibility. See the
+This is Local Remote Desktop's extension, not LocalSend protocol compatibility. See the
 [file guide](files.md) for clipboard races, storage and current limitations.

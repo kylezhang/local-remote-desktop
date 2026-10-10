@@ -1,12 +1,11 @@
 # Roadmap
 
-The accepted next product name is **Local Remote Desktop**; the planned repository
-slug is `local-remote-desktop`. See the [naming decision](product-name.md).
-The current repository name remains unchanged until the dedicated migration.
+The product is **Local Remote Desktop** and the repository is `local-remote-desktop`.
+See the [completed naming migration](product-name.md).
 
 [简体中文](zh-CN/roadmap.md) · [README](../README.md)
 
-LocalRemote aims to provide one familiar LAN remote-control application per platform. Each desktop installation will eventually initiate or accept control, with explicit authorization. Discovery never implies trust.
+Local Remote Desktop aims to provide one familiar LAN remote-control application per platform. Each desktop installation will eventually initiate or accept control, with explicit authorization. Discovery never implies trust.
 
 v0.1.0 remains the stable baseline. The current preview is v0.2.0-beta.1: a tested Windows package and Mac source, with native Mac acceptance still pending. It consolidates the earlier patch plans with new clipboard/password capabilities. A preview is not completion of the v0.2.0 feature set or a stable-release date promise.
 

@@ -1,0 +1,37 @@
+Local Remote Desktop product rename checkpoint — 2026-10-10
+
+Repository: https://atomgit.com/zkxw2008/local-remote-desktop
+Same private AtomGit repository (id 11027529); history, existing tags/releases
+and their asset identifiers preserved. Current development: 0.3.0-alpha.1.
+
+PASS self-contained Windows x64 build; LocalRemoteDesktop assembly/namespace,
+English/Chinese titles, embedded icon and localization resources.
+Candidate LocalRemoteDesktop.dll SHA256:
+f7c8a5f97d04a9c46c71744c9af8f867f6a0fd64d605481bca2315f0cd98a959
+PASS full actual WPF ClientChecks in RML1 and RMP1 modes against this DLL:
+layout/languages, sharing state/credentials, encrypted video/input, text/files,
+quality reconnect, close/disconnect cleanup and exclusive viewer/sharing roles.
+Passing routing fixtures do not prove physical OS input acceptance.
+
+PASS NamingChecks with the actual pre-rename and current assemblies: real
+current-user DPAPI decrypt, explicit-path consent and sharing-password fixtures,
+unchanged credential bytes and language path, one-time legacy migration.
+Only synthetic credentials used. All compatibility writes use explicit fixture
+paths; APPDATA overrides are not treated as reliable known-folder isolation.
+
+PASS 19 installer fixtures, including LocalRemote.app migration and rollback;
+13 signing fixtures and package pipeline checks. Apple signing, installation,
+privacy and notarization commands are mocked in these portable checks.
+PASS Swift syntax for 20 files; Linux Swift Foundation checks for HostModel,
+pairing editor, discovery lifecycle, 199 labels and 28 translated templates.
+SKIP native SwiftUI, NetService, ScreenCaptureKit, Keychain and Mac installation.
+
+Persistent Mac bundle ID/Keychain/LaunchAgent identifiers remain
+com.remotemaclan.host. Existing data paths, Bonjour service and wire/credential
+markers remain compatible. Ad-hoc signing can still require renewed permissions;
+the rename does not claim to solve that platform limitation.
+
+No new release/tag and no Mac binary published for this rename. Mac controller,
+native Mac build/runtime and bidirectional physical-LAN acceptance are pending.
+Final committed-build hash and Windows deployment are recorded separately below
+after completion.

@@ -1,18 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0"><dict>
-<key>NSLocalNetworkUsageDescription</key><string>LocalRemote advertises this device on your local network while desktop sharing is enabled.</string>
+<key>NSLocalNetworkUsageDescription</key><string>Local Remote Desktop advertises this device on your local network while desktop sharing is enabled.</string>
 <key>NSBonjourServices</key><array><string>_localremote._tcp</string></array>
-<key>CFBundleExecutable</key><string>LocalRemote</string>
+<key>CFBundleExecutable</key><string>LocalRemoteDesktop</string>
 <key>CFBundleIdentifier</key><string>com.remotemaclan.host</string>
-<key>CFBundleName</key><string>LocalRemote</string>
-<key>CFBundleDisplayName</key><string>LocalRemote</string>
-<key>CFBundleIconFile</key><string>LocalRemote.icns</string>
-<key>CFBundleVersion</key><string>21</string>
+<key>CFBundleName</key><string>Local Remote Desktop</string>
+<key>CFBundleDisplayName</key><string>Local Remote Desktop</string>
+<key>CFBundleIconFile</key><string>LocalRemoteDesktop.icns</string>
+<key>CFBundleVersion</key><string>22</string>
 <key>CFBundleInfoDictionaryVersion</key><string>6.0</string>
 <key>NSPrincipalClass</key><string>NSApplication</string>
 <key>CFBundleShortVersionString</key><string>0.3.0</string>
-<key>LocalRemoteReleaseVersion</key><string>0.3.0-alpha.1</string>
+<key>LocalRemoteDesktopReleaseVersion</key><string>0.3.0-alpha.1</string>
 <key>CFBundlePackageType</key><string>APPL</string>
 <key>LSMinimumSystemVersion</key><string>13.0</string>
 <key>NSHighResolutionCapable</key><true/>

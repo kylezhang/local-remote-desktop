@@ -1,55 +1,49 @@
 # Project layout and naming
 
-[简体中文](zh-CN/naming.md)
+[简体中文](zh-CN/naming.md) · [Product name](product-name.md)
 
-LocalRemote is the product, repository, application and source namespace. Platform
-directories describe the platform, rather than permanently assigning client/host
-roles; Windows-to-Mac remains the only implemented direction today.
+**Local Remote Desktop** is the product. The repository slug is
+`local-remote-desktop`; `LocalRemoteDesktop` is the native source/assembly name.
+Platform folders describe their OS rather than fixing a permanent client/host role.
 
 ```text
 apps/
-  macos/                 Swift package, Sources/LocalRemote, installer
-  windows/               LocalRemote.csproj, LocalRemote namespace
-assets/brand/            Shared icons and editable identity
-docs/                    English/zh-CN documentation, including protocol.md
-scripts/                 Build/package/brand tooling
-tests/                   Automated checks and historical validation records
+  macos/       Swift package, Sources/LocalRemoteDesktop, installer
+  windows/     LocalRemoteDesktop.csproj, LocalRemoteDesktop namespace
+assets/brand/  Shared icons and editable symbol
+docs/          English and zh-CN documentation
+scripts/       Build and package tooling
+tests/         Checks and historical validation records
 ```
 
-Current builds produce `LocalRemote.app` with `Contents/MacOS/LocalRemote` on
-Mac, and `LocalRemote.exe`/`LocalRemote.dll` on Windows. Mac installation uses
-`/Applications/LocalRemote.app`. Build, package and test scripts use these names.
+Mac builds produce `Local Remote Desktop.app` with `Contents/MacOS/LocalRemoteDesktop`
+and install at `/Applications/Local Remote Desktop.app`. Windows produces
+`LocalRemoteDesktop.exe` and `LocalRemoteDesktop.dll`. Current icon containers and
+build/package scripts use LocalRemoteDesktop names.
 
-## Compatibility during updates
+## Existing installations
 
-| Retained identity | Reason |
+| Retained identity | Compatibility purpose |
 |---|---|
-| Mac bundle ID `com.remotemaclan.host` | An established signing/privacy identity; changing it would require a separate authorization migration. |
-| Keychain service `com.remotemaclan.host`, account `pairing-v1` | Keep the user's existing pairing key. |
-| LaunchAgent label `com.remotemaclan.host` | Keep one login job; update its executable path to the renamed application. |
-| Protocol magic `RML1` and existing crypto labels | Renamed applications remain compatible with previously deployed peers. |
+| Mac bundle ID, Keychain service and LaunchAgent label `com.remotemaclan.host` | Preserve the user's privacy/storage/login identity; Keychain account remains `pairing-v1`. |
+| Windows `%LOCALAPPDATA%/LocalRemote` | Keep passwords, consent, language, remembered connections and received files. |
+| Mac Application Support `LocalRemote/ReceivedFiles` | Preserve received files; do not duplicate or relocate user data. |
+| `_localremote._tcp` discovery, RML1/RMP1 and `LOCALREMOTE-PAIRING-PASSWORD-V1:` | Keep existing authenticated peers and stored credentials compatible. |
+| `LOCALREMOTE_*` / `RML_*` development environment switches | Keep build/test/signing configuration compatible. |
 
-These are stable internal contracts, not visible product names. New display,
-source and artifact names use LocalRemote. Do not change persistent identities
-just to satisfy a text search.
+The Mac installer checks all six current/previous system/user bundle paths,
+stops LocalRemoteDesktop, LocalRemote and RemoteMacLAN processes, replaces bundles
+without merging contents and restores complete backups on verification failure.
+It updates the existing login job after verification. A keep-permissions request
+requires compatible signatures; renaming does not guarantee ad-hoc authorization.
+The old LocalRemote.app and RemoteMacLAN.app are removed only as this app's verified
+bundles. No Keychain or stored pairing data is deleted.
 
-The Mac installer validates and backs up all four known current/legacy system
-and user bundles before replacement. It removes old `RemoteMacLAN.app` copies,
-can restore them on verification failure, and stops either executable name.
-It retains pairing storage and updates an existing login job's path only after
-the new app is verified. The same keep/reset-permissions policies still apply;
-renaming does not guarantee that macOS preserves authorization.
+Windows keeps the existing encrypted-store migration from RemoteMacLAN to
+LocalRemote. No new data-store migration is introduced. Locally maintained old
+launch directories may retain a single LocalRemote.exe compatibility launcher
+for existing shortcuts; it starts the current LocalRemoteDesktop assembly.
+New packages and the canonical build directory use LocalRemoteDesktop.exe.
 
-Git moves tracked source, but ignored signing pins remain in old checkouts.
-Development builds copy an existing legacy signing pin/strict-policy marker into
-the new directory when missing. New settings win; release builds do not alter
-those local settings. Old RML signing environment names remain accepted aliases.
-
-Windows copies recognized DPAPI records from `%LOCALAPPDATA%/RemoteMacLAN` to
-`%LOCALAPPDATA%/LocalRemote` once. It does not decrypt/re-encrypt during migration,
-overwrite newer records or delete originals. The completion marker prevents
-forgotten connections from being restored later. Old local executable shortcuts
-may have a compatibility deployment copy; release packages only use LocalRemote.
-
-Existing v0.1.0 tags, downloadable archives and historical test records keep their
-original names. Naming changes belong to the upcoming release, not rewritten history.
+Released v0.1.0/v0.2.0-beta.1 tags, asset names and validation records are historical;
+do not rewrite or overwrite them. Current repository links use the new slug.

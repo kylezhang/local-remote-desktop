@@ -1,7 +1,7 @@
 using System.Diagnostics;
 using System.Security.Cryptography;
 using System.Text.Json;
-using LocalRemote;
+using LocalRemoteDesktop;
 static class TransferBenchmark {
     public static async Task Run(string report) {
         var root=Path.Combine(Path.GetTempPath(),"localremote-transfer-bench-"+Guid.NewGuid().ToString("N")); Directory.CreateDirectory(root);

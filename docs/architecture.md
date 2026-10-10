@@ -25,7 +25,7 @@ and [protocol](protocol.md#optional-text-clipboard).
 
 Metrics are decoded FPS and incoming H.264 Mbps on Windows, plus mean Mac encoding callback time. Encoding time includes encoder queuing and excludes network time. There is no trustworthy per-frame decoder or total input-to-display latency metric in this subprocess pipeline.
 
-Development builds support manual/generated passwords with salted PBKDF2-HMAC-SHA256 (600000 iterations); legacy raw PSKs remain compatible. Mac derives on its credential queue and caches the key; Windows derives off the UI thread. Explicit save updates the existing Keychain item and disconnects old controllers. Keychain/DPAPI protect stored credentials. The PSK authenticates each connection; independent direction keys protect video and input. Protocol limits and diagnostics are documented separately. Application files and source names use LocalRemote; stable bundle/Keychain identities and the wire protocol remain compatible. See [naming migration](naming.md).
+Development builds support manual/generated passwords with salted PBKDF2-HMAC-SHA256 (600000 iterations); legacy raw PSKs remain compatible. Mac derives on its credential queue and caches the key; Windows derives off the UI thread. Explicit save updates the existing Keychain item and disconnects old controllers. Keychain/DPAPI protect stored credentials. The PSK authenticates each connection; independent direction keys protect video and input. Protocol limits and diagnostics are documented separately. Application files and source names use Local Remote Desktop; stable bundle/Keychain identities and the wire protocol remain compatible. See [naming migration](naming.md).
 
 ## Planned desktop roles
 

@@ -1,6 +1,6 @@
 using System.Security.Cryptography;
 using System.Windows;
-namespace LocalRemote;
+namespace LocalRemoteDesktop;
 
 public partial class SharingWindow:Window {
     HostCredential? credential;

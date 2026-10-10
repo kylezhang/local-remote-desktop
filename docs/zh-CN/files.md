@@ -37,15 +37,15 @@ Windows 向 Mac 传文件时，提前 Ctrl+V 会提示等待，并阻止粘贴�
 
 | 平台 | 位置 |
 |---|---|
-| Windows | `%LOCALAPPDATA%\LocalRemote\ReceivedFiles` |
+| Windows | `%LOCALAPPDATA%\LocalRemoteDesktop\ReceivedFiles` |
 | Mac | `~/Library/Application Support/LocalRemote/ReceivedFiles` |
 
-每批有独立目录，已完成文件不会自动删除，使用完可自行清理，注意磁盘占用。崩溃或系统强制结束可能留下 `.incoming-*` 未完成目录；退出该设备的 LocalRemote 后可清理这些目录，完成批次不受影响。
+每批有独立目录，已完成文件不会自动删除，使用完可自行清理，注意磁盘占用。崩溃或系统强制结束可能留下 `.incoming-*` 未完成目录；退出该设备的 Local Remote Desktop 后可清理这些目录，完成批次不受影响。
 
 ## 连接与隐私
 
 除桌面端口 47980 外，还需允许 TCP **47981** 到 Mac。独立文件连接自动复用配对密钥双向认证并以 AES-GCM 加密，另检查本次桌面会话令牌和最新允许状态。过程在后台完成，不需要再次人工认证；桌面断开即失效。旧 Host 不支持时仅关闭文件功能，仍可远控。
 
 只向配对设备发送选中的文件内容及文件名，不发送完整源路径，文件路径不混入文本同步，不记录文件内容。
-接收文件须保存到磁盘，LocalRemote 不额外做静态文件加密。文字与文件有独立允许选项。
+接收文件须保存到磁盘，Local Remote Desktop 不额外做静态文件加密。文字与文件有独立允许选项。
 设计借鉴“先准备文件信息，再传内容”，不代表兼容 LocalSend 的通信协议。详见[协议](protocol.md)和[验证状态](validation.md)。

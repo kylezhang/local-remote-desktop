@@ -6,7 +6,7 @@ using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
-using LocalRemote;
+using LocalRemoteDesktop;
 
 static class Program {
     static void Require(bool value,string message) { if(!value) throw new Exception(message); }

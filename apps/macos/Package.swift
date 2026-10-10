@@ -1,3 +1,3 @@
 // swift-tools-version: 5.9
 import PackageDescription
-let package = Package(name: "LocalRemote", platforms: [.macOS(.v13)], products: [.executable(name: "LocalRemote", targets: ["LocalRemote"])], targets: [.executableTarget(name: "LocalRemote")])
+let package = Package(name: "LocalRemoteDesktop", platforms: [.macOS(.v13)], products: [.executable(name: "LocalRemoteDesktop", targets: ["LocalRemoteDesktop"])], targets: [.executableTarget(name: "LocalRemoteDesktop")])

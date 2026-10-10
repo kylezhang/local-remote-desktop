@@ -1,7 +1,7 @@
 using System.IO;
 using System.Security.Cryptography;
 using System.Text.Json;
-namespace LocalRemote;
+namespace LocalRemoteDesktop;
 
 internal sealed record HostCredential(string Password,byte[] Salt) {
     const string Alphabet="ABCDEFGHJKLMNPQRSTUVWXYZ23456789";

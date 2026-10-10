@@ -8,7 +8,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Threading;
-namespace LocalRemote;
+namespace LocalRemoteDesktop;
 public partial class MainWindow : Window
 {
     CancellationTokenSource? session;
@@ -368,7 +368,7 @@ public partial class MainWindow : Window
     }
     void FullscreenClick(object sender,RoutedEventArgs e)=>ToggleFull();
     void DiagnosticsClick(object sender,RoutedEventArgs e) {
-        Clipboard.SetText($"LocalRemote input diagnostics\nConnected: {connected}\nKeyboardFocus: {Surface.IsKeyboardFocusWithin}\nWindowsShortcuts: {WindowsShortcuts.IsChecked==true}\nTargetPlatform: {targetPlatform}\nInputAllowed: {inputAllowed}\nHostReportsInput: {hostReportsInput}\nQueued: {Interlocked.Read(ref inputsQueued)}\nSent: {Interlocked.Read(ref inputsSent)}\nHostReceived: {Interlocked.Read(ref hostReceived)}\nHostPosted: {Interlocked.Read(ref hostPosted)}\nHostBlocked: {Interlocked.Read(ref hostBlocked)}\nHostRejected: {Interlocked.Read(ref hostRejected)}\nHostError: {hostInputError}\nPosted means submitted to native OS input, not confirmed application acceptance.");
+        Clipboard.SetText($"Local Remote Desktop input diagnostics\nConnected: {connected}\nKeyboardFocus: {Surface.IsKeyboardFocusWithin}\nWindowsShortcuts: {WindowsShortcuts.IsChecked==true}\nTargetPlatform: {targetPlatform}\nInputAllowed: {inputAllowed}\nHostReportsInput: {hostReportsInput}\nQueued: {Interlocked.Read(ref inputsQueued)}\nSent: {Interlocked.Read(ref inputsSent)}\nHostReceived: {Interlocked.Read(ref hostReceived)}\nHostPosted: {Interlocked.Read(ref hostPosted)}\nHostBlocked: {Interlocked.Read(ref hostBlocked)}\nHostRejected: {Interlocked.Read(ref hostRejected)}\nHostError: {hostInputError}\nPosted means submitted to native OS input, not confirmed application acceptance.");
         SetStatus("诊断已复制（不包含密钥、IP 或输入内容）");
     }
     void ForgetClick(object sender,RoutedEventArgs e) {

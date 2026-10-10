@@ -1,3 +1,3 @@
 using System.Windows;
-namespace LocalRemote;
+namespace LocalRemoteDesktop;
 public partial class App : Application { }

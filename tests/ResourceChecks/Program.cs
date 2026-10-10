@@ -1,7 +1,7 @@
 using System.Diagnostics;
 using System.Reflection;
 using System.Text.Json;
-using LocalRemote;
+using LocalRemoteDesktop;
 
 static void Assert(bool value,string message) { if(!value) throw new Exception(message); }
 // Exercise production draining with a large logical stream without allocating

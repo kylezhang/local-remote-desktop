@@ -1,4 +1,4 @@
-# Maintaining LocalRemote
+# Maintaining Local Remote Desktop
 
 Use small, focused commits with Conventional Commit-style subjects: `feat:`, `fix:`, `docs:`, `test:`, `chore:`. Describe user-visible behavior and validation; do not claim platform testing that was not performed. Keep README/roadmap statements aligned with implemented support. English is the primary documentation; update corresponding Chinese pages when changing behavior.
 

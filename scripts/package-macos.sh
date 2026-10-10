@@ -17,7 +17,7 @@ commit="$(git rev-parse HEAD)"
 python3 tests/ReleaseChecks/check.py
 actual_version="$(python3 -c 'import plistlib; print(plistlib.load(open("apps/macos/Info.plist", "rb"))["CFBundleShortVersionString"])')"
 [[ "$version" == "$actual_version" ]] || fail 'Requested version does not match the committed application version.'
-release_version="$(python3 -c 'import plistlib; i=plistlib.load(open("apps/macos/Info.plist", "rb")); print(i.get("LocalRemoteReleaseVersion", i["CFBundleShortVersionString"]))')"
+release_version="$(python3 -c 'import plistlib; i=plistlib.load(open("apps/macos/Info.plist", "rb")); print(i.get("LocalRemoteDesktopReleaseVersion", i["CFBundleShortVersionString"]))')"
 [[ "$version" == "$release_version" ]] || fail 'Do not package a prerelease source as a stable Mac binary.'
 identities="$(security find-identity -v -p codesigning)"
 [[ -n "$(printf '%s\n' "$identities" | awk -v selected="$SIGN_IDENTITY" '$2 == selected && /"Developer ID Application:/ { print $2; exit }')" ]] || fail 'The selected fingerprint is not a valid Developer ID Application identity.'
@@ -26,7 +26,7 @@ output="${2:-$root/dist}"
 mkdir -p "$output"
 [[ ! -L "$output" ]] || fail 'Output directory must not be a symlink.'
 output="$(cd "$output" && pwd -P)"
-name="LocalRemote-v$version-macos-arm64"
+name="LocalRemoteDesktop-v$version-macos-arm64"
 final="$output/$name"
 [[ ! -e "$final" && ! -L "$final" ]] || fail 'Release output already exists; never overwrite release artifacts.'
 stage="$(mktemp -d "$output/.macos-release.XXXXXXXX")"
@@ -37,8 +37,8 @@ mkdir -p "$payload" "$stage/publish"
 echo '[1/5] Compile the full Host and run startup checks; build with distribution signing.'
 bash tests/MacStartupChecks/check.sh
 LOCALREMOTE_RELEASE_BUILD=1 bash apps/macos/build-app.sh
-ditto apps/macos/build/LocalRemote.app "$payload/LocalRemote.app"
-app="$payload/LocalRemote.app"
+ditto "apps/macos/build/Local Remote Desktop.app" "$payload/Local Remote Desktop.app"
+app="$payload/Local Remote Desktop.app"
 check_native_signature() {
   codesign --verify --strict -R 'anchor apple generic and certificate leaf[field.1.2.840.113635.100.6.1.13] exists' "$1"
   local details
@@ -67,9 +67,9 @@ check_native_signature "$app"
 spctl --assess --type execute "$app"
 cp NOTICE.md "$payload/NOTICE.md"
 cat > "$payload/START-HERE.txt" <<EOF
-LocalRemote $version — macOS Apple Silicon
+Local Remote Desktop $version — macOS Apple Silicon
 
-Quit any older Host. Copy LocalRemote.app to /Applications, replacing the old bundle.
+Quit any older Host. Copy Local Remote Desktop.app to /Applications, replacing the old bundle.
 Open the installed app, allow Screen Recording and Accessibility when requested,
 then quit and reopen if macOS asks. Start sharing; enter the Mac LAN IP and pairing
 key in Windows. Share the pairing key only with your own trusted controller.
@@ -77,12 +77,12 @@ Requires macOS 13 or later and a normally logged-in user session.
 FileVault preboot and login-before-user-session control are not supported.
 A development-to-distribution signing change can require new permission approval.
 
-退出旧 Host，将 LocalRemote.app 完整替换到 /Applications，打开后按系统提示
+退出旧 Host，将 Local Remote Desktop.app 完整替换到 /Applications，打开后按系统提示
 授予屏幕录制和辅助功能权限；需要时退出重开。开始共享后，在 Windows
 填写 Mac 局域网 IP 和配对密钥。仅支持正常登录后的用户会话。
 从开发签名切换到发布签名时，可能需要重新授权。
 
-Repository: https://atomgit.com/zkxw2008/LocalRemote
+Repository: https://atomgit.com/zkxw2008/local-remote-desktop
 Source commit: $commit
 EOF
 python3 scripts/check-macos-package.py --app "$app" --version "$version" --commit "$commit" --manifest-output "$payload/release.json"
@@ -93,9 +93,9 @@ ditto -c -k --keepParent "$payload" "$archive"
 python3 scripts/check-macos-package.py --archive "$archive" --version "$version" --commit "$commit"
 mkdir "$stage/extracted"
 ditto -x -k "$archive" "$stage/extracted"
-check_native_signature "$stage/extracted/$name/LocalRemote.app"
-xcrun stapler validate "$stage/extracted/$name/LocalRemote.app"
-spctl --assess --type execute "$stage/extracted/$name/LocalRemote.app"
+check_native_signature "$stage/extracted/$name/Local Remote Desktop.app"
+xcrun stapler validate "$stage/extracted/$name/Local Remote Desktop.app"
+spctl --assess --type execute "$stage/extracted/$name/Local Remote Desktop.app"
 [[ "$(git rev-parse HEAD)" == "$commit" && -z "$(git status --porcelain --untracked-files=normal)" ]] || fail 'Source changed during packaging; refusing to publish the candidate.'
 (cd "$stage/publish" && python3 -c 'import hashlib,sys; print(hashlib.sha256(open(sys.argv[1], "rb").read()).hexdigest()+"  "+sys.argv[1])' "$name.zip" > SHA256SUMS.txt)
 cp "$payload/release.json" "$stage/publish/release.json"

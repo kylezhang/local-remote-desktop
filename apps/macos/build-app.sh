@@ -41,7 +41,7 @@ fi
 # a separate cache so products from different backends are never mixed.
 xcrun swift build --build-system native --scratch-path .build-native -c release
 bin_dir="$(xcrun swift build --build-system native --scratch-path .build-native -c release --show-bin-path)"
-app="$PWD/build/LocalRemote.app"
+app="$PWD/build/Local Remote Desktop.app"
 mkdir -p "$PWD/build"
 [[ ! -L "$PWD/build" && ! -L "$app" ]] || { echo 'Build output must not be a symlink.' >&2; exit 1; }
 stage="$(mktemp -d "$PWD/build/.bundle.XXXXXXXX")"
@@ -61,14 +61,14 @@ cleanup_bundle() {
 trap cleanup_bundle EXIT
 trap 'exit 130' INT
 trap 'exit 143' TERM
-app="$stage/LocalRemote.app"
+app="$stage/Local Remote Desktop.app"
 mkdir -p "$app/Contents/MacOS" "$app/Contents/Resources"
-cp "$bin_dir/LocalRemote" "$app/Contents/MacOS/LocalRemote"
+cp "$bin_dir/LocalRemoteDesktop" "$app/Contents/MacOS/LocalRemoteDesktop"
 cp Info.plist "$app/Contents/Info.plist"
-cp ../../assets/brand/LocalRemote.icns "$app/Contents/Resources/LocalRemote.icns"
-cp ../../assets/brand/icon.png "$app/Contents/Resources/LocalRemote.png"
+cp ../../assets/brand/LocalRemoteDesktop.icns "$app/Contents/Resources/LocalRemoteDesktop.icns"
+cp ../../assets/brand/icon.png "$app/Contents/Resources/LocalRemoteDesktop.png"
 cp ../../assets/localization/strings.json "$app/Contents/Resources/strings.json"
-[[ -s "$app/Contents/Resources/LocalRemote.icns" && -s "$app/Contents/Resources/LocalRemote.png" ]] || {
+[[ -s "$app/Contents/Resources/LocalRemoteDesktop.icns" && -s "$app/Contents/Resources/LocalRemoteDesktop.png" ]] || {
   echo '图标资源缺失，构建中止。' >&2; exit 1
 }
 # This signed resource is a startup policy hint, not proof of certificate trust.
@@ -79,7 +79,7 @@ printf '%s\n' "$signing_mode" > "$app/Contents/Resources/signing-mode.txt"
 # readable/executable when copied into /Applications for another normal user.
 find "$app" -type d -exec chmod 755 {} +
 find "$app" -type f -exec chmod 644 {} +
-chmod 755 "$app/Contents/MacOS/LocalRemote"
+chmod 755 "$app/Contents/MacOS/LocalRemoteDesktop"
 sign_options=()
 if [[ "$release_mode" == 1 ]]; then sign_options=(--options runtime --timestamp); fi
 codesign --force --sign "$identity" --identifier com.remotemaclan.host "${sign_options[@]}" "$app"

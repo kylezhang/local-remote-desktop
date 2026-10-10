@@ -31,9 +31,9 @@ for mode, script_name, success in [
         root = Path(temporary).resolve()
         assert root.is_relative_to(work)
         (root/'bin').mkdir()
-        (root/'bin/LocalRemote').write_text('mock executable')
+        (root/'bin/LocalRemoteDesktop').write_text('mock executable')
         (root/'Info.plist').write_text('mock bundle metadata')
-        (root/'LocalRemote.icns').write_text('mock icon')
+        (root/'LocalRemoteDesktop.icns').write_text('mock icon')
         (root/'icon.png').write_text('mock PNG icon')
         (root/'strings.json').write_text('{}')
         if mode == 'stable-missing': (root/'.require-stable-signature').touch()
@@ -42,7 +42,7 @@ for mode, script_name, success in [
             (root/'legacy-signing').mkdir()
             (root/'legacy-signing/.signing-identity').write_text('ABCDEF')
             (root/'legacy-signing/.require-stable-signature').touch()
-        old = root/'build/LocalRemote.app/Contents/obsolete-resource'
+        old = root/'build/Local Remote Desktop.app/Contents/obsolete-resource'
         old.parent.mkdir(parents=True)
         old.write_text('old bundle')
         prefix = '''
@@ -55,7 +55,7 @@ security() {
 codesign() { echo "codesign $*" >> "$PWD/actions"; [[ "$*" != *INVALID* && MODE != sign-failed ]]; }
 xcrun() { echo 'build' >> "$PWD/actions"; if [[ "$*" == *--show-bin-path* ]]; then echo "$PWD/bin"; fi; }
 mv() {
-  if [[ "$2" == "$PWD/build/LocalRemote.app" && "$1" == */.bundle.*/LocalRemote.app ]]; then
+  if [[ "$2" == "$PWD/build/Local Remote Desktop.app" && "$1" == */.bundle.*/"Local Remote Desktop.app" ]]; then
     if [[ MODE == move-failed ]]; then return 1; fi
     if [[ MODE == interrupted-build ]]; then builtin kill -TERM $$; return 1; fi
   fi
@@ -68,9 +68,9 @@ mv() {
         lines = script.splitlines(keepends=True)
         fixture = ''.join(lines[:2]) + prefix + ''.join(lines[2:])
         # Probe source is disposable fixture data, not any installed executable.
-        fixture = fixture.replace('/usr/bin/true', '"$PWD/bin/LocalRemote"')
+        fixture = fixture.replace('/usr/bin/true', '"$PWD/bin/LocalRemoteDesktop"')
         fixture = fixture.replace('$PWD/../../macos-host', '$PWD/legacy-signing')
-        fixture = fixture.replace('../../assets/brand/LocalRemote.icns', 'LocalRemote.icns')
+        fixture = fixture.replace('../../assets/brand/LocalRemoteDesktop.icns', 'LocalRemoteDesktop.icns')
         fixture = fixture.replace('../../assets/brand/icon.png', 'icon.png')
         fixture = fixture.replace('../../assets/localization/strings.json', 'strings.json')
         path = root/script_name
@@ -84,11 +84,11 @@ mv() {
             assert (root/'.signing-identity').read_text().strip() == 'ABCDEF'
             assert (root/'.require-stable-signature').exists()
             if script_name == 'build-app.sh':
-                assert (root/'build/LocalRemote.app/Contents/Resources/signing-mode.txt').read_text().strip() == 'certificate'
+                assert (root/'build/Local Remote Desktop.app/Contents/Resources/signing-mode.txt').read_text().strip() == 'certificate'
         if mode == 'none': assert not (root/'.signing-identity').exists()
         if mode == 'adhoc':
             assert not (root/'.require-stable-signature').exists()
-            assert (root/'build/LocalRemote.app/Contents/Resources/signing-mode.txt').read_text().strip() == 'ad-hoc'
+            assert (root/'build/Local Remote Desktop.app/Contents/Resources/signing-mode.txt').read_text().strip() == 'ad-hoc'
         if mode == 'release-certificate':
             assert '--options runtime --timestamp' in actions
             assert not (root/'.signing-identity').exists()

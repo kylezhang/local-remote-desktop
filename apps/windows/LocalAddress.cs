@@ -1,7 +1,7 @@
 using System.Net;
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
-namespace LocalRemote;
+namespace LocalRemoteDesktop;
 static class LocalAddress
 {
     public static string Find()

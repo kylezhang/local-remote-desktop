@@ -1,4 +1,4 @@
-# LocalRemote 协议（RML1 / RMP1）
+# Local Remote Desktop 协议（RML1 / RMP1）
 
 [English / 完整字段规范](../protocol.md)
 
@@ -56,4 +56,4 @@ Mac 新复制文件后发 file_offer（requestId、offer、items），offer 为�
 
 按序传 file_start/index、类型 3 原始文件分块、file_end/index/sha256，最后 file_complete。类型 3 只用于文件连接；每块最多 32 KiB、加密包体最多 64 KiB。接收端校验长度及 SHA-256 后才提交本地生成目录。上传由 Host 回 file_done/clipboardReady，下载由 Client 提交后在 UI 线程尝试更新 Windows 剪贴板（忙时最多重试两秒），之后回 file_done/clipboardReady。Host 只有收到显式 true 才提示可粘贴；旧端缺少字段或 false 时仅表示传输完成。新本地复制优先；完成文件保留，未完成的正常清理删除。
 
-最多 32 个普通文件，单个 4 GiB、合计 8 GiB；NFC 文件名最多 240 UTF-8 字节且忽略大小写不重名，拒绝路径分隔符、设备名、末尾点/空格。不支持文件夹/符号链接。按单调时间计算持续目标 8 MiB/s、起始额度 512 KiB，接收等待 15 秒、总任务一小时，取消关闭连接。不提供任意远程文件系统操作，不删除源文件。此为 LocalRemote 扩展，不兼容 LocalSend 协议；详见[文件指南](files.md)及英文完整规范。
+最多 32 个普通文件，单个 4 GiB、合计 8 GiB；NFC 文件名最多 240 UTF-8 字节且忽略大小写不重名，拒绝路径分隔符、设备名、末尾点/空格。不支持文件夹/符号链接。按单调时间计算持续目标 8 MiB/s、起始额度 512 KiB，接收等待 15 秒、总任务一小时，取消关闭连接。不提供任意远程文件系统操作，不删除源文件。此为 Local Remote Desktop 扩展，不兼容 LocalSend 协议；详见[文件指南](files.md)及英文完整规范。

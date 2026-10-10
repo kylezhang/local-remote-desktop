@@ -4,7 +4,7 @@ using System.Net;
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using System.Text;
-namespace LocalRemote;
+namespace LocalRemoteDesktop;
 
 public sealed record LanDevice(string Name,string Address,string Platform,int Port) {
     public override string ToString()=>$"{Name} · {Address}";

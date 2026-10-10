@@ -1,35 +1,22 @@
-# 工程结构与命名
+# 工程布局与命名
 
-[English](../naming.md)
+[English](../naming.md) · [产品名称](product-name.md)
 
-产品、仓库、应用、源码命名空间统一为 LocalRemote。源码位于 `apps/macos` 和
-`apps/windows`，不再用目录名长期限定控制端/被控端；目前仍只实现 Windows→Mac。
-共享图标在 assets/brand，英文及中文文档在 docs，通信约定在 docs/protocol.md，工具在 scripts，测试在 tests。
+产品名为 **Local Remote Desktop**，仓库名为 `local-remote-desktop`，
+工程、程序集、命名空间和 Swift 目标使用 `LocalRemoteDesktop`。
+平台目录仍为 `apps/macos`、`apps/windows`，不把平台固定为单一控制/被控角色。
+Mac 安装到 `/Applications/Local Remote Desktop.app`，可执行文件为 LocalRemoteDesktop。
+Windows 新构建与发布包使用 LocalRemoteDesktop.exe；源码在 Sources/LocalRemoteDesktop 和 LocalRemoteDesktop.csproj。
 
-Mac 产物为 `LocalRemote.app`，内部程序 `Contents/MacOS/LocalRemote`，安装到
-`/Applications/LocalRemote.app`。Windows 工程为 `LocalRemote.csproj`，程序及程序集为
-`LocalRemote.exe`、`LocalRemote.dll`。构建、打包和测试引用同步更新。
+Mac 安装脚本核对三代名称在系统/用户应用目录中的六个路径，只移除本应用的合法旧包，
+停止三种可执行文件名并更新自启动路径。验证失败保留完整恢复副本，不合并新旧文件。
+bundle ID、钥匙串服务和 LaunchAgent 标签继续为 com.remotemaclan.host，账户 pairing-v1 不变。
+签名/保留权限检查仍执行，更名不保证临时签名更新沿用授权。
 
-## 更新兼容
+Windows 继续使用 `%LOCALAPPDATA%/LocalRemote` 保存加密密码、连接、授权选择、语言和接收文件。
+Mac 接收文件目录 LocalRemote/ReceivedFiles 保留；不搬动用户文件。
+Bonjour `_localremote._tcp`、RML1/RMP1、旧凭据标记及 LOCALREMOTE_*/RML_* 开关保持兼容。
+旧 Windows 启动目录可保留唯一的 LocalRemote.exe 兼容入口，实际加载最新 LocalRemoteDesktop.dll。
+规范目录和新包使用 LocalRemoteDesktop.exe，不保留重复产品入口。
 
-| 保留标识 | 原因 |
-|---|---|
-| Mac bundle ID `com.remotemaclan.host` | 沿用签名与系统授权身份，改变需另做迁移。 |
-| 钥匙串服务 `com.remotemaclan.host`、账户 `pairing-v1` | 保留原配对密钥。 |
-| LaunchAgent label `com.remotemaclan.host` | 维持唯一登录任务，只更新程序路径。 |
-| 通信 magic `RML1` 及已有加密标签 | 新旧版本仍可互联。 |
-
-以上是稳定内部约定，显示名称、源码和发布文件均使用 LocalRemote，不为清空搜索结果而破坏兼容。
-
-Mac 安装器验证系统/用户目录中的新旧四个应用位置，替换前保留完整备份。
-旧 RemoteMacLAN.app 在成功更新后移除，验证失败可恢复；新旧进程名均会停止。
-配对存储保留，自启动路径在新包验证后更新；保留/重置权限政策不变，改名不保证系统继续认可授权。
-
-Git 不迁移忽略的本地签名配置。开发构建会在新目录缺失时复制旧签名固定配置和严格模式标记，
-不覆盖新配置，发布构建不改变这些设置；旧 RML 签名环境变量保留为兼容别名。
-
-Windows 从 `%LOCALAPPDATA%/RemoteMacLAN` 一次性复制已识别的 DPAPI 加密记录到
-`%LOCALAPPDATA%/LocalRemote`，不重新加解密、不覆盖新记录、不删原文件。
-完成标记防止忘记的连接被重新迁入；旧本地启动快捷路径可保留兼容部署副本，正式包使用新名称。
-
-v0.1.0 tag、下载附件和历史测试记录保留当时名称；本次改名进入后续版本，不改写已发布历史。
+已有 v0.1.0/v0.2.0-beta.1 tag、Release 名称、产物和历史验证记录不覆盖；当前仓库链接使用新地址。
