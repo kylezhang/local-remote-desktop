@@ -16,7 +16,7 @@ With AI-assisted development, I decided to build a LAN remote desktop tool mysel
 
 Local Remote Desktop lets you view and control another computer's current desktop over your LAN. Devices connect directly, without an account or a cloud relay. When you return to the remote computer, your work is still in the same session.
 
-The current connection direction is **Windows → Mac**. The longer-term goal is one application per platform that can connect to other devices or allow desktop control. Windows ↔ Mac, mobile controllers, Linux and HarmonyOS are covered in the [roadmap](docs/roadmap.md).
+The current connection direction is **Windows → Mac**. The longer-term goal is one application per platform that can connect to other devices or allow desktop control. Future plans include Windows ↔ Mac, mobile controllers, Linux and HarmonyOS.
 
 ## Features
 

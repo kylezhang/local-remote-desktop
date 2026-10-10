@@ -16,7 +16,7 @@
 
 Local Remote Desktop 让你通过局域网查看并操作另一台电脑当前的桌面。设备直接连接，无需账号或云中转。回到被控电脑时，可以继续同一个工作现场。
 
-当前连接方向为 **Windows → Mac**。长期目标是各平台安装同一个产品的对应版本，既能连接其他设备，也能允许桌面被控制。Windows ↔ Mac、手机控制端、Linux 和 HarmonyOS 的规划见 [路线图](docs/zh-CN/roadmap.md)。
+当前连接方向为 **Windows → Mac**。长期目标是各平台安装同一个产品的对应版本，既能连接其他设备，也能允许桌面被控制。后续计划支持 Windows ↔ Mac、手机控制端、Linux 和 HarmonyOS。
 
 ## 功能
 
