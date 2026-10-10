@@ -10,9 +10,9 @@
 
 ## Background
 
-This project started with a simple need: control a Mac from a Windows PC during everyday office work. The tools I tried were awkward to use, outdated, or paid products, and none felt like the right fit.
+This project started with an everyday office need: control a Mac from a Windows PC. After trying several tools, I still hadn't found a client that felt right. Some were awkward to use, others were dated, and some required payment. For a simple personal setup connecting my own two computers over the LAN, I wanted a lightweight, convenient tool without an additional cost.
 
-With AI-assisted development, I decided to build a small tool for that workflow: easy to connect, convenient to use, and focused on the local network.
+With AI-assisted development, I decided to build a LAN remote desktop tool myself, starting with that everyday need and keeping connection and control as simple as possible.
 
 ## Introduction
 
