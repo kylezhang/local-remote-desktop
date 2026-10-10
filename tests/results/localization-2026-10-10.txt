@@ -32,3 +32,12 @@ System dialogs and nested OS error details retain their native language.
 SKIP native macOS SDK/SwiftUI display, actual Keychain/TCC, Bonjour permissions,
 installed Mac language persistence and physical two-device interoperability.
 These require a native Mac environment and are not cleared by Linux fixtures.
+
+Final committed build source: 7df064b40e653662b964ea1b3a48029275e9b564.
+Final self-contained Windows DLL SHA256:
+20771ce934d7877f37974d0827eeca559bb2bca46c740069e28bc7755c04cca2
+PASS final committed DLL ClientChecks in RMP1 and RML1 modes (all checks above).
+PASS deployed hash matches in canonical apps/windows and the user's existing
+remote-mac-lan/windows-client launch directory; obsolete legacy launcher absent.
+No client was running during replacement; no extra application window launched.
+This is a local development candidate, not an AtomGit beta.2 release/tag.
