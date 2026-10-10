@@ -4,54 +4,50 @@
 
 # Local Remote Desktop
 
-**Remote control across your local network.**
-
-Local Remote Desktop lets you view and control another computer's existing desktop over your LAN. Connect directly, without an account or a cloud relay, and continue the same work when you return to that computer.
-
-**Currently available: Windows → Mac.** Two-way desktop control and mobile controllers are planned.
-
-**Preview: v0.2.0-beta.1** — shorter pairing passwords, text/file clipboard sharing and a simpler Mac interface. Windows is packaged; Mac is source-only. Native Mac acceptance is pending. The latest stable release remains v0.1.0.
-
 **English** | [简体中文](README.zh-CN.md)
 
-[Download](https://atomgit.com/zkxw2008/local-remote-desktop/releases) · [Documentation](#documentation) · [Roadmap](docs/roadmap.md) · [Changelog](CHANGELOG.md)
+[Download](https://atomgit.com/zkxw2008/local-remote-desktop/releases) · [Documentation](#documentation) · [Roadmap](docs/roadmap.md)
 
-Unreleased main is **v0.3.0-alpha.1 development**: a [Windows sharing preview](docs/windows-sharing.md),
-[nearby-device selection](docs/discovery.md) and remembered English/Chinese UI.
-The Mac controller is the next alpha milestone and is not ready yet. Both roles
-follow the [shared interface conventions](docs/interface.md). Native Mac acceptance
-is pending; this does not replace the published preview.
+## Background
+
+This project started with a simple need: control a Mac from a Windows PC during everyday office work. The tools I tried were awkward to use, outdated, or paid products, and none felt like the right fit.
+
+With AI-assisted development, I decided to build a small tool for that workflow: easy to connect, convenient to use, and focused on the local network.
+
+## Introduction
+
+Local Remote Desktop lets you view and control another computer's current desktop over your LAN. Devices connect directly, without an account or a cloud relay. When you return to the remote computer, your work is still in the same session.
+
+The current connection direction is **Windows → Mac**. The longer-term goal is one application per platform that can connect to other devices or allow desktop control. Windows ↔ Mac, mobile controllers, Linux and HarmonyOS are covered in the [roadmap](docs/roadmap.md).
 
 ## Features
 
-- **Work on the current desktop** — view the screen and use your keyboard and mouse.
-- **Connect locally** — a direct connection between devices on the same network.
-- **Pair trusted devices** — authenticated, encrypted connections with securely stored pairing keys.
-- **Keep setup convenient** — remember your Mac address and key, use full screen, and reconnect after interruptions.
-- **Adjust picture quality** — choose Smooth, Standard or High, including while connected.
+- **Current-session control:** view the Mac screen and use your Windows keyboard and mouse.
+- **Local, paired connections:** authentication and encryption, with pairing credentials stored securely on each device.
+- **Remembered connections:** keep your target address and password for the next connection.
+- **Desktop controls:** full screen, automatic reconnect and three picture-quality presets, adjustable while connected.
+- **Convenient pairing:** generate a password or choose your own; existing keys remain valid until explicitly changed.
+- **Text and file clipboard:** copy and paste plain text and regular files between paired devices, without pairing again for each transfer.
 
-## Supported platforms
-
-| Platform | Role | Requirements |
-|---|---|---|
-| Windows | Control a Mac | Windows 10/11, x64 |
-| macOS | Share the current desktop | macOS 13+, Apple Silicon |
-
-The current release supports one controller and one display. The Mac must be awake and logged in; FileVault unlock and control before login are not supported. Lock-screen control is not guaranteed. Published packages use Chinese; development builds also offer English.
+Short passwords and clipboard sharing are available in the preview; v0.1.0 uses the original keys and does not include clipboard sharing. Nearby-device selection and English/Chinese switching are available in current development builds. See the [user guide](docs/usage.md) for behavior and limits.
 
 ## Installation
 
+The latest stable release is **v0.1.0**; the published preview is **v0.2.0-beta.1**. Windows downloads are available in [Releases](https://atomgit.com/zkxw2008/local-remote-desktop/releases). Mac currently requires a source build.
+
 ### Windows
 
-1. Download the Windows x64 ZIP from [Releases](https://atomgit.com/zkxw2008/local-remote-desktop/releases) and extract it.
-2. Install a complete [FFmpeg build](https://ffmpeg.org/download.html) with H.264 decoding and add it to PATH.
-3. Run the executable in that archive: `LocalRemote.exe` in v0.2.0-beta.1, or `RemoteMacLAN.exe` in v0.1.0. Current source builds use `LocalRemoteDesktop.exe`.
+Requires **Windows 10/11, x64**.
 
-The ZIP includes the .NET Desktop Runtime. If FFmpeg already works on your machine, you can keep that installation. Existing released archives retain their original filenames; the current source and repository use the new product name.
+1. Download and extract the Windows ZIP.
+2. Install [FFmpeg](https://ffmpeg.org/download.html) with H.264 decoding and make `ffmpeg.exe` available on PATH or beside the application. An existing working installation can be reused.
+3. Run `LocalRemote.exe` from the preview package, or `RemoteMacLAN.exe` from v0.1.0. New source builds use `LocalRemoteDesktop.exe`.
+
+Keep the extracted folder together. Release packages include the .NET Desktop Runtime.
 
 ### macOS
 
-Install Xcode Command Line Tools if needed (`xcode-select --install`), then build and install:
+Requires **macOS 13+, Apple Silicon** and **Xcode Command Line Tools**. Install the tools with `xcode-select --install` if needed, then run:
 
 ```sh
 git clone https://atomgit.com/zkxw2008/local-remote-desktop.git
@@ -59,55 +55,50 @@ cd local-remote-desktop
 bash apps/macos/install-app.sh
 ```
 
-Grant **Screen Recording** and **Accessibility** in System Settings → Privacy & Security. Quit and reopen the application after granting access, then start sharing. Run the installer as your normal user, without `sudo`.
+The installer builds the current main branch and opens `/Applications/Local Remote Desktop.app`. Run it as your normal user, without `sudo`.
 
-The default installer resets this app's two permission decisions for a clean installation. Updates can use `--keep-permissions` when new and installed signatures are compatible; incompatible updates stop before changing the installed app or permissions. See the Mac guide before updating an ad-hoc development build.
-
-macOS is currently distributed as source. See the [Mac guide](docs/macos.md) for signing, updates, permissions and troubleshooting.
+Allow **Screen Recording** and **Accessibility** in System Settings → Privacy & Security. Quit and reopen the app after granting access. The default installation resets this app's permission decisions; see the [Mac guide](docs/macos.md) for updates, signing and permission-preserving installation.
 
 ## Usage
 
-1. Open Local Remote Desktop on the Mac, start sharing, and copy its pairing key.
-2. On Windows, enter the Mac's LAN IP address and pairing key, then connect.
-3. Click the remote picture to control the desktop. Disconnect when finished; your Mac session stays open.
+1. On the Mac, open the app, start sharing and copy its pairing password.
+2. On Windows, enter the Mac's LAN address in **Target IP** and enter the same password, then connect. Development builds also let you select a nearby Mac.
+3. Click the remote picture to use your keyboard and mouse. Disconnect when finished; the Mac session stays open.
 
-Both devices must be reachable on the same network. Allow TCP **47980** to the Mac. Keep the pairing key private and use Local Remote Desktop on a trusted LAN.
+Both devices must be reachable on the same network, with TCP **47980** allowed to the Mac. Share the password only with devices you trust.
 
-| Shortcut | Action |
-|---|---|
-| F11 | Toggle full screen |
-| Ctrl+Alt+Esc | Release remote input |
-| Ctrl key, Windows shortcut mode on | Send the Mac Command modifier |
+**F11** toggles full screen; **Ctrl+Alt+Esc** releases remote input. With Windows Shortcuts enabled, Ctrl+C/V maps to the Mac's Command+C/V. Clipboard sharing is enabled by default in supported paired sessions and can be changed in Settings → Clipboard. See the [file guide](docs/files.md) for supported copy-and-paste formats.
 
-The development branch enables **Windows shortcuts** by default: Ctrl+C/V operates the Mac clipboard. Disable it for the original Ctrl→Control / Win→Command mapping. Published v0.1.0 packages still use that original mapping.
+Currently, one controller and one display are supported. The Mac must be awake and logged in. Login-screen control and FileVault preboot unlock are unsupported; lock-screen control is not guaranteed.
 
-Development builds implement **bidirectional text and file clipboard sharing**, enabled by default for paired sessions. Both apps remember an explicit off choice in Settings → Clipboard. Wait for the enabled status, then copy again. Text is limited to 32 KiB; regular files transfer automatically with progress and cancellation, without repeated pairing or per-file dialogs. Windows encrypted-peer/UI tests pass; native Mac acceptance is pending. Published v0.1.0 packages do not include clipboard sharing. See the [user guide](docs/usage.md#text-clipboard-sync-development) and [file guide](docs/files.md) for supported formats and limits.
+## Development
 
-Development builds also support a manually chosen **8–64 character pairing password** or a generated **12-character password**. Click Change Password beside Current Password on the Mac, enter or generate a password in the separate editor, then Save Password. Existing 64-character keys remain valid until explicitly changed; update both apps before using passwords. See the [user guide](docs/usage.md#pairing-password-development).
+The native applications use **Swift** on macOS and **C# / .NET 8 / WPF** on Windows. Mac capture and encoding use ScreenCaptureKit and VideoToolbox; the Windows viewer currently decodes through FFmpeg. Sessions use authenticated, encrypted TCP connections over the LAN. See the [architecture](docs/architecture.md) for details.
 
-Quality changes briefly reconnect the session. See the [user guide](docs/usage.md) for controls, picture settings and connection help.
+From the repository root, build Windows with the .NET 8 SDK:
 
-## Roadmap
+```powershell
+dotnet build apps/windows/LocalRemoteDesktop.csproj -c Release
+dotnet run --project apps/windows/LocalRemoteDesktop.csproj -c Release
+```
 
-The goal is one application on each supported device, with a familiar way to connect or allow a connection. Next steps focus on reliable installation, English UI, easier pairing and device discovery, followed by Windows ↔ Mac control and mobile controllers.
+Build the Mac application on macOS:
 
-The installation/input improvements originally planned for v0.1.1/v0.1.2 are consolidated into the **v0.2.0-beta.1** preview. **v0.2.0** targets validated discovery/clipboard/localization, **v0.3.0** desktop control in both directions, then **v1.0.0** stable desktop, **v1.1–v1.2** Android/iOS controllers, **v1.3.0** Linux desktop and **v1.4.0** HarmonyOS phone/tablet controllers. See the [roadmap](docs/roadmap.md) for scope and release criteria; these features are not yet released.
+```sh
+bash apps/macos/build-app.sh
+```
 
-## Background
-
-Local Remote Desktop began with a practical frustration: finding a Windows-to-Mac client that fit an everyday office workflow. The tools I tried felt awkward, were dated, or required payment. AI-assisted development made it practical to build a focused alternative, starting with the devices I use every day.
+Main is **v0.3.0-alpha.1**, with a [Windows sharing preview](docs/windows-sharing.md). The Mac controller is the next milestone and is not implemented yet. Native Mac build and runtime acceptance remain pending; development changes do not replace existing release downloads. Check [validation status](docs/validation.md) and [Contributing](CONTRIBUTING.md) before preparing a release.
 
 ## Documentation
 
-- [User guide](docs/usage.md) and [Mac troubleshooting](docs/macos.md)
-- [File copy and paste](docs/files.md)
-- [Windows source build](apps/windows/BUILD.md)
-- [Architecture](docs/architecture.md) and [security protocol](docs/protocol.md)
-- [Build and test status](docs/validation.md)
-- [Resource use and performance](docs/performance.md)
-- [Contributing](CONTRIBUTING.md) and [release process](docs/releasing.md)
-- [Project layout and naming migration](docs/naming.md)
+- [User guide](docs/usage.md) · [File clipboard](docs/files.md)
+- [Mac installation and troubleshooting](docs/macos.md) · [Windows source build](apps/windows/BUILD.md)
+- [Roadmap and version plan](docs/roadmap.md) · [Changelog](CHANGELOG.md)
+- [Architecture](docs/architecture.md) · [Protocol](docs/protocol.md) · [Performance](docs/performance.md)
+- [Cross-platform interface conventions](docs/interface.md) · [Project layout](docs/naming.md)
+- [Validation status](docs/validation.md) · [Release process](docs/releasing.md)
 
 ## License
 
-An open-source license has not yet been selected. See [NOTICE](NOTICE.md) for the current distribution and dependency information.
+A project-wide open-source license has not yet been selected. See [NOTICE](NOTICE.md) for distribution and dependency information.
