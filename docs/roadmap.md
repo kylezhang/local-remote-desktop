@@ -1,5 +1,9 @@
 # Roadmap
 
+The accepted next product name is **Local Remote Desktop**; the planned repository
+slug is `local-remote-desktop`. See the [naming decision](product-name.md).
+The current repository name remains unchanged until the dedicated migration.
+
 [简体中文](zh-CN/roadmap.md) · [README](../README.md)
 
 LocalRemote aims to provide one familiar LAN remote-control application per platform. Each desktop installation will eventually initiate or accept control, with explicit authorization. Discovery never implies trust.

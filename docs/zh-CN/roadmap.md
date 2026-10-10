@@ -1,5 +1,8 @@
 # 路线图
 
+新产品名已确定为 **Local Remote Desktop**，计划仓库名为 `local-remote-desktop`。
+见[命名决定](product-name.md)；单独迁移完成前，当前仓库名保持不变。
+
 [English](../roadmap.md) · [README](../../README.zh-CN.md)
 
 目标是各平台安装同一个产品的对应版本，通过统一界面发起或接受局域网远程控制。接受连接必须授权，发现设备不代表信任。
