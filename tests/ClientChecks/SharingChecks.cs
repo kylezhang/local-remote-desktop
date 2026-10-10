@@ -44,6 +44,8 @@ static partial class Program {
             Assert(creates==1 && capture.Stops==1,"Close during startup created another listener");
             Console.WriteLine("PASS actual WPF sharing: opt-in, hidden credential, live language, authenticated control, draft/cancel/failed save preservation, successful revocation and close-during-start cleanup");
         } finally { await sharing.Shutdown(); UiText.Current.Use("zh-Hans"); }
+        var idle=new SharingWindow(_=>{},()=>credential) {Left=-20000,Top=-20000,ShowActivated=false,ShowInTaskbar=false};
+        idle.Show(); idle.Close(); await Until(()=>!idle.IsVisible,"Closing idle sharing page remained canceled");
         await CheckWindowsTarget();
         if(Environment.GetEnvironmentVariable("LOCALREMOTE_NATIVE_INPUT_CHECK")=="1") await CheckNativeWindowsInput();
     }
@@ -55,11 +57,16 @@ static partial class Program {
         var window=new MainWindow(false,()=>modifiers,desktopPort:host.Port) {Left=-20000,Top=-20000,ShowActivated=false,ShowInTaskbar=false};
         try {
             window.Show(); ((TextBox)window.FindName("Address")).Text="127.0.0.1"; ((PasswordBox)window.FindName("Secret")).Password=credential.Password;
+            ((MenuItem)window.FindName("AllowConnections")).RaiseEvent(new RoutedEventArgs(MenuItem.ClickEvent));
+            var sharing=window.OwnedWindows.OfType<SharingWindow>().Single();
+            Assert(!sharing.Sharing && ((Button)sharing.FindName("SharingStart")).IsEnabled,"Idle sharing page incorrectly reserved the role");
             ((MenuItem)window.FindName("Reconnect")).IsChecked=false;
             ((Button)window.FindName("ConnectButton")).RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
             await Until(()=>((Image)window.FindName("Desktop")).Source!=null,"WPF client could not display real Windows sharing pipeline");
             Assert(((TextBlock)window.FindName("ConnectionTarget")).Text.StartsWith("Windows"),"Target type not shown");
             Assert(!((MenuItem)window.FindName("AllowConnections")).IsEnabled,"Control role allows accidental simultaneous sharing");
+            var start=(Button)sharing.FindName("SharingStart"); Assert(!start.IsEnabled,"Previously opened sharing page can start while controlling");
+            start.RaiseEvent(new RoutedEventArgs(Button.ClickEvent)); Assert(!sharing.Sharing,"Routed start bypassed role exclusion");
             var surface=(System.Windows.UIElement)window.FindName("Surface");
             void Key(System.Windows.Input.Key key,bool down) {
                 var args=new System.Windows.Input.KeyEventArgs(System.Windows.Input.Keyboard.PrimaryDevice,System.Windows.PresentationSource.FromVisual(window),0,key) {RoutedEvent=down?System.Windows.Input.Keyboard.PreviewKeyDownEvent:System.Windows.Input.Keyboard.PreviewKeyUpEvent}; surface.RaiseEvent(args);
@@ -69,7 +76,9 @@ static partial class Program {
             var keys=recorder.Values.Where(x=>x.Type==1).Take(4).Select(x=>x.Data.Key.Vk).ToArray(); Assert(keys.SequenceEqual(new ushort[]{162,67,67,162}),"Windows shortcut sent Command/Win instead of Control");
             surface.RaiseEvent(new System.Windows.Input.MouseWheelEventArgs(System.Windows.Input.Mouse.PrimaryDevice,0,-120) {RoutedEvent=System.Windows.Input.Mouse.MouseWheelEvent});
             await Until(()=>recorder.Values.Any(x=>(x.Data.Mouse.Flags&0x800)!=0),"Coordinate-free wheel packet rejected by Windows host");
-            window.Close(); await Until(()=>input.Held==0,"Closing Windows controller left held input");
+            ((Button)window.FindName("ConnectButton")).RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+            await Until(()=>start.IsEnabled && input.Held==0,"Disconnect did not restore idle sharing or release input");
+            window.Close(); await Until(()=>!window.IsVisible && !sharing.IsVisible,"Owner closure left sharing page alive");
             Console.WriteLine("PASS actual WPF viewer → production Windows host → generated H264/decoder; target-aware Ctrl+C, wheel without coordinates, exclusive role and disconnect cleanup");
         } finally { window.Close(); }
     }

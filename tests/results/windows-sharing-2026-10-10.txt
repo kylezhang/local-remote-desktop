@@ -49,3 +49,14 @@ Windows sharing preview has no clipboard/files or Bonjour advertisement yet;
 existing Mac-sharing control role retains its clipboard implementation.
 No login-screen, UAC secure-desktop or FileVault preboot support claim.
 No user desktop recordings, clipboard contents or credentials retained here.
+
+Additional sharing/viewer lifecycle regression:
+PASS an already-open idle sharing page is disabled during control, including
+routed start attempts; disconnect restores it. Closing idle sharing directly or
+closing its owner completes after the canceled Closing event, leaving no window.
+PASS password generation changes only the draft; saving the same password leaves
+the authorized session intact. Full short-password WPF regression passed against
+the role/lifecycle-fixed candidate DLL SHA256:
+8c6c6844a157fe6741a69edd9c5ad493986fdaa12c9581c5eb4f95defe47c527
+PASS portable Mac package validation and release-pipeline refusal fixtures;
+all Apple signing/notarization commands are mocked, not native acceptance.

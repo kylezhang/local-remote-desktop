@@ -109,7 +109,8 @@ public partial class MainWindow : Window
     }
     async Task CloseSharingAndOwner() {
         var sharing=sharingWindow; if(sharing==null) return;
-        await sharing.Shutdown(); sharingWindow=null; Close();
+        await sharing.Shutdown(); sharingWindow=null;
+        await System.Windows.Threading.Dispatcher.Yield(System.Windows.Threading.DispatcherPriority.Background); Close();
     }
     void SharingClick(object sender,RoutedEventArgs e) {
         if(session!=null) return;
@@ -266,11 +267,11 @@ public partial class MainWindow : Window
         } catch(Exception ex) { SetStatus($"无法记住连接：{ex.Message}"); return; }
         requestedQuality=quality; qualityChangePending=false;
         discoveryScan?.Cancel();
-        targetPlatform="macos"; AllowConnections.IsEnabled=false;
+        targetPlatform="macos"; AllowConnections.IsEnabled=false; sharingWindow?.SetControlActive(true);
         session=new(); render.Start(); ConnectButton.Content=UiText.Text("断开"); DiscoverButton.IsEnabled=Address.IsEnabled=Secret.IsEnabled=ForgetButton.IsEnabled=false;
         ConnectionFields.Visibility=Visibility.Collapsed; ConnectionTarget.Text=$"Mac · {ip}"; ConnectionTarget.Visibility=Visibility.Visible;
         runner=Run(ip,secret,session.Token);
-        try { await runner; } finally { render.Stop(); ResetClipboard(); ResetFiles(); connected=false; session.Dispose(); session=null; AllowConnections.IsEnabled=true; ConnectButton.Content=UiText.Text("连接"); DiscoverButton.IsEnabled=Address.IsEnabled=Secret.IsEnabled=Quality.IsEnabled=ForgetButton.IsEnabled=true; ConnectionFields.Visibility=Visibility.Visible; ConnectionTarget.Visibility=Visibility.Collapsed; Desktop.Source=null; bitmap=null; width=height=0; }
+        try { await runner; } finally { render.Stop(); ResetClipboard(); ResetFiles(); connected=false; session.Dispose(); session=null; AllowConnections.IsEnabled=true; sharingWindow?.SetControlActive(false); ConnectButton.Content=UiText.Text("连接"); DiscoverButton.IsEnabled=Address.IsEnabled=Secret.IsEnabled=Quality.IsEnabled=ForgetButton.IsEnabled=true; ConnectionFields.Visibility=Visibility.Visible; ConnectionTarget.Visibility=Visibility.Collapsed; Desktop.Source=null; bitmap=null; width=height=0; }
     }
     async Task Run(string ip,string secret,CancellationToken ct) {
         bool paired=false;
