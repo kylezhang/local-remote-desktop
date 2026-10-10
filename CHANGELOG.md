@@ -4,7 +4,7 @@
 
 ## Unreleased
 
-- Renamed the Windows connection field to “Device address”, with clearer local
+- Renamed the Windows connection field to “Target IP”, with clearer local
   IPv4 guidance. Remembered addresses and the local-IP default are preserved.
   This wording anticipates future platforms; current control remains Windows → Mac.
 

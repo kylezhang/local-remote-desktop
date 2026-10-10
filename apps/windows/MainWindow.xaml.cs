@@ -177,7 +177,7 @@ public partial class MainWindow : Window
         if(session!=null) { session.Cancel(); return; }
         var ip=Address.Text.Trim(); var secret=Secret.Password.Trim(); int quality=Quality.SelectedIndex;
         try {
-            if(ip.Length==0) throw new ArgumentException("请填写被控设备的局域网地址。");
+            if(ip.Length==0) throw new ArgumentException("请填写目标IP。");
             PairingPassword.Validate(secret);
             if(rememberConnection) SecretStore.Remember(ip,secret);
         } catch(Exception ex) { Status.Text=$"无法记住连接：{ex.Message}"; return; }

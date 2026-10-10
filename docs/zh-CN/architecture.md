@@ -20,6 +20,20 @@ Windows 将新文本放在粘贴按键之前。行为见[使用指南](usage.md#
 开发版本支持手填/自动生成配对密码，用随机盐与 PBKDF2-HMAC-SHA256（600000 次）派生 PSK；旧原始密钥兼容保留。
 Mac 在凭据队列派生并缓存，Windows 在界面线程外派生；显式保存更新同一钥匙串项并断开旧连接。凭据仍由 Keychain/DPAPI 存储保护。
 
+## 桌面双角色规划
+
+当前 Mac 实现共享，Windows 实现控制。Windows MainWindow 还直接管理连接、输入、显示和剪贴板，
+已有 IVideoDecoder 可复用，但整体还未分离为独立会话模块，需要逐步整理。
+
+反向链路新增 Windows 采集/编码/输入注入及 Mac 解码/显示/输入采集。
+Windows 候选是 [DXGI 桌面采集](https://learn.microsoft.com/en-us/windows/win32/direct3ddxgi/desktop-dup-api)及
+[SendInput](https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-sendinput)；输入受进程权限等级约束，
+不承诺 UAC 安全桌面或登录前控制。Mac 可评估 [VideoToolbox 解码](https://developer.apple.com/documentation/videotoolbox/vtdecompressionsession-api-collection)。
+上述仍是待原生验证的候选，尚未实现。
+
+认证和数据格式按共享/控制角色复用；现有辅助功能字段、Mac 修饰键及 Windows 键码不能直接视为平台无关，
+需明确能力协商和兼容处理。每次调整都验证原有方向；实现顺序见[路线图](roadmap.md#v030-实现顺序)。
+
 ## 文件剪贴板扩展
 
 开发构建通过独立 TCP 47981 传文件，绑定已认证桌面会话及独立文件允许状态。两方向均由 Windows 发起，来源元数据经桌面控制通道通知。自动复用 PSK 认证/AES-GCM，并用新文件连接密钥和桌面令牌，不需额外人工配对。

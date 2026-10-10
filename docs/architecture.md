@@ -27,6 +27,26 @@ Metrics are decoded FPS and incoming H.264 Mbps on Windows, plus mean Mac encodi
 
 Development builds support manual/generated passwords with salted PBKDF2-HMAC-SHA256 (600000 iterations); legacy raw PSKs remain compatible. Mac derives on its credential queue and caches the key; Windows derives off the UI thread. Explicit save updates the existing Keychain item and disconnects old controllers. Keychain/DPAPI protect stored credentials. The PSK authenticates each connection; independent direction keys protect video and input. Protocol limits and diagnostics are documented separately. Application files and source names use LocalRemote; stable bundle/Keychain identities and the wire protocol remain compatible. See [naming migration](naming.md).
 
+## Planned desktop roles
+
+The current Mac Host and Windows controller are platform-specific. Windows
+`MainWindow` also owns connection lifetime, input, rendering and clipboard wiring;
+the existing `IVideoDecoder` abstraction is useful, but the whole application is
+not yet a reusable session engine. Incremental extraction is needed for two roles.
+
+The reverse path adds Windows desktop capture/encoding/input injection and Mac
+decode/render/input collection. Evaluate native [DXGI desktop duplication](https://learn.microsoft.com/en-us/windows/win32/direct3ddxgi/desktop-dup-api)
+for capture and [SendInput](https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-sendinput)
+for ordinary input; SendInput is limited by integrity levels, so UAC secure desktop
+and login-screen control are not promised. Mac decoding can use
+[VideoToolbox decompression](https://developer.apple.com/documentation/videotoolbox/vtdecompressionsession-api-collection).
+These are candidates requiring native validation, not implemented components.
+
+Authentication/framing remain host/controller-relative. New capability and keyboard
+semantics require explicit compatibility handling; the existing accessibility field,
+Mac flags and Windows VK representation cannot simply be assumed universal.
+Keep the existing direction working throughout. See [milestones](roadmap.md#v030-implementation-sequence).
+
 ## File clipboard extension
 
 Development builds use a separate TCP 47981 socket for file content, bound to the

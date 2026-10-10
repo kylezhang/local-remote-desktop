@@ -32,6 +32,38 @@ Linux and HarmonyOS are versioned targets, not current support claims. HarmonyOS
 
 ## Verification and prerequisites
 
+### v0.3.0 implementation sequence
+
+Bidirectional desktop control is the next major capability after the v0.2.0 daily-use
+checkpoint. It adds the missing Windows sharing role and Mac controlling role.
+It does not require replacing the native applications or changing the LAN transport.
+
+1. Separate connection/session lifetime from the Windows window incrementally;
+   keep the existing Windows → Mac regression passing after each extraction.
+   Host/controller are per-session roles, not different products. Each platform
+   keeps one application with “Connect” and “Allow connections” actions.
+2. **v0.3.0-alpha.1:** Windows capture/H.264 sender and authorized input receiver.
+   First verify the actual Windows pipeline using a loopback test controller,
+   with bounded queues, stop/restart and permission failure checks.
+3. **v0.3.0-alpha.2:** Mac H.264 viewer, normalized pointer and keyboard sender.
+   Verify capture-to-display and ordinary keyboard/mouse control on real Mac/Windows.
+   Define input capability negotiation and target-aware shortcut mapping before
+   sending input; existing Windows virtual keys and Mac modifier semantics are
+   not a complete platform-neutral input contract.
+4. **v0.3.0-beta.1:** unify connection/sharing UI, discovery and clipboard consent
+   in both roles; test session revocation, reconnection, quality changes and resource
+   cleanup in both directions. File listeners follow the sharing role, rather than
+   permanently following the Mac platform.
+5. **v0.3.0:** release only after both desktop directions pass native acceptance
+   and the existing Windows → Mac behavior remains usable.
+
+Reuse the authenticated record format, H.264 wire representation, file-transfer
+rules and compatibility fixtures. Swift and C# still need their own platform
+implementations; reuse of a specification is not reuse of a single binary module.
+Discovery cannot authorize control, and enabling one sharing direction must not
+automatically open a reverse control session. Simultaneous reciprocal control is
+not an initial acceptance target. These milestones are planned, not implemented.
+
 The v0.1.0 Windows build and simulated-peer tests were validated; the user reported the Windows-to-Mac workflow usable. This does not substitute for an independently reproduced native Mac test matrix. See [build and test status](validation.md).
 
 Stable v0.2.0 must distinguish stable signed distribution from ad-hoc development builds. Stable signing needs an appropriate signing identity, and broader macOS distribution may need notarization. Changes to privacy permissions and Keychain behavior must be tested with the actual installed signature. The installer can reset only this app's decisions; it cannot automatically grant permissions or promise removal of visible Settings rows.
