@@ -71,4 +71,6 @@ def check(binary, mode, session=False):
 for mode in ['password','legacy','bad-proof','replay','oversized']: check(sys.argv[1],mode)
 if len(sys.argv) > 2:
     for mode in ['session','stop','reject','auth-eof']: check(sys.argv[2],mode,session=True)
-print('PASS independent Python/OpenSSL-Swift RMP1/RML1 interoperability; native CryptoKit/GUI not tested')
+print('PASS independent Python/Swift RMP1/RML1 interoperability; ' +
+      ('native CryptoKit/CommonCrypto and Darwin sockets; GUI not tested' if sys.platform == 'darwin'
+       else 'OpenSSL test adapters; native CryptoKit/GUI not tested'))

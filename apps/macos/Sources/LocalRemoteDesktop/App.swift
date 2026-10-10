@@ -16,40 +16,162 @@ enum AppBrand {
 @main
 struct LocalRemoteDesktopApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) var delegate
-    var body: some Scene { WindowGroup("Local Remote Desktop") { HostView(model: delegate.model, connect: { delegate.openController() }) }.windowResizability(.contentSize) }
+    var body: some Scene {
+        Settings { EmptyView() }
+            .commands {
+                CommandGroup(replacing: .appSettings) {
+                    Button(UiText.text("设置")) { delegate.openSettings() }.keyboardShortcut(",")
+                }
+            }
+    }
 }
-final class AppDelegate: NSObject, NSApplicationDelegate {
+final class DesktopNavigation: ObservableObject { @Published var page = "connect" }
+final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     let model = HostModel()
-    private lazy var controller = ControllerCoordinator(host: model)
-    func openController() { controller.open() }
+    private lazy var controller = ControllerModel(host: model)
+    private let navigation = DesktopNavigation()
+    private var window: ControllerWindow?
+    func openSettings() { navigation.page = "settings"; openWindow() }
+    private func openWindow() {
+        if let window { window.makeKeyAndOrderFront(nil); return }
+        let next = ControllerWindow(contentRect: NSRect(x: 0,y: 0,width: 1000,height: 660),
+            styleMask: [.titled,.closable,.miniaturizable,.resizable], backing: .buffered, defer: false)
+        next.title = "Local Remote Desktop"; next.isReleasedWhenClosed = false
+        next.minSize = NSSize(width: 820,height: 520); next.acceptsMouseMovedEvents = true
+        next.contentView = NSHostingView(rootView: DesktopShell(host: model, controller: controller, navigation: navigation,
+            fullScreen: { [weak next] in next?.toggleFullScreen(nil) }))
+        next.delegate = self; next.center(); window = next; next.makeKeyAndOrderFront(nil)
+    }
     func applicationDidFinishLaunching(_ notification: Notification) {
-        // A LaunchAgent starts the executable directly, independently of Finder.
-        // Resolve duplicate GUI instances before either one accesses Keychain.
         let current = ProcessInfo.processInfo.processIdentifier
         if let first = NSRunningApplication.runningApplications(withBundleIdentifier: "com.remotemaclan.host")
             .filter({ !$0.isTerminated }).min(by: { $0.processIdentifier < $1.processIdentifier }), first.processIdentifier < current {
             first.activate(options: [.activateIgnoringOtherApps])
             NSApplication.shared.terminate(nil); return
         }
-        // LaunchAgents run the executable directly. Set the running Dock icon
-        // explicitly as well as supplying CFBundleIconFile for Finder.
-        AppBrand.applyDockIcon()
-        model.start()
+        AppBrand.applyDockIcon(); openWindow(); model.start()
     }
-    func applicationWillTerminate(_ notification: Notification) { controller.stop(); model.stop() }
+    func windowWillClose(_ notification: Notification) { controller.disconnect() }
+    func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool { openWindow(); return false }
+    func applicationWillTerminate(_ notification: Notification) { controller.disconnect(); model.stop() }
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool { false }
+}
+struct DesktopShell: View {
+    @ObservedObject var host: HostModel
+    @ObservedObject var controller: ControllerModel
+    @ObservedObject var navigation: DesktopNavigation
+    var fullScreen: () -> Void
+    private let accent = Color(red: 82.0/255,green: 101.0/255,blue: 236.0/255)
+    var body: some View {
+        Group {
+            if controller.busy { ControllerView(model: controller, host: host, fullScreen: fullScreen) }
+            else {
+                HStack(spacing: 0) {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Local Remote Desktop").font(.caption).foregroundStyle(.secondary).padding(.bottom, 18)
+                        navigationButton("连接", symbol: "rectangle.connected.to.line.below", page: "connect")
+                        navigationButton("共享此设备", symbol: "arrow.left.arrow.right", page: "share")
+                        navigationButton("设置", symbol: "gearshape", page: "settings")
+                        Spacer()
+                    }.padding(16).frame(width: 165).background(Color(nsColor: .windowBackgroundColor))
+                    Divider()
+                    Group {
+                        switch navigation.page {
+                        case "share": ScrollView { HostView(model: host) }.frame(maxWidth: .infinity,maxHeight: .infinity)
+                        case "settings": DesktopSettings(host: host, controller: controller)
+                        default: ConnectionPage(model: controller, host: host, showSharing: { navigation.page = "share" })
+                        }
+                    }.frame(maxWidth: .infinity,maxHeight: .infinity)
+                }
+            }
+        }.tint(accent).frame(minWidth: 820,minHeight: 480)
+    }
+    private func navigationButton(_ title: String, symbol: String, page: String) -> some View {
+        Button { navigation.page = page } label: {
+            Label(UiText.text(title), systemImage: symbol).frame(maxWidth: .infinity,alignment: .leading).padding(12)
+                .background(navigation.page == page ? accent.opacity(0.12) : Color.clear)
+                .cornerRadius(6)
+        }.buttonStyle(.plain)
+    }
+}
+struct ConnectionPage: View {
+    @ObservedObject var model: ControllerModel
+    @ObservedObject var host: HostModel
+    var showSharing: () -> Void
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 24) {
+                Text(UiText.text("连接")).font(.largeTitle)
+                Text(UiText.text("选择要连接的附近设备。")).foregroundStyle(.secondary)
+                HStack(alignment: .top, spacing: 28) {
+                    VStack(alignment: .leading, spacing: 12) {
+                        Text(UiText.text("附近设备")).font(.headline)
+                        Text(UiText.text("Mac 控制端暂不支持自动发现；请填写目标IP。"))
+                            .foregroundStyle(.secondary).fixedSize(horizontal: false,vertical: true)
+                    }.frame(maxWidth: .infinity,alignment: .leading)
+                    Divider()
+                    VStack(alignment: .leading, spacing: 14) {
+                        Text(UiText.text("输入目标IP")).font(.title2)
+                        Text(UiText.text("目标IP")).font(.caption)
+                        TextField("192.168.1.10", text: $model.address).textFieldStyle(.roundedBorder)
+                        Text(UiText.text("配对密码")).font(.caption)
+                        SecureField(UiText.text("配对密码"), text: $model.password).textFieldStyle(.roundedBorder)
+                        Picker(UiText.text("画质"), selection: $model.quality) {
+                            Text(UiText.text("流畅")).tag(0); Text(UiText.text("标准")).tag(1); Text(UiText.text("高清")).tag(2)
+                        }
+                        Button(UiText.text("连接")) { model.connect() }.buttonStyle(.borderedProminent)
+                            .disabled(host.active || host.starting)
+                        if host.active || host.starting {
+                            Text(UiText.text("先停止共享，再连接另一台设备。")).font(.caption).foregroundStyle(.secondary)
+                            Button(UiText.text("共享此设备"), action: showSharing)
+                        } else {
+                            Text(UiText.text("首次连接需要目标设备的配对密码。")).font(.caption).foregroundStyle(.secondary)
+                        }
+                        Text(UiText.text(model.status)).font(.caption).foregroundStyle(.secondary).textSelection(.enabled)
+                    }.frame(width: 280)
+                }
+                Spacer(minLength: 10)
+            }.padding(32).frame(maxWidth: .infinity,alignment: .leading)
+        }
+    }
+}
+struct DesktopSettings: View {
+    @ObservedObject var host: HostModel
+    @ObservedObject var controller: ControllerModel
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 18) {
+                Text(UiText.text("设置")).font(.largeTitle)
+                Text(UiText.text("剪贴板")).font(.headline)
+                Toggle(UiText.text("同步文字"), isOn: $host.allowClipboard)
+                Toggle(UiText.text("同步文件"), isOn: $host.allowFiles)
+                Text(UiText.text("Mac 控制端的剪贴板和文件同步将在下一阶段补齐。"))
+                    .font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false,vertical: true)
+                Button(UiText.text("打开接收目录")) { host.openReceivedFiles() }
+                Divider()
+                Text(UiText.text("键盘与连接")).font(.headline)
+                Toggle(UiText.text("Mac 快捷键"), isOn: $controller.shortcuts)
+                Toggle(UiText.text("自动重连"), isOn: $controller.autoReconnect)
+                Divider()
+                Picker(UiText.text("语言"), selection: $host.languageCode) {
+                    Text("English").tag("en"); Text("简体中文").tag("zh-Hans")
+                }.pickerStyle(.segmented)
+                Divider()
+                Text(UiText.text("权限")).font(.headline)
+                Button(UiText.text("屏幕录制权限")) { NSWorkspace.shared.open(URL(string:"x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture")!) }
+                Button(UiText.text("辅助功能权限")) { host.openAccessibilitySettings() }
+                Divider()
+                Text(UiText.text("诊断")).font(.headline)
+                Text("Local Remote Desktop 0.3.0-alpha.2").font(.caption).foregroundStyle(.secondary)
+                Button(UiText.text("复制启动诊断")) { host.copyDiagnostics() }
+                if !host.inputTestResult.isEmpty { Text(UiText.text(host.inputTestResult)).font(.caption) }
+            }.frame(maxWidth: 520,alignment: .leading).padding(32).frame(maxWidth: .infinity,alignment: .leading)
+        }
+    }
 }
 struct HostView: View {
     @ObservedObject var model: HostModel
-    var connect: () -> Void = {}
     private let blueberry = Color(red: 82.0 / 255.0, green: 101.0 / 255.0, blue: 236.0 / 255.0)
-    private let brandText = Color(nsColor: NSColor(name: nil) { appearance in
-        if appearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua {
-            return NSColor(srgbRed: 177.0 / 255.0, green: 183.0 / 255.0, blue: 1, alpha: 1)
-        }
-        return NSColor(srgbRed: 40.0 / 255.0, green: 44.0 / 255.0, blue: 103.0 / 255.0, alpha: 1)
-    })
-    private var brandIcon: NSImage? { AppBrand.icon }
     private var hasFileNotice: Bool {
         !model.fileStatus.hasPrefix("文件同步：") || model.fileStatus.contains("不可用")
     }
@@ -63,42 +185,10 @@ struct HostView: View {
         if model.secret.isEmpty { return "尚未读取" }
         return model.revealSecret ? PairingEditor.displayed(model.secret) : "••••••••••••"
     }
-    private var settingsMenu: some View {
-        Menu(UiText.text("设置")) {
-            Button(UiText.text("连接设备（预览）…"), action: connect)
-            Divider()
-            Section(UiText.text("剪贴板")) {
-                Toggle(UiText.text("同步文字"), isOn: $model.allowClipboard)
-                Toggle(UiText.text("同步文件"), isOn: $model.allowFiles)
-                Button(UiText.text("打开接收目录")) { model.openReceivedFiles() }
-            }
-            Menu(UiText.text("权限")) {
-                Button(UiText.text("屏幕录制权限")) { NSWorkspace.shared.open(URL(string:"x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture")!) }
-                Button(UiText.text("辅助功能权限")) { model.openAccessibilitySettings() }
-            }
-            Picker(UiText.text("语言"), selection: $model.languageCode) {
-                Text("English").tag("en")
-                Text("简体中文").tag("zh-Hans")
-            }
-            Menu(UiText.text("诊断")) {
-                Button(UiText.text("本机键盘自检")) { model.testInput() }
-                Button(UiText.text("复制启动诊断")) { model.copyDiagnostics() }
-            }
-            Divider()
-            Button(UiText.text("退出 Local Remote Desktop")) { NSApplication.shared.terminate(nil) }
-        }.fixedSize()
-    }
     var body: some View {
         VStack(alignment: .leading, spacing: 18) {
-            HStack(spacing: 10) {
-                if let icon = brandIcon {
-                    Image(nsImage: icon).resizable().interpolation(.high).scaledToFit()
-                        .frame(width: 36, height: 36).accessibilityHidden(true)
-                }
-                Text(UiText.text("Local Remote Desktop 0.3.0-alpha.2")).font(.title2).foregroundStyle(brandText)
-                Spacer()
-                settingsMenu
-            }
+            Text(UiText.text("共享此设备")).font(.largeTitle)
+            Text(UiText.text("共享期间可在这里停止连接。")).foregroundStyle(.secondary)
             VStack(alignment: .leading, spacing: 6) {
                 Text(UiText.text(sharingTitle)).font(.headline)
                 Text(UiText.text(model.status)).font(.callout).foregroundStyle(.secondary)
@@ -134,7 +224,7 @@ struct HostView: View {
                 if !model.pairingMessage.isEmpty {
                     Text(UiText.text(model.pairingMessage)).font(.caption).fixedSize(horizontal: false, vertical: true)
                 }
-                Text(UiText.text("在 Windows 填写这台 Mac 的局域网 IP 和当前密码。"))
+                Text(UiText.text("在另一台设备上输入这台 Mac 的 IP 和配对密码。"))
                     .font(.callout).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
             }
             if hasFileNotice {
@@ -148,7 +238,7 @@ struct HostView: View {
             }
             Text(UiText.text("Mac 需保持唤醒并登录。剪贴板共享可在设置中调整。"))
                 .font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
-        }.frame(width: 450, alignment: .leading).padding(24).tint(blueberry)
+        }.frame(maxWidth: 600, alignment: .leading).padding(32).frame(maxWidth: .infinity,alignment: .leading).tint(blueberry)
         .sheet(isPresented: $model.editingPassword, onDismiss: { model.cancelPasswordEditor() }) {
             PasswordEditorView(model: model).tint(blueberry)
         }

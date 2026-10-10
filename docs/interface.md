@@ -12,7 +12,7 @@ must not appear as usable actions before implementation.
 - **Connect**: choose a nearby device or enter its **Target IP**, enter **Pairing
   password**, then connect. Discovery fills the address; it never pairs or starts
   control automatically. Remembered connections stay convenient.
-- **Allow connections**: start/stop sharing the current desktop and manage its
+- **Share this device**: start/stop sharing the current desktop and manage its
   password. Keep the local stop action reachable. Sharing is explicitly enabled.
 - **Settings**: the same groups in every app: Clipboard, Keyboard & connection,
   Language, then Diagnostics. Keep routine controls compact; details belong here.
@@ -70,4 +70,6 @@ menu. Equivalent actions may have different native presentations.
 ## Design review
 
 [Product direction](product.md) and the [interactive UI proposal](design.md) define
-the next interface iteration. The proposal awaits review; it is not current app UI.
+the next interface iteration. The desktop proposal was reviewed on 2026-10-10. Navigation and session layouts
+are being applied incrementally; see [native UI progress](native-ui.md) for
+verified coverage and remaining work. Future platform views remain references.

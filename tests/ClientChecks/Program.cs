@@ -27,6 +27,11 @@ static partial class Program {
         } await Task.Delay(20); }
     }
     static async Task Check() {
+        if(Environment.GetEnvironmentVariable("LOCALREMOTE_SHELL_CHECK")=="1") { await CheckShell(); return; }
+        if(Environment.GetEnvironmentVariable("LOCALREMOTE_LAN_INPUT_CHECK")=="1") { await CheckLANWindowsInput(); return; }
+        // Legacy integration fixtures create real windows. Keep routine/CI runs
+        // unshown; interactive acceptance requires an explicitly agreed period.
+        if(Environment.GetEnvironmentVariable("LOCALREMOTE_INTERACTIVE_CHECKS")!="1") { await CheckShell(); return; }
         UiText.Current.Use("zh-Hans");
         await CheckLanguages();
         await CheckWindowsSharing();

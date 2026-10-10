@@ -58,7 +58,8 @@ static partial class Program {
         try {
             window.Show(); ((TextBox)window.FindName("Address")).Text="127.0.0.1"; ((PasswordBox)window.FindName("Secret")).Password=credential.Password;
             ((MenuItem)window.FindName("AllowConnections")).RaiseEvent(new RoutedEventArgs(MenuItem.ClickEvent));
-            var sharing=window.OwnedWindows.OfType<SharingWindow>().Single();
+            var sharing=window.SharingController??throw new Exception("Missing embedded sharing controller");
+            Assert(!sharing.IsVisible && window.OwnedWindows.Count==0,"Sharing opened a second window");
             Assert(!sharing.Sharing && ((Button)sharing.FindName("SharingStart")).IsEnabled,"Idle sharing page incorrectly reserved the role");
             ((MenuItem)window.FindName("Reconnect")).IsChecked=false;
             ((Button)window.FindName("ConnectButton")).RaiseEvent(new RoutedEventArgs(Button.ClickEvent));

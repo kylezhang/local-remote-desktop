@@ -3,7 +3,13 @@ func require(_ value: @autoclosure () -> Bool, _ message: String) {
     if !value() { fatalError(message) }
 }
 @MainActor func until(_ condition: () -> Bool) async {
-    for _ in 0..<10000 { if condition() { return }; await Task.yield() }
+    let deadline = Date().addingTimeInterval(10)
+    while Date() < deadline {
+        if condition() { return }
+        // A fixed yield count can finish before the Darwin main actor or a KDF
+        // worker is scheduled. Suspend against a real deadline on both platforms.
+        try? await Task.sleep(nanoseconds: 1_000_000)
+    }
     fatalError("model operation did not settle")
 }
 @main enum Check {

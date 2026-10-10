@@ -137,11 +137,7 @@ struct ControllerView: View {
     var body: some View {
         VStack(spacing: 0) {
             HStack(spacing: 8) {
-                if !model.connected {
-                    Text(UiText.text("目标IP")).font(.caption)
-                    TextField("192.168.1.10", text: $model.address).frame(width: 125).disabled(model.busy)
-                    SecureField(UiText.text("配对密码"), text: $model.password).frame(minWidth: 110, maxWidth: 170).disabled(model.busy)
-                } else { Text(model.address).font(.caption).lineLimit(1) }
+                Text(model.address).font(.caption).lineLimit(1)
                 Picker(UiText.text("画质"), selection: $model.quality) {
                     Text(UiText.text("流畅")).tag(0); Text(UiText.text("标准")).tag(1); Text(UiText.text("高清")).tag(2)
                 }.labelsHidden().frame(width: 100)
@@ -253,20 +249,4 @@ final class ControllerWindow: NSWindow {
         }
         super.sendEvent(event)
     }
-}
-final class ControllerCoordinator: NSObject, NSWindowDelegate {
-    private let host: HostModel, model: ControllerModel
-    private var window: NSWindow?
-    init(host: HostModel) { self.host = host; model = ControllerModel(host: host) }
-    func open() {
-        if let window { window.makeKeyAndOrderFront(nil); return }
-        let window = ControllerWindow(contentRect: NSRect(x: 0,y: 0,width: 980,height: 650),
-            styleMask: [.titled,.closable,.miniaturizable,.resizable], backing: .buffered, defer: false)
-        window.title = "Local Remote Desktop"; window.isReleasedWhenClosed = false
-        window.acceptsMouseMovedEvents = true
-        window.contentView = NSHostingView(rootView: ControllerView(model: model, host: host, fullScreen: { [weak window] in window?.toggleFullScreen(nil) }))
-        window.delegate = self; window.center(); self.window = window; window.makeKeyAndOrderFront(nil)
-    }
-    func stop() { model.disconnect() }
-    func windowWillClose(_ notification: Notification) { stop(); window = nil }
 }

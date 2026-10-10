@@ -34,6 +34,17 @@ files are unchanged. Linux wire/session copies adapt Darwin sockets and secure
 randomness to Linux APIs, with real OpenSSL HMAC/AES-GCM/PBKDF2. Passing these checks
 is not a native AppKit/SwiftUI/VideoToolbox compile or real-device acceptance.
 
+## Native fixtures
+
+On a Mac, `bash tests/MacControllerChecks/native-video.sh` generates known-color
+H.264 frames with VideoToolbox and verifies production decoder pixels and bounds.
+It does not capture a desktop or accept native input.
+
+`NativeLANCheck.swift` and the companion Windows LAN harness are opt-in test
+helpers. They are not part of routine checks. Schedule any physical input test
+with a dedicated target; an unshown/recording adapter result is not application
+input acceptance. No new native input result is claimed by adding these fixtures.
+
 中文：检查使用隔离凭据、回环网络和 UserDefaults，不注入系统输入。
 测试覆盖生产 Swift 规则、状态、传输和会话逻辑；Linux 平台适配与界面/解码替身
 不代替 Apple SDK 构建、真实画面或 Mac → Windows 键鼠验收。

@@ -75,7 +75,9 @@ Run LocalRemoteDesktop.exe. Keep this folder together; .NET Desktop Runtime is i
 FFmpeg is NOT included: install a complete H.264-capable build and expose ffmpeg.exe on PATH,
 or place it and all its required DLLs beside the app. https://ffmpeg.org/download.html
 Mac must be logged in, running the Host and authorized for screen capture/Accessibility.
-Enter Mac LAN IPv4 and its pairing password (legacy 64-character keys also work).
+Use Connect to select a nearby device or enter Target IP and its pairing password.
+Use Share this device to start/stop sharing this Windows desktop. Switching pages keeps sharing active.
+Legacy 64-character keys also work. Windows sharing does not yet offer clipboard/files; see the development guide.
 Mac: Change Password opens an editor; generated passwords take effect only after Save.
 Update both apps for short-password authentication. Click the picture to type.
 F11: full screen. Ctrl+Alt+Esc: release input. Quality changes briefly reconnect.
@@ -86,7 +88,9 @@ Folders and image clipboard formats are not supported. See the repository user g
 
 运行 LocalRemoteDesktop.exe，保持完整目录；无需另装 .NET。
 FFmpeg 需单独完整安装并配置 PATH；现有正常安装可继续用。
-Mac 正常登录并开启共享、完成权限；填写 IP 和配对密码，点击画面后输入。
+连接页选择附近设备或填写目标 IP 和配对密码，点击画面后输入。
+共享此设备页开启/停止 Windows 共享；切换页面继续共享。反向剪贴板/文件仍待补齐。
+Mac 作为被控设备时需正常登录、开启共享并完成权限。
 修改密码在独立窗口操作，保存才生效；短密码需更新两端。
 文字/普通文件默认同步；在设置中可关闭，等启用后重新复制。文件需 TCP 47981。
 

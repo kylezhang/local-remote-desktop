@@ -1,5 +1,6 @@
 {
   "目标IP": "Target IP",
+  "画质": "Picture quality",
   "密码": "Password",
   "设置": "Settings",
   "语言": "Language",
@@ -216,5 +217,23 @@
   "画面解码失败，请检查 Windows 的编码设置。": "Video decoding failed. Check the Windows encoder settings.",
   "目标能力不兼容，请更新两端应用。": "Unsupported target capabilities. Update both applications.",
   "连接已断开。请确认 Windows 已开始共享。": "Disconnected. Check that Windows sharing is running.",
-  "正在切换画质…": "Changing quality…"
+  "正在切换画质…": "Changing quality…",
+  "共享此设备": "Share this device",
+  "选择要连接的附近设备。": "Choose a nearby device.",
+  "附近设备": "Nearby devices",
+  "输入目标IP": "Enter Target IP",
+  "首次连接需要目标设备的配对密码。": "First connections require the target device’s pairing password.",
+  "在另一台设备上输入这台 Mac 的 IP 和配对密码。": "Enter this Mac’s IP and pairing password on the other device.",
+  "屏幕共享": "Screen sharing",
+  "控制权限": "Remote input",
+  "未授权": "Not allowed",
+  "已授权": "Allowed",
+  "授权后可控制键盘和鼠标；未授权时只能查看。": "Allow keyboard and mouse control, or share the screen for viewing only.",
+  "共享期间可在这里停止连接。": "You can stop sharing here at any time.",
+  "Mac 控制端暂不支持自动发现；请填写目标IP。": "Enter Target IP. Device discovery on Mac is coming next.",
+  "Mac 控制端的剪贴板和文件同步将在下一阶段补齐。": "Clipboard and file sync for Mac connections are coming next.",
+  "先停止共享，再连接另一台设备。": "Stop sharing before connecting to another device.",
+  "已选择 {0}，可直接连接。": "Selected {0}. Ready to connect.",
+  "目标设备的局域网 IPv4；优先恢复上次地址，首次需改成目标 IP。": "Target device’s LAN IPv4. Restores the last address; replace the initial address with your target’s IP.",
+  "填写目标设备上显示的配对密码": "Enter the pairing password shown on the target device"
 }

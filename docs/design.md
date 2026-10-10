@@ -2,7 +2,11 @@
 
 [简体中文](zh-CN/design.md) · [Product direction](product.md) · [Delivery plan](v0.3.0-plan.md)
 
-**Proposal for review, not implemented app UI.** Open
+**Reviewed on 2026-10-10; native implementation is underway.** The desktop
+navigation and session layout are now in source. Windows passed an unshown WPF
+layout/lifecycle check; the updated Mac UI awaits a native SDK build because the
+development Mac is currently unreachable. Discovery and reverse clipboard/files
+remain next-stage work. This prototype also includes future platform references. Open
 [the interactive prototype](../design/review/index.html) in a browser. It runs
 offline with fictional devices, passwords and desktop content. It never connects,
 captures, transfers or stores credentials. Platform selectors include future

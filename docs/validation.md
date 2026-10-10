@@ -217,3 +217,7 @@ SSH to a logged-in development Mac can run native builds and collect test logs;
 macOS privacy approval remains an interactive system operation. A Mac CI runner
 can automate builds, but a headless build does not validate desktop permissions,
 rendering or input acceptance.
+
+## Unified desktop UI — 2026-10-10
+
+See [native UI progress](native-ui.md) and the [check record](../tests/results/native-ui-2026-10-10.txt). Windows UI fixtures stay unshown; they are not native input acceptance. The updated Mac UI has syntax checks only until the development Mac is reachable.

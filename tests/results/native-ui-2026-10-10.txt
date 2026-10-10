@@ -1,0 +1,22 @@
+Unified desktop interface development — 2026-10-10
+
+PASS Windows .NET 8 WPF production build.
+PASS unshown WPF shell fixtures: English/Chinese; 820/1100/1440-pixel
+layouts; fixture discovery selection; navigation; masked sharing password;
+edit cancellation; session presentation; controller/sharing exclusion;
+owner shutdown releases the fixture loopback listener.
+PASS in-memory WPF layout rendering, with no Window.Show/Activate call.
+PASS Swift syntax parser for application sources, including updated App and viewer.
+
+Mac SSH connection timed out on two attempts. The changed Mac UI has not
+been compiled against an Apple SDK or accepted in an installed GUI.
+Previous native build/video results apply to previous source, not this UI.
+
+No foreground test window, physical screen capture, native input injection,
+user credential/clipboard access or permission reset in the shell fixture.
+Fixture sharing uses isolated credentials, loopback networking and mock adapters.
+The older displayed-window integration suite is now explicitly opt-in.
+
+Pending: Mac native UI build/interaction, reverse discovery, reverse clipboard/files,
+first-pairing dialog, real two-device input/session acceptance and update acceptance.
+No new tag, release or cross-platform support claim produced by this record.

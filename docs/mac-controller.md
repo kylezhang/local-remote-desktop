@@ -5,23 +5,24 @@
 Development **v0.3.0-alpha.2** adds a Mac controller to the existing application.
 The source implements authenticated connection, H.264 reception/VideoToolbox
 decoding, pointer and keyboard input, full screen, quality changes and reconnect.
-Transport and state checks pass; **native Apple SDK compilation, AppKit interaction,
-VideoToolbox rendering and real Mac → Windows acceptance are still pending**.
+Earlier native SDK, transport and synthetic VideoToolbox checks passed.
+**The newly unified interface still needs an Apple SDK build, installed AppKit
+interaction and real Mac → Windows acceptance**; see [UI progress](native-ui.md).
 This is a development checkpoint, not a verified bidirectional release.
 
 ## Connect to Windows
 
-1. In Windows, open **Settings → Allow connections (preview)** and start sharing.
+1. In Windows, open **Share this device** and start sharing.
    View its sharing password; this is separate from saved target passwords.
 2. On the Mac, stop sharing if it is active. Open
-   **Settings → Connect to device (preview)**.
+   **Connect** in the main window.
 3. Enter the Windows **Target IP** (LAN IPv4) and sharing password, then Connect.
    Both devices need TCP 47980 connectivity. Click the picture for keyboard focus.
-4. Disconnect or close the controller window to release input and end the session.
+4. Disconnect or close the application window to release input and end the session.
 
 The app remembers the last successfully connected address. The controller password
 remains in memory while the Mac app runs, including when closing/reopening the
-controller window; it is not stored on disk and must be entered after app exit.
+application window; it is not stored on disk and must be entered after app exit.
 This preview does not read or create an additional Keychain item.
 Connecting alone does not require Mac Screen Recording or Accessibility: those
 permissions are needed when this Mac shares its own desktop.

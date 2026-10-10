@@ -3,7 +3,7 @@
 [简体中文](zh-CN/windows-sharing.md) · [Roadmap](roadmap.md)
 
 Development v0.3.0-alpha.1 adds the missing Windows sharing role. Open
-**Settings → Allow connections (preview)** in the same Windows application.
+**Share this device** in the same Windows application.
 Starting it shares the primary display of the current logged-in Windows desktop.
 Opening the page alone does not start a listener or capture.
 
@@ -26,8 +26,8 @@ Mac workflow and clipboard implementation remain available in the control role.
   host and releases its held input. Start sharing again with the new password.
   A failed save preserves the existing password/session. The sharing credential
   is separate from remembered passwords for computers you control.
-- Stop sharing or close its window to close the listener and active session.
-  Closing the main app also awaits sharing cleanup. Sharing is not automatically
+- Stop sharing or close the main application to close the listener and active
+  session. Switching pages keeps sharing active; the app awaits cleanup on exit. Sharing is not automatically
   enabled at login or relaunch. Control and sharing roles are exclusive in this
   initial desktop interface.
 

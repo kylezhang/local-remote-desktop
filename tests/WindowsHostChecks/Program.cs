@@ -10,16 +10,35 @@ using LocalRemoteDesktop;
 
 static class Program {
     static void Require(bool value,string message) { if(!value) throw new Exception(message); }
-    static async Task Until(Func<bool> value,string message) {
-        var watch=Stopwatch.StartNew(); while(!value()) { if(watch.ElapsedMilliseconds>10000) throw new Exception(message); await Task.Delay(20); }
+    static async Task Until(Func<bool> value,string message,int timeout=10000) {
+        var watch=Stopwatch.StartNew(); while(!value()) { if(watch.ElapsedMilliseconds>timeout) throw new Exception(message); await Task.Delay(20); }
     }
     static byte[] Join(params byte[][] values)=>values.SelectMany(v=>v).ToArray();
     static byte[] H(byte[] key,string label,byte[] data)=>HMACSHA256.HashData(key,Join(Encoding.ASCII.GetBytes(label),data));
     static byte[] Nonce(ulong n) { var result=new byte[12]; BinaryPrimitives.WriteUInt64BigEndian(result.AsSpan(4),n); return result; }
     static async Task Main() {
+        if(Environment.GetEnvironmentVariable("LOCALREMOTE_LAN_TRANSPORT_CHECK")=="1") { await LANTransport(); return; }
         await Framing(); Input(); Credentials(); await Authentication(); await Lifecycle(); await FailureCleanup();
         if(OperatingSystem.IsWindows()) { foreach(int quality in new[]{0,1,2}) await Capture(false,quality); if(Environment.GetEnvironmentVariable("LOCALREMOTE_REAL_CAPTURE_CHECK")=="1") await Capture(true,0); }
         Console.WriteLine("PASS Windows sharing backend checks; no system input or clipboard injection");
+    }
+    static async Task LANTransport() {
+        var address=IPAddress.Parse(Environment.GetEnvironmentVariable("LOCALREMOTE_LAN_ADDRESS")??throw new Exception("LAN address required"));
+        Require(WindowsHost.IsLan(address),"LAN test must bind a private address");
+        var recorder=new RecordingInput(); var area=CaptureArea.Primary();
+        var input=new WindowsInput(area,CaptureArea.Virtual(),recorder);
+        var credential=HostCredential.Create("Office-LAN#42");
+        FfmpegDesktopCapture? capture=null;
+        await using var host=new WindowsHost(PairingPassword.Derive(credential.Password,credential.Salt),credential.Salt,area,
+            ()=>capture=new FfmpegDesktopCapture(area,software:false,synthetic:true),()=>input,address:address);
+        host.Start(); Console.WriteLine("READY headless LAN production WindowsHost / synthetic MF H264 / recording input adapter");
+        await Until(()=>recorder.Values.Count>=8,"Mac LAN inputs not received",45000);
+        await Until(()=>input.Received>=9 && input.Held==0,"Mac LAN release_all not received");
+        Require(input.Blocked==0 && input.Rejected==0,"Mac LAN malformed/blocked events");
+        Require(recorder.Values.Where(v=>v.Type==1).Select(v=>(int)v.Data.Key.Vk).SequenceEqual(new[]{65,65,49,49}),"Mac key order or target mapping wrong");
+        Require(recorder.Values.Any(v=>(v.Data.Mouse.Flags&0x800)!=0),"Mac wheel not received");
+        Console.WriteLine($"PASS actual Mac native controller -> LAN -> production Windows host: {input.Received} input records, ordered keys, pointer/button/wheel and release; recording adapter, no system input");
+        await Task.Delay(1500);
     }
     static async Task Framing() {
         byte[] stream=[0,0,0,1,9,0xf0,0,0,1,7,4,5,0,0,0,1,8,3,0,0,1,5,1,2,3,0,0,0,1,9,0xf0,0,0,1,1,4,5];

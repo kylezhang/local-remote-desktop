@@ -22,6 +22,9 @@ pathlib.Path(sys.argv[2]).write_text(text)
 PY
     wire="$stage/Wire.swift"
     args=(-I "$stage" -L "$stage" -lCryptoKit -lCommonCrypto -Xlinker -rpath -Xlinker "$stage")
+else
+    # Bash 3.2 treats an empty array expansion as unbound under set -u.
+    args=(-sdk "$(xcrun --show-sdk-path)")
 fi
 "$compiler" -parse-as-library "${args[@]}" "$source/ControllerCore.swift" "$source/PairingCredential.swift" "$wire" "$root/tests/MacControllerChecks/ProtocolCheck.swift" -o "$stage/check"
 python3 - "$source/ControllerSession.swift" "$stage/ControllerSession.swift" <<'PY'

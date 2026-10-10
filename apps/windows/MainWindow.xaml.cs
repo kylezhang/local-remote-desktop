@@ -34,6 +34,8 @@ public partial class MainWindow : Window
     IVideoDecoder? activeDecoder;
     bool windowClosing;
     SharingWindow? sharingWindow;
+    readonly Func<Action<bool>,SharingWindow> createSharing;
+    internal SharingWindow? SharingController=>sharingWindow;
     bool closingSharingOwner;
     string targetPlatform="macos";
     readonly TextClipboardSync clipboard;
@@ -54,8 +56,9 @@ public partial class MainWindow : Window
     readonly DispatcherTimer render = new() { Interval=TimeSpan.FromMilliseconds(16) };
     public MainWindow():this(true) {}
     internal MainWindow(bool remember):this(remember,null) {}
-    internal MainWindow(bool remember, Func<ModifierKeys>? modifiers, ITextClipboard? board=null, IFileClipboard? fileBoard=null, string? fileRoot=null, int desktopPort=47980, int filePort=47981, Func<CancellationToken,Task<IReadOnlyList<LanDevice>>>? discovery=null) {
+    internal MainWindow(bool remember, Func<ModifierKeys>? modifiers, ITextClipboard? board=null, IFileClipboard? fileBoard=null, string? fileRoot=null, int desktopPort=47980, int filePort=47981, Func<CancellationToken,Task<IReadOnlyList<LanDevice>>>? discovery=null, Func<Action<bool>,SharingWindow>? sharingFactory=null) {
         rememberConnection=remember; UiText.Current.Configure(remember);
+        createSharing=sharingFactory??(changed=>remember?new SharingWindow(changed):new SharingWindow(changed,()=>HostCredential.Create(HostCredential.Generate()),_=>{}));
         this.desktopPort=desktopPort;
         browse=discovery??MdnsDiscovery.Scan;
         readModifiers=modifiers ?? (()=>Keyboard.Modifiers);
@@ -82,6 +85,10 @@ public partial class MainWindow : Window
         WindowsShortcuts.IsChecked=!remember || SecretStore.LoadWindowsShortcuts();
         WindowsShortcuts.Checked+=(_,_)=>KeyboardModeChanged(); WindowsShortcuts.Unchecked+=(_,_)=>KeyboardModeChanged();
         SettingsMenu.SubmenuClosed+=(_,e)=> { if(ReferenceEquals(e.OriginalSource,SettingsMenu) && connected) Surface.Focus(); };
+        Address.TextChanged+=(_,_)=> {
+            if(session!=null || DeviceList.SelectedItem is not LanDevice device || Address.Text==device.Address) return;
+            DeviceList.SelectedItem=null; SelectedDeviceName.Text=UiText.Text("输入目标IP");
+        };
         Address.LostFocus+=(_,_)=> { if(!rememberConnection) return; var s=SecretStore.Load(Address.Text.Trim()); if(s.Length>0) Secret.Password=s; };
         Quality.SelectionChanged+=(_,_)=> {
             if(session==null) return;
@@ -112,34 +119,58 @@ public partial class MainWindow : Window
         await sharing.Shutdown(); sharingWindow=null;
         await System.Windows.Threading.Dispatcher.Yield(System.Windows.Threading.DispatcherPriority.Background); Close();
     }
-    void SharingClick(object sender,RoutedEventArgs e) {
-        if(session!=null) return;
-        if(sharingWindow!=null) { sharingWindow.Activate(); return; }
-        var sharing=new SharingWindow(active=>ConnectButton.IsEnabled=!active) {Owner=this};
-        sharingWindow=sharing; sharing.Closed+=(_,_)=> {if(ReferenceEquals(sharingWindow,sharing)) sharingWindow=null; if(session==null) ConnectButton.IsEnabled=true;}; sharing.Show();
+    void NavigateClick(object sender,RoutedEventArgs e) {
+        if(ConnectPage==null || SharingPage==null || SettingsPage==null || session!=null || sender is not FrameworkElement {Tag:string page}) return;
+        ShowPage(page);
+    }
+    void ShowPage(string page) {
+        if(page=="share" && sharingWindow==null) {
+            // Reuse the tested sharing lifecycle without creating another visible window.
+            var sharing=createSharing(active=>StartConnection.IsEnabled=!active);
+            var content=sharing.Content; sharing.Content=null; SharingPage.Content=content;
+            sharingWindow=sharing;
+            sharing.Closed+=(_,_)=> { if(ReferenceEquals(sharingWindow,sharing)) { sharingWindow=null; SharingPage.Content=null; } };
+        }
+        ConnectPage.Visibility=page=="connect"?Visibility.Visible:Visibility.Collapsed;
+        SharingPage.Visibility=page=="share"?Visibility.Visible:Visibility.Collapsed;
+        SettingsPage.Visibility=page=="settings"?Visibility.Visible:Visibility.Collapsed;
+    }
+    void SharingClick(object sender,RoutedEventArgs e) { if(session==null) NavShare.IsChecked=true; }
+    void RefreshDevicesClick(object sender,RoutedEventArgs e)=>RefreshDevices();
+    void DeviceSelected(object sender,SelectionChangedEventArgs e) {
+        if(session!=null || DeviceList.SelectedItem is not LanDevice device) return;
+        Address.Text=device.Address; Secret.Password=rememberConnection?SecretStore.Load(device.Address):"";
+        SelectedDeviceName.Text=device.Name;
+        SetStatus(Secret.Password.Length>0?$"已选择 {device.Name}，可直接连接。":$"已选择 {device.Name}，填写配对密码后连接。");
+    }
+    void SetSessionLayout(bool active) {
+        HomeShell.Visibility=active?Visibility.Collapsed:Visibility.Visible;
+        SessionPage.Visibility=active?Visibility.Visible:Visibility.Collapsed;
+        if(!active) { NavConnect.IsChecked=true; ShowPage("connect"); }
     }
     void DiscoverClick(object sender,RoutedEventArgs e) {
         if(session!=null) return;
         RebuildDeviceMenu(); DiscoverButton.ContextMenu.PlacementTarget=DiscoverButton; DiscoverButton.ContextMenu.IsOpen=true;
         if(discoveryScan==null && (discoveryFinished==0 || Environment.TickCount64-discoveryFinished>10000)) RefreshDevices();
     }
-    void SetStatus(string value) { rawStatus=value; statusSuffix=""; Status.Text=UiText.Text(value); }
-    void AppendStatus(string value) { statusSuffix+=value; Status.Text=UiText.Text(rawStatus)+UiText.Text(statusSuffix); }
-    void SetClipboardStatus(string value) { rawClipboardStatus=value; ClipboardStatus.Text=UiText.Text(value); }
-    void SetFileStatus(string value) { rawFileStatus=value; FileStatus.Text=UiText.Text(value); }
+    void SetStatus(string value) { rawStatus=value; statusSuffix=""; Status.Text=HomeStatus.Text=UiText.Text(value); }
+    void AppendStatus(string value) { statusSuffix+=value; Status.Text=HomeStatus.Text=UiText.Text(rawStatus)+UiText.Text(statusSuffix); }
+    void SetClipboardStatus(string value) { rawClipboardStatus=value; ClipboardStatus.Text=HomeStatus.Text=UiText.Text(value); }
+    void SetFileStatus(string value) { rawFileStatus=value; FileStatus.Text=HomeStatus.Text=UiText.Text(value); }
     void ApplyLanguage() {
-        Status.Text=UiText.Text(rawStatus)+UiText.Text(statusSuffix);
+        Status.Text=HomeStatus.Text=UiText.Text(rawStatus)+UiText.Text(statusSuffix);
         ClipboardStatus.Text=UiText.Text(rawClipboardStatus); FileStatus.Text=UiText.Text(rawFileStatus);
         ConnectButton.Content=UiText.Text(session==null?"连接":"断开");
         LanguageEnglish.IsChecked=UiText.Current.Language=="en"; LanguageChinese.IsChecked=!LanguageEnglish.IsChecked;
         RebuildDeviceMenu();
     }
     void LanguageClick(object sender,RoutedEventArgs e) {
-        if(sender is not MenuItem {Tag:string code}) return;
+        if(sender is not FrameworkElement {Tag:string code}) return;
         try { UiText.Current.Use(code,rememberConnection); }
         catch(Exception error) { SetStatus($"语言已切换，但无法保存：{error.Message}"); }
     }
     void RebuildDeviceMenu() {
+        DeviceList.ItemsSource=discovered; DeviceSearchStatus.Text=UiText.Text(discoveryStatus);
         var menu=DiscoverButton.ContextMenu; menu.Items.Clear();
         if(discovered.Count==0) menu.Items.Add(new MenuItem {Header=UiText.Text(discoveryStatus),IsEnabled=false});
         foreach(var device in discovered) {
@@ -268,10 +299,10 @@ public partial class MainWindow : Window
         requestedQuality=quality; qualityChangePending=false;
         discoveryScan?.Cancel();
         targetPlatform="macos"; AllowConnections.IsEnabled=false; sharingWindow?.SetControlActive(true);
-        session=new(); render.Start(); ConnectButton.Content=UiText.Text("断开"); DiscoverButton.IsEnabled=Address.IsEnabled=Secret.IsEnabled=ForgetButton.IsEnabled=false;
-        ConnectionFields.Visibility=Visibility.Collapsed; ConnectionTarget.Text=$"Mac · {ip}"; ConnectionTarget.Visibility=Visibility.Visible;
+        session=new(); SetSessionLayout(true); render.Start(); ConnectButton.Content=UiText.Text("断开"); DiscoverButton.IsEnabled=Address.IsEnabled=Secret.IsEnabled=ForgetButton.IsEnabled=false;
+        ConnectionFields.Visibility=Visibility.Collapsed; ConnectionTarget.Text=ip; ConnectionTarget.Visibility=Visibility.Visible;
         runner=Run(ip,secret,session.Token);
-        try { await runner; } finally { render.Stop(); ResetClipboard(); ResetFiles(); connected=false; session.Dispose(); session=null; AllowConnections.IsEnabled=true; sharingWindow?.SetControlActive(false); ConnectButton.Content=UiText.Text("连接"); DiscoverButton.IsEnabled=Address.IsEnabled=Secret.IsEnabled=Quality.IsEnabled=ForgetButton.IsEnabled=true; ConnectionFields.Visibility=Visibility.Visible; ConnectionTarget.Visibility=Visibility.Collapsed; Desktop.Source=null; bitmap=null; width=height=0; }
+        try { await runner; } finally { render.Stop(); ResetClipboard(); ResetFiles(); connected=false; if(full) ToggleFull(); session.Dispose(); session=null; SetSessionLayout(false); AllowConnections.IsEnabled=true; sharingWindow?.SetControlActive(false); ConnectButton.Content=UiText.Text("连接"); DiscoverButton.IsEnabled=Address.IsEnabled=Secret.IsEnabled=Quality.IsEnabled=ForgetButton.IsEnabled=true; ConnectionFields.Visibility=Visibility.Visible; ConnectionTarget.Visibility=Visibility.Collapsed; Desktop.Source=null; bitmap=null; width=height=0; }
     }
     async Task Run(string ip,string secret,CancellationToken ct) {
         bool paired=false;
@@ -282,7 +313,7 @@ public partial class MainWindow : Window
             int quality=requestedQuality;
             Task? heartbeat=null, controls=null;
             try {
-                SetStatus("连接和验证 Mac…");
+                SetStatus("正在连接…");
                 using(var timeout=CancellationTokenSource.CreateLinkedTokenSource(ct)) { timeout.CancelAfter(TimeSpan.FromSeconds(8)); await wire.Connect(ip,secret,timeout.Token,desktopPort); }
                 paired=true; if(rememberConnection) SecretStore.Save(ip,secret);
                 inputs=new InputQueue(); connected=true;
@@ -375,5 +406,5 @@ public partial class MainWindow : Window
         try { SecretStore.Forget(Address.Text.Trim()); Secret.Password=""; Address.Text=LocalAddress.Find(); SetStatus("已清除当前设备的地址和配对密码记忆。"); }
         catch(Exception ex) { SetStatus($"清除失败：{ex.Message}"); }
     }
-    void ToggleFull() { full=!full; if(full) { previousState=WindowState; WindowState=WindowState.Normal; WindowStyle=WindowStyle.None; WindowState=WindowState.Maximized; Toolbar.Visibility=Visibility.Collapsed; Surface.Focus(); } else { WindowState=WindowState.Normal; WindowStyle=WindowStyle.SingleBorderWindow; WindowState=previousState; Toolbar.Visibility=Visibility.Visible; } }
+    void ToggleFull() { if(session==null) return; full=!full; if(full) { previousState=WindowState; WindowState=WindowState.Normal; WindowStyle=WindowStyle.None; WindowState=WindowState.Maximized; Toolbar.Visibility=Visibility.Collapsed; Surface.Focus(); } else { WindowState=WindowState.Normal; WindowStyle=WindowStyle.SingleBorderWindow; WindowState=previousState; Toolbar.Visibility=Visibility.Visible; } }
 }
