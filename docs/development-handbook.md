@@ -161,3 +161,5 @@ records determine what is implemented; this handbook is not a support claim.
 When an agreement changes, update this handbook, its Chinese counterpart and the
 specific product/interface/protocol/release document in the same commit. Record
 observed results in [validation](validation.md); keep tentative conclusions labeled.
+
+Normal Mac installation uses permission preservation by default. Signature changes stop before replacement; --reset-permissions is explicit repair. Use meaningful device empty states and content-sized settings/sharing sections rather than filling spare space with unrelated controls.

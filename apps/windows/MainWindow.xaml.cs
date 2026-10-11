@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.IO;
+using System.Security.Cryptography;
 using System.Text.Json;
 using System.Threading.Channels;
 using System.Windows;
@@ -221,8 +222,8 @@ public partial class MainWindow : Window
     }
     void SetStatus(string value) { if(manualConnecting && ManualDialog.Visibility==Visibility.Visible) ManualError.Text=UiText.Text(value); rawStatus=value; statusSuffix=""; Status.Text=HomeStatus.Text=UiText.Text(value); }
     void AppendStatus(string value) { statusSuffix+=value; Status.Text=HomeStatus.Text=UiText.Text(rawStatus)+UiText.Text(statusSuffix); }
-    void SetClipboardStatus(string value) { rawClipboardStatus=value; ClipboardStatus.Text=HomeStatus.Text=UiText.Text(value); }
-    void SetFileStatus(string value) { rawFileStatus=value; FileStatus.Text=HomeStatus.Text=UiText.Text(value); }
+    void SetClipboardStatus(string value) { rawClipboardStatus=value; ClipboardStatus.Text=UiText.Text(value); }
+    void SetFileStatus(string value) { rawFileStatus=value; FileStatus.Text=UiText.Text(value); }
     void ApplyLanguage() {
         Status.Text=HomeStatus.Text=UiText.Text(rawStatus)+UiText.Text(statusSuffix);
         ClipboardStatus.Text=UiText.Text(rawClipboardStatus); FileStatus.Text=UiText.Text(rawFileStatus);
@@ -244,6 +245,8 @@ public partial class MainWindow : Window
             StartConnection.IsEnabled=sharingWindow?.Sharing!=true && (DeviceList.SelectedItem is not LanDevice peer || peer.Online);
         } finally {rebuildingDevices=false;}
         DeviceSearchStatus.Text=UiText.Text(discoveryStatus);
+        DeviceEmptyState.Visibility=discovered.Count==0?Visibility.Visible:Visibility.Collapsed;
+        DeviceEmptyTitle.Text=UiText.Text(discoveryScan!=null?"正在搜索局域网设备…":"暂无设备记录");
         var menu=DiscoverButton.ContextMenu; menu.Items.Clear();
         if(discovered.Count==0) menu.Items.Add(new MenuItem {Header=UiText.Text(discoveryStatus),IsEnabled=false});
         foreach(var device in discovered) {
@@ -451,7 +454,7 @@ public partial class MainWindow : Window
             using var attempt=CancellationTokenSource.CreateLinkedTokenSource(ct);
             activeAttempt=attempt; qualityChangePending=false;
             int quality=requestedQuality;
-            Task? heartbeat=null, controls=null;
+            Task? heartbeat=null, controls=null; bool retryBlocked=false;
             try {
                 SetStatus("正在连接…");
                 using(var timeout=CancellationTokenSource.CreateLinkedTokenSource(ct)) { timeout.CancelAfter(TimeSpan.FromSeconds(8)); await wire.Connect(ip,secret,timeout.Token,desktopPort); }
@@ -477,8 +480,8 @@ public partial class MainWindow : Window
                     if(packet.type==1) {
                         using var json=JsonDocument.Parse(packet.data); var root=json.RootElement;
                         if(root.TryGetProperty("platform",out var platform)) {
-                            var name=platform.GetString(); if(name is not ("windows" or "macos")) throw new IOException("Unsupported target platform");
-                            if(!root.TryGetProperty("inputModel",out var model) || model.GetString()!=(name=="windows"?"win-vk-v1":"win-vk-mac-v1")) throw new IOException("Unsupported target input model");
+                            var name=platform.GetString(); if(name is not ("windows" or "macos")) throw new NotSupportedException("Unsupported target platform");
+                            if(!root.TryGetProperty("inputModel",out var model) || model.GetString()!=(name=="windows"?"win-vk-v1":"win-vk-mac-v1")) throw new NotSupportedException("Unsupported target input model");
                             await Dispatcher.InvokeAsync(()=> { targetPlatform=name; });
                         }
                         if(root.GetProperty("op").GetString() is "capabilities" or "heartbeat") await Dispatcher.InvokeAsync(()=>ApplyPeerName(root,ip));
@@ -511,7 +514,13 @@ public partial class MainWindow : Window
                     } else if(packet.type==2 && decoder!=null) { Interlocked.Add(ref bytes,packet.data.Length); await decoder.Feed(packet.data,attempt.Token); }
                 }
                 },attempt.Token);
-            } catch(Exception ex) { SetStatus(ct.IsCancellationRequested?"已断开":qualityChangePending?"正在切换画质":$"连接中断：{ex.Message}"); }
+            } catch(Exception ex) {
+                // Retrying credentials or incompatible capabilities cannot heal
+                // the connection. Return to Connect with the draft intact.
+                retryBlocked=ex is CryptographicException or ArgumentException or NotSupportedException;
+                SetStatus(ct.IsCancellationRequested?"已断开":ex is CryptographicException?
+                    "目标设备身份验证未完成，请检查配对密码后重新连接。":qualityChangePending && !retryBlocked?"正在切换画质":$"连接中断：{ex.Message}");
+            }
             finally {
                 connected=false; ResetClipboard(); ResetFiles(); inputs?.Complete(); attempt.Cancel(); wire.Dispose();
                 lock(decoderGate) { decoder?.Dispose(); if(ReferenceEquals(activeDecoder,decoder)) activeDecoder=null; }
@@ -521,7 +530,7 @@ public partial class MainWindow : Window
                 if(Surface.IsMouseCaptured) Surface.ReleaseMouseCapture();
                 Desktop.Source=null; bitmap=null; width=height=0;
             }
-            if(ct.IsCancellationRequested || (!qualityChangePending && (!paired || Reconnect.IsChecked!=true))) break;
+            if(ct.IsCancellationRequested || retryBlocked || (!qualityChangePending && (!paired || Reconnect.IsChecked!=true))) break;
             AppendStatus("；3 秒后重连");
             try { await Task.Delay(3000,ct); } catch(OperationCanceledException) { break; }
         } while(!ct.IsCancellationRequested);

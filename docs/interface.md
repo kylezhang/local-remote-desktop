@@ -89,3 +89,5 @@ sharing permissions and credentials owned by their task pages. See the
 the next interface iteration. The desktop proposal was reviewed on 2026-10-10. Navigation and session layouts
 are being applied incrementally; see [native UI progress](native-ui.md) for
 verified coverage and remaining work. Future platform views remain references.
+
+Empty device lists expose a manual action without invented history or metadata. Sharing uses two balanced content-sized sections; settings surfaces fit their actual content instead of stretching into empty panels. Preserve window size across navigation.

@@ -15,7 +15,17 @@
  <Grid Grid.Row="1"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="24"/><ColumnDefinition Width="285"/></Grid.ColumnDefinitions>
  <DockPanel><DockPanel DockPanel.Dock="Top" Margin="0,0,0,12"><Button Content="{local:Translate Key='刷新设备'}" Click="RefreshDevicesClick" DockPanel.Dock="Right" Padding="8,4"/><TextBlock Text="{local:Translate Key='附近设备'}" FontWeight="SemiBold" VerticalAlignment="Center"/></DockPanel>
  <StackPanel DockPanel.Dock="Top"><TextBlock x:Name="DeviceSearchStatus" Foreground="#697183" TextWrapping="Wrap" Margin="0,0,0,12"/></StackPanel>
+ <Grid>
  <ListBox x:Name="DeviceList" SelectionChanged="DeviceSelected" BorderThickness="0" Background="Transparent" ScrollViewer.HorizontalScrollBarVisibility="Disabled" HorizontalContentAlignment="Stretch"><ListBox.ItemTemplate><DataTemplate><StackPanel Margin="10,14"><TextBlock Text="{Binding Name}" FontWeight="SemiBold"/><TextBlock Text="{Binding SystemLabel}" Foreground="#697183" Margin="0,6,0,0"/><TextBlock Text="{Binding StateLabel}" Foreground="#697183" FontSize="12" Margin="0,6,0,0"/></StackPanel></DataTemplate></ListBox.ItemTemplate></ListBox>
+ <Border x:Name="DeviceEmptyState" Background="#F6F7FA" CornerRadius="10" Padding="24" VerticalAlignment="Top" MinHeight="230">
+  <StackPanel VerticalAlignment="Center">
+   <TextBlock Text="▤" FontSize="30" Foreground="#697183" HorizontalAlignment="Center" Margin="0,0,0,16"/>
+   <TextBlock x:Name="DeviceEmptyTitle" Text="{local:Translate Key='暂无设备记录'}" FontWeight="SemiBold" TextAlignment="Center"/>
+   <TextBlock Text="{local:Translate Key='开启目标设备的共享后刷新，也可以输入目标IP连接。'}" Foreground="#697183" TextAlignment="Center" TextWrapping="Wrap" Margin="0,10,0,20"/>
+   <Button Content="{local:Translate Key='输入目标IP'}" Click="ManualClick" HorizontalAlignment="Center"/>
+  </StackPanel>
+ </Border>
+ </Grid>
  </DockPanel>
  <ScrollViewer Grid.Column="2" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled"><StackPanel>
  <TextBlock x:Name="SelectedDeviceName" Text="{local:Translate Key='输入目标IP'}" FontSize="20" FontWeight="SemiBold" Margin="0,0,0,20"/>
@@ -41,12 +51,17 @@
  <ContentControl x:Name="SharingPage" Visibility="Collapsed" Margin="0" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch"/>
  <Grid x:Name="SettingsPage" Visibility="Collapsed" Margin="32"><Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
  <TextBlock Text="{local:Translate Key='设置'}" FontSize="25" FontWeight="SemiBold" Margin="0,0,0,24"/>
- <TabControl x:Name="SettingsTabs" Grid.Row="1" Background="White" BorderThickness="0">
- <TabItem Header="{local:Translate Key='通用'}"><ScrollViewer VerticalScrollBarVisibility="Auto"><StackPanel Margin="0,24,0,0" Width="{Binding ActualWidth,RelativeSource={RelativeSource AncestorType=ScrollViewer}}" MaxWidth="640" HorizontalAlignment="Left">
+ <TabControl x:Name="SettingsTabs" Grid.Row="1" Background="White" BorderThickness="0" FocusVisualStyle="{x:Null}" MaxWidth="640" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+ <TabControl.Template><ControlTemplate TargetType="TabControl"><Grid><Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
+ <TabPanel IsItemsHost="True" KeyboardNavigation.TabIndex="1"/>
+ <Border x:Name="SettingsSurface" Grid.Row="1" Background="#F6F7FA" CornerRadius="10" Padding="20" Margin="0,16,0,0" VerticalAlignment="Top">
+ <ContentPresenter x:Name="PART_SelectedContentHost" ContentSource="SelectedContent"/>
+ </Border></Grid></ControlTemplate></TabControl.Template>
+ <TabItem Header="{local:Translate Key='通用'}"><ScrollViewer VerticalScrollBarVisibility="Auto"><StackPanel Margin="0" Width="{Binding ActualWidth,RelativeSource={RelativeSource AncestorType=ScrollViewer}}" MaxWidth="640" HorizontalAlignment="Left">
  <TextBlock Text="{local:Translate Key='语言'}" FontWeight="SemiBold" Margin="0,0,0,16"/>
  <StackPanel Orientation="Horizontal"><RadioButton x:Name="LanguageEnglish" Content="English" Tag="en" GroupName="languages" Click="LanguageClick" Margin="0,0,28,0"/><RadioButton x:Name="LanguageChinese" Content="简体中文" Tag="zh-Hans" GroupName="languages" Click="LanguageClick"/></StackPanel>
  </StackPanel></ScrollViewer></TabItem>
- <TabItem Header="{local:Translate Key='连接设置'}"><ScrollViewer VerticalScrollBarVisibility="Auto"><StackPanel Margin="0,24,0,0" Width="{Binding ActualWidth,RelativeSource={RelativeSource AncestorType=ScrollViewer}}" MaxWidth="640" HorizontalAlignment="Left">
+ <TabItem Header="{local:Translate Key='连接设置'}"><ScrollViewer VerticalScrollBarVisibility="Auto"><StackPanel Margin="0" Width="{Binding ActualWidth,RelativeSource={RelativeSource AncestorType=ScrollViewer}}" MaxWidth="640" HorizontalAlignment="Left">
  <TextBlock Text="{local:Translate Key='默认连接选项'}" FontWeight="SemiBold"/>
  <TextBlock Text="{local:Translate Key='用于下一次连接；当前会话在画面工具栏中调整。'}" Foreground="#697183" FontSize="12" Margin="0,8,0,24" TextWrapping="Wrap"/>
  <DockPanel Margin="0,0,0,20"><ComboBox x:Name="DefaultQuality" DockPanel.Dock="Right" Width="170" SelectedIndex="0"><ComboBoxItem Content="{local:Translate Key='流畅'}"/><ComboBoxItem Content="{local:Translate Key='标准'}"/><ComboBoxItem Content="{local:Translate Key='高清'}"/></ComboBox><TextBlock Text="{local:Translate Key='画质'}" VerticalAlignment="Center"/></DockPanel>
@@ -54,14 +69,14 @@
  <CheckBox x:Name="DefaultShortcuts" Content="{local:Translate Key='Windows 快捷键'}" Margin="0,0,0,8"/>
  <TextBlock Text="{local:Translate Key='Ctrl 对应 Mac Command，Win 对应 Control；Windows 目标使用原生快捷键。'}" Foreground="#697183" FontSize="12" TextWrapping="Wrap"/>
  </StackPanel></ScrollViewer></TabItem>
- <TabItem Header="{local:Translate Key='剪贴板'}"><ScrollViewer VerticalScrollBarVisibility="Auto"><StackPanel Margin="0,24,0,0" Width="{Binding ActualWidth,RelativeSource={RelativeSource AncestorType=ScrollViewer}}" MaxWidth="640" HorizontalAlignment="Left">
+ <TabItem Header="{local:Translate Key='剪贴板'}"><ScrollViewer VerticalScrollBarVisibility="Auto"><StackPanel Margin="0" Width="{Binding ActualWidth,RelativeSource={RelativeSource AncestorType=ScrollViewer}}" MaxWidth="640" HorizontalAlignment="Left">
  <TextBlock Text="{local:Translate Key='允许已配对设备共享剪贴板'}" FontWeight="SemiBold"/>
  <TextBlock Text="{local:Translate Key='关闭后立即停止对应同步；会话选项只能进一步限制共享。'}" Foreground="#697183" FontSize="12" TextWrapping="Wrap" Margin="0,8,0,24"/>
  <CheckBox x:Name="GlobalClipboard" Content="{local:Translate Key='同步文字'}" IsChecked="True" Margin="0,0,0,20"/>
  <CheckBox x:Name="GlobalFiles" Content="{local:Translate Key='同步文件'}" IsChecked="True" Margin="0,0,0,20"/>
  <Button Content="{local:Translate Key='打开接收目录'}" Click="OpenFilesClick" HorizontalAlignment="Left"/>
  </StackPanel></ScrollViewer></TabItem>
- <TabItem Header="{local:Translate Key='关于'}"><ScrollViewer VerticalScrollBarVisibility="Auto"><StackPanel Margin="0,24,0,0" Width="{Binding ActualWidth,RelativeSource={RelativeSource AncestorType=ScrollViewer}}" MaxWidth="640" HorizontalAlignment="Left">
+ <TabItem Header="{local:Translate Key='关于'}"><ScrollViewer VerticalScrollBarVisibility="Auto"><StackPanel Margin="0" Width="{Binding ActualWidth,RelativeSource={RelativeSource AncestorType=ScrollViewer}}" MaxWidth="640" HorizontalAlignment="Left">
  <TextBlock Text="Local Remote Desktop" FontSize="20" FontWeight="SemiBold"/><TextBlock Text="0.3.0-alpha.2" Foreground="#697183" Margin="0,8,0,24"/>
  <TextBlock Text="{local:Translate Key='许可'}" FontWeight="SemiBold"/><TextBlock Text="GPL-3.0-or-later" Margin="0,8,0,24"/>
  <Expander Header="{local:Translate Key='故障排查'}"><StackPanel Margin="0,16,0,0"><CheckBox Content="{local:Translate Key='显示性能数据'}" IsChecked="{Binding ElementName=ShowPerformance,Path=IsChecked,Mode=TwoWay}" Margin="0,0,0,16"/><Button Content="{local:Translate Key='复制诊断'}" Click="DiagnosticsClick" HorizontalAlignment="Left"/></StackPanel></Expander>

@@ -48,3 +48,7 @@ Native Mac build/fixture checks have now run through SSH in an isolated checkout
 The installed app and permissions were not changed by those checks. A stable
 release date depends on the remaining gates; repeating mocks cannot clear them. Do not claim repeated Keychain prompts/TCC issues permanently fixed. A beta
 is an implementation checkpoint, not evidence that these native gates passed.
+
+## Current v0.3.0 acceptance
+
+The earlier Apple SDK/VideoToolbox result above covers its earlier source checkpoint. Updated UI, clipboard/files and recovery code require a new native build. Direct Mac SSH checks are stopped; current native/installed acceptance is pending. Use [the consolidated checklist](desktop-acceptance.md); no new stable release is declared.

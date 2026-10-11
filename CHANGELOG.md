@@ -4,6 +4,14 @@
 
 ## Unreleased
 
+- Desktop entry pages now have actionable empty device states, balanced sharing
+  sections and content-sized settings surfaces. Keep the 920 × 660 startup size.
+- Windows reconnect stops on rejected authentication or incompatible targets;
+  transient network loss still retries and Disconnect cancels a pending retry.
+- Normal Mac installation preserves permissions after signature checks; reset is
+  explicit repair. Incompatible signatures leave the old installation untouched.
+  Updated checks and a bilingual consolidated native acceptance checklist are included.
+
 - Both desktop roles now reuse the encrypted regular-file protocol. Mac controllers
   push/pull files through a separate session-bound channel; Windows sharing adds
   consent, progress/cancel, local-copy priority and partial cleanup. Remote paste

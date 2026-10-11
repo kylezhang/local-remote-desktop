@@ -2,7 +2,7 @@
 
 [简体中文](zh-CN/macos-signing.md) · [Mac guide](macos.md)
 
-Status: v0.1.1 development. Update guards and startup tests are implemented;
+Status: v0.3.0 development (2026-10-11). Update guards and startup tests are implemented;
 there is no independently validated, signed Mac release package yet.
 
 | Build | Intended use | Update expectations |
@@ -53,12 +53,11 @@ After aligning the public version and committing the final source:
 ```bash
 export SIGN_IDENTITY='<valid Developer ID Application fingerprint>'
 export NOTARY_PROFILE='<existing notarytool Keychain profile name>'
-bash scripts/package-macos.sh 0.1.1
+bash scripts/package-macos.sh 0.3.0
 ```
 
-The example version is the planned release, not the current app version. Today
-the committed app is 0.1.0, so requesting 0.1.1 correctly fails until release
-preparation. A clean source tree and matching versions are required.
+The example version is the planned release, not the current app version. The committed app remains 0.3.0-alpha.2, so requesting a stable 0.3.0
+package correctly fails until release preparation. A clean source tree and matching versions are required.
 
 The pipeline compiles the full Host and runs startup checks, creates a fresh
 bundle, signs with Hardened Runtime and a secure timestamp, checks the Developer
@@ -79,4 +78,4 @@ keys, change local signing pins, create tags or publish an AtomGit release.
 Portable tests exercise package rejection and mocked Apple-tool failures; they
 do not validate real signatures, notarization or permissions. No candidate has
 been natively produced here. A successful pipeline is still not the first-launch
-and two-update TCC/Keychain acceptance required for publishing v0.1.1.
+and two-update TCC/Keychain acceptance required for publishing a stable desktop release.

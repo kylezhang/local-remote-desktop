@@ -2,7 +2,7 @@
 
 [English](../macos-signing.md) · [Mac 指南](macos.md)
 
-当前是 v0.1.1 开发工作，更新防护及启动逻辑测试已实现，尚无独立验收的签名 Mac 发布包。
+当前是 v0.3.0 开发工作（2026-10-11），更新防护及启动逻辑测试已实现，尚无独立验收的签名 Mac 发布包。
 
 | 构建 | 用途 | 更新边界 |
 |---|---|---|
@@ -38,10 +38,10 @@ Python 3、已有有效 Developer ID Application 身份及保存在钥匙串中�
 ```bash
 export SIGN_IDENTITY='<有效 Developer ID Application 指纹>'
 export NOTARY_PROFILE='<已有 notarytool 钥匙串配置名称>'
-bash scripts/package-macos.sh 0.1.1
+bash scripts/package-macos.sh 0.3.0
 ```
 
-示例 0.1.1 是计划版本，当前源码仍是 0.1.0，因此目前请求 0.1.1 会被正确拒绝。
+示例 0.3.0 是计划正式版，当前源码仍为 0.3.0-alpha.2，因此准备完成前请求正式包会被正确拒绝。
 源码必须提交且目录干净，两端版本一致。
 
 流程先完整编译 Host 并执行启动检查，构建全新应用包，用 Hardened Runtime 和安全时间戳签名，
@@ -55,4 +55,4 @@ bash scripts/package-macos.sh 0.1.1
 流程不安装或打开应用、不重置隐私权限、不读取配对密钥、不改变本地签名固定配置，也不打 tag 或直接发布。
 
 便携测试验证包拒绝规则和模拟 Apple 工具的失败路径，不能代替真实签名、公证或授权验证。
-这里尚未原生产生 Mac 候选包；即使打包流程成功，v0.1.1 发布前仍需首次启动及连续两次升级的钥匙串/TCC 实机验收。
+这里尚未原生产生 Mac 候选包；即使打包流程成功，正式桌面版发布前仍需首次启动及连续两次升级的钥匙串/TCC 实机验收。

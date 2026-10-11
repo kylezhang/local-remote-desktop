@@ -70,6 +70,21 @@ import Foundation
         try await Task.sleep(nanoseconds:3_100_000_000)
         precondition(ControllerSession.instances.count == finalCount)
         print("PASS failure/incorrect-password states, reconnect cancellation, quality restart and held-input release flow (session doubles)")
+        model.defaultAutoReconnect = true; model.connect()
+        let lost = ControllerSession.instances.last!
+        lost.status(["op":"connected"]); await until { model.connected && !model.credentialBusy }
+        lost.finish(WireError.closed); await until { !model.connected }
+        try await Task.sleep(nanoseconds:3_100_000_000)
+        let recovered = ControllerSession.instances.last!
+        precondition(recovered !== lost && recovered.started && model.busy)
+        recovered.status(["op":"connected"]); await until { model.connected }
+        lost.status(["op":"heartbeat", "inputEnabled":false]); lost.finish(WireError.authentication)
+        await Task.yield(); precondition(model.connected && model.busy)
+        recovered.finish(WireError.authentication); await until { !model.busy }
+        let authCount = ControllerSession.instances.count
+        try await Task.sleep(nanoseconds:3_100_000_000)
+        precondition(ControllerSession.instances.count == authCount && !host.controlling && model.password == "Office-LAN#42")
+        print("PASS automatic reconnect actually starts a new session; stale callbacks ignored and later authentication rejection terminates retry (session doubles)")
         try await checkPairing()
     }
     @MainActor static func checkPairing() async throws {

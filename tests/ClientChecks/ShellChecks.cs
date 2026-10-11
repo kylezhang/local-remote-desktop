@@ -13,6 +13,11 @@ static partial class Program {
     static async Task CheckShell() {
         await CheckReverseClipboard();
         await CheckReverseFiles();
+        await CheckRecovery();
+        var emptyWindow=new MainWindow(false,null);
+        Assert(((Border)emptyWindow.FindName("DeviceEmptyState")).Visibility==Visibility.Visible,"Empty devices have no transition state");
+        Assert(((TextBlock)emptyWindow.FindName("DeviceEmptyTitle")).Text.Length>0,"Empty device state has no title");
+        emptyWindow.Close();
         int loads=0, saved=0;var advertisement=new ShellAdvertisement();
         var nameRoot=Path.Combine(Path.GetTempPath(),"lrd-shell-name-"+Guid.NewGuid().ToString("N")); Directory.CreateDirectory(nameRoot);
         var nameStore=new DeviceName(Path.Combine(nameRoot,"name.txt"),"Fixture PC");
@@ -53,6 +58,7 @@ static partial class Program {
                 Invoke("RefreshDevicesClick",window,new RoutedEventArgs());
                 Find<ListBox>("DeviceList").SelectedIndex=0;
                 Assert(Find<TextBox>("Address").Text=="192.168.1.24" && Find<TextBlock>("SelectedDeviceName").Text=="Fixture Mac","Discovery selection lost target");
+                Assert(Find<Border>("DeviceEmptyState").Visibility==Visibility.Collapsed,"Discovered device left empty-state placeholder visible");
                 Find<PasswordBox>("Secret").Password="Fixture-LAN#42";
                 Invoke("ForgetClick",window,new RoutedEventArgs());
                 Assert(Find<TextBox>("Address").Text=="192.168.1.24" && Find<PasswordBox>("Secret").Password=="","Forget password cleared address or kept credential");
@@ -81,6 +87,9 @@ static partial class Program {
                     Snapshot("settings-"+lang+"-"+tab+"-820",820);
                     foreach(int dpi in new[]{120,144}) Snapshot("settings-"+lang+"-"+tab+"-dpi"+dpi,820,dpi);
                     Snapshot("settings-default-"+lang+"-"+tab,904,96,620);
+                    var surface=(Border)tabs.Template.FindName("SettingsSurface",tabs);
+                    Assert(surface.ActualHeight<420,"Settings surface stretches into an empty panel");
+                    if(tab==0) Assert(surface.ActualHeight<180,"Single language setting occupies a full-height panel");
                 }
                 Find<ComboBox>("DefaultQuality").SelectedIndex=0;
                 Find<CheckBox>("DefaultShortcuts").IsChecked=true; Find<CheckBox>("DefaultReconnect").IsChecked=true;
@@ -143,6 +152,10 @@ static partial class Program {
                 Assert(Find<PasswordBox>("Secret").Password=="","New IP retained an unrelated password");
                 Find<PasswordBox>("Secret").Password="Fixture-LAN#42";
                 Snapshot("sharing-"+lang,1100);
+                Snapshot("sharing-default-"+lang,904,96,620);
+                var deviceSurface=(Border)sharing.FindName("SharingDeviceSurface");
+                var passwordSurface=(Border)sharing.FindName("SharingPasswordSurface");
+                Assert(deviceSurface.ActualWidth>=270 && passwordSurface.ActualWidth>=270,"Sharing retains a narrow left-only form");
                 Invoke("SetSessionLayout",true);
                 Assert(!Visible("HomeShell") && Visible("SessionPage"),"Session leaves credential navigation visible");
                 Snapshot("session-"+lang,1100);

@@ -307,5 +307,8 @@
   "目标设备磁盘空间不足": "The target does not have enough disk space.",
   "目标设备文件传输失败": "File transfer to the target failed.",
   "关闭": "Dismiss",
-  "无法打开接收目录，请稍后重试。": "Could not open received files. Try again later."
+  "无法打开接收目录，请稍后重试。": "Could not open received files. Try again later.",
+  "目标设备身份验证未完成，请检查配对密码后重新连接。": "Target authentication did not complete. Check the pairing password and reconnect.",
+  "暂无设备记录": "No devices yet",
+  "开启目标设备的共享后刷新，也可以输入目标IP连接。": "Start sharing on the target and refresh, or enter its Target IP."
 }

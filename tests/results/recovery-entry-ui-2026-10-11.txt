@@ -1,0 +1,17 @@
+Recovery / entry UI / installer checks — 2026-10-11
+PASS production Windows Release + unshown WPF encrypted-peer checks:
+  transient network reconnect, cancel during retry, changed-password proof rejection,
+  invalid server proof and incompatible input model stop retrying; draft retained.
+PASS English/Chinese layout widths 820/920/1100/1440; empty state visibility,
+  sharing section widths and content-sized general/settings heights.
+PASS reverse paired text/files, wrong-password/manual pairing and lifecycle regression.
+PASS 21 installer scenarios: default preserve, explicit scoped repair, signature mismatch,
+  duplicate/legacy bundles, interrupted replacement and rollback/retained backup.
+PASS 13 signing control-flow scenarios with mocked Apple tools.
+PASS portable Swift controller/state reconnect, stale callbacks and later auth rejection.
+PASS 312 shared localized strings and all Swift source parse.
+Installer tests used disposable Linux trees as non-root; no actual TCC/signing/launchd.
+Windows checks used loopback + recording services; no shown windows or real input/clipboard.
+Hidden WPF screenshot rendering is unavailable; layout evidence is not visual acceptance.
+Current Apple SDK build/native UI/Keychain/TCC and real two-device acceptance NOT RUN.
+No new tag, stable release or native Mac binary is claimed.

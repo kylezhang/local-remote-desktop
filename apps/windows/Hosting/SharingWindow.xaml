@@ -1,9 +1,11 @@
 <Window x:Class="LocalRemoteDesktop.SharingWindow" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:local="clr-namespace:LocalRemoteDesktop" Title="Local Remote Desktop" Icon="/LocalRemoteDesktop;component/LocalRemoteDesktop.ico" SizeToContent="Height" Width="500" ResizeMode="NoResize" WindowStartupLocation="CenterOwner" Background="#FFFFFF" Foreground="#202435" FontFamily="Segoe UI">
  <Window.Resources><ResourceDictionary><ResourceDictionary.MergedDictionaries><ResourceDictionary Source="/LocalRemoteDesktop;component/BrandResources.xaml"/></ResourceDictionary.MergedDictionaries></ResourceDictionary></Window.Resources>
- <ScrollViewer VerticalScrollBarVisibility="Auto"><StackPanel Margin="32" MaxWidth="580" HorizontalAlignment="Left">
+ <ScrollViewer VerticalScrollBarVisibility="Auto"><StackPanel x:Name="SharingLayout" Margin="32" MaxWidth="640" HorizontalAlignment="Stretch">
   <TextBlock Text="{local:Translate Key='共享此设备'}" FontSize="26" FontWeight="SemiBold" Margin="0,0,0,14"/>
-  <TextBlock x:Name="SharingStatus" TextWrapping="Wrap" Margin="0,0,0,10"/>
   <TextBlock Text="{local:Translate Key='让另一台设备连接并操作你的当前屏幕。'}" TextWrapping="Wrap" Margin="0,0,0,12"/>
+  <Grid Margin="0,12,0,0"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="20"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+  <Border x:Name="SharingDeviceSurface" Background="#F6F7FA" CornerRadius="10" Padding="20" VerticalAlignment="Top"><StackPanel>
+  <TextBlock x:Name="SharingStatus" TextWrapping="Wrap" Margin="0,0,0,10"/>
   <TextBlock Text="{local:Translate Key='被另一台设备来连接'}" FontWeight="SemiBold" Margin="0,0,0,12"/>
   <DockPanel Margin="0,0,0,12">
    <Button x:Name="ChangeDeviceName" DockPanel.Dock="Right" Content="{local:Translate Key='修改名称'}" Click="NameEditClick" Padding="8,4"/>
@@ -24,7 +26,9 @@
   <TextBlock x:Name="SharingAddress" FontFamily="Consolas" TextWrapping="Wrap" Margin="0,0,0,12"/>
   <TextBlock x:Name="DiscoveryNotice" Text="{local:Translate Key='设备发现不可用；仍可通过目标IP连接。'}" Visibility="Collapsed" Foreground="#697183" FontSize="12" TextWrapping="Wrap" Margin="0,0,0,12"/>
   <Button x:Name="SharingStart" Style="{StaticResource BrandConnectButton}" Content="{local:Translate Key='开始共享'}" HorizontalAlignment="Left" Padding="12,6" Click="StartClick"/>
-  <Separator Margin="0,18,0,18"/>
+  </StackPanel></Border>
+  <Border x:Name="SharingPasswordSurface" Grid.Column="2" BorderBrush="#E5E8F0" BorderThickness="1" CornerRadius="10" Padding="20" VerticalAlignment="Top"><StackPanel>
+  <TextBlock Text="{local:Translate Key='连接本设备时，使用下方密码。'}" Foreground="#697183" TextWrapping="Wrap" Margin="0,0,0,16"/>
   <DockPanel>
    <Button x:Name="ChangeSharingPassword" DockPanel.Dock="Right" Content="{local:Translate Key='修改密码…'}" Click="EditClick" Padding="8,4"/>
    <TextBlock Text="{local:Translate Key='当前密码'}" FontWeight="SemiBold" VerticalAlignment="Center"/>
@@ -47,6 +51,8 @@
     <Button x:Name="SaveSharingPassword" Style="{StaticResource BrandConnectButton}" Content="{local:Translate Key='保存密码'}" Click="SaveClick" Padding="8,4"/>
    </StackPanel>
   </StackPanel>
+  </StackPanel></Border>
+  </Grid>
   <Border x:Name="SharingTransfer" Visibility="Collapsed" Background="#F6F7FA" CornerRadius="6" Padding="10" Margin="0,14,0,0"><DockPanel>
    <Button x:Name="CancelSharingFiles" DockPanel.Dock="Right" Content="{local:Translate Key='取消'}" Click="CancelSharingFilesClick" Padding="8,4"/>
    <Button x:Name="DismissSharingFiles" DockPanel.Dock="Right" Content="{local:Translate Key='关闭'}" Click="DismissSharingFilesClick" Padding="8,4" Margin="6,0"/>

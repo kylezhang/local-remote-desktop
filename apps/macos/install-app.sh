@@ -3,13 +3,15 @@ set -euo pipefail
 cd "$(dirname "$0")"
 [[ "$(uname -s)" == Darwin ]] || { echo '此安装脚本只能在 macOS 运行。' >&2; exit 1; }
 [[ "$EUID" != 0 ]] || { echo '请以正常登录用户运行，不要使用 sudo。' >&2; exit 1; }
-reset_screen=true
-reset_accessibility=true
+# Normal updates must not revoke working permissions. A changed ad-hoc
+# identity fails the preservation preflight; repair remains an explicit choice.
+reset_screen=false
+reset_accessibility=false
 if [[ $# == 1 ]]; then
   case "$1" in
-    --reset-permissions) ;;
+    --reset-permissions) reset_screen=true; reset_accessibility=true ;;
     --keep-permissions) reset_screen=false; reset_accessibility=false ;;
-    --reset-screen-permission) reset_accessibility=false ;;
+    --reset-screen-permission) reset_screen=true ;;
     *) echo '用法：bash apps/macos/install-app.sh [--keep-permissions|--reset-permissions|--reset-screen-permission]' >&2; exit 1 ;;
   esac
 elif [[ $# != 0 ]]; then
@@ -160,8 +162,8 @@ done
 if hosts_running; then stop_hosts KILL; sleep 0.2; fi
 if hosts_running; then echo '旧 Host 无法停止，安装已中止。' >&2; exit 1; fi
 
-echo '[3/6] 清理本应用的屏幕录制和辅助功能授权。'
-# User-requested clean installation. Reset only these two services for our
+echo '[3/6] 按所选安装模式处理本应用授权。'
+# Explicit permission repair. Reset only these two services for our
 # bundle ID, never all apps/services or the Keychain pairing key.
 if [[ "$reset_screen" == true ]]; then
   if ! tccutil reset ScreenCapture com.remotemaclan.host; then

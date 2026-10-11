@@ -17,7 +17,7 @@ work = Path(options.work_dir).resolve()
 work.mkdir(parents=True, exist_ok=True)
 
 class InstallerChecks(unittest.TestCase):
-    def run_case(self, mode='normal', loaded=False, duplicate=False, option=None, legacy=False, prior_brand=False):
+    def run_case(self, mode='normal', loaded=False, duplicate=False, option='--reset-permissions', legacy=False, prior_brand=False):
         temporary = tempfile.TemporaryDirectory(prefix='installer-', dir=work)
         root = Path(temporary.name).resolve()
         self.assertTrue(root.is_relative_to(work))
@@ -217,13 +217,30 @@ open() { echo "open $*" >> "$_test_root/actions"; [[ "$_mode" != launch-fail ]];
         self.assertNotIn('launchctl bootstrap', actions)
         self.assertIn('install-launch-agent.sh', result.stderr)
 
-    def test_default_resets_both_services_only_for_our_bundle(self):
+    def test_explicit_repair_resets_both_services_only_for_our_bundle(self):
         _, result, actions = self.run_case()
         self.assertEqual(result.returncode, 0, result.stdout+result.stderr)
         resets=[line for line in actions.splitlines() if line.startswith('tccutil ')]
         self.assertEqual(resets, ['tccutil reset ScreenCapture com.remotemaclan.host', 'tccutil reset Accessibility com.remotemaclan.host'])
         self.assertLess(actions.index('kill -TERM'), actions.index('tccutil reset'))
         self.assertLess(actions.index('tccutil reset Accessibility'), actions.index('open '))
+
+    def test_default_preserves_permissions(self):
+        _, result, actions = self.run_case(option=None)
+        self.assertEqual(result.returncode, 0, result.stdout+result.stderr)
+        self.assertNotIn('tccutil ', actions)
+        self.assertEqual(actions.count('requirement-verify '), 2)
+
+    def test_default_changed_identity_leaves_old_installation_untouched(self):
+        root, result, actions = self.run_case('changed-adhoc', loaded=True, duplicate=True, option=None)
+        self.assertNotEqual(result.returncode, 0)
+        self.assertTrue((root/'process').exists() and (root/'loaded').exists())
+        for folder in ('apps', 'personal-apps'):
+            self.assertTrue((root/folder/'Local Remote Desktop.app/Contents/obsolete-resource').exists())
+        for forbidden in ('kill ', 'launchctl ', 'tccutil ', 'open '):
+            self.assertNotIn(forbidden, actions)
+        self.assertIn('--reset-permissions', result.stderr)
+        self.assertFalse(list((root/'apps').glob('.localremote-install.*')))
 
     def test_permission_preservation_is_available(self):
         _, result, actions = self.run_case(option='--keep-permissions')

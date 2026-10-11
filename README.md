@@ -55,7 +55,7 @@ bash apps/macos/install-app.sh
 
 The installer builds the current main branch and opens `/Applications/Local Remote Desktop.app`. Run it as your normal user, without `sudo`.
 
-Allow **Screen Recording** and **Accessibility** in System Settings → Privacy & Security. Quit and reopen the app after granting access. The default installation resets this app's permission decisions; see the [Mac guide](docs/macos.md) for updates, signing and permission-preserving installation.
+Allow **Screen Recording** and **Accessibility** in System Settings → Privacy & Security. Quit and reopen the app after granting access. Normal installation preserves permission decisions after a signature compatibility check; incompatible updates stop before replacement. Explicit permission repair is available; see the [Mac guide](docs/macos.md) for updates, signing and permission-preserving installation.
 
 ## Usage
 

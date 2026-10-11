@@ -71,7 +71,7 @@ public sealed class Wire : IDisposable
         await tcp.ConnectAsync(ip, port, ct).ConfigureAwait(false); stream = tcp.GetStream();
         var hello = new byte[36]; await stream.ReadExactlyAsync(hello, ct).ConfigureAwait(false);
         bool passwordMode=hello.AsSpan(0,4).SequenceEqual("RMP1"u8);
-        if(!passwordMode && !hello.AsSpan(0,4).SequenceEqual("RML1"u8)) throw new IOException("不兼容的 Host 协议。");
+        if(!passwordMode && !hello.AsSpan(0,4).SequenceEqual("RML1"u8)) throw new NotSupportedException("不兼容的 Host 协议。");
         var salt=new byte[16];
         if(passwordMode) await stream.ReadExactlyAsync(salt,ct).ConfigureAwait(false);
         else if(!PairingPassword.IsLegacy(secret)) throw new ArgumentException("此 Mac 版本仍使用旧密钥；请更新 Mac 后设置密码。");
@@ -80,8 +80,10 @@ public sealed class Wire : IDisposable
             var server=hello[4..]; var client=RandomNumberGenerator.GetBytes(32);
             var transcript=passwordMode?Join("RMP1"u8.ToArray(),salt,server,client):Join(server,client);
             await stream.WriteAsync(Join(client,Mac(key,Join(Label("client"),transcript))),ct).ConfigureAwait(false);
-            var proof=new byte[32]; await stream.ReadExactlyAsync(proof,ct).ConfigureAwait(false);
-            if(!CryptographicOperations.FixedTimeEquals(proof,Mac(key,Join(Label("server"),transcript)))) throw new CryptographicException("Mac 身份验证失败，请核对配对密码。");
+            var proof=new byte[32];
+            try { await stream.ReadExactlyAsync(proof,ct).ConfigureAwait(false); }
+            catch(IOException error) { throw new CryptographicException("目标设备身份验证未完成，请检查配对密码后重新连接。",error); }
+            if(!CryptographicOperations.FixedTimeEquals(proof,Mac(key,Join(Label("server"),transcript)))) throw new CryptographicException("目标设备身份验证未完成，请检查配对密码后重新连接。");
             tx=Mac(key,Join(Label("c2h"),transcript)); rx=Mac(key,Join(Label("h2c"),transcript));
         } finally { CryptographicOperations.ZeroMemory(key); }
     }
