@@ -4,6 +4,16 @@ The v0.2.0-beta.1 preview uses the current final-package Windows checks, portabl
 
 [简体中文](zh-CN/validation.md)
 
+## Discovery and returning pairing — 2026-10-11
+
+Windows OS DNS-SD construction, registration and withdrawal passed with temporary
+metadata; independent loopback discovery and unshown WPF fixtures passed. Portable
+Swift discovery and controller pairing use explicit service doubles and an injected
+scan-deadline scheduler. They do not validate native Security/Bonjour/SwiftUI APIs.
+See [the current record](../tests/results/discovery-pairing-2026-10-11.txt).
+Updated Mac SDK, installed permissions/Keychain and two-device input remain pending;
+Mac SSH is stopped because the device is outside this LAN. No release gate is cleared.
+
 ## Native development checkpoint — 2026-10-10
 
 An isolated Mac checkout at `b651e760a1baca8b28571614b170e2f788be7b5a`

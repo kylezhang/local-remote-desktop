@@ -49,6 +49,7 @@ public partial class MainWindow : Window
     readonly Func<CancellationToken,Task<IReadOnlyList<LanDevice>>> browse;
     IReadOnlyList<LanDevice> discovered=[];
     readonly Dictionary<string,LanDevice> knownPeers=new(StringComparer.OrdinalIgnoreCase);
+    bool rebuildingDevices;
     long discoveryFinished;
     string discoveryStatus="尚未搜索";
     bool pasteSuppressed;
@@ -152,7 +153,7 @@ public partial class MainWindow : Window
     void ShowPage(string page) {
         if(page=="share" && sharingWindow==null) {
             // Reuse the tested sharing lifecycle without creating another visible window.
-            var sharing=createSharing(active=>StartConnection.IsEnabled=!active);
+            var sharing=createSharing(active=>StartConnection.IsEnabled=!active && (DeviceList.SelectedItem is not LanDevice peer || peer.Online));
             sharing.NameChanged+=name=>LocalDeviceName.Text=name;
             LocalDeviceName.Text=((TextBlock)sharing.FindName("SharingName")).Text;
             var content=sharing.Content; sharing.Content=null; SharingPage.Content=content;
@@ -194,8 +195,9 @@ public partial class MainWindow : Window
     }
     void RefreshDevicesClick(object sender,RoutedEventArgs e)=>RefreshDevices();
     void DeviceSelected(object sender,SelectionChangedEventArgs e) {
-        if(session!=null || DeviceList.SelectedItem is not LanDevice device) return;
+        if(rebuildingDevices || session!=null || DeviceList.SelectedItem is not LanDevice device) return;
         Address.Text=device.Address; Secret.Password=loadPassword(device.Address);
+        StartConnection.IsEnabled=device.Online && sharingWindow?.Sharing!=true;
         SelectedDeviceName.Text=device.Name; SelectedDeviceSystem.Text=device.SystemLabel;
         SetStatus(Secret.Password.Length>0?$"已选择 {device.Name}，可直接连接。":$"已选择 {device.Name}，填写配对密码后连接。");
     }
@@ -226,7 +228,14 @@ public partial class MainWindow : Window
         catch(Exception error) { SetStatus($"语言已切换，但无法保存：{error.Message}"); }
     }
     void RebuildDeviceMenu() {
-        DeviceList.ItemsSource=discovered; DeviceSearchStatus.Text=UiText.Text(discoveryStatus);
+        var selected=DeviceList.SelectedItem as LanDevice;
+        rebuildingDevices=true;
+        try {
+            DeviceList.ItemsSource=discovered;DeviceList.Items.Refresh();
+            if(selected!=null) DeviceList.SelectedItem=discovered.FirstOrDefault(d=>d.Address==selected.Address);
+            StartConnection.IsEnabled=sharingWindow?.Sharing!=true && (DeviceList.SelectedItem is not LanDevice peer || peer.Online);
+        } finally {rebuildingDevices=false;}
+        DeviceSearchStatus.Text=UiText.Text(discoveryStatus);
         var menu=DiscoverButton.ContextMenu; menu.Items.Clear();
         if(discovered.Count==0) menu.Items.Add(new MenuItem {Header=UiText.Text(discoveryStatus),IsEnabled=false});
         foreach(var device in discovered) {
@@ -246,12 +255,12 @@ public partial class MainWindow : Window
     async void RefreshDevices() {
         if(windowClosing || session!=null || discoveryScan!=null) return;
         using var scan=new CancellationTokenSource(); discoveryScan=scan;
-        discovered=knownPeers.Values.ToArray(); discoveryStatus="正在搜索局域网设备…"; RebuildDeviceMenu();
+        discovered=knownPeers.Values.Select(d=>d with {Online=false}).ToArray(); discoveryStatus="正在搜索局域网设备…"; RebuildDeviceMenu();
         try {
             var devices=await browse(scan.Token);
             if(windowClosing || scan.IsCancellationRequested) return;
-            discovered=devices.Concat(knownPeers.Values).DistinctBy(d=>d.Address).Take(32).ToArray();
-            discoveryStatus=devices.Count==0?"未发现设备；请确认 Mac 已开始共享":"已发现设备";
+            discovered=devices.Concat(knownPeers.Values.Select(d=>d with {Online=false})).DistinctBy(d=>d.Address).Take(32).ToArray();
+            discoveryStatus=devices.Count==0?"未发现设备；请确认目标设备已开始共享。":"已发现设备";
         } catch(OperationCanceledException) { return; }
         catch { discoveryStatus="发现不可用；仍可手动填写目标IP"; }
         finally {
@@ -411,6 +420,7 @@ public partial class MainWindow : Window
     async void ConnectClick(object sender,RoutedEventArgs e) => await StartConnectionAsync();
     async Task StartConnectionAsync() {
         if(windowClosing) return;
+        if(!manualConnecting && DeviceList.SelectedItem is LanDevice {Online:false}) {SetStatus("本次未发现此设备；可刷新设备或通过目标IP重试。");return;}
         if(sharingWindow?.Sharing==true) return;
         if(session!=null) { session.Cancel(); return; }
         var ip=Address.Text.Trim(); var secret=Secret.Password; int quality=HomeQuality.SelectedIndex;

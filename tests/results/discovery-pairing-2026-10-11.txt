@@ -1,0 +1,54 @@
+Local Remote Desktop — discovery and returning pairing development
+Date: 2026-10-11
+Development source version: 0.3.0-alpha.2; no new tag/release.
+
+Windows .NET 8 Release source build: PASS
+Unshown WPF ClientChecks: PASS
+- English/Chinese, 820/1100/1440 widths and scaled settings render fixtures.
+- Real localhost mutual authentication: wrong password, successful-only save,
+  remember opt-out, saved-password failure, cancellation and retained manual draft.
+- Refresh preserves an unsaved password draft; one metadata row per address.
+- No publication on opening Share; successful listener start publishes;
+  active name update retains listener/credential; owner shutdown withdraws.
+- No windows shown/activated, native input injected, user credentials accessed,
+  real screen capture or system clipboard changed by these checks.
+
+Windows DiscoveryChecks: PASS
+- Actual Windows dnsapi.dll instance construction/free and native pointer/TXT layout.
+- Opt-in LOCALREMOTE_NATIVE_DISCOVERY_CHECK=1: actual OS registration completion,
+  deregistration and free, with temporary synthetic metadata and no desktop capture.
+- Manager doubles: rapid-name coalescing, pending-stop cleanup, no self-retry loop
+  on failure, and recovery when a different desired name arrives during failure.
+- C# DNS parsing accepts Mac and Windows; private IPv4/fixed port/protocol checks,
+  foreign transactions, TTL goodbye, compression cycles/truncation and 5,000 fuzz cases.
+- Independent localhost UDP responder: split record followups, bounded query count,
+  cancellation and socket cleanup. This is not a physical multicast acceptance test.
+
+WindowsHostChecks / ProtocolChecks: PASS
+- Existing RMP1/RML1 authentication, replay/tamper/wrong proof/record bounds.
+- Atomic isolated DPAPI storage and locked-file preservation.
+- Synthetic video → MF hardware H264 → encrypted localhost → decoder.
+- Recorded input, held-key release, unauthorized capture denial and listener cleanup.
+- These do not establish real native application input or sustained desktop FPS.
+
+Swift 5.9.2 Foundation/service-double checks on WSL: PASS
+- Production ControllerDiscovery with browser/service and deadline-scheduler doubles:
+  Windows capability/private IPv4/malformed sockaddr, dedup/remove, stale generations,
+  32-service bound and cleanup through the injected deadline callback.
+- Production ControllerModel: no credential I/O on init/browse/select; explicit saved
+  password load, canceled read cannot create a later session; successful-only save,
+  opt-out, failed-save notice without disconnect, exact-address forget, retained failed
+  pairing draft, authenticated bounded nonsecret history, reconnect and stale callbacks.
+- Existing host/model/name/localization/core checks retained; all Swift sources parsed.
+- Native five-second scheduling, Apple Foundation Bonjour, Security/Keychain ACLs,
+  SwiftUI/AppKit type checking and installed update behavior are NOT verified here.
+- The async browser fixture initially stalled on Linux; final lifecycle fixture uses
+  an injected scheduler rather than treating Linux dispatch behavior as Mac acceptance.
+
+Native Mac / physical two-device input and clipboard acceptance: PENDING
+Mac is outside this LAN. No Mac SSH, tunnel, relaunch, install or permission reset.
+Earlier Apple SDK baseline remains historical; updated sources need a new native build.
+Reverse Mac-controller clipboard/files are still pending.
+
+No release gate is cleared. Continue reverse clipboard/file session-role integration,
+then updated Mac native and scheduled two-device acceptance before tag/release.

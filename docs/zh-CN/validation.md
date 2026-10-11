@@ -4,6 +4,14 @@ v0.2.0-beta.1 测试版采用当前最终 Windows 包回归、便携 Swift/状�
 
 [English](../validation.md)
 
+## 发现与再次配对 — 2026-10-11
+
+Windows 使用临时信息完成系统 DNS-SD 构造、注册与撤销，独立回环发现及无窗口 WPF 检查通过。
+可移植 Swift 发现和控制端配对使用明确服务替身及可控的搜索超时调度；不代表原生
+Security/Bonjour/SwiftUI API 验收。见[本轮记录](../../tests/results/discovery-pairing-2026-10-11.txt)。
+新版 Mac SDK、安装后权限/钥匙串和真实双机输入仍待完成；Mac 不在同一局域网，SSH 已停止。
+尚未达到发版门槛。
+
 ## 原生开发检查点 — 2026-10-10
 
 Mac 隔离检出提交 `b651e760a1baca8b28571614b170e2f788be7b5a` 通过 Apple SDK

@@ -2,43 +2,71 @@
 
 [简体中文](zh-CN/discovery.md)
 
-Development builds advertise the Mac with Bonjour/DNS-SD only after desktop
-sharing starts. In Windows, open the arrow inside **Target IP** to choose a device.
-Selecting fills the address and restores only that address's remembered password;
-it does not connect, pair, authorize control or overwrite a manually typed address
-merely because a device appeared. Manual IPv4 entry remains available.
+Development builds publish a device only after **Share this device** starts a
+listener. Windows publishes through the built-in Windows DNS-SD service; Mac uses
+Bonjour. Windows can discover compatible Mac and Windows sharing services. The
+Mac controller currently offers Windows targets only; Mac-to-Mac control is not
+implemented. Selecting a row never connects or authorizes control.
 
-Windows performs a three-second search once on opening and on explicit refresh.
-There is no permanent discovery polling loop. At most four active Ethernet/Wi-Fi
-IPv4 interfaces, 32 results and bounded DNS records/follow-up queries are used.
-The current resolver offers only compatible Mac services on TCP 47980. Discovery
-names and addresses are untrusted; the existing authenticated connection is still
-required. A stale result cannot bypass pairing.
+Use **Connect → Nearby devices** or **Enter Target IP**. Names come from the
+sharing app's **This device’s name**, which defaults to its system hostname. The
+OS label comes from the app's platform metadata. A bare IP does not identify a
+name or OS; manual targets display those details after authenticated connection.
+Names are display labels, never credential identities.
 
-Mac publishes `_localremote._tcp.local` with TXT `protocol=1`, `platform=macos`
-and `deviceName`. The app name defaults to its system hostname and can be changed
-under Share this device → This device’s name. Windows prefers this bounded TXT
-name and falls back to the legacy DNS-SD service name. No password, key, account
-or clipboard data is advertised. The display name is visible to the LAN while
-sharing; rename refreshes publication without disconnecting. Stop or replace its password and
-the old publication stops; a restarted listener publishes a new service.
+## Publication and scanning
 
-Manual IP does not reveal a name or platform by itself. Once paired, the sharing
-app returns authenticated `deviceName`/`platform`; heartbeat updates the name.
-Windows keeps one record per address in memory across searches, without treating
-it as a newly discovered or confirmed online device. Older peers without a name
-keep the known name or IP. Passwords remain associated with the address, not this
-editable label. Windows announcement and Mac browsing are not implemented yet.
+Both platforms use `_localremote._tcp.local`, TCP 47980 and TXT `protocol=1`,
+`platform=macos|windows`, `deviceName`. No password, account or clipboard data is
+advertised. Names are visible to the LAN while sharing. Renaming republishes
+without closing the listener or changing credentials. Stopping sharing or
+replacing its password withdraws publication. Discovery failure leaves manual
+IP connections available.
 
-Windows uses [RFC 6762 one-shot/legacy unicast queries](https://www.rfc-editor.org/rfc/rfc6762.html#section-5.1):
-send a PTR query from an ephemeral local port to IPv4 multicast 224.0.0.251:5353,
-then resolve SRV/TXT/A records. It neither takes over UDP 5353 nor changes DNS or
-firewall rules. Allow local-network access if macOS asks. Wi-Fi client isolation,
-firewall rules or multicast filtering can prevent discovery; use the known IP
-instead. IPv6 discovery is not implemented.
+Windows uses the operating system's asynchronous
+[DNS-SD registration API](https://learn.microsoft.com/en-us/windows/win32/api/windns/nf-windns-dnsserviceregister).
+Registration is owned by the app process; exit removes it. Renames coalesce to
+one pending native operation. Stop/Exit waits at most five seconds for DNS cleanup,
+independently of closing the desktop listener. Pending native memory is retained
+until the OS callback, never freed prematurely. No permanent discovery polling
+or additional Bonjour installation is needed.
 
-Automated Windows tests cover malformed/compressed DNS, port/platform/LAN filters,
-split packets, real loopback UDP, bounded queries and cancellation. WPF tests cover
-selection, manual fallback, narrow layout and no automatic trust. Swift production
-publication lifecycle is checked with a NetService double. **Native Mac Bonjour,
-local-network permission and physical multicast acceptance remain unverified.**
+Windows scans for three seconds on opening and explicit refresh, using at most
+four Ethernet/Wi-Fi IPv4 interfaces, 32 results and bounded DNS follow-up queries.
+Its [RFC 6762 one-shot queries](https://www.rfc-editor.org/rfc/rfc6762.html#section-5.1)
+use an ephemeral port, not another listener on UDP 5353. Own local addresses are
+excluded. Mac uses a five-second main-runloop Bonjour scan, at most 32 resolved
+services and three seconds per resolve. Refresh replaces the previous generation;
+leaving Connect or beginning control stops browsing. No firewall/DNS policy is
+changed. IPv6 discovery is not implemented.
+
+## Recent devices and pairing
+
+Authenticated peers have one record per address. Windows retains metadata during
+the current process; Mac retains up to 32 nonsecret recent records across app
+starts. Rows distinguish **Found nearby** from **Recent connection · Not found
+this time**. Recent records are not proof that sharing is enabled. Refresh or
+retry through Target IP when multicast discovery is unavailable.
+
+Returning Mac connections may explicitly load a remembered target password from
+Keychain; opening the app, selecting rows and refreshing never reads it. A typed
+password can be saved after successful authentication. Storage failure does not
+end the connection, and unchecking Remember password skips this save without
+deleting older credentials. See [Mac controller](mac-controller.md). Existing
+Windows DPAPI credential memory remains in place. Editable names, discovery
+records and history never replace authenticated identity checks.
+
+## Verification
+
+Windows native DNS instance construction, registration/completion, deregistration
+and freeing passed with temporary fixture metadata. Independent UDP loopback
+checks cover Windows/Mac platform records, compressed/malformed DNS, filtering,
+query bounds and cancellation. Publication lifecycle doubles cover coalescing,
+late completion and failure without polling. Unshown WPF checks cover selection,
+shared-name updates, opt-in publication and withdrawal during owner shutdown.
+
+Production Swift discovery/model code is compiled with explicit browser, session
+and credential doubles. These are not native Bonjour, Keychain or Apple SDK
+acceptance. **The updated Mac app and actual two-device multicast/input acceptance
+remain pending.** The Mac is outside this LAN; SSH attempts are stopped. See
+[the check record](../tests/results/discovery-pairing-2026-10-11.txt).

@@ -9,7 +9,7 @@ enum Pairing {
         return mode == "certificate" || mode == "ad-hoc" ? mode : "unknown"
     }()
     static var permitsAutomaticRead: Bool { buildSigningMode == "certificate" }
-    private static let queue = DispatchQueue(label: "localremote.keychain", qos: .userInitiated)
+    static let queue = DispatchQueue(label: "localremote.keychain", qos: .userInitiated)
     private static let counterLock = NSLock()
     private static var reads = 0
     private static var creates = 0

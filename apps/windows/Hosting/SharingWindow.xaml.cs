@@ -10,11 +10,13 @@ public partial class SharingWindow:Window {
     readonly Func<HostCredential> load;
     readonly Action<HostCredential> save;
     readonly Func<HostCredential,byte[],bool,Action<string>,WindowsHost> create;
+    readonly IDeviceAdvertisement advertisement;
     Task? starting,shutdown,stopping; bool shutting,closed,revealed,saving,controlActive; string status="尚未共享";
     public SharingWindow():this(_=>{}) {}
-    internal SharingWindow(Action<bool> changed,Func<HostCredential>? load=null,Action<HostCredential>? save=null,Func<HostCredential,byte[],bool,Action<string>,WindowsHost>? create=null,DeviceName? deviceName=null) {
+    internal SharingWindow(Action<bool> changed,Func<HostCredential>? load=null,Action<HostCredential>? save=null,Func<HostCredential,byte[],bool,Action<string>,WindowsHost>? create=null,DeviceName? deviceName=null,IDeviceAdvertisement? advertisement=null) {
         sharingChanged=changed; this.deviceName=deviceName??DeviceName.Default; this.load=load??(()=>HostCredential.Load()); this.save=save??(c=>c.Save());
         this.create=create??((c,key,software,report)=> { var area=CaptureArea.Primary(); return new WindowsHost(key,c.Salt,area,()=>new FfmpegDesktopCapture(area,software),()=>new WindowsInput(area,CaptureArea.Virtual(),new SendInputAdapter()),report,deviceName:()=>this.deviceName.Current); });
+        this.advertisement=advertisement??(create!=null?new NoDeviceAdvertisement():new DeviceAdvertisement(available=>Dispatcher.BeginInvoke(()=> {if(!shutting && host!=null) DiscoveryNotice.Visibility=available?Visibility.Collapsed:Visibility.Visible;})));
         InitializeComponent(); SharingAddress.Text=LocalAddress.Find(); SharingName.Text=this.deviceName.Current;
         try { credential=this.load(); } catch { status="无法读取共享密码，请检查本机安全存储。"; SharingStart.IsEnabled=false; }
         UiText.Current.LanguageChanged+=Translate; Translate();
@@ -49,18 +51,25 @@ public partial class SharingWindow:Window {
             if(shutting || lifetime.IsCancellationRequested) return;
             WindowsHost? next=null; next=create(value,key,Software.IsChecked==true,s=> {if(next!=null) Report(next,s);});
             host=next;
-            try { next.Start(); Software.IsEnabled=false; }
+            try { next.Start(); Software.IsEnabled=false; advertisement.Publish(deviceName.Current,next.Port); }
             catch { host=null; await next.DisposeAsync(); throw; }
         } finally { if(key!=null) CryptographicOperations.ZeroMemory(key); if(host==null) sharingChanged(false); }
     }
     internal Task Stop() {
         var old=host; host=null;
-        if(old==null) return stopping??Task.CompletedTask;
+        if(old==null) return stopping??Withdraw();
         return stopping=StopCore(old);
     }
     async Task StopCore(WindowsHost old) {
+        var withdrawal=Withdraw();
         await old.DisposeAsync();
+        await withdrawal;DiscoveryNotice.Visibility=Visibility.Collapsed;
         Software.IsEnabled=true; sharingChanged(false); status="已停止"; Translate();
+    }
+    async Task Withdraw() {
+        // A stuck OS DNS completion must not block Stop/Exit. Its native request
+        // stays rooted until callback; process exit removes OS registrations.
+        try {await advertisement.Stop().WaitAsync(TimeSpan.FromSeconds(5));} catch { }
     }
     internal Task Shutdown()=>shutdown??=ShutdownCore();
     async Task ShutdownCore() {
@@ -75,7 +84,7 @@ public partial class SharingWindow:Window {
     void NameRestoreClick(object sender,RoutedEventArgs e) { NameDraft.Text=deviceName.SystemName; NameError.Text=""; }
     void NameCancelClick(object sender,RoutedEventArgs e) { NameDraft.Text=""; NameError.Text=""; NameEditor.Visibility=Visibility.Collapsed; }
     void NameSaveClick(object sender,RoutedEventArgs e) {
-        try { deviceName.Save(NameDraft.Text); SharingName.Text=deviceName.Current; NameChanged?.Invoke(deviceName.Current); NameCancelClick(sender,e); }
+        try { deviceName.Save(NameDraft.Text); SharingName.Text=deviceName.Current; if(host!=null) advertisement.Publish(deviceName.Current,host.Port); NameChanged?.Invoke(deviceName.Current); NameCancelClick(sender,e); }
         catch(Exception error) { NameError.Text=UiText.Text(error is ArgumentException?error.Message:"无法保存名称，原名称仍有效。"); }
     }
     void RevealClick(object sender,RoutedEventArgs e) { revealed=!revealed; CurrentPassword.Text=revealed?credential?.Password??"":"••••••••"; Translate(); }

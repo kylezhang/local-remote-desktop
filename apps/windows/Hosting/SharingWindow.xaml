@@ -22,6 +22,7 @@
   </StackPanel>
   <TextBlock Text="{local:Translate Key='本机 IP'}" FontSize="12" Foreground="#697183" Margin="0,0,0,6"/>
   <TextBlock x:Name="SharingAddress" FontFamily="Consolas" TextWrapping="Wrap" Margin="0,0,0,12"/>
+  <TextBlock x:Name="DiscoveryNotice" Text="{local:Translate Key='设备发现不可用；仍可通过目标IP连接。'}" Visibility="Collapsed" Foreground="#697183" FontSize="12" TextWrapping="Wrap" Margin="0,0,0,12"/>
   <Button x:Name="SharingStart" Style="{StaticResource BrandConnectButton}" Content="{local:Translate Key='开始共享'}" HorizontalAlignment="Left" Padding="12,6" Click="StartClick"/>
   <Separator Margin="0,18,0,18"/>
   <DockPanel>

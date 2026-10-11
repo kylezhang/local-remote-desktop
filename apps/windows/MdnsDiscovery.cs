@@ -6,8 +6,9 @@ using System.Net.Sockets;
 using System.Text;
 namespace LocalRemoteDesktop;
 
-public sealed record LanDevice(string Name,string Address,string Platform,int Port) {
+public sealed record LanDevice(string Name,string Address,string Platform,int Port,bool Online=true) {
     public string SystemLabel=>Platform=="macos"?"macOS":Platform=="windows"?"Windows":"";
+    public string StateLabel=>UiText.Text(Online?"本次已发现":"最近连接 · 本次未发现");
     public override string ToString()=>$"{Name} · {Address}";
 }
 // One-shot DNS-SD, not a continuously running resolver. Metadata never grants control.
@@ -91,7 +92,7 @@ internal static class MdnsDiscovery {
             if(ptr.Target==null || !ptr.Target.EndsWith('.'+Service,StringComparison.OrdinalIgnoreCase)) continue;
             var txt=live.FirstOrDefault(r=>r.Type==16 && Same(r.Name,ptr.Target))?.Txt;
             if(txt==null || !txt.TryGetValue("protocol",out var protocol) || protocol!="1" ||
-                !txt.TryGetValue("platform",out var platform) || platform!="macos") continue;
+                !txt.TryGetValue("platform",out var platform) || platform is not ("macos" or "windows")) continue;
             foreach(var srv in live.Where(r=>r.Type==33 && r.Port==47980 && Same(r.Name,ptr.Target))) {
                 foreach(var a in live.Where(r=>r.Type==1 && Same(r.Name,srv.Target))) {
                     if(a.Address==null || !IPAddress.TryParse(a.Address,out var ip) || !Local(ip)) continue;
@@ -136,6 +137,8 @@ internal static class MdnsDiscovery {
         return Devices(records.Values.Where(x=>x.expires>Environment.TickCount64).Select(x=>x.record));
     }
     internal static async Task<IReadOnlyList<LanDevice>> Scan(CancellationToken token) {
+        var localAddresses=NetworkInterface.GetAllNetworkInterfaces()
+            .SelectMany(n=>n.GetIPProperties().UnicastAddresses).Select(a=>a.Address.ToString()).ToHashSet();
         var addresses=NetworkInterface.GetAllNetworkInterfaces()
             .Where(n=>n.OperationalStatus==OperationalStatus.Up && n.NetworkInterfaceType is NetworkInterfaceType.Ethernet or NetworkInterfaceType.Wireless80211)
             .SelectMany(n=>n.GetIPProperties().UnicastAddresses).Select(a=>a.Address)
@@ -144,6 +147,6 @@ internal static class MdnsDiscovery {
             try { return await ScanInterface(address,new(IPAddress.Parse("224.0.0.251"),5353),TimeSpan.FromSeconds(3),token); }
             catch(SocketException) { return (IReadOnlyList<LanDevice>)[]; }
         });
-        return (await Task.WhenAll(tasks)).SelectMany(d=>d).DistinctBy(d=>d.Address).Take(32).OrderBy(d=>d.Name,StringComparer.OrdinalIgnoreCase).ToArray();
+        return (await Task.WhenAll(tasks)).SelectMany(d=>d).Where(d=>!localAddresses.Contains(d.Address)).DistinctBy(d=>d.Address).Take(32).OrderBy(d=>d.Name,StringComparer.OrdinalIgnoreCase).ToArray();
     }
 }

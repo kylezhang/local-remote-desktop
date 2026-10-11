@@ -19,8 +19,8 @@ Mac workflow and clipboard implementation remain available in the control role.
   compatible controller. Both installations must be reachable over TCP 47980.
   Allow the application on Windows Firewall's private network profile if needed;
   the app does not modify firewall policy.
-- The first password is 12 random characters. View/Copy does not change sharing.
-  Change Password accepts 8–64 printable ASCII characters without spaces.
+- New passwords are 8 random characters. View/Copy does not change sharing.
+  Change Password accepts exactly 8 printable ASCII characters without spaces; existing longer passwords remain valid.
   Generation only fills a draft. Cancel leaves the current password unchanged.
 - Save stores the new password atomically with current-user DPAPI, stops the old
   host and releases its held input. Start sharing again with the new password.
@@ -69,8 +69,8 @@ its focus, so event acceptance remains unverified. Do not equate a successful
 SendInput submission with acceptance by every application. Physical LAN, native
 Mac controller and longer capture/latency acceptance remain pending.
 
-No clipboard/files or Windows Bonjour advertisement in this sharing-role preview;
-those follow role interoperability in beta.1. Primary display only. No pre-login,
+Windows sharing now publishes through system DNS-SD; see [Nearby devices](discovery.md).
+Clipboard/files for this role still follow role interoperability in beta.1. Primary display only. No pre-login,
 lock-screen or UAC secure-desktop guarantee. Normal Windows input is constrained
 by application integrity levels; the app does not elevate or bypass them.
 

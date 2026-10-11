@@ -11,7 +11,7 @@ static partial class Program {
     // Never Show/Activate a Window, capture a physical screen, access user
     // credentials/clipboard or inject OS input. Rendering stays in memory.
     static async Task CheckShell() {
-        int loads=0, saved=0;
+        int loads=0, saved=0;var advertisement=new ShellAdvertisement();
         var nameRoot=Path.Combine(Path.GetTempPath(),"lrd-shell-name-"+Guid.NewGuid().ToString("N")); Directory.CreateDirectory(nameRoot);
         var nameStore=new DeviceName(Path.Combine(nameRoot,"name.txt"),"Fixture PC");
         var credential=HostCredential.Create("Fixture-LAN#42");
@@ -20,7 +20,7 @@ static partial class Program {
             [new("Fixture Mac","192.168.1.24","macos",47980)]),sharingFactory:changed=>new SharingWindow(changed,
                 ()=> { loads++; return credential; },c=> { saved++; credential=c; },
                 (c,key,software,report)=>new WindowsHost(key,c.Salt,area,()=>new SharingCapture(),
-                    ()=>new WindowsInput(area,area,new SharingInput()),report,IPAddress.Loopback,0,deviceName:()=>nameStore.Current),deviceName:nameStore));
+                    ()=>new WindowsInput(area,area,new SharingInput()),report,IPAddress.Loopback,0,deviceName:()=>nameStore.Current),deviceName:nameStore,advertisement:advertisement));
         ((TextBlock)window.FindName("LocalDeviceName")).Text="Fixture PC";
         T Find<T>(string name)=>(T)window.FindName(name);
         void Nav(string name)=>Find<RadioButton>(name).IsChecked=true;
@@ -50,6 +50,8 @@ static partial class Program {
                 Invoke("ForgetClick",window,new RoutedEventArgs());
                 Assert(Find<TextBox>("Address").Text=="192.168.1.24" && Find<PasswordBox>("Secret").Password=="","Forget password cleared address or kept credential");
                 Find<PasswordBox>("Secret").Password="Fixture-LAN#42";
+                Invoke("RefreshDevicesClick",window,new RoutedEventArgs());
+                Assert(Find<PasswordBox>("Secret").Password=="Fixture-LAN#42","Refresh overwrote an unsaved password draft");
                 foreach(int width in new[]{820,1100,1440}) Snapshot("connect-"+lang+"-"+width,width);
                 Invoke("ManualClick",window,new RoutedEventArgs());
                 Assert(Visible("ManualDialog") && !Find<Grid>("HomeShell").IsEnabled,"Manual dialog did not isolate navigation");
@@ -140,6 +142,7 @@ static partial class Program {
             await CheckPairingDialog();
             var page=window.SharingController!;
             void ShareClick(string name)=>((Button)page.FindName(name)).RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+            Assert(advertisement.Names.Count==0,"Idle sharing advertised a target");
             var oldCredential=credential.Password;
             ShareClick("ChangeSharingPassword");ShareClick("GenerateSharingPassword");
             Assert(((TextBox)page.FindName("Draft")).Text.Length==8 && saved==0 && credential.Password==oldCredential,"Generate did not remain an eight-character draft");
@@ -152,6 +155,9 @@ static partial class Program {
             ((Button)page.FindName("SharingStart")).RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
             await Until(()=>page.Sharing && ((Button)page.FindName("SharingStart")).IsEnabled,"Fixture sharing did not start");
             Assert(!Find<Button>("StartConnection").IsEnabled,"Active sharing permits control role");
+            Assert(advertisement.Names.Count==1,"Started sharing not advertised exactly once");
+            ShareClick("ChangeDeviceName");((TextBox)page.FindName("NameDraft")).Text="Renamed active PC";ShareClick("SaveDeviceName");
+            Assert(advertisement.Names.Last()=="Renamed active PC" && page.Sharing && credential.Password=="Office#2","Active rename changed listener or password");
             Invoke("ManualClick",window,new RoutedEventArgs());
             Assert(Find<CheckBox>("ManualStopSharing").Visibility==Visibility.Visible,"Sharing role transition was not disclosed");
             Find<TextBox>("ManualAddress").Text="8.8.8.8";Find<PasswordBox>("ManualSecret").Password="Office#2";Find<CheckBox>("ManualStopSharing").IsChecked=true;
@@ -160,7 +166,14 @@ static partial class Program {
             Invoke("ManualCancelClick",window,new RoutedEventArgs());
             Assert(page.Sharing,"Cancel stopped sharing");
             window.Close(); await Until(()=>!page.Sharing && window.SharingController==null,"Owner shutdown left listener alive");
+            Assert(advertisement.Stops>0,"Owner shutdown did not withdraw discovery");
             Console.WriteLine("PASS unshown native WPF shell: English/Chinese, 820/1100/1440px layouts, device selection, single-window sharing, hidden password, edit cancellation, session navigation, exclusive role and listener cleanup");
         } finally { if(window.SharingController is {} sharing) await sharing.Shutdown(); window.Close(); Directory.Delete(nameRoot,true); }
     }
+}
+
+sealed class ShellAdvertisement:IDeviceAdvertisement {
+    public List<string> Names=new();public int Stops;
+    public void Publish(string name,int port) {Names.Add(name);}
+    public Task Stop() {Stops++;return Task.CompletedTask;}
 }

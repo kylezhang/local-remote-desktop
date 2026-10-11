@@ -19,8 +19,12 @@ before calling the Mac viewer verified.
   priority, Annex B/AVCC framing and malformed video.
 - **Model:** production ControllerModel compiled with service/property/image
   doubles: exclusive roles, gated input, 10,000-frame latest-only presentation,
-  address-only persistence, stale callbacks, auth/initial failures, cancel/reconnect,
+  bounded nonsecret peer history, stale callbacks, auth/initial failures, cancel/reconnect,
   rapid quality changes and quality restart with automatic reconnect disabled.
+  Credential doubles verify no Keychain access on startup/browse/select, deliberate
+  remembered-password read/cancel, successful-only save, opt-out, failed-save
+  recovery, address-scoped forget and retained pairing drafts. These do not verify
+  native Security APIs or installed Keychain ACLs.
 - **Wire:** production Wire controller against an independent Python AES-GCM peer;
   RMP1/RML1, fragmented records, 100 KiB video, ordered input, invalid host proof,
   replay and oversized record rejection.

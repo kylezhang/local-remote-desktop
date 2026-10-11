@@ -85,6 +85,7 @@ struct DesktopShell: View {
                 }
             }
         }.font(.system(size: 14)).tint(accent).frame(minWidth: 820,minHeight: 480)
+        .sheet(isPresented: $controller.manualOpen) { ManualConnectionView(model: controller, host: host) }
     }
     private func navigationButton(_ title: String, symbol: String, page: String) -> some View {
         Button { navigation.page = page } label: {
@@ -101,38 +102,114 @@ struct ConnectionPage: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 24) {
-                Text(UiText.text("连接")).font(.system(size: 25, weight: .semibold))
+                HStack {
+                    Text(UiText.text("连接")).font(.system(size: 25, weight: .semibold))
+                    Spacer()
+                    Button(UiText.text("输入目标IP")) { model.openManual() }.disabled(model.credentialBusy)
+                }
                 Text(UiText.text("选择你要连接并操作的设备。")).foregroundStyle(.secondary)
                 HStack(alignment: .top, spacing: 28) {
                     VStack(alignment: .leading, spacing: 12) {
-                        Text(UiText.text("附近设备")).font(.headline)
-                        Text(UiText.text("Mac 控制端暂不支持自动发现；请填写目标IP。"))
-                            .foregroundStyle(.secondary).fixedSize(horizontal: false,vertical: true)
-                    }.frame(maxWidth: .infinity,alignment: .leading)
+                        HStack {
+                            Text(UiText.text("附近设备")).font(.headline)
+                            Spacer()
+                            Button(UiText.text("刷新设备")) { model.refreshDevices() }.disabled(model.searching)
+                        }
+                        if model.searching {
+                            Text(UiText.text("正在搜索局域网设备…")).font(.caption).foregroundStyle(.secondary)
+                        } else if model.devices.isEmpty {
+                            Text(UiText.text("未发现设备；请确认目标设备已开始共享。"))
+                                .foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+                        }
+                        ForEach(model.devices) { device in
+                            Button { model.select(device) } label: {
+                                HStack(spacing: 12) {
+                                    Image(systemName: "desktopcomputer").font(.title2).foregroundStyle(.secondary)
+                                    VStack(alignment: .leading, spacing: 6) {
+                                        Text(device.name).fontWeight(.semibold).lineLimit(2)
+                                        Text(device.systemLabel).font(.caption).foregroundStyle(.secondary)
+                                        Text(UiText.text(device.online ? "本次已发现" : "最近连接 · 本次未发现"))
+                                            .font(.caption).foregroundStyle(.secondary)
+                                    }
+                                    Spacer(minLength: 0)
+                                }.padding(12).frame(maxWidth: .infinity, alignment: .leading)
+                                    .background(model.address == device.address ? Color.accentColor.opacity(0.10) : Color.clear)
+                                    .cornerRadius(9)
+                            }.buttonStyle(.plain).disabled(model.credentialBusy)
+                        }
+                    }.frame(maxWidth: .infinity, alignment: .leading)
                     Divider()
                     VStack(alignment: .leading, spacing: 14) {
-                        Text(UiText.text("输入目标IP")).font(.title2)
+                        if let device = model.selectedDevice {
+                            Text(device.name).font(.title2).textSelection(.enabled)
+                            Text(device.systemLabel).font(.caption).foregroundStyle(.secondary)
+                        } else { Text(UiText.text("输入目标IP")).font(.title2) }
                         Text(UiText.text("目标IP")).font(.caption)
-                        TextField("192.168.1.10", text: $model.address).textFieldStyle(.roundedBorder)
+                        Text(model.address.isEmpty ? "—" : model.address).textSelection(.enabled)
                         Text(UiText.text("配对密码")).font(.caption)
-                        SecureField(UiText.text("配对密码"), text: $model.password).textFieldStyle(.roundedBorder)
+                        SecureField(UiText.text(model.hasRememberedPassword ? "已记住密码" : "配对密码"), text: $model.password)
+                            .textFieldStyle(.roundedBorder).disabled(model.credentialBusy)
+                        Toggle(UiText.text("记住密码"), isOn: $model.rememberPassword).disabled(model.credentialBusy)
                         Picker(UiText.text("画质"), selection: $model.nextQuality) {
                             Text(UiText.text("流畅")).tag(0); Text(UiText.text("标准")).tag(1); Text(UiText.text("高清")).tag(2)
                         }
                         Button(UiText.text("连接")) { model.connect() }.buttonStyle(.borderedProminent)
-                            .disabled(host.active || host.starting)
+                            .disabled(model.address.isEmpty || model.selectedDevice?.online != true || model.credentialBusy || host.active || host.starting)
                         if host.active || host.starting {
                             Text(UiText.text("先停止共享，再连接另一台设备。")).font(.caption).foregroundStyle(.secondary)
                             Button(UiText.text("共享此设备"), action: showSharing)
-                        } else {
-                            Text(UiText.text("首次连接需要目标设备的配对密码。")).font(.caption).foregroundStyle(.secondary)
+                        } else if model.selectedDevice?.online == false {
+                            Text(UiText.text("本次未发现此设备；可刷新设备或通过目标IP重试。"))
+                                .font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
                         }
-                        Text(UiText.text(model.status)).font(.caption).foregroundStyle(.secondary).textSelection(.enabled)
+                        if model.hasRememberedPassword {
+                            Button(UiText.text("忘记密码")) { model.forgetPassword() }.disabled(model.credentialBusy)
+                        }
+                        Text(UiText.text(model.pairingNotice.isEmpty ? model.status : model.pairingNotice))
+                            .font(.caption).foregroundStyle(.secondary).textSelection(.enabled)
                     }.frame(width: 280)
                 }
-                Spacer(minLength: 10)
-            }.padding(32).frame(maxWidth: .infinity,alignment: .leading)
-        }
+            }.padding(32).frame(maxWidth: .infinity, alignment: .leading)
+        }.onAppear { model.refreshDevices() }.onDisappear { model.pauseDiscovery() }
+    }
+}
+struct ManualConnectionView: View {
+    @ObservedObject var model: ControllerModel
+    @ObservedObject var host: HostModel
+    var body: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            Text(UiText.text("输入目标IP")).font(.title2).fontWeight(.semibold)
+            if let device = model.manualDevice {
+                Text(device.name).fontWeight(.semibold)
+                Text(device.systemLabel).font(.caption).foregroundStyle(.secondary)
+            } else {
+                Text(UiText.text("连接后显示目标设备名称和系统。"))
+                    .font(.caption).foregroundStyle(.secondary)
+            }
+            Text(UiText.text("目标IP")).font(.caption)
+            TextField("192.168.1.10", text: $model.manualAddress).textFieldStyle(.roundedBorder)
+                .disabled(model.busy || model.credentialBusy)
+            Text(UiText.text("配对密码")).font(.caption)
+            SecureField(UiText.text(model.manualDevice?.remembered == true ? "已记住密码" : "配对密码"), text: $model.manualPassword)
+                .textFieldStyle(.roundedBorder).disabled(model.busy || model.credentialBusy)
+            Toggle(UiText.text("记住密码"), isOn: $model.manualRemember).disabled(model.busy || model.credentialBusy)
+            if host.active || host.starting {
+                Toggle(UiText.text("停止共享并连接"), isOn: $model.stopSharingToConnect).disabled(model.busy)
+                Text(UiText.text("这将停止本机共享并断开当前控制者。"))
+                    .font(.caption).foregroundStyle(.secondary)
+            }
+            if model.busy || !model.pairingNotice.isEmpty {
+                Text(UiText.text(model.pairingNotice.isEmpty ? model.status : model.pairingNotice))
+                    .font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+            }
+            HStack {
+                Spacer()
+                Button(UiText.text("取消")) { model.cancelManual() }.keyboardShortcut(.cancelAction)
+                Button(UiText.text(model.busy ? "正在连接…" : "连接")) { model.connectManual() }
+                    .buttonStyle(.borderedProminent).keyboardShortcut(.defaultAction)
+                    .disabled(model.busy || model.credentialBusy || ((host.active || host.starting) && !model.stopSharingToConnect))
+            }
+        }.padding(28).frame(width: 420).interactiveDismissDisabled(model.busy || model.credentialBusy)
     }
 }
 struct DesktopSettings: View {

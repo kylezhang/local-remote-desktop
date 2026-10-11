@@ -6,7 +6,8 @@ names. Both sources also use four settings categories and separate connection
 defaults from active session options. Windows manual pairing uses one dialog and
 saves credentials only after authentication. New sharing passwords are 8 characters
 on both sources; existing longer credentials remain unchanged. Mac controller
-pairing parity, theme and other visual details remain pending.
+discovery and secure target-password memory are now in source. Theme details and
+native Mac acceptance remain pending.
 
 [简体中文](zh-CN/native-ui.md) · [Design](design.md) · [Delivery plan](v0.3.0-plan.md)
 
@@ -27,9 +28,10 @@ places Settings at its bottom; ordinary text and controls use neutral colors.
 
 Mac uses native window chrome, system typography and the same navigation. The
 controller now uses the main window, including its existing Command-key routing.
-Mac controller discovery, persistent pairing memory, reverse clipboard/files and
-the compact first-pairing dialog remain follow-up work. The current manual form
-stays available so those gaps do not masquerade as working features.
+Mac now has a bounded Windows-device browser, recent-device records and a native
+manual connection sheet. Credential accounts are separate from its own sharing
+password; startup and discovery do not read Keychain. Reverse clipboard/files
+and updated Apple SDK/installed acceptance remain follow-up work.
 
 ## Device names
 
@@ -38,17 +40,17 @@ name. Use system name fills the draft; Cancel preserves the old value. Save acce
 1–32 Unicode scalars, trims surrounding whitespace and rejects control characters.
 It updates metadata without stopping the listener, replacing credentials or
 changing the OS computer name. Mac republishes its Bonjour service while sharing;
-Windows publication remains pending.
+Windows also republishes through the OS DNS-SD service while sharing.
 
 Both sharing roles send `deviceName` after authentication and on the existing
 heartbeat. Windows updates one address-matched list item and retains it in memory
 across refreshes; this is not persistent device history or proof of availability.
-Mac updates its session label. Missing/invalid legacy metadata uses the known name
+Mac updates its session label and bounded nonsecret recent records. Missing/invalid legacy metadata uses the known name
 or address. Changing a manual address clears unrelated name/system information.
 
 ## Manual pairing and password policy
 
-Windows uses one manual Target IP/password/remember dialog. Known targets show
+Both desktop sources use one manual Target IP/password/remember dialog. Known targets show
 real metadata; unknown targets get metadata only from an authenticated peer.
 Cancel or failed authentication makes no credential write and creates no peer
 record. Successful authentication saves at most once per logical connection;
@@ -98,5 +100,5 @@ agreed test period. The physical LAN input harness remains separately opt-in.
 See the [shell record](../tests/results/native-ui-2026-10-10.txt) and
 [name checks](../tests/results/device-names-2026-10-11.txt). Next: apply the remaining
 approved pairing/visual details, restore
-native Mac verification, finish reverse discovery and session-owned clipboard/files,
+native Mac verification and finish session-owned clipboard/files,
 then perform scheduled two-device acceptance before packaging v0.3.0.

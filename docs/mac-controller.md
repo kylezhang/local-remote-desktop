@@ -16,14 +16,27 @@ This is a development checkpoint, not a verified bidirectional release.
    View its sharing password; this is separate from saved target passwords.
 2. On the Mac, stop sharing if it is active. Open
    **Connect** in the main window.
-3. Enter the Windows **Target IP** (LAN IPv4) and sharing password, then Connect.
+3. Select the Windows device in **Nearby devices**, or use **Enter Target IP**
+   to fill its LAN IPv4 and sharing password, then Connect.
    Both devices need TCP 47980 connectivity. Click the picture for keyboard focus.
 4. Disconnect or close the application window to release input and end the session.
 
-The app remembers the last successfully connected address. The controller password
-remains in memory while the Mac app runs, including when closing/reopening the
-application window; it is not stored on disk and must be entered after app exit.
-This preview does not read or create an additional Keychain item.
+The app remembers authenticated target metadata separately from its password.
+Remember password saves to a separate, address-specific account in the existing
+file-based Keychain only after authentication. Startup, browsing and selection
+never read credentials; Connect can deliberately read a remembered password.
+This may require the system's Keychain authorization on first access or code
+identity change. The password remains cached during this app run, including
+reconnects, with no repeated read/write on quality changes. Forget password deletes
+only that target account and clears its cache; the address and this Mac's own
+sharing password remain. An unchecked Remember password skips this save, and a
+save failure keeps the current connection with an inline notice. Wrong passwords
+and cancellation do not overwrite existing stored credentials.
+
+The native manual sheet retains its draft after failure. Switching from sharing
+to control validates the target first and requires **Stop sharing & connect**.
+Cancel keeps sharing unless a valid transition has already started. Discovery
+is convenience, not authorization; see [Nearby devices](discovery.md).
 Connecting alone does not require Mac Screen Recording or Accessibility: those
 permissions are needed when this Mac shares its own desktop.
 
@@ -69,8 +82,7 @@ See [validation status](validation.md) for the remaining gates.
 
 One controller, primary Windows display and the logged-in desktop. Windows UAC
 secure desktop, elevated application input, lock screen and pre-login control are
-not guaranteed. This reverse-role preview has no clipboard/file synchronization,
-Windows discovery advertisement or persistent Mac controller password; those belong
-to the following role-interoperability stage. Existing Windows → Mac clipboard and
+not guaranteed. This reverse-role preview still has no clipboard/file synchronization;
+that belongs to the following role-interoperability stage. Existing Windows → Mac clipboard and
 file support remain in the original direction. Simultaneous sharing and controlling
 are disabled in the interface to avoid reciprocal desktop feedback.
