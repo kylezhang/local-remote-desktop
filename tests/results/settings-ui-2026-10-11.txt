@@ -1,0 +1,25 @@
+Local Remote Desktop — revision-2 settings increment, 2026-10-11
+
+PASS Windows Release build and unshown WPF shell.
+PASS English/Chinese four-category settings, bottom navigation, widths 820/1100.
+PASS 100/125/150% offscreen rendering; not real per-monitor DPI acceptance.
+PASS future defaults do not change current quality/shortcut/reconnect options.
+PASS session choices do not overwrite defaults; new logical connection adopts them.
+PASS global text/file consent limits session options.
+PASS text consent revocation disables the production sync state immediately;
+     stale acknowledgement and positive acknowledgement while globally off denied;
+     re-enable requires a new matching consent acknowledgement.
+PASS isolated current-user DPAPI connection-default save/reload, missing/corrupt
+     fallback and quality bounds; existing credential/transport/lifecycle checks.
+PASS forgetting a target password retains its address and local sharing key.
+PASS Swift controller defaults persist in isolated preferences without altering
+     active transport/options; quality-restart/reconnect behavior remains covered.
+PASS shared localization, Swift syntax and existing Foundation/model checks.
+
+Visual review corrected selected TabItem styling leaking into page text and
+centered content; ordinary text is neutral, brand is reserved for active actions.
+Routine checks never showed a window, injected real input or read user clipboard.
+Generated-video MF H264 tests do not establish desktop latency or sustained FPS.
+Mac Apple SDK/native UI acceptance remains pending; prior SSH access timed out.
+Theme, full first-pairing/remembered-device flow, reverse discovery/clipboard/files
+and real two-device acceptance remain follow-up work. No tag/release created.

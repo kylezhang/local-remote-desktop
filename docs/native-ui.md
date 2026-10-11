@@ -2,7 +2,9 @@
 
 The [second design revision](design.md) is approved and being implemented in stages.
 Both desktop sources now include local-name editing and authenticated target
-names. The complete revised settings, pairing flow and visual treatment are pending.
+names. Both sources also use four settings categories and separate connection
+defaults from active session options. Pairing flow, theme and other visual details
+remain pending.
 
 [简体中文](zh-CN/native-ui.md) · [Design](design.md) · [Delivery plan](v0.3.0-plan.md)
 
@@ -18,7 +20,8 @@ Existing transport, credential identities and installation permissions are retai
 Windows shows discovered devices beside the connection form. Its current secure
 address/password memory and paired clipboard/file workflow remain in place.
 The sharing view reuses the existing lifecycle controller without displaying a
-second window. Settings groups match the design and the same session preferences.
+second window. Settings uses General, Connection, Clipboard and About. The rail
+places Settings at its bottom; ordinary text and controls use neutral colors.
 
 Mac uses native window chrome, system typography and the same navigation. The
 controller now uses the main window, including its existing Command-key routing.
@@ -43,11 +46,26 @@ or address. Changing a manual address clears unrelated name/system information.
 
 ## Verification
 
+Connection defaults are saved separately for quality, reconnect and shortcut
+mapping. They are copied once at a new logical connection; temporary session
+changes and quality reconnects do not overwrite or reapply future defaults.
+Windows global clipboard switches are persistent local consent. Session toggles
+can only restrict them. Turning global text sharing off stops polling, revokes
+the current request and rejects stale acknowledgements; files are disabled through
+the existing cancellation path. New logical connections reset temporary restrictions.
+Mac connection defaults persist similarly; reverse clipboard/files remain unsupported.
+Sharing permissions are on the Mac sharing page, not settings for connecting.
+
 Windows was built with .NET 8. Unshown WPF fixtures check English/Chinese layouts
 at 820, 1100 and 1440 pixels, navigation, selection, password cancellation, a
 single visible-window design, session presentation, role exclusion and listener
 cleanup. The fixtures use their own credentials and fake input/capture adapters.
 They do not establish real desktop input, latency or permission acceptance.
+
+Additional unshown fixtures check the four categories at 820/1100 pixels, render
+at 100/125/150% scale, default/session independence and clipboard consent revocation.
+Scaled renders are not actual per-monitor DPI acceptance. See the
+[settings check record](../tests/results/settings-ui-2026-10-11.txt).
 
 Windows name persistence, metadata fallback, independent DNS-SD fixtures and
 encrypted backend rename propagation pass. Swift Foundation checks cover isolated
@@ -65,6 +83,6 @@ agreed test period. The physical LAN input harness remains separately opt-in.
 
 See the [shell record](../tests/results/native-ui-2026-10-10.txt) and
 [name checks](../tests/results/device-names-2026-10-11.txt). Next: apply the remaining
-approved settings/visual changes, restore
+approved pairing/visual details, restore
 native Mac verification, finish reverse discovery and session-owned clipboard/files,
 then perform scheduled two-device acceptance before packaging v0.3.0.

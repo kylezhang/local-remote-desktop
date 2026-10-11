@@ -14,8 +14,10 @@ must not appear as usable actions before implementation.
   control automatically. Remembered connections stay convenient.
 - **Share this device**: start/stop sharing the current desktop and manage its
   password. Keep the local stop action reachable. Sharing is explicitly enabled.
-- **Settings**: the same groups in every app: Clipboard, Keyboard & connection,
-  Language, then Diagnostics. Keep routine controls compact; details belong here.
+- **Settings**: General, Connection, Clipboard and About. Connection defaults
+  affect new logical connections; current-session options are temporary. Clipboard
+  settings grant local consent and session options can only further restrict it.
+  Keep sharing permissions/passwords on Share and target credentials on Connect.
 - During control, prioritize the remote screen. Use one compact bar for target,
   picture quality, disconnect/full screen and settings. Hide credential editing
   during a session. Transfers use a temporary progress/cancel notice, not another
@@ -30,8 +32,8 @@ is inline; system permission prompts retain their native presentation.
 ## Appearance and interaction
 
 Keep the approved blueberry icon and existing palette during this implementation:
-accent #5265EC, pressed accent #4238AF, supporting accent #643AC2, text #282C67,
-light surface #F7F8FF; use readable system/dark equivalents. Do not add a second
+accent #5265EC, text #202435, secondary #697183, white content, rail #F6F7FA and
+rules #E5E8F0; use readable system/dark equivalents. Do not add a second
 logo to a desktop title bar. Use Segoe UI on Windows and system San Francisco on
 Mac; future Linux/mobile apps use their native system typography.
 

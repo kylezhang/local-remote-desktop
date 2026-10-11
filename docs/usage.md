@@ -17,7 +17,7 @@ the setup instructions to either interface:
 | 自动生成 / 保存密码 | Generate / Save Password (Mac, development) |
 | 设置 → 权限 | Permission Settings (Mac) |
 | 连接 / 断开 | Connect / Disconnect (Windows) |
-| 忘记此连接 | Forget Connection (Windows) |
+| 忘记密码（开发版） / 忘记此连接 | Forget Password / earlier Forget Connection (Windows) |
 | 流畅 / 标准 / 高清 | Smooth / Standard / High |
 | 复制诊断 | Copy Diagnostics (Windows) |
 | Windows 快捷键 | Windows Shortcuts (development update) |
@@ -32,6 +32,14 @@ appear only when needed. Both sharing pages keep passwords masked and offer an
 explicit edit/cancel flow. Viewing/copying a password does not start sharing.
 The approved second UI revision is being applied incrementally; see
 [native progress](native-ui.md) for features and validation still pending.
+
+Settings has **General**, **Connection**, **Clipboard** and **About** categories.
+Connection options set defaults for later connections. Picture quality, reconnect
+and shortcut changes from the remote toolbar apply to the current session only.
+Clipboard settings grant local consent; session toggles can restrict it but cannot
+turn on a category that is globally off. Forget Password on Connect removes only
+the selected target's saved password, retaining its address and local sharing key.
+Mac permission recovery is on Share this device.
 
 ## This device’s name (development)
 
@@ -55,7 +63,7 @@ enter its IPv4 address and pairing password, select Smooth, then Connect. Legacy
 computer's own LAN address to make the subnet easier to edit; a saved target takes
 precedence. Discovery selection fills the address without connecting automatically.
 
-Click the picture for keyboard focus. In the development update, **Windows Shortcuts** is enabled by default: Ctrl maps to Mac Command, Win to Control, Alt to Option and Shift to Shift. Ctrl+C/V/X/A/Z/S therefore sends the corresponding Command shortcut. Ctrl+Shift combinations retain Shift. Changing this mode releases held remote keys; the choice is remembered on Windows. Disable it to use the original mapping (Ctrl→Control, Win→Command), including Control+C for a terminal interrupt. Published v0.1.0 packages use the original mapping.
+Click the picture for keyboard focus. In the development update, **Windows Shortcuts** is enabled by default: Ctrl maps to Mac Command, Win to Control, Alt to Option and Shift to Shift. Ctrl+C/V/X/A/Z/S therefore sends the corresponding Command shortcut. Ctrl+Shift combinations retain Shift. Changing this mode releases held remote keys. The toolbar choice is temporary; save a future default under Settings → Connection. Disable it to use the original mapping (Ctrl→Control, Win→Command), including Control+C for a terminal interrupt. Published v0.1.0 packages use the original mapping.
 
 These shortcuts operate the Mac's own clipboard; cross-device text sharing uses the separate setting below, enabled by default in current development builds. Windows-reserved shortcuts such as Alt+Tab or Win combinations may stay local. Windows input-method composition is not transmitted; the Mac's own input method can process physical keys.
 

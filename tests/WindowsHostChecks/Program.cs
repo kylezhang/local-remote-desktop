@@ -116,6 +116,19 @@ static class Program {
             var changed=HostCredential.Create("Office-LAN#42"); changed.Save(path); var restored=HostCredential.Load(path);
             Require(restored.Password==changed.Password && restored.Salt.SequenceEqual(changed.Salt) && !restored.Salt.SequenceEqual(first.Salt),"Explicit password update/salt failed");
             Require(Directory.GetFiles(root).Length==1,"Atomic credential save left temporary files");
+            var quality=Path.Combine(root,"quality.dpapi");var reconnect=Path.Combine(root,"reconnect.dpapi");
+            Require(SecretStore.LoadConnectionQuality(quality)==0 && SecretStore.LoadAutoReconnect(reconnect),"Missing defaults changed startup behavior");
+            SecretStore.SaveConnectionQuality(2,quality);SecretStore.SaveAutoReconnect(false,reconnect);
+            Require(SecretStore.LoadConnectionQuality(quality)==2 && !SecretStore.LoadAutoReconnect(reconnect),"Connection defaults not restored");
+            File.WriteAllBytes(quality,new byte[]{255});Require(SecretStore.LoadConnectionQuality(quality)==0,"Corrupt quality outside valid range");
+            try { SecretStore.SaveConnectionQuality(3,quality);throw new Exception("Invalid quality persisted"); } catch(ArgumentOutOfRangeException) {}
+            const string fixtureAddress="192.168.1.24";
+            var target=Path.Combine(root,Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(fixtureAddress)))+".dpapi");
+            var last=Path.Combine(root,"last-host.dpapi");var addressBytes=SecretStore.Protect(Encoding.UTF8.GetBytes(fixtureAddress));
+            File.WriteAllBytes(target,SecretStore.Protect(Encoding.UTF8.GetBytes("Fixture#42")));File.WriteAllBytes(last,addressBytes);
+            SecretStore.Forget(fixtureAddress,root);
+            Require(!File.Exists(target) && File.ReadAllBytes(last).SequenceEqual(addressBytes) && File.Exists(path),"Forget password removed target address or local sharing credential");
+            Console.WriteLine("PASS isolated connection-default persistence, missing/corrupt fallback and bounds");
             Console.WriteLine("PASS real current-user DPAPI sharing credential, restart persistence, explicit replacement and atomic cleanup (isolated path)");
         } finally { Directory.Delete(root,true); }
     }

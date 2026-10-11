@@ -8,6 +8,13 @@ final class ControllerModel: ObservableObject {
     @Published private(set) var targetName = ""
     @Published private(set) var targetSystem = ""
     @Published var quality = 1
+    @Published var nextQuality = 0
+    @Published var defaultQuality = 0 { didSet {
+        preferences.set(defaultQuality, forKey: "controllerDefaultQuality")
+        if !busy { nextQuality = defaultQuality }
+    } }
+    @Published var defaultShortcuts = true { didSet { preferences.set(defaultShortcuts, forKey: "controllerDefaultShortcuts") } }
+    @Published var defaultAutoReconnect = true { didSet { preferences.set(defaultAutoReconnect, forKey: "controllerDefaultReconnect") } }
     @Published var shortcuts = true
     @Published var autoReconnect = true {
         didSet { if !autoReconnect && retry != nil && !qualityRestart { disconnect() } }
@@ -31,6 +38,10 @@ final class ControllerModel: ObservableObject {
     init(host: HostModel, preferences: UserDefaults = .standard) {
         self.host = host; self.preferences = preferences
         address = preferences.string(forKey: "controllerAddress") ?? ""
+        let storedQuality = preferences.object(forKey: "controllerDefaultQuality") as? Int ?? 0
+        defaultQuality = (0...2).contains(storedQuality) ? storedQuality : 0; nextQuality = defaultQuality
+        defaultShortcuts = preferences.object(forKey: "controllerDefaultShortcuts") as? Bool ?? true
+        defaultAutoReconnect = preferences.object(forKey: "controllerDefaultReconnect") as? Bool ?? true
     }
     func connect() {
         guard !host.active, !host.starting else { status = "请先停止这台 Mac 的共享，再连接其他设备。"; return }
@@ -38,6 +49,7 @@ final class ControllerModel: ObservableObject {
         do { address = try ControllerRules.address(address); try PairingCredential.validate(password) }
         catch { status = "请输入局域网 IPv4 和 8–64 位配对密码。"; return }
         targetName = address; targetSystem = ""
+        quality = nextQuality; shortcuts = defaultShortcuts; autoReconnect = defaultAutoReconnect
         wantsConnection = true; hasConnected = false; begin()
     }
     private func begin() {
@@ -116,6 +128,7 @@ final class ControllerModel: ObservableObject {
         session?.stop(); session = nil; presentation?.cancel(); presentation = nil
         frameLock.lock(); frameToken = nil; latest = nil; frameLock.unlock()
         connected = false; busy = false; inputEnabled = false; host.controlling = false
+        nextQuality = defaultQuality
         image = nil; width = 0; height = 0; inputGeneration += 1; status = "未连接"
     }
     func restart() {
@@ -152,12 +165,11 @@ struct ControllerView: View {
                 Button(UiText.text(model.busy ? "断开" : "连接")) { if model.busy { model.disconnect() } else { model.connect() } }
                     .disabled(!model.busy && (host.active || host.starting))
                 Button(UiText.text("全屏"), action: fullScreen)
-                Menu(UiText.text("设置")) {
+                Menu(UiText.text("会话选项")) {
                     Toggle(UiText.text("Mac 快捷键"), isOn: $model.shortcuts)
                     Toggle(UiText.text("自动重连"), isOn: $model.autoReconnect)
-                    Picker(UiText.text("语言"), selection: $host.languageCode) { Text("English").tag("en"); Text("简体中文").tag("zh-Hans") }
                 }.fixedSize()
-            }.textFieldStyle(.roundedBorder).padding(10)
+            }.textFieldStyle(.roundedBorder).padding(.horizontal, 12).frame(height: 42)
             Divider()
             RemoteScreen(model: model, fullScreen: fullScreen).frame(maxWidth: .infinity, maxHeight: .infinity)
             Divider()

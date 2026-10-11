@@ -73,18 +73,34 @@ public partial class MainWindow : Window
             FileNotice, action=>Dispatcher.BeginInvoke(action),fileRoot,filePort);
         fileNoticeTimer.Tick+=(_,_)=> { fileNoticeTimer.Stop(); if(!files.Busy) TransferNotice.Visibility=Visibility.Collapsed; };
         fileTimer.Tick+=(_,_)=>files.Poll();
-        FileSync.IsChecked=!remember || SecretStore.LoadFileSync();
+        GlobalFiles.IsChecked=!remember || SecretStore.LoadFileSync();
         void FileModeChanged() {
-            files.Configure(FileSync.IsChecked==true);
-            if(rememberConnection) { try { SecretStore.SaveFileSync(FileSync.IsChecked==true); } catch(Exception ex) { SetFileStatus($"文件同步已切换，但无法保存选择：{ex.Message}"); } }
+            files.Configure(EffectiveFiles);
         }
         FileSync.Checked+=(_,_)=>FileModeChanged(); FileSync.Unchecked+=(_,_)=>FileModeChanged();
-        files.Configure(FileSync.IsChecked==true);
+        void GlobalFilesChanged() {
+            FileSync.IsEnabled=GlobalFiles.IsChecked==true; FileModeChanged();
+            if(rememberConnection) { try { SecretStore.SaveFileSync(GlobalFiles.IsChecked==true); } catch(Exception ex) { SetFileStatus($"文件同步已切换，但无法保存选择：{ex.Message}"); } }
+        }
+        GlobalFiles.Checked+=(_,_)=>GlobalFilesChanged(); GlobalFiles.Unchecked+=(_,_)=>GlobalFilesChanged();
+        FileSync.IsEnabled=GlobalFiles.IsChecked==true; FileModeChanged();
         clipboardTimer.Tick+=(_,_)=>PollClipboard();
-        ClipboardSync.IsChecked=!remember || SecretStore.LoadClipboardSync();
+        GlobalClipboard.IsChecked=!remember || SecretStore.LoadClipboardSync();
         ClipboardSync.Checked+=(_,_)=>ClipboardModeChanged(); ClipboardSync.Unchecked+=(_,_)=>ClipboardModeChanged();
+        void GlobalClipboardChanged() {
+            ClipboardSync.IsEnabled=GlobalClipboard.IsChecked==true; ClipboardModeChanged();
+            if(rememberConnection) { try { SecretStore.SaveClipboardSync(GlobalClipboard.IsChecked==true); } catch(Exception ex) { SetClipboardStatus($"文本同步已切换，但无法保存选择：{ex.Message}"); } }
+        }
+        GlobalClipboard.Checked+=(_,_)=>GlobalClipboardChanged(); GlobalClipboard.Unchecked+=(_,_)=>GlobalClipboardChanged();
+        ClipboardSync.IsEnabled=GlobalClipboard.IsChecked==true;
         ClipboardModeChanged();
-        WindowsShortcuts.IsChecked=!remember || SecretStore.LoadWindowsShortcuts();
+        DefaultShortcuts.IsChecked=!remember || SecretStore.LoadWindowsShortcuts();
+        DefaultReconnect.IsChecked=!remember || SecretStore.LoadAutoReconnect();
+        DefaultQuality.SelectedIndex=remember?SecretStore.LoadConnectionQuality():0;
+        HomeQuality.SelectedIndex=DefaultQuality.SelectedIndex;
+        DefaultShortcuts.Checked+=(_,_)=>SaveDefaults(); DefaultShortcuts.Unchecked+=(_,_)=>SaveDefaults();
+        DefaultReconnect.Checked+=(_,_)=>SaveDefaults(); DefaultReconnect.Unchecked+=(_,_)=>SaveDefaults();
+        DefaultQuality.SelectionChanged+=(_,_)=> { if(session==null) HomeQuality.SelectedIndex=DefaultQuality.SelectedIndex; SaveDefaults(); };
         WindowsShortcuts.Checked+=(_,_)=>KeyboardModeChanged(); WindowsShortcuts.Unchecked+=(_,_)=>KeyboardModeChanged();
         SettingsMenu.SubmenuClosed+=(_,e)=> { if(ReferenceEquals(e.OriginalSource,SettingsMenu) && connected) Surface.Focus(); };
         Address.TextChanged+=(_,_)=> {
@@ -155,6 +171,21 @@ public partial class MainWindow : Window
         ConnectionTarget.Text=$"{name} · {device.SystemLabel}"; ConnectionTarget.ToolTip=ip;
     }
     void SharingClick(object sender,RoutedEventArgs e) { if(session==null) NavShare.IsChecked=true; }
+    internal bool EffectiveClipboard=>GlobalClipboard.IsChecked==true && ClipboardSync.IsChecked==true;
+    internal bool EffectiveFiles=>GlobalFiles.IsChecked==true && FileSync.IsChecked==true;
+    internal void BeginConnectionOptions() {
+        Quality.SelectedIndex=HomeQuality.SelectedIndex;
+        WindowsShortcuts.IsChecked=DefaultShortcuts.IsChecked==true; Reconnect.IsChecked=DefaultReconnect.IsChecked==true;
+        ClipboardSync.IsChecked=true; FileSync.IsChecked=true;
+    }
+    void SaveDefaults() {
+        if(!rememberConnection) return;
+        try {
+            SecretStore.SaveConnectionQuality(DefaultQuality.SelectedIndex);
+            SecretStore.SaveAutoReconnect(DefaultReconnect.IsChecked==true);
+            SecretStore.SaveWindowsShortcuts(DefaultShortcuts.IsChecked==true);
+        } catch { SetStatus("默认选项无法保存；本次选择仍有效。"); }
+    }
     void RefreshDevicesClick(object sender,RoutedEventArgs e)=>RefreshDevices();
     void DeviceSelected(object sender,SelectionChangedEventArgs e) {
         if(session!=null || DeviceList.SelectedItem is not LanDevice device) return;
@@ -249,9 +280,8 @@ public partial class MainWindow : Window
     }
     void ClipboardModeChanged() {
         clipboardTimer.Stop(); clipboard.SetEnabled(false);
-        SetClipboardStatus(ClipboardSync.IsChecked!=true?"文本同步：关闭":!connected?"文本同步：等待连接":!peerClipboard?"文本同步：Mac 版本不支持":"文本同步：等待 Mac 确认");
-        if(connected && peerClipboard) ClipboardMessage(new {op="clipboard_sync",enabled=ClipboardSync.IsChecked==true,requestId=++clipboardRequestId});
-        if(rememberConnection) { try { SecretStore.SaveClipboardSync(ClipboardSync.IsChecked==true); } catch(Exception ex) { SetClipboardStatus($"文本同步已切换，但无法保存选择：{ex.Message}"); } }
+        SetClipboardStatus(!EffectiveClipboard?"文本同步：关闭":!connected?"文本同步：等待连接":!peerClipboard?"文本同步：Mac 版本不支持":"文本同步：等待 Mac 确认");
+        if(connected && peerClipboard) ClipboardMessage(new {op="clipboard_sync",enabled=EffectiveClipboard,requestId=++clipboardRequestId});
     }
     void PollClipboard() {
         if(connected && clipboard.Enabled && clipboard.Poll() is {} text)
@@ -259,11 +289,11 @@ public partial class MainWindow : Window
     }
     void ResetClipboard() {
         clipboardTimer.Stop(); clipboard.SetEnabled(false); peerClipboard=false;
-        SetClipboardStatus(ClipboardSync.IsChecked==true?"文本同步：等待连接":"文本同步：关闭");
+        SetClipboardStatus(EffectiveClipboard?"文本同步：等待连接":"文本同步：关闭");
     }
     void ResetFiles() {
         fileTimer.Stop(); fileNoticeTimer.Stop(); files.Reset(); pasteSuppressed=false; CancelFiles.IsEnabled=false; TransferNotice.Visibility=Visibility.Collapsed;
-        SetFileStatus(FileSync.IsChecked==true?"文件同步：等待连接":"文件同步：关闭");
+        SetFileStatus(EffectiveFiles?"文件同步：等待连接":"文件同步：关闭");
     }
     void FileNotice(string text,bool busy) {
         SetFileStatus(text); CancelFiles.IsEnabled=busy; CancelFiles.Visibility=busy?Visibility.Visible:Visibility.Collapsed; DismissFileNotice.IsEnabled=!busy;
@@ -286,10 +316,10 @@ public partial class MainWindow : Window
         }
         if(!peerClipboard || !root.TryGetProperty("requestId",out var request) || request.ValueKind!=JsonValueKind.Number || !request.TryGetInt64(out var id) || id!=clipboardRequestId) return;
         if(op=="clipboard_sync" && root.TryGetProperty("enabled",out var permission) && permission.ValueKind is JsonValueKind.True or JsonValueKind.False) {
-            bool enabled=permission.GetBoolean() && ClipboardSync.IsChecked==true && connected;
+            bool enabled=permission.GetBoolean() && EffectiveClipboard && connected;
             clipboard.SetEnabled(enabled);
             if(enabled) clipboardTimer.Start(); else clipboardTimer.Stop();
-            SetClipboardStatus(enabled?"文本同步：已启用（双向，最多 32 KiB）":ClipboardSync.IsChecked==true?"文本同步：等待 Mac 开启允许同步":"文本同步：关闭");
+            SetClipboardStatus(enabled?"文本同步：已启用（双向，最多 32 KiB）":EffectiveClipboard?"文本同步：等待 Mac 开启允许同步":"文本同步：关闭");
         } else if(op=="clipboard_text" && root.TryGetProperty("encoding",out var encoding) && encoding.GetString()=="utf8-base64url"
                   && root.TryGetProperty("text",out var text) && text.ValueKind==JsonValueKind.String) {
             _=clipboard.Receive(text.GetString()!);
@@ -297,9 +327,6 @@ public partial class MainWindow : Window
     }
     void KeyboardModeChanged() {
         Input(new {op="release_all"});
-        if(!rememberConnection) return;
-        try { SecretStore.SaveWindowsShortcuts(WindowsShortcuts.IsChecked==true); }
-        catch(Exception ex) { SetStatus($"快捷键模式已切换，但无法保存：{ex.Message}"); }
     }
     void Input(object message) {
         if(!connected || inputs==null) return;
@@ -310,19 +337,19 @@ public partial class MainWindow : Window
     async void ConnectClick(object sender,RoutedEventArgs e) {
         if(sharingWindow?.Sharing==true) return;
         if(session!=null) { session.Cancel(); return; }
-        var ip=Address.Text.Trim(); var secret=Secret.Password.Trim(); int quality=Quality.SelectedIndex;
+        var ip=Address.Text.Trim(); var secret=Secret.Password.Trim(); int quality=HomeQuality.SelectedIndex;
         try {
             if(ip.Length==0) throw new ArgumentException("请填写目标IP。");
             PairingPassword.Validate(secret);
             if(rememberConnection) SecretStore.Remember(ip,secret);
         } catch(Exception ex) { SetStatus($"无法记住连接：{ex.Message}"); return; }
-        requestedQuality=quality; qualityChangePending=false;
+        BeginConnectionOptions(); requestedQuality=quality; qualityChangePending=false;
         discoveryScan?.Cancel();
-        targetPlatform="macos"; AllowConnections.IsEnabled=false; sharingWindow?.SetControlActive(true);
+        targetPlatform="macos"; NavShare.IsEnabled=false; sharingWindow?.SetControlActive(true);
         session=new(); SetSessionLayout(true); render.Start(); ConnectButton.Content=UiText.Text("断开"); DiscoverButton.IsEnabled=Address.IsEnabled=Secret.IsEnabled=ForgetButton.IsEnabled=false;
         ConnectionFields.Visibility=Visibility.Collapsed; ConnectionTarget.Text=ip; ConnectionTarget.Visibility=Visibility.Visible;
         runner=Run(ip,secret,session.Token);
-        try { await runner; } finally { render.Stop(); ResetClipboard(); ResetFiles(); connected=false; if(full) ToggleFull(); session.Dispose(); session=null; SetSessionLayout(false); AllowConnections.IsEnabled=true; sharingWindow?.SetControlActive(false); ConnectButton.Content=UiText.Text("连接"); DiscoverButton.IsEnabled=Address.IsEnabled=Secret.IsEnabled=Quality.IsEnabled=ForgetButton.IsEnabled=true; ConnectionFields.Visibility=Visibility.Visible; ConnectionTarget.Visibility=Visibility.Collapsed; Desktop.Source=null; bitmap=null; width=height=0; }
+        try { await runner; } finally { render.Stop(); ResetClipboard(); ResetFiles(); connected=false; if(full) ToggleFull(); session.Dispose(); session=null; SetSessionLayout(false); NavShare.IsEnabled=true; sharingWindow?.SetControlActive(false); ConnectButton.Content=UiText.Text("连接"); DiscoverButton.IsEnabled=Address.IsEnabled=Secret.IsEnabled=Quality.IsEnabled=ForgetButton.IsEnabled=true; ConnectionFields.Visibility=Visibility.Visible; ConnectionTarget.Visibility=Visibility.Collapsed; Desktop.Source=null; bitmap=null; width=height=0; }
     }
     async Task Run(string ip,string secret,CancellationToken ct) {
         bool paired=false;
@@ -337,7 +364,7 @@ public partial class MainWindow : Window
                 using(var timeout=CancellationTokenSource.CreateLinkedTokenSource(ct)) { timeout.CancelAfter(TimeSpan.FromSeconds(8)); await wire.Connect(ip,secret,timeout.Token,desktopPort); }
                 paired=true; if(rememberConnection) SecretStore.Save(ip,secret);
                 inputs=new InputQueue(); connected=true;
-                files.Connect(ip,secret); files.Configure(FileSync.IsChecked==true); fileTimer.Start();
+                files.Connect(ip,secret); files.Configure(EffectiveFiles); fileTimer.Start();
                 Interlocked.Exchange(ref inputsQueued,0); Interlocked.Exchange(ref inputsSent,0);
                 Interlocked.Exchange(ref hostReceived,0); Interlocked.Exchange(ref hostPosted,0);
                 Interlocked.Exchange(ref hostBlocked,0); Interlocked.Exchange(ref hostRejected,0); hostInputError="";
@@ -424,7 +451,7 @@ public partial class MainWindow : Window
         SetStatus("诊断已复制（不包含密钥、IP 或输入内容）");
     }
     void ForgetClick(object sender,RoutedEventArgs e) {
-        try { SecretStore.Forget(Address.Text.Trim()); Secret.Password=""; Address.Text=LocalAddress.Find(); SetStatus("已清除当前设备的地址和配对密码记忆。"); }
+        try { if(rememberConnection) SecretStore.Forget(Address.Text.Trim()); Secret.Password=""; SetStatus("已忘记此设备的密码，目标地址保留。"); }
         catch(Exception ex) { SetStatus($"清除失败：{ex.Message}"); }
     }
     void ToggleFull() { if(session==null) return; full=!full; if(full) { previousState=WindowState; WindowState=WindowState.Normal; WindowStyle=WindowStyle.None; WindowState=WindowState.Maximized; Toolbar.Visibility=Visibility.Collapsed; Surface.Focus(); } else { WindowState=WindowState.Normal; WindowStyle=WindowStyle.SingleBorderWindow; WindowState=previousState; Toolbar.Visibility=Visibility.Visible; } }

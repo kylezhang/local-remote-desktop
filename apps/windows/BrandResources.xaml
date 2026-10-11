@@ -4,11 +4,11 @@
   <Style TargetType="TextBox"><Setter Property="SelectionBrush" Value="#5265EC"/></Style>
   <Style TargetType="PasswordBox"><Setter Property="SelectionBrush" Value="#5265EC"/></Style>
   <Style TargetType="Button">
-   <Setter Property="Padding" Value="10,6"/><Setter Property="Background" Value="#F7F8FF"/>
-   <Setter Property="Foreground" Value="#282C67"/><Setter Property="BorderBrush" Value="#D9DEEF"/>
+   <Setter Property="Padding" Value="12,8"/><Setter Property="Background" Value="#FFFFFF"/>
+   <Setter Property="Foreground" Value="#202435"/><Setter Property="BorderBrush" Value="#E5E8F0"/>
    <Setter Property="BorderThickness" Value="1"/>
    <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="Button">
-    <Border x:Name="OrdinaryButton" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="5" Padding="{TemplateBinding Padding}">
+    <Border x:Name="OrdinaryButton" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="7" Padding="{TemplateBinding Padding}">
      <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" RecognizesAccessKey="True"/>
     </Border>
     <ControlTemplate.Triggers>
@@ -22,27 +22,29 @@
   <Style x:Key="BrandConnectButton" TargetType="Button">
    <Setter Property="Foreground" Value="White"/>
    <Setter Property="FontWeight" Value="SemiBold"/>
-   <Setter Property="Background"><Setter.Value><LinearGradientBrush StartPoint="0,0" EndPoint="1,1"><GradientStop Color="#5265EC" Offset="0"/><GradientStop Color="#643AC2" Offset="1"/></LinearGradientBrush></Setter.Value></Setter>
+   <Setter Property="Background" Value="#5265EC"/><Setter Property="Padding" Value="14,9"/>
    <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="Button">
-    <Border x:Name="ButtonBorder" Background="{TemplateBinding Background}" CornerRadius="5" Padding="{TemplateBinding Padding}">
+    <Border x:Name="ButtonBorder" Background="{TemplateBinding Background}" CornerRadius="7" Padding="{TemplateBinding Padding}">
      <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" RecognizesAccessKey="True"/>
     </Border>
     <ControlTemplate.Triggers>
      <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="ButtonBorder" Property="Background" Value="#4B50CE"/></Trigger>
      <Trigger Property="IsPressed" Value="True"><Setter TargetName="ButtonBorder" Property="Background" Value="#4238AF"/></Trigger>
-     <Trigger Property="IsKeyboardFocused" Value="True"><Setter TargetName="ButtonBorder" Property="BorderBrush" Value="#282C67"/><Setter TargetName="ButtonBorder" Property="BorderThickness" Value="2"/></Trigger>
+     <Trigger Property="IsKeyboardFocused" Value="True"><Setter TargetName="ButtonBorder" Property="BorderBrush" Value="#202435"/><Setter TargetName="ButtonBorder" Property="BorderThickness" Value="2"/></Trigger>
      <Trigger Property="IsEnabled" Value="False"><Setter TargetName="ButtonBorder" Property="Opacity" Value="0.45"/></Trigger>
     </ControlTemplate.Triggers>
    </ControlTemplate></Setter.Value></Setter>
   </Style>
 
+ <Style TargetType="TabItem"><Setter Property="Padding" Value="16,9"/><Setter Property="Margin" Value="0,0,6,0"/><Setter Property="Template"><Setter.Value><ControlTemplate TargetType="TabItem"><Border x:Name="Tab" Background="Transparent" CornerRadius="7" Padding="{TemplateBinding Padding}"><ContentPresenter x:Name="TabHeader" ContentSource="Header" RecognizesAccessKey="True"/></Border><ControlTemplate.Triggers><Trigger Property="IsSelected" Value="True"><Setter TargetName="Tab" Property="Background" Value="#EEF0FF"/><Setter TargetName="TabHeader" Property="TextElement.Foreground" Value="#3449BF"/><Setter TargetName="TabHeader" Property="TextElement.FontWeight" Value="SemiBold"/></Trigger><Trigger Property="IsKeyboardFocused" Value="True"><Setter TargetName="Tab" Property="BorderBrush" Value="#5265EC"/><Setter TargetName="Tab" Property="BorderThickness" Value="1"/></Trigger></ControlTemplate.Triggers></ControlTemplate></Setter.Value></Setter></Style>
+ <Style TargetType="ListBoxItem"><Setter Property="Margin" Value="0,0,0,6"/><Setter Property="HorizontalContentAlignment" Value="Stretch"/><Setter Property="Template"><Setter.Value><ControlTemplate TargetType="ListBoxItem"><Border x:Name="Row" Background="White" BorderBrush="#E5E8F0" BorderThickness="0,0,0,1" CornerRadius="9"><ContentPresenter/></Border><ControlTemplate.Triggers><Trigger Property="IsSelected" Value="True"><Setter TargetName="Row" Property="Background" Value="#F1F3FF"/><Setter TargetName="Row" Property="BorderThickness" Value="1"/></Trigger><Trigger Property="IsMouseOver" Value="True"><Setter TargetName="Row" Property="Background" Value="#F6F7FA"/></Trigger><Trigger Property="IsKeyboardFocusWithin" Value="True"><Setter TargetName="Row" Property="BorderBrush" Value="#5265EC"/><Setter TargetName="Row" Property="BorderThickness" Value="1"/></Trigger></ControlTemplate.Triggers></ControlTemplate></Setter.Value></Setter></Style>
  <Style x:Key="NavigationItem" TargetType="RadioButton">
   <Setter Property="Margin" Value="0,3"/><Setter Property="Padding" Value="12,14"/>
   <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="RadioButton">
-   <Border x:Name="Item" Padding="{TemplateBinding Padding}" CornerRadius="6" Background="Transparent"><ContentPresenter/></Border>
+   <Border x:Name="Item" Padding="{TemplateBinding Padding}" CornerRadius="9" Background="Transparent"><ContentPresenter/></Border>
    <ControlTemplate.Triggers>
     <Trigger Property="IsChecked" Value="True"><Setter TargetName="Item" Property="Background" Value="#EBEEFF"/><Setter Property="FontWeight" Value="SemiBold"/></Trigger>
-    <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="Item" Property="Background" Value="#F0F2FF"/></Trigger>
+    <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="Item" Property="Background" Value="#ECEFF5"/></Trigger>
     <Trigger Property="IsKeyboardFocused" Value="True"><Setter TargetName="Item" Property="BorderBrush" Value="#5265EC"/><Setter TargetName="Item" Property="BorderThickness" Value="1"/></Trigger>
     <Trigger Property="IsEnabled" Value="False"><Setter Property="Opacity" Value="0.45"/></Trigger>
    </ControlTemplate.Triggers>

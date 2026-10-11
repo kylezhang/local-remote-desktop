@@ -130,8 +130,7 @@ reduced motion and use native dark colors rather than simply inverting images.
 1. Extract shared tokens, strings and interaction/state rules. Do not change
    Keychain service names, Mac bundle identity, signing, TCC or transport as part
    of visual work. Capability gaps remain independently tracked.
-   Authenticated device-name metadata still needs a protocol implementation:
-   the current capabilities include platform but not the peer's device name.
+   Authenticated device-name metadata is implemented in capabilities/heartbeat.
    Bound and validate display metadata, escape it, and fall back to IP / unknown
    system when absent. A display name is not a cryptographic device identity.
 2. Implement the Windows shell/styles/settings and the relevant Mac native views

@@ -21,15 +21,16 @@ static partial class Program {
                 ()=> { loads++; return credential; },c=> { saved++; credential=c; },
                 (c,key,software,report)=>new WindowsHost(key,c.Salt,area,()=>new SharingCapture(),
                     ()=>new WindowsInput(area,area,new SharingInput()),report,IPAddress.Loopback,0,deviceName:()=>nameStore.Current),deviceName:nameStore));
+        ((TextBlock)window.FindName("LocalDeviceName")).Text="Fixture PC";
         T Find<T>(string name)=>(T)window.FindName(name);
         void Nav(string name)=>Find<RadioButton>(name).IsChecked=true;
         void Invoke(string name,params object[] args)=>typeof(MainWindow).GetMethod(name,BindingFlags.Instance|BindingFlags.NonPublic)!.Invoke(window,args);
         bool Visible(string name)=>Find<FrameworkElement>(name).Visibility==Visibility.Visible;
-        void Snapshot(string name,int width) {
+        void Snapshot(string name,int width,int dpi=96) {
             var content=(FrameworkElement)window.Content;
             content.Measure(new Size(width,640)); content.Arrange(new Rect(0,0,width,640)); content.UpdateLayout();
             Assert(!window.IsVisible && !window.IsActive,"Background check opened/activated a window");
-            var image=new RenderTargetBitmap(width,640,96,96,PixelFormats.Pbgra32); image.Render(content);
+            var image=new RenderTargetBitmap((int)Math.Ceiling(width*dpi/96d),(int)Math.Ceiling(640*dpi/96d),dpi,dpi,PixelFormats.Pbgra32); image.Render(content);
             var root=Environment.GetEnvironmentVariable("LOCALREMOTE_UI_SNAPSHOTS");
             if(root!=null) {
                 Directory.CreateDirectory(root); var png=new PngBitmapEncoder(); png.Frames.Add(BitmapFrame.Create(image));
@@ -46,10 +47,52 @@ static partial class Program {
                 Find<ListBox>("DeviceList").SelectedIndex=0;
                 Assert(Find<TextBox>("Address").Text=="192.168.1.24" && Find<TextBlock>("SelectedDeviceName").Text=="Fixture Mac","Discovery selection lost target");
                 Find<PasswordBox>("Secret").Password="Fixture-LAN#42";
+                Invoke("ForgetClick",window,new RoutedEventArgs());
+                Assert(Find<TextBox>("Address").Text=="192.168.1.24" && Find<PasswordBox>("Secret").Password=="","Forget password cleared address or kept credential");
+                Find<PasswordBox>("Secret").Password="Fixture-LAN#42";
                 foreach(int width in new[]{820,1100,1440}) Snapshot("connect-"+lang+"-"+width,width);
                 Nav("NavSettings");
                 Assert(Visible("SettingsPage") && !Visible("ConnectPage"),"Settings did not replace connection page");
-                Snapshot("settings-"+lang,1100);
+                var tabs=Find<TabControl>("SettingsTabs");
+                Assert(tabs.Items.Count==4,"Settings category count incorrect");
+                for(int tab=0;tab<4;tab++) {
+                    tabs.SelectedIndex=tab; Snapshot("settings-"+lang+"-"+tab,1100);
+                    Snapshot("settings-"+lang+"-"+tab+"-820",820);
+                    foreach(int dpi in new[]{120,144}) Snapshot("settings-"+lang+"-"+tab+"-dpi"+dpi,820,dpi);
+                }
+                Find<ComboBox>("DefaultQuality").SelectedIndex=0;
+                Find<CheckBox>("DefaultShortcuts").IsChecked=true; Find<CheckBox>("DefaultReconnect").IsChecked=true;
+                window.BeginConnectionOptions();
+                Find<ComboBox>("DefaultQuality").SelectedIndex=2;
+                Find<CheckBox>("DefaultShortcuts").IsChecked=false; Find<CheckBox>("DefaultReconnect").IsChecked=false;
+                Assert(Find<ComboBox>("Quality").SelectedIndex==0 && Find<MenuItem>("WindowsShortcuts").IsChecked && Find<MenuItem>("Reconnect").IsChecked,"Future defaults changed current options");
+                Find<MenuItem>("WindowsShortcuts").IsChecked=true;
+                Assert(Find<CheckBox>("DefaultShortcuts").IsChecked==false,"Session choice overwrote default");
+                Find<CheckBox>("GlobalClipboard").IsChecked=false; Find<CheckBox>("GlobalFiles").IsChecked=false;
+                Find<MenuItem>("ClipboardSync").IsChecked=true; Find<MenuItem>("FileSync").IsChecked=true;
+                Assert(!window.EffectiveClipboard && !window.EffectiveFiles && !Find<MenuItem>("ClipboardSync").IsEnabled && !Find<MenuItem>("FileSync").IsEnabled,"Session expanded disabled global consent");
+                Find<CheckBox>("GlobalClipboard").IsChecked=true; Find<CheckBox>("GlobalFiles").IsChecked=true;
+                var fields=typeof(MainWindow);
+                void Field(string name,object value)=>fields.GetField(name,BindingFlags.Instance|BindingFlags.NonPublic)!.SetValue(window,value);
+                long Request()=>(long)fields.GetField("clipboardRequestId",BindingFlags.Instance|BindingFlags.NonPublic)!.GetValue(window)!;
+                var text=(TextClipboardSync)fields.GetField("clipboard",BindingFlags.Instance|BindingFlags.NonPublic)!.GetValue(window)!;
+                void Clipboard(object value) {using var message=System.Text.Json.JsonDocument.Parse(System.Text.Json.JsonSerializer.Serialize(value));Invoke("ClipboardControl",message.RootElement);}
+                Field("connected",true); Clipboard(new {op="capabilities",clipboardText=true});
+                var oldRequest=Request();Clipboard(new {op="clipboard_sync",enabled=true,requestId=oldRequest});
+                Assert(text.Enabled,"Fresh consent acknowledgement did not enable fixture clipboard");
+                Find<CheckBox>("GlobalClipboard").IsChecked=false;
+                Clipboard(new {op="clipboard_sync",enabled=true,requestId=oldRequest});
+                Clipboard(new {op="clipboard_sync",enabled=true,requestId=Request()});
+                Assert(!text.Enabled,"Revoked global consent accepted stale or positive peer acknowledgement");
+                Find<CheckBox>("GlobalClipboard").IsChecked=true;
+                Clipboard(new {op="clipboard_sync",enabled=true,requestId=oldRequest});
+                Assert(!text.Enabled,"Re-enable revived old consent");
+                Clipboard(new {op="clipboard_sync",enabled=true,requestId=Request()});
+                Assert(text.Enabled,"Fresh consent after re-enable did not work");
+                Field("connected",false);Invoke("ResetClipboard");
+                window.BeginConnectionOptions();
+                Assert(Find<ComboBox>("Quality").SelectedIndex==2 && !Find<MenuItem>("WindowsShortcuts").IsChecked && !Find<MenuItem>("Reconnect").IsChecked,"New logical connection did not adopt defaults");
+                Console.WriteLine("PASS four settings categories, next-connection defaults, temporary session choices and global clipboard/file consent ceiling");
                 Nav("NavShare");
                 Assert(Visible("SharingPage") && window.SharingController!=null && loads==1,"Sharing view duplicated credential reads");
                 var sharing=window.SharingController!;

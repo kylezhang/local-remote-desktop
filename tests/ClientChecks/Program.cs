@@ -80,7 +80,7 @@ static partial class Program {
 
                 ((TextBox)window.FindName("Address")).Text="127.0.0.1";
                 ((PasswordBox)window.FindName("Secret")).Password=host.Credential;
-                ((MenuItem)window.FindName("Reconnect")).IsChecked=false;
+                ((CheckBox)window.FindName("DefaultReconnect")).IsChecked=false;
                 var connect=(Button)window.FindName("ConnectButton"); var surface=(UIElement)window.FindName("Surface");
                 connect.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
                 await Until(()=>((Image)window.FindName("Desktop")).Source!=null,"real client did not decode/display mock H264");
@@ -333,7 +333,7 @@ static partial class Program {
             var quality=(ComboBox)window.FindName("Quality"); var board=(MenuItem)window.FindName("ClipboardSync");
             ((TextBox)window.FindName("Address")).Text="192.168.100.250";
             ((PasswordBox)window.FindName("Secret")).Password="Local-test#42";
-            ((MenuItem)window.FindName("LanguageEnglish")).RaiseEvent(new RoutedEventArgs(MenuItem.ClickEvent));
+            ((RadioButton)window.FindName("LanguageEnglish")).RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
             await Until(()=>label.Text=="Target IP","English label/binding missing");
             Assert(((Button)window.FindName("ConnectButton")).Content.ToString()=="Connect" && board.Header.ToString()=="Sync text","English controls not translated");
             Assert(((ComboBoxItem)quality.Items[1]).Content.ToString()=="Standard","quality translation missing");
@@ -354,7 +354,7 @@ static partial class Program {
                 image.Render(drawing); png.Frames.Add(System.Windows.Media.Imaging.BitmapFrame.Create(image));
                 using var stream=File.Create(Path.Combine(root,"english-720.png")); png.Save(stream);
             }
-            ((MenuItem)window.FindName("LanguageChinese")).RaiseEvent(new RoutedEventArgs(MenuItem.ClickEvent));
+            ((RadioButton)window.FindName("LanguageChinese")).RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
             await Until(()=>label.Text=="目标IP","Chinese switch did not refresh binding");
             Assert(quality.SelectedIndex==0 && board.IsChecked && ((PasswordBox)window.FindName("Secret")).Password=="Local-test#42","language switch changed session settings or password");
             Assert(((TextBox)window.FindName("Address")).Text=="192.168.100.250","language switch changed target");

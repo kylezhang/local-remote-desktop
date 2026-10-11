@@ -20,6 +20,10 @@ import Foundation
         first.status(["op":"capabilities","inputEnabled":true,"deviceName":"Office Windows"]); first.status(["op":"video_header","width":1280,"height":720])
         first.status(["op":"connected"]); await until { model.connected }
         precondition(model.targetName == "Office Windows" && model.targetSystem == "Windows")
+        let currentQuality = model.quality
+        model.defaultQuality = 2; model.defaultShortcuts = false; model.defaultAutoReconnect = false
+        precondition(model.quality == currentQuality && model.shortcuts && model.autoReconnect && !first.stopped)
+        print("PASS editing future defaults preserves active quality/shortcuts/reconnect and transport")
         first.status(["op":"heartbeat","deviceName":"Renamed Windows"]); await until { model.targetName == "Renamed Windows" }
         model.send(["op":"key_event","vk":67,"down":true]); precondition(first.messages.count == 1)
         model.release(); precondition(first.messages.last?["op"] as? String == "release_all")
@@ -31,13 +35,14 @@ import Foundation
         try await Task.sleep(nanoseconds:30_000_000); precondition(!model.connected && model.image == nil)
         let fresh = ControllerModel(host:host,preferences:preferences)
         precondition(fresh.address == model.address && fresh.password.isEmpty)
+        precondition(fresh.defaultQuality == 2 && !fresh.defaultShortcuts && !fresh.defaultAutoReconnect)
         print("PASS exclusive roles, authenticated input gate, latest-only presentation, disconnect and stale callbacks; only address persisted")
-        model.autoReconnect = false; model.connect()
+        model.defaultAutoReconnect = false; model.connect()
         let second = ControllerSession.instances.last!
         second.status(["op":"connected"]); await until { model.connected }
         second.finish(WireError.closed); await until { !model.busy }
         precondition(!host.controlling)
-        model.autoReconnect = true; model.connect()
+        model.defaultAutoReconnect = true; model.connect()
         let third = ControllerSession.instances.last!; third.finish(WireError.authentication)
         await until { !model.busy }; precondition(!host.controlling && model.status.contains("身份验证失败"))
         model.connect(); let fourth = ControllerSession.instances.last!
@@ -56,7 +61,7 @@ import Foundation
         try await Task.sleep(nanoseconds:3_100_000_000)
         precondition(ControllerSession.instances.count == count+2 && model.busy)
         model.disconnect()
-        model.autoReconnect = true; model.connect()
+        model.defaultAutoReconnect = true; model.connect()
         let seventh = ControllerSession.instances.last!
         seventh.status(["op":"connected"]); await until { model.connected }
         seventh.finish(WireError.closed); await until { !model.connected }

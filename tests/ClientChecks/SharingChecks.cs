@@ -57,15 +57,15 @@ static partial class Program {
         var window=new MainWindow(false,()=>modifiers,desktopPort:host.Port) {Left=-20000,Top=-20000,ShowActivated=false,ShowInTaskbar=false};
         try {
             window.Show(); ((TextBox)window.FindName("Address")).Text="127.0.0.1"; ((PasswordBox)window.FindName("Secret")).Password=credential.Password;
-            ((MenuItem)window.FindName("AllowConnections")).RaiseEvent(new RoutedEventArgs(MenuItem.ClickEvent));
+            ((RadioButton)window.FindName("NavShare")).IsChecked=true;
             var sharing=window.SharingController??throw new Exception("Missing embedded sharing controller");
             Assert(!sharing.IsVisible && window.OwnedWindows.Count==0,"Sharing opened a second window");
             Assert(!sharing.Sharing && ((Button)sharing.FindName("SharingStart")).IsEnabled,"Idle sharing page incorrectly reserved the role");
-            ((MenuItem)window.FindName("Reconnect")).IsChecked=false;
+            ((CheckBox)window.FindName("DefaultReconnect")).IsChecked=false;
             ((Button)window.FindName("ConnectButton")).RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
             await Until(()=>((Image)window.FindName("Desktop")).Source!=null,"WPF client could not display real Windows sharing pipeline");
-            Assert(((TextBlock)window.FindName("ConnectionTarget")).Text.StartsWith("Windows"),"Target type not shown");
-            Assert(!((MenuItem)window.FindName("AllowConnections")).IsEnabled,"Control role allows accidental simultaneous sharing");
+            Assert(((TextBlock)window.FindName("ConnectionTarget")).Text.EndsWith(" · Windows"),"Target type not shown beside authenticated name");
+            Assert(!((RadioButton)window.FindName("NavShare")).IsEnabled,"Control role allows accidental simultaneous sharing");
             var start=(Button)sharing.FindName("SharingStart"); Assert(!start.IsEnabled,"Previously opened sharing page can start while controlling");
             start.RaiseEvent(new RoutedEventArgs(Button.ClickEvent)); Assert(!sharing.Sharing,"Routed start bypassed role exclusion");
             var surface=(System.Windows.UIElement)window.FindName("Surface");

@@ -48,7 +48,7 @@ static class SecretStore
             File.WriteAllText(marker,"LocalRemoteDesktop encrypted settings migration completed.\n");
         }
     }
-    static string PathFor(string host) => Path.Combine(DirectoryPath(),Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(host)))+".dpapi");
+    static string PathFor(string host,string? directory=null) => Path.Combine(directory??DirectoryPath(),Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(host)))+".dpapi");
     public static void Save(string host,string secret) => File.WriteAllBytes(PathFor(host), Transform(System.Text.Encoding.UTF8.GetBytes(secret),true));
     public static string Load(string host) { try { return System.Text.Encoding.UTF8.GetString(Transform(File.ReadAllBytes(PathFor(host)),false)); } catch { return ""; } }
     public static void Remember(string host,string secret) {
@@ -66,8 +66,16 @@ static class SecretStore
     public static bool LoadFileSync(string? preferencePath=null)=>LoadSharing("file-clipboard.dpapi",preferencePath);
     public static void SaveClipboardSync(bool enabled,string? preferencePath=null) => File.WriteAllBytes(preferencePath??Path.Combine(DirectoryPath(),"text-clipboard.dpapi"),Transform(new byte[]{enabled?(byte)1:(byte)0},true));
     public static bool LoadClipboardSync(string? preferencePath=null)=>LoadSharing("text-clipboard.dpapi",preferencePath);
-    public static void Forget(string host) {
-        File.Delete(PathFor(host));
-        if (LastHost()==host) File.Delete(Path.Combine(DirectoryPath(),"last-host.dpapi"));
+    public static void SaveConnectionQuality(int value,string? preferencePath=null) {
+        if(value is <0 or >2) throw new ArgumentOutOfRangeException(nameof(value));
+        File.WriteAllBytes(preferencePath??Path.Combine(DirectoryPath(),"connection-quality.dpapi"),Transform(new[]{(byte)value},true));
+    }
+    public static int LoadConnectionQuality(string? preferencePath=null) {
+        try { var value=Transform(File.ReadAllBytes(preferencePath??Path.Combine(DirectoryPath(),"connection-quality.dpapi")),false); return value.Length==1 && value[0]<=2?value[0]:0; } catch { return 0; }
+    }
+    public static void SaveAutoReconnect(bool enabled,string? preferencePath=null)=>File.WriteAllBytes(preferencePath??Path.Combine(DirectoryPath(),"connection-reconnect.dpapi"),Transform(new[]{enabled?(byte)1:(byte)0},true));
+    public static bool LoadAutoReconnect(string? preferencePath=null)=>LoadSharing("connection-reconnect.dpapi",preferencePath);
+    public static void Forget(string host,string? directory=null) {
+        File.Delete(PathFor(host,directory));
     }
 }

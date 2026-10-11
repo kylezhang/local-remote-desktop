@@ -71,9 +71,9 @@ struct DesktopShell: View {
                         Text(host.deviceName).font(.caption).foregroundStyle(.secondary).padding(.bottom, 18)
                         navigationButton("连接", symbol: "rectangle.connected.to.line.below", page: "connect")
                         navigationButton("共享此设备", symbol: "arrow.left.arrow.right", page: "share")
-                        navigationButton("设置", symbol: "gearshape", page: "settings")
                         Spacer()
-                    }.padding(16).frame(width: 165).background(Color(nsColor: .windowBackgroundColor))
+                        navigationButton("设置", symbol: "gearshape", page: "settings")
+                    }.padding(16).frame(width: 174).background(Color(nsColor: .windowBackgroundColor))
                     Divider()
                     Group {
                         switch navigation.page {
@@ -84,13 +84,13 @@ struct DesktopShell: View {
                     }.frame(maxWidth: .infinity,maxHeight: .infinity)
                 }
             }
-        }.tint(accent).frame(minWidth: 820,minHeight: 480)
+        }.font(.system(size: 14)).tint(accent).frame(minWidth: 820,minHeight: 480)
     }
     private func navigationButton(_ title: String, symbol: String, page: String) -> some View {
         Button { navigation.page = page } label: {
             Label(UiText.text(title), systemImage: symbol).frame(maxWidth: .infinity,alignment: .leading).padding(12)
                 .background(navigation.page == page ? accent.opacity(0.12) : Color.clear)
-                .cornerRadius(6)
+                .cornerRadius(9)
         }.buttonStyle(.plain)
     }
 }
@@ -101,7 +101,7 @@ struct ConnectionPage: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 24) {
-                Text(UiText.text("连接")).font(.largeTitle)
+                Text(UiText.text("连接")).font(.system(size: 25, weight: .semibold))
                 Text(UiText.text("选择你要连接并操作的设备。")).foregroundStyle(.secondary)
                 HStack(alignment: .top, spacing: 28) {
                     VStack(alignment: .leading, spacing: 12) {
@@ -116,7 +116,7 @@ struct ConnectionPage: View {
                         TextField("192.168.1.10", text: $model.address).textFieldStyle(.roundedBorder)
                         Text(UiText.text("配对密码")).font(.caption)
                         SecureField(UiText.text("配对密码"), text: $model.password).textFieldStyle(.roundedBorder)
-                        Picker(UiText.text("画质"), selection: $model.quality) {
+                        Picker(UiText.text("画质"), selection: $model.nextQuality) {
                             Text(UiText.text("流畅")).tag(0); Text(UiText.text("标准")).tag(1); Text(UiText.text("高清")).tag(2)
                         }
                         Button(UiText.text("连接")) { model.connect() }.buttonStyle(.borderedProminent)
@@ -138,35 +138,58 @@ struct ConnectionPage: View {
 struct DesktopSettings: View {
     @ObservedObject var host: HostModel
     @ObservedObject var controller: ControllerModel
+    @State private var category = "general"
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 18) {
-                Text(UiText.text("设置")).font(.largeTitle)
-                Text(UiText.text("剪贴板")).font(.headline)
-                Toggle(UiText.text("同步文字"), isOn: $host.allowClipboard)
-                Toggle(UiText.text("同步文件"), isOn: $host.allowFiles)
-                Text(UiText.text("Mac 控制端的剪贴板和文件同步将在下一阶段补齐。"))
-                    .font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false,vertical: true)
-                Button(UiText.text("打开接收目录")) { host.openReceivedFiles() }
-                Divider()
-                Text(UiText.text("键盘与连接")).font(.headline)
-                Toggle(UiText.text("Mac 快捷键"), isOn: $controller.shortcuts)
-                Toggle(UiText.text("自动重连"), isOn: $controller.autoReconnect)
-                Divider()
-                Picker(UiText.text("语言"), selection: $host.languageCode) {
-                    Text("English").tag("en"); Text("简体中文").tag("zh-Hans")
-                }.pickerStyle(.segmented)
-                Divider()
-                Text(UiText.text("权限")).font(.headline)
-                Button(UiText.text("屏幕录制权限")) { NSWorkspace.shared.open(URL(string:"x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture")!) }
-                Button(UiText.text("辅助功能权限")) { host.openAccessibilitySettings() }
-                Divider()
-                Text(UiText.text("诊断")).font(.headline)
-                Text("Local Remote Desktop 0.3.0-alpha.2").font(.caption).foregroundStyle(.secondary)
-                Button(UiText.text("复制启动诊断")) { host.copyDiagnostics() }
-                if !host.inputTestResult.isEmpty { Text(UiText.text(host.inputTestResult)).font(.caption) }
-            }.frame(maxWidth: 520,alignment: .leading).padding(32).frame(maxWidth: .infinity,alignment: .leading)
-        }
+        VStack(alignment: .leading, spacing: 24) {
+            Text(UiText.text("设置")).font(.system(size: 25, weight: .semibold))
+            Picker(UiText.text("设置"), selection: $category) {
+                Text(UiText.text("通用")).tag("general")
+                Text(UiText.text("连接设置")).tag("connection")
+                Text(UiText.text("剪贴板")).tag("clipboard")
+                Text(UiText.text("关于")).tag("about")
+            }.pickerStyle(.segmented).frame(maxWidth: 580)
+            ScrollView {
+                VStack(alignment: .leading, spacing: 20) {
+                    switch category {
+                    case "connection":
+                        Text(UiText.text("默认连接选项")).font(.headline)
+                        Text(UiText.text("用于下一次连接；当前会话在画面工具栏中调整。"))
+                            .font(.caption).foregroundStyle(.secondary)
+                        Picker(UiText.text("画质"), selection: $controller.defaultQuality) {
+                            Text(UiText.text("流畅")).tag(0); Text(UiText.text("标准")).tag(1); Text(UiText.text("高清")).tag(2)
+                        }
+                        Toggle(UiText.text("自动重连"), isOn: $controller.defaultAutoReconnect)
+                        Toggle(UiText.text("Mac 快捷键"), isOn: $controller.defaultShortcuts)
+                        Text(UiText.text("Mac 本机快捷键映射到目标 Windows 对应按键。"))
+                            .font(.caption).foregroundStyle(.secondary)
+                    case "clipboard":
+                        Text(UiText.text("允许已配对设备共享剪贴板")).font(.headline)
+                        Text(UiText.text("关闭后立即停止对应同步；会话选项只能进一步限制共享。"))
+                            .font(.caption).foregroundStyle(.secondary)
+                        Toggle(UiText.text("同步文字"), isOn: $host.allowClipboard)
+                        Toggle(UiText.text("同步文件"), isOn: $host.allowFiles)
+                        Button(UiText.text("打开接收目录")) { host.openReceivedFiles() }
+                        Text(UiText.text("Mac 控制端的剪贴板和文件同步将在下一阶段补齐。"))
+                            .font(.caption).foregroundStyle(.secondary)
+                    case "about":
+                        Text("Local Remote Desktop").font(.title2)
+                        Text("Local Remote Desktop 0.3.0-alpha.2").font(.caption).foregroundStyle(.secondary)
+                        Text(UiText.text("许可")).font(.headline)
+                        Text("GPL-3.0-or-later").textSelection(.enabled)
+                        DisclosureGroup(UiText.text("故障排查")) {
+                            VStack(alignment: .leading, spacing: 14) {
+                                Button(UiText.text("复制启动诊断")) { host.copyDiagnostics() }
+                                if !host.inputTestResult.isEmpty { Text(UiText.text(host.inputTestResult)).font(.caption) }
+                            }.padding(.top, 12)
+                        }
+                    default:
+                        Picker(UiText.text("语言"), selection: $host.languageCode) {
+                            Text("English").tag("en"); Text("简体中文").tag("zh-Hans")
+                        }.pickerStyle(.segmented)
+                    }
+                }.frame(maxWidth: 640, alignment: .leading).frame(maxWidth: .infinity, alignment: .leading)
+            }
+        }.padding(32).frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
     }
 }
 struct HostView: View {
@@ -187,7 +210,7 @@ struct HostView: View {
     }
     var body: some View {
         VStack(alignment: .leading, spacing: 18) {
-            Text(UiText.text("共享此设备")).font(.largeTitle)
+            Text(UiText.text("共享此设备")).font(.system(size: 25, weight: .semibold))
             Text(UiText.text("让另一台设备连接并操作你的当前屏幕。")).foregroundStyle(.secondary)
             VStack(alignment: .leading, spacing: 6) {
                 Text(UiText.text(sharingTitle)).font(.headline)
@@ -234,7 +257,7 @@ struct HostView: View {
                 if !model.pairingMessage.isEmpty {
                     Text(UiText.text(model.pairingMessage)).font(.caption).fixedSize(horizontal: false, vertical: true)
                 }
-                Text(UiText.text("在另一台设备上输入这台 Mac 的 IP 和配对密码。"))
+                Text(UiText.text("连接本设备时，使用下方密码。"))
                     .font(.callout).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
             }
             if hasFileNotice {
@@ -246,8 +269,14 @@ struct HostView: View {
             if !model.inputTestResult.isEmpty {
                 Text(UiText.text(model.inputTestResult)).font(.caption).fixedSize(horizontal: false, vertical: true).textSelection(.enabled)
             }
-            Text(UiText.text("Mac 需保持唤醒并登录。剪贴板共享可在设置中调整。"))
-                .font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+            DisclosureGroup(UiText.text("权限")) {
+                HStack {
+                    Button(UiText.text("屏幕录制权限")) {
+                        NSWorkspace.shared.open(URL(string:"x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture")!)
+                    }
+                    Button(UiText.text("辅助功能权限")) { model.openAccessibilitySettings() }
+                }.padding(.top, 12)
+            }
         }.frame(maxWidth: 600, alignment: .leading).padding(32).frame(maxWidth: .infinity,alignment: .leading).tint(blueberry)
         .sheet(isPresented: $model.editingName, onDismiss: { model.cancelNameEditor() }) {
             DeviceNameEditorView(model: model).tint(blueberry)
