@@ -2,6 +2,11 @@
 
 [English / 完整字段规范](../protocol.md)
 
+开发版两端共享角色在已认证的 capabilities 和心跳回复中附带可选 `deviceName`。
+它是 1–32 个 Unicode 字符、不含控制字符的应用展示名称，不是配对身份。字段缺失、
+类型错误或无效时，控制端保留已有名称或地址。改名通过现有连接传播，不增加认证流程
+或协议版本；平台信息来自校验过的 capabilities，不能从 IP 或名称推断。
+
 固定 TCP 47980、IPv4、单控制端，整数大端。PSK 32 随机字节，显示为 64 位 hex。加密包体上限 Host→Client 8MiB、反向 64KiB。
 
 Host 发 RML1 与随机 S，Client 发随机 C 及 HMAC-SHA256(PSK, client || S || C)，Host 验证后回 server 标签的 HMAC；双方用 c2h/h2c 标签及随机 transcript 派生独立方向密钥。每包是 u32 长度、密文、16 字节 GCM tag，明文含类型字节及载荷。nonce 为四个零字节加方向 u64 计数器，长度作 AAD；认证、长度、tag、顺序或 EOF 错误断开。无未认证控制模式。

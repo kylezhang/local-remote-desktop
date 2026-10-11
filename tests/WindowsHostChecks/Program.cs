@@ -121,15 +121,18 @@ static class Program {
     }
     static async Task Lifecycle() {
         var salt=RandomNumberGenerator.GetBytes(16); var key=PairingPassword.Derive("Office-LAN#42",salt);
+        string displayName="Office fixture";
         var area=new CaptureArea(0,0,320,180); var native=new RecordingInput(); var capture=new FakeCapture(); var injector=new WindowsInput(area,area,native);
-        await using var host=new WindowsHost(key,salt,area,()=>capture,()=>injector,address:IPAddress.Loopback,port:0); host.Start();
+        await using var host=new WindowsHost(key,salt,area,()=>capture,()=>injector,address:IPAddress.Loopback,port:0,deviceName:()=>displayName); host.Start();
         using(var wrong=new Wire()) { try { await wrong.Connect("127.0.0.1","wrong-password",CancellationToken.None,host.Port); throw new Exception("Wrong password accepted"); } catch(Exception e) when(e is CryptographicException or System.IO.IOException) {} }
         Require(capture.Starts==0,"Unauthenticated capture started"); await Task.Delay(100);
         for(int attempt=0;attempt<2;attempt++) {
             using var deadline=new CancellationTokenSource(TimeSpan.FromSeconds(12)); using var client=new Wire();
             await client.Connect("127.0.0.1","Office-LAN#42",deadline.Token,host.Port); await client.Json(new {op="handshake",version=1,quality=0},deadline.Token);
-            using(var caps=JsonDocument.Parse((await client.Read(deadline.Token)).data)) Require(caps.RootElement.GetProperty("platform").GetString()=="windows","Platform missing");
+            using(var caps=JsonDocument.Parse((await client.Read(deadline.Token)).data)) Require(caps.RootElement.GetProperty("platform").GetString()=="windows" && caps.RootElement.GetProperty("deviceName").GetString()==displayName,"Authenticated device metadata missing");
             await client.Read(deadline.Token); await client.Read(deadline.Token);
+            displayName="Renamed fixture"; await client.Json(new {op="heartbeat"},deadline.Token);
+            using(var changed=JsonDocument.Parse((await client.Read(deadline.Token)).data)) Require(changed.RootElement.GetProperty("deviceName").GetString()==displayName,"Live rename not returned without disconnect");
             using(var busy=new TcpClient()) { await busy.ConnectAsync(IPAddress.Loopback,host.Port); var probe=new byte[1]; Require(await busy.GetStream().ReadAsync(probe,deadline.Token)==0,"Second controller not rejected"); }
             await client.Json(new {op="key_event",vk=162,down=true,flags=2},deadline.Token); await Until(()=>injector.Held==1,"Input not received");
             await client.Json(new {op="disconnect"},deadline.Token); await Until(()=>capture.Stops==attempt+1 && injector.Held==0,"Disconnect did not clean capture/input");

@@ -34,8 +34,9 @@ enum MacFiles { static var receivedDirectory: URL { FileManager.default.temporar
 final class InputSelfTest { func run(_ done: (String) -> Void) { done("test") } }
 final class HostDiscovery {
     static var starts = 0, stops = 0
+    static var lastName = ""
     var state = "stopped"
-    func start() { Self.starts += 1; state = "published" }
+    func start(name: String = DeviceName.current()) { Self.starts += 1; Self.lastName = name; state = "published" }
     func stop() { Self.stops += 1; state = "stopped" }
 }
 func randomBytes(_ count: Int) -> Data { Data((0..<count).map { UInt8($0) }) }
@@ -63,13 +64,15 @@ final class Host {
     let passwordSalt: Data?
     let status: (String) -> Void, fileStatus: (String) -> Void
     private(set) var stopped = false
-    init(key: Data, passwordSalt: Data?, clipboardAllowed: Bool, filesAllowed: Bool,
+    init(key: Data, deviceName: String = DeviceName.current(), passwordSalt: Data?, clipboardAllowed: Bool, filesAllowed: Bool,
          fileStatus: @escaping (String) -> Void, status: @escaping (String) -> Void) {
         self.key = key; self.passwordSalt = passwordSalt; self.status = status; self.fileStatus = fileStatus
         Self.instances.append(self)
     }
     func start() throws {}
     func stop() { stopped = true }
+    var deviceName = ""
+    func setDeviceName(_ name: String) { deviceName = name }
     func setClipboardAllowed(_ allowed: Bool) {}
     func setFilesAllowed(_ allowed: Bool) {}
     func cancelFiles() {}

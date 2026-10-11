@@ -19,13 +19,14 @@ final class NetService: NSObject {
 }
 @main struct Check {
     static func main() {
-        let discovery = HostDiscovery(); discovery.start()
+        let discovery = HostDiscovery(); discovery.start(name: "Office Mac")
         let first = NetService.instances.last!
         precondition(first.published && first.domain == "local." && first.type == "_localremote._tcp." && first.port == 47980)
         let txt = try! JSONSerialization.jsonObject(with: first.txt!) as! [String: String]
-        precondition(txt == ["protocol": "1", "platform": "macos"])
+        precondition(txt == ["protocol": "1", "platform": "macos", "deviceName": "Office Mac"])
         discovery.netServiceDidPublish(first); precondition(discovery.state == "published")
-        discovery.start(); let second = NetService.instances.last!
+        discovery.start(name: "改名后的 Mac"); let second = NetService.instances.last!
+        precondition(second.name == "改名后的 Mac")
         precondition(first.stopped && first.delegate == nil && second !== first)
         discovery.netServiceDidPublish(first); precondition(discovery.state == "publishing")
         discovery.netService(second, didNotPublish: [:]); precondition(discovery.state.contains("manual IP"))

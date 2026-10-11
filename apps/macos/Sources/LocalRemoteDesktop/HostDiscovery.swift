@@ -12,12 +12,12 @@ final class HostDiscovery: NSObject, NetServiceDelegate {
         }
         return value.isEmpty ? "Mac" : value
     }
-    func start() {
+    func start(name: String = DeviceName.current()) {
         stop()
-        let raw = ProcessInfo.processInfo.hostName.components(separatedBy: ".").first ?? "Mac"
+        let raw = DeviceName.valid(name) ?? DeviceName.system
         let next = NetService(domain: "local.", type: "_localremote._tcp.", name: Self.serviceName(raw), port: 47980)
         next.delegate = self
-        next.setTXTRecord(NetService.data(fromTXTRecord: ["protocol": Data("1".utf8), "platform": Data("macos".utf8)]))
+        next.setTXTRecord(NetService.data(fromTXTRecord: ["protocol": Data("1".utf8), "platform": Data("macos".utf8), "deviceName": Data(raw.utf8)]))
         service = next; state = "publishing"; next.publish()
     }
     func netServiceDidPublish(_ sender: NetService) { if service === sender { state = "published" } }

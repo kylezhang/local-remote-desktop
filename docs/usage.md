@@ -25,19 +25,35 @@ the setup instructions to either interface:
 
 ## Interface organization
 
-Windows uses one compact toolbar for connection, quality, Full Screen and
-Settings. The title bar carries the app name/icon; the toolbar does not repeat them. After connecting, the IP/key fields become a short Mac
-address label. Settings groups clipboard, keyboard/connection and diagnostic
-options; performance counters are hidden until enabled. Transfer progress and
-errors appear only when needed, including in full screen. Completed notices can
-be dismissed. Mac separates sharing status/actions from the current password. Passwords are
-hidden by default; legacy keys are labeled and wrap when revealed. Change Password
-opens a separate editor with local validation and Save/Cancel. Clipboard, permissions
-and diagnostics are in Settings. Viewing/copying a password does not start sharing.
+Development desktop builds use Connect, Share this device and Settings in one
+window. Connecting hides navigation/credentials and leaves a compact session bar
+for quality, full screen, options and disconnect. Performance and transfer details
+appear only when needed. Both sharing pages keep passwords masked and offer an
+explicit edit/cancel flow. Viewing/copying a password does not start sharing.
+The approved second UI revision is being applied incrementally; see
+[native progress](native-ui.md) for features and validation still pending.
+
+## This device’s name (development)
+
+In Share this device, choose **Change name** beside **This device’s name**. The
+default is the system name. Save an app-only name of 1–32 Unicode characters;
+Cancel preserves the old name and **Use system name** fills the draft for review.
+Saving does not rename the OS computer, change pairing or end sharing.
+
+While sharing, Mac advertises this name on the LAN. A paired target also returns
+its name/system over the existing connection; changing its name updates the
+session label through heartbeat. A new manual IP has no name/system until the
+target reports them. Older targets keep the known name or IP. Windows retains
+authenticated records in memory during refresh; persistent device history and
+reverse discovery remain pending.
 
 ## Connect and control
 
-Start sharing on the awake, logged-in Mac. On Windows, enter the Mac's IPv4 address and 64-character hexadecimal pairing key, select Smooth, then Connect. The first address default may be the Windows computer's own LAN address to make the subnet easier to edit; it does not discover the Mac. A previously saved Mac address/key takes precedence.
+Start sharing on the awake, logged-in Mac. On Windows, choose its nearby entry or
+enter its IPv4 address and pairing password, select Smooth, then Connect. Legacy
+64-character keys remain supported. The first address default may be the Windows
+computer's own LAN address to make the subnet easier to edit; a saved target takes
+precedence. Discovery selection fills the address without connecting automatically.
 
 Click the picture for keyboard focus. In the development update, **Windows Shortcuts** is enabled by default: Ctrl maps to Mac Command, Win to Control, Alt to Option and Shift to Shift. Ctrl+C/V/X/A/Z/S therefore sends the corresponding Command shortcut. Ctrl+Shift combinations retain Shift. Changing this mode releases held remote keys; the choice is remembered on Windows. Disable it to use the original mapping (Ctrl→Control, Win→Command), including Control+C for a terminal interrupt. Published v0.1.0 packages use the original mapping.
 

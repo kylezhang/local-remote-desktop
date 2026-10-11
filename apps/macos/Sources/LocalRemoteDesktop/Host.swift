@@ -12,9 +12,13 @@ final class Host {
     private let key: Data
     private let passwordSalt: Data?
     private let status: (String) -> Void
-    init(key: Data, passwordSalt: Data? = nil, clipboardAllowed: Bool = false, filesAllowed: Bool = false, fileStatus: @escaping (String) -> Void = { _ in }, status: @escaping (String) -> Void) {
+    private var deviceName: String
+    init(key: Data, deviceName: String = DeviceName.current(), passwordSalt: Data? = nil, clipboardAllowed: Bool = false, filesAllowed: Bool = false, fileStatus: @escaping (String) -> Void = { _ in }, status: @escaping (String) -> Void) {
+        self.deviceName = DeviceName.valid(deviceName) ?? DeviceName.system
         self.key = key; self.passwordSalt = passwordSalt; self.clipboardAllowed = clipboardAllowed; self.filesAllowed = filesAllowed; self.fileStatus = fileStatus; self.status = status
     }
+    func setDeviceName(_ value: String) { lock.lock(); deviceName = DeviceName.valid(value) ?? DeviceName.system; lock.unlock() }
+    private func displayName() -> String { lock.lock(); defer { lock.unlock() }; return deviceName }
     func setClipboardAllowed(_ value: Bool) { lock.lock(); clipboardAllowed = value; lock.unlock() }
     private func allowsClipboard() -> Bool { lock.lock(); defer { lock.unlock() }; return clipboardAllowed }
     func setFilesAllowed(_ value: Bool) { lock.lock(); filesAllowed = value; lock.unlock() }
@@ -69,7 +73,7 @@ final class Host {
             if let startupError { throw startupError }
             var trusted = AXIsProcessTrusted()
             clipboard = MacClipboard(wire: wire, allowed: { [weak self] in self?.allowsClipboard() ?? false })
-            var capabilities: [String: Any] = ["op":"capabilities","platform":"macos","inputModel":"win-vk-mac-v1","accessibility":trusted,"clipboardText":true,"fileClipboard":false]
+            var capabilities: [String: Any] = ["op":"capabilities","deviceName":displayName(),"platform":"macos","inputModel":"win-vk-mac-v1","accessibility":trusted,"clipboardText":true,"fileClipboard":false]
             do {
                 let fileSession = try MacFiles(key: key, passwordSalt: passwordSalt, control: wire, allowed: { [weak self] in self?.allowsFiles() ?? false }, status: fileStatus); files = fileSession
                 lock.lock(); let active = running; if active { currentFiles = fileSession }; lock.unlock()
@@ -85,7 +89,7 @@ final class Host {
                     lastHeartbeat = Date()
                     let currentTrust = AXIsProcessTrusted()
                     var reply = input.diagnostics
-                    reply["op"] = "heartbeat"; reply["accessibility"] = currentTrust
+                    reply["op"] = "heartbeat"; reply["deviceName"] = displayName(); reply["accessibility"] = currentTrust
                     try wire.json(reply)
                     if currentTrust != trusted {
                         trusted = currentTrust

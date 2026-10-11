@@ -3,21 +3,22 @@
  <Grid>
  <Grid x:Name="HomeShell"><Grid.ColumnDefinitions><ColumnDefinition Width="180"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
  <Border Background="#F7F8FF" BorderBrush="#E2E5F3" BorderThickness="0,0,1,0"><StackPanel Margin="12,28,12,12">
- <TextBlock Text="Local Remote Desktop" FontSize="12" Margin="8,0,0,24"/>
+ <TextBlock x:Name="LocalDeviceName" FontSize="12" Margin="8,0,0,24" TextWrapping="Wrap"/>
  <RadioButton x:Name="NavConnect" Content="{local:Translate Key='连接'}" Tag="connect" GroupName="navigation" Style="{StaticResource NavigationItem}" Checked="NavigateClick" IsChecked="True"/>
  <RadioButton x:Name="NavShare" Content="{local:Translate Key='共享此设备'}" Tag="share" GroupName="navigation" Style="{StaticResource NavigationItem}" Checked="NavigateClick"/>
  <RadioButton x:Name="NavSettings" Content="{local:Translate Key='设置'}" Tag="settings" GroupName="navigation" Style="{StaticResource NavigationItem}" Checked="NavigateClick"/>
  </StackPanel></Border>
  <Grid Grid.Column="1" Background="White">
  <Grid x:Name="ConnectPage" Margin="32"><Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
- <StackPanel Margin="0,0,0,28"><TextBlock Text="{local:Translate Key='连接'}" FontSize="26" FontWeight="SemiBold"/><TextBlock Text="{local:Translate Key='选择要连接的附近设备。'}" Foreground="#656982" Margin="0,8,0,0"/></StackPanel>
+ <StackPanel Margin="0,0,0,28"><TextBlock Text="{local:Translate Key='连接'}" FontSize="26" FontWeight="SemiBold"/><TextBlock Text="{local:Translate Key='选择你要连接并操作的设备。'}" Foreground="#656982" Margin="0,8,0,0"/></StackPanel>
  <Grid Grid.Row="1"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="24"/><ColumnDefinition Width="285"/></Grid.ColumnDefinitions>
  <DockPanel><DockPanel DockPanel.Dock="Top" Margin="0,0,0,12"><Button Content="{local:Translate Key='刷新设备'}" Click="RefreshDevicesClick" DockPanel.Dock="Right" Padding="8,4"/><TextBlock Text="{local:Translate Key='附近设备'}" FontWeight="SemiBold" VerticalAlignment="Center"/></DockPanel>
  <StackPanel DockPanel.Dock="Top"><TextBlock x:Name="DeviceSearchStatus" Foreground="#656982" TextWrapping="Wrap" Margin="0,0,0,12"/></StackPanel>
- <ListBox x:Name="DeviceList" SelectionChanged="DeviceSelected" BorderThickness="0" Background="Transparent" ScrollViewer.HorizontalScrollBarVisibility="Disabled" HorizontalContentAlignment="Stretch"><ListBox.ItemTemplate><DataTemplate><StackPanel Margin="10,14"><TextBlock Text="{Binding Name}" FontWeight="SemiBold"/><TextBlock Text="{Binding Address}" Foreground="#656982" Margin="0,6,0,0"/></StackPanel></DataTemplate></ListBox.ItemTemplate></ListBox>
+ <ListBox x:Name="DeviceList" SelectionChanged="DeviceSelected" BorderThickness="0" Background="Transparent" ScrollViewer.HorizontalScrollBarVisibility="Disabled" HorizontalContentAlignment="Stretch"><ListBox.ItemTemplate><DataTemplate><StackPanel Margin="10,14"><TextBlock Text="{Binding Name}" FontWeight="SemiBold"/><TextBlock Text="{Binding SystemLabel}" Foreground="#656982" Margin="0,6,0,0"/></StackPanel></DataTemplate></ListBox.ItemTemplate></ListBox>
  </DockPanel>
  <ScrollViewer Grid.Column="2" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled"><StackPanel>
  <TextBlock x:Name="SelectedDeviceName" Text="{local:Translate Key='输入目标IP'}" FontSize="20" FontWeight="SemiBold" Margin="0,0,0,20"/>
+ <TextBlock x:Name="SelectedDeviceSystem" Foreground="#697183" FontSize="12" Margin="0,-12,0,16"/>
      <StackPanel x:Name="ConnectionFields" Orientation="Vertical" VerticalAlignment="Center" Margin="0,0,8,0">
      <TextBlock x:Name="TargetIpLabel" Text="{local:Translate Key='目标IP'}" VerticalAlignment="Center" Margin="0,0,0,6" FontSize="12"/>
      <Grid Width="Auto">

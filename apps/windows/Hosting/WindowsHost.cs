@@ -15,14 +15,14 @@ internal sealed class WindowsHost: IAsyncDisposable {
     readonly Func<WindowsInput> input;
     readonly CaptureArea area;
     readonly CancellationTokenSource stop=new();
-    readonly Action<string> status;
+    readonly Action<string> status; readonly Func<string> deviceName;
     Task? accept,session; TcpClient? controller; int disposed;
     internal string LastError {get;private set;}="";
     internal int Port=>((IPEndPoint)listener.LocalEndpoint).Port;
-    internal WindowsHost(byte[] key,byte[] salt,CaptureArea area,Func<IDesktopCapture> capture,Func<WindowsInput> input,Action<string>? status=null,IPAddress? address=null,int port=47980) {
+    internal WindowsHost(byte[] key,byte[] salt,CaptureArea area,Func<IDesktopCapture> capture,Func<WindowsInput> input,Action<string>? status=null,IPAddress? address=null,int port=47980,Func<string>? deviceName=null) {
         if(key.Length!=32 || salt.Length!=16) throw new ArgumentException("Invalid host credential");
         this.key=key.ToArray(); this.salt=salt.ToArray(); this.area=area; this.capture=capture; this.input=input;
-        this.status=status??(_=>{}); listener=new(address??IPAddress.Any,port);
+        this.status=status??(_=>{}); this.deviceName=deviceName??(()=>DeviceName.Default.Current); listener=new(address??IPAddress.Any,port);
     }
     internal void Start() {
         lock(gate) { if(disposed!=0 || accept!=null) throw new InvalidOperationException("Host already started/stopped"); listener.Start(4); accept=AcceptLoop(); }
@@ -55,7 +55,7 @@ internal sealed class WindowsHost: IAsyncDisposable {
                 !h.TryGetProperty("version",out var version) || !version.TryGetInt32(out var v) || v!=1 ||
                 !h.TryGetProperty("quality",out var quality) || !quality.TryGetInt32(out var q) || q is <0 or >2) throw new IOException("Invalid control handshake");
             var profile=VideoProfile.For(area,q); injector=input(); LastError="";
-            await wire.Json(new {op="capabilities",platform="windows",inputModel="win-vk-v1",inputEnabled=true,clipboardText=false,fileClipboard=false},lifetime.Token);
+            await wire.Json(new {op="capabilities",deviceName=DeviceName.Valid(deviceName())??"Windows",platform="windows",inputModel="win-vk-v1",inputEnabled=true,clipboardText=false,fileClipboard=false},lifetime.Token);
             await wire.Json(new {op="video_header",width=profile.Width,height=profile.Height,fps=profile.Fps,codec="h264-annexb"},lifetime.Token);
             status("In use");
             // Backpressure reaches the encoder pipe; no unbounded frame queue.
@@ -70,7 +70,7 @@ internal sealed class WindowsHost: IAsyncDisposable {
                 if(m.ValueKind!=JsonValueKind.Object || !m.TryGetProperty("op",out var kind) || kind.ValueKind!=JsonValueKind.String) throw new IOException("Invalid control record");
                 var name=kind.GetString();
                 if(name=="disconnect") break;
-                if(name=="heartbeat") { await wire.Json(new {op="heartbeat",inputEnabled=true,inputReceived=injector.Received,inputPosted=injector.Posted,inputBlocked=injector.Blocked,inputRejected=injector.Rejected,inputError=injector.Error},lifetime.Token); continue; }
+                if(name=="heartbeat") { await wire.Json(new {op="heartbeat",deviceName=DeviceName.Valid(deviceName())??"Windows",inputEnabled=true,inputReceived=injector.Received,inputPosted=injector.Posted,inputBlocked=injector.Blocked,inputRejected=injector.Rejected,inputError=injector.Error},lifetime.Token); continue; }
                 if(name is "mouse_move" or "mouse_button" or "scroll" or "key_event" or "release_all") injector.Handle(m);
                 else if(name is not ("clipboard_sync" or "file_sync")) throw new IOException("Unsupported control operation");
             }

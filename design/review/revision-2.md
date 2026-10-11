@@ -1,8 +1,9 @@
 # Revision 2: design and implementation contract
 
-Status: **awaiting user review**. This revision changes the offline proposal only.
-The installed clients, native source, packages, tags and releases are unchanged.
-The previous revision's approval does not authorize implementing this revision.
+Status: **approved for incremental implementation**. Native local-name editing and
+authenticated peer metadata are implemented; the full interaction/visual contract
+is still in progress. See [native progress](../../docs/native-ui.md). This approval
+does not replace native acceptance or authorize an unverified release.
 
 ## Start with the task
 
@@ -68,9 +69,10 @@ behavior**, not claims of implementation in the current alpha.
   trims surrounding whitespace and updates the local name without stopping
   sharing or changing pairing. Use the same name in discovery and authenticated
   peer metadata; platform is app-reported and cannot be edited as a name.
-  The current Mac advertisement uses its system hostname and Windows parses
-  its DNS-SD name plus platform TXT record. Configurable names and manual-IP
-  authenticated names remain proposed native work, not completed capabilities.
+  Mac advertises its app name through DNS-SD/TXT; Windows parses it with the
+  platform record. Both hosts send configurable names after authentication;
+  existing heartbeats propagate renames. Windows publication and Mac browsing
+  remain follow-up work, so reverse discovery is not a completed capability.
   Native propagation must refresh one existing record, retaining credentials;
   do not use a mutable display name as the saved-password identity.
 - Permission recovery belongs to Share. Screen denial blocks sharing; missing

@@ -5,6 +5,8 @@ import Foundation
 final class ControllerModel: ObservableObject {
     @Published var address = ""
     @Published var password = ""
+    @Published private(set) var targetName = ""
+    @Published private(set) var targetSystem = ""
     @Published var quality = 1
     @Published var shortcuts = true
     @Published var autoReconnect = true {
@@ -35,6 +37,7 @@ final class ControllerModel: ObservableObject {
         guard !busy else { return }
         do { address = try ControllerRules.address(address); try PairingCredential.validate(password) }
         catch { status = "请输入局域网 IPv4 和 8–64 位配对密码。"; return }
+        targetName = address; targetSystem = ""
         wantsConnection = true; hasConnected = false; begin()
     }
     private func begin() {
@@ -63,12 +66,15 @@ final class ControllerModel: ObservableObject {
     }
     private func receive(_ message: [String: Any]) {
         switch message["op"] as? String {
-        case "capabilities": inputEnabled = message["inputEnabled"] as? Bool == true
+        case "capabilities":
+            targetName = DeviceName.peer(message, fallback: address); targetSystem = "Windows"
+            inputEnabled = message["inputEnabled"] as? Bool == true
         case "video_header": width = message["width"] as? Int ?? 0; height = message["height"] as? Int ?? 0
         case "connected":
             connected = true; hasConnected = true; status = inputEnabled ? "已连接，点击画面开始操作。" : "已连接，只能查看。"
             preferences.set(address, forKey: "controllerAddress")
         case "heartbeat":
+            targetName = DeviceName.peer(message, fallback: targetName.isEmpty ? address : targetName)
             if let enabled = message["inputEnabled"] as? Bool, enabled != inputEnabled {
                 release(); inputEnabled = enabled
                 status = enabled ? "已连接，点击画面开始操作。" : "已连接，只能查看。"
@@ -137,7 +143,8 @@ struct ControllerView: View {
     var body: some View {
         VStack(spacing: 0) {
             HStack(spacing: 8) {
-                Text(model.address).font(.caption).lineLimit(1)
+                Text(model.targetName.isEmpty ? model.address : model.targetName).font(.caption).lineLimit(1)
+                if !model.targetSystem.isEmpty { Text(model.targetSystem).font(.caption).foregroundStyle(.secondary) }
                 Picker(UiText.text("画质"), selection: $model.quality) {
                     Text(UiText.text("流畅")).tag(0); Text(UiText.text("标准")).tag(1); Text(UiText.text("高清")).tag(2)
                 }.labelsHidden().frame(width: 100)

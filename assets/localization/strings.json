@@ -235,5 +235,17 @@
   "先停止共享，再连接另一台设备。": "Stop sharing before connecting to another device.",
   "已选择 {0}，可直接连接。": "Selected {0}. Ready to connect.",
   "目标设备的局域网 IPv4；优先恢复上次地址，首次需改成目标 IP。": "Target device’s LAN IPv4. Restores the last address; replace the initial address with your target’s IP.",
-  "填写目标设备上显示的配对密码": "Enter the pairing password shown on the target device"
+  "填写目标设备上显示的配对密码": "Enter the pairing password shown on the target device",
+  "本机名称": "This device’s name",
+  "本机 IP": "This device’s IP",
+  "修改名称": "Change name",
+  "修改本机名称": "Change this device’s name",
+  "使用系统名称": "Use system name",
+  "保存名称": "Save name",
+  "显示在其他设备的列表中，默认使用系统本机名称。": "Shown in the device list on other devices. Defaults to your system device name.",
+  "请输入 1–32 个字符的名称，不含控制字符。": "Enter 1–32 characters without control characters.",
+  "无法保存名称，原名称仍有效。": "Could not save the name. The previous name is unchanged.",
+  "选择你要连接并操作的设备。": "Choose the device you want to connect to and control.",
+  "让另一台设备连接并操作你的当前屏幕。": "Let another device connect to and control your current screen.",
+  "被另一台设备来连接": "Allow another device to connect"
 }

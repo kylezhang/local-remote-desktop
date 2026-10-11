@@ -1,7 +1,8 @@
 # Local Remote Desktop design review
 
-Revision 2 is **awaiting user review**. Native applications have not been updated
-to this revision. See [English specification](../../docs/design.md),
+Revision 2 is **approved for incremental implementation**. Local-name editing and
+authenticated peer names are in native source; the rest of the revision is not yet
+fully applied. See [English specification](../../docs/design.md),
 [中文说明](../../docs/zh-CN/design.md) and the [implementation contract](revision-2.md).
 
 Open `index.html` in a browser, or serve this repository locally and open

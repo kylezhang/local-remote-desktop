@@ -7,6 +7,7 @@ using System.Text;
 namespace LocalRemoteDesktop;
 
 public sealed record LanDevice(string Name,string Address,string Platform,int Port) {
+    public string SystemLabel=>Platform=="macos"?"macOS":Platform=="windows"?"Windows":"";
     public override string ToString()=>$"{Name} · {Address}";
 }
 // One-shot DNS-SD, not a continuously running resolver. Metadata never grants control.
@@ -94,7 +95,7 @@ internal static class MdnsDiscovery {
             foreach(var srv in live.Where(r=>r.Type==33 && r.Port==47980 && Same(r.Name,ptr.Target))) {
                 foreach(var a in live.Where(r=>r.Type==1 && Same(r.Name,srv.Target))) {
                     if(a.Address==null || !IPAddress.TryParse(a.Address,out var ip) || !Local(ip)) continue;
-                    var name=ptr.Target[..^(Service.Length+1)];
+                    var name=DeviceName.Valid(txt.GetValueOrDefault("deviceName"))??ptr.Target[..^(Service.Length+1)];
                     if(name.Length==0 || name.Length>100 || name.Any(char.IsControl)) continue;
                     if(!devices.Any(d=>d.Address==ip.ToString())) devices.Add(new(name,ip.ToString(),platform,srv.Port));
                     if(devices.Count==32) return devices;

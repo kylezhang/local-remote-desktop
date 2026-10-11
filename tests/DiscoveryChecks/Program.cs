@@ -31,6 +31,10 @@ static class Check {
     static async Task Main() {
         var packet=Packet(43,true); var records=MdnsDiscovery.Parse(packet,43); var devices=MdnsDiscovery.Devices(records);
         Assert(devices.Count==1 && devices[0].Name=="Office Mac" && devices[0].Address=="192.168.7.10","compressed DNS-SD fixture rejected");
+        var custom=records.Select(r=>r.Type==16?r with {Txt=new Dictionary<string,string>{{"protocol","1"},{"platform","macos"},{"deviceName","办公室 Mac"}}}:r);
+        Assert(MdnsDiscovery.Devices(custom).Single().Name=="办公室 Mac","Full display-name TXT ignored");
+        var malformed=records.Select(r=>r.Type==16?r with {Txt=new Dictionary<string,string>{{"protocol","1"},{"platform","macos"},{"deviceName","Bad\nName"}}}:r);
+        Assert(MdnsDiscovery.Devices(malformed).Single().Name=="Office Mac","Malformed TXT name failed legacy instance fallback");
         Assert(MdnsDiscovery.Parse(packet,44).Count==0,"foreign transaction accepted");
         Assert(MdnsDiscovery.Devices(MdnsDiscovery.Parse(Packet(43,platform:"untrusted"),43)).Count==0,"unsupported platform accepted");
         Assert(MdnsDiscovery.Devices(MdnsDiscovery.Parse(Packet(43,ttl:0),43)).Count==0,"goodbye record accepted");

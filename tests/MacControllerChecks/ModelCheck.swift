@@ -17,8 +17,10 @@ import Foundation
         let first = ControllerSession.instances.last!
         precondition(model.busy && host.controlling && first.started && !model.connected)
         model.send(["op":"key_event"]); precondition(first.messages.isEmpty)
-        first.status(["op":"capabilities","inputEnabled":true]); first.status(["op":"video_header","width":1280,"height":720])
+        first.status(["op":"capabilities","inputEnabled":true,"deviceName":"Office Windows"]); first.status(["op":"video_header","width":1280,"height":720])
         first.status(["op":"connected"]); await until { model.connected }
+        precondition(model.targetName == "Office Windows" && model.targetSystem == "Windows")
+        first.status(["op":"heartbeat","deviceName":"Renamed Windows"]); await until { model.targetName == "Renamed Windows" }
         model.send(["op":"key_event","vk":67,"down":true]); precondition(first.messages.count == 1)
         model.release(); precondition(first.messages.last?["op"] as? String == "release_all")
         for i in 0..<10_000 { first.frame(CGImage(i)) }

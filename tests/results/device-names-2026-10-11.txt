@@ -1,0 +1,25 @@
+Local Remote Desktop — incremental revision-2 device-name checks, 2026-10-11
+
+PASS .NET 8 Release build: zero warnings/errors.
+PASS Windows isolated preference save/reload/system restore, Unicode limits,
+     invalid edits and legacy/malformed peer-field fallback.
+PASS DNS-SD compressed/split/foreign/malformed fixtures and real loopback UDP;
+     TXT display names preferred with compatible legacy service-name fallback.
+PASS unshown WPF English/Chinese layouts at 820/1100/1440px, name save/cancel,
+     sidebar update, address-matched peer refresh and unrelated-address clearing.
+PASS Windows host encrypted capabilities/heartbeat names; rename uses the same
+     paired session. Existing authentication, lifecycle, release and generated
+     MF H264/video decoding checks pass; no real desktop input injection.
+PASS Swift Foundation isolated name persistence/restore/Unicode/fallback checks.
+PASS production Bonjour lifecycle with NetService double and renamed TXT name.
+PASS host-model rename updates the existing host/publication without stopping
+     sharing or changing credentials; preferences use an isolated test suite.
+PASS controller model authenticated name and heartbeat rename with session double.
+PASS shared localization and Swift source syntax checks.
+
+Windows test windows were never shown/activated. No user clipboard, real input
+injection, permission reset or pairing rotation occurred during these checks.
+Mac SSH timed out: changed native AppKit/SwiftUI/ScreenCaptureKit source has NOT
+been built against the current Apple SDK or validated after installation.
+Native Bonjour multicast, real two-device input and update acceptance are pending.
+This record is not a release or a claim that all revision-2 UI work is complete.

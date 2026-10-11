@@ -68,7 +68,7 @@ struct DesktopShell: View {
             else {
                 HStack(spacing: 0) {
                     VStack(alignment: .leading, spacing: 8) {
-                        Text("Local Remote Desktop").font(.caption).foregroundStyle(.secondary).padding(.bottom, 18)
+                        Text(host.deviceName).font(.caption).foregroundStyle(.secondary).padding(.bottom, 18)
                         navigationButton("连接", symbol: "rectangle.connected.to.line.below", page: "connect")
                         navigationButton("共享此设备", symbol: "arrow.left.arrow.right", page: "share")
                         navigationButton("设置", symbol: "gearshape", page: "settings")
@@ -102,7 +102,7 @@ struct ConnectionPage: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 24) {
                 Text(UiText.text("连接")).font(.largeTitle)
-                Text(UiText.text("选择要连接的附近设备。")).foregroundStyle(.secondary)
+                Text(UiText.text("选择你要连接并操作的设备。")).foregroundStyle(.secondary)
                 HStack(alignment: .top, spacing: 28) {
                     VStack(alignment: .leading, spacing: 12) {
                         Text(UiText.text("附近设备")).font(.headline)
@@ -188,7 +188,7 @@ struct HostView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 18) {
             Text(UiText.text("共享此设备")).font(.largeTitle)
-            Text(UiText.text("共享期间可在这里停止连接。")).foregroundStyle(.secondary)
+            Text(UiText.text("让另一台设备连接并操作你的当前屏幕。")).foregroundStyle(.secondary)
             VStack(alignment: .leading, spacing: 6) {
                 Text(UiText.text(sharingTitle)).font(.headline)
                 Text(UiText.text(model.status)).font(.callout).foregroundStyle(.secondary)
@@ -200,6 +200,16 @@ struct HostView: View {
             Button(UiText.text(model.starting ? "正在启动…" : model.active ? "停止共享" : "开始共享")) {
                 if model.active { model.stop() } else { model.start(requestPermission: true) }
             }.buttonStyle(.borderedProminent).disabled(model.credentialBusy || model.controlling)
+            Divider()
+            VStack(alignment: .leading, spacing: 12) {
+                Text(UiText.text("被另一台设备来连接")).font(.headline)
+                HStack {
+                    Text(UiText.text("本机名称")).foregroundStyle(.secondary)
+                    Text(model.deviceName).textSelection(.enabled)
+                    Spacer()
+                    Button(UiText.text("修改名称")) { model.openNameEditor() }
+                }
+            }
             Divider()
             VStack(alignment: .leading, spacing: 10) {
                 HStack {
@@ -239,9 +249,27 @@ struct HostView: View {
             Text(UiText.text("Mac 需保持唤醒并登录。剪贴板共享可在设置中调整。"))
                 .font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
         }.frame(maxWidth: 600, alignment: .leading).padding(32).frame(maxWidth: .infinity,alignment: .leading).tint(blueberry)
+        .sheet(isPresented: $model.editingName, onDismiss: { model.cancelNameEditor() }) {
+            DeviceNameEditorView(model: model).tint(blueberry)
+        }
         .sheet(isPresented: $model.editingPassword, onDismiss: { model.cancelPasswordEditor() }) {
             PasswordEditorView(model: model).tint(blueberry)
         }
+    }
+}
+struct DeviceNameEditorView: View {
+    @ObservedObject var model: HostModel
+    var body: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            Text(UiText.text("修改本机名称")).font(.title2)
+            Text(UiText.text("显示在其他设备的列表中，默认使用系统本机名称。")).font(.callout).foregroundStyle(.secondary)
+            TextField(UiText.text("本机名称"), text: $model.nameDraft).textFieldStyle(.roundedBorder)
+            Button(UiText.text("使用系统名称")) { model.restoreSystemName() }
+            if !model.nameError.isEmpty { Text(UiText.text(model.nameError)).font(.caption).foregroundStyle(.red) }
+            HStack { Spacer(); Button(UiText.text("取消")) { model.cancelNameEditor() }
+                Button(UiText.text("保存名称")) { model.saveName() }.buttonStyle(.borderedProminent)
+            }
+        }.padding(24).frame(width: 400)
     }
 }
 struct PasswordEditorView: View {

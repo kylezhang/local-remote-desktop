@@ -3,7 +3,24 @@
  <ScrollViewer VerticalScrollBarVisibility="Auto"><StackPanel Margin="24" MaxWidth="580" HorizontalAlignment="Left">
   <TextBlock Text="{local:Translate Key='共享此设备'}" FontSize="26" FontWeight="SemiBold" Margin="0,0,0,14"/>
   <TextBlock x:Name="SharingStatus" TextWrapping="Wrap" Margin="0,0,0,10"/>
-  <TextBlock Text="{local:Translate Key='共享当前 Windows 桌面。连接方需知道本机局域网 IP 和配对密码。'}" TextWrapping="Wrap" Margin="0,0,0,12"/>
+  <TextBlock Text="{local:Translate Key='让另一台设备连接并操作你的当前屏幕。'}" TextWrapping="Wrap" Margin="0,0,0,12"/>
+  <TextBlock Text="{local:Translate Key='被另一台设备来连接'}" FontWeight="SemiBold" Margin="0,0,0,12"/>
+  <DockPanel Margin="0,0,0,12">
+   <Button x:Name="ChangeDeviceName" DockPanel.Dock="Right" Content="{local:Translate Key='修改名称'}" Click="NameEditClick" Padding="8,4"/>
+   <TextBlock Text="{local:Translate Key='本机名称'}" Foreground="#697183" Margin="0,0,12,0" VerticalAlignment="Center"/>
+   <TextBlock x:Name="SharingName" TextWrapping="Wrap" VerticalAlignment="Center"/>
+  </DockPanel>
+  <StackPanel x:Name="NameEditor" Visibility="Collapsed" Margin="0,0,0,16">
+   <TextBlock Text="{local:Translate Key='显示在其他设备的列表中，默认使用系统本机名称。'}" FontSize="12" TextWrapping="Wrap" Margin="0,0,0,8"/>
+   <TextBox x:Name="NameDraft" Padding="6" AutomationProperties.Name="{local:Translate Key='本机名称'}"/>
+   <Button x:Name="RestoreDeviceName" Content="{local:Translate Key='使用系统名称'}" Click="NameRestoreClick" HorizontalAlignment="Left" Margin="0,8,0,0"/>
+   <TextBlock x:Name="NameError" TextWrapping="Wrap" Foreground="#A82435" Margin="0,6"/>
+   <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+    <Button x:Name="CancelDeviceName" Content="{local:Translate Key='取消'}" Click="NameCancelClick" Margin="0,0,8,0"/>
+    <Button x:Name="SaveDeviceName" Content="{local:Translate Key='保存名称'}" Click="NameSaveClick" Style="{StaticResource BrandConnectButton}"/>
+   </StackPanel>
+  </StackPanel>
+  <TextBlock Text="{local:Translate Key='本机 IP'}" FontSize="12" Foreground="#697183" Margin="0,0,0,6"/>
   <TextBlock x:Name="SharingAddress" FontFamily="Consolas" TextWrapping="Wrap" Margin="0,0,0,12"/>
   <Button x:Name="SharingStart" Style="{StaticResource BrandConnectButton}" Content="{local:Translate Key='开始共享'}" HorizontalAlignment="Left" Padding="12,6" Click="StartClick"/>
   <Separator Margin="0,18,0,18"/>

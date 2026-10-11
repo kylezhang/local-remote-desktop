@@ -14,7 +14,10 @@ func require(_ value: @autoclosure () -> Bool, _ message: String) {
 }
 @main enum Check {
     @MainActor static func main() async throws {
-        let model = HostModel()
+        let suite = "LocalRemoteDesktop.NameModelCheck." + UUID().uuidString
+        let preferences = UserDefaults(suiteName: suite)!
+        defer { preferences.removePersistentDomain(forName: suite) }
+        let model = HostModel(namePreferences: preferences)
         model.controlling = true; model.start(requestPermission: true)
         require(!model.active && !model.starting && Pairing.readAttempts == 0, "sharing started while controlling another desktop")
         model.controlling = false
@@ -44,6 +47,14 @@ func require(_ value: @autoclosure () -> Bool, _ message: String) {
         model.start(requestPermission: true); await until { !model.starting }
         require(model.active && Pairing.readAttempts == 1, "sharing did not reuse credential")
         let original = Host.instances.last!, oldSecret = model.secret, sharingStatus = model.status
+        let nameBefore = model.deviceName, discoveryStarts = HostDiscovery.starts
+        model.openNameEditor(); model.nameDraft = "Discarded name"; model.cancelNameEditor()
+        require(model.deviceName == nameBefore && preferences.string(forKey: DeviceName.preference) == nil, "name cancel persisted a draft")
+        model.openNameEditor(); model.nameDraft = "Office fixture"; model.saveName()
+        require(model.active && !original.stopped && model.secret == oldSecret && Pairing.saveAttempts == 0, "rename changed sharing or pairing")
+        require(original.deviceName == "Office fixture" && HostDiscovery.lastName == "Office fixture" && HostDiscovery.starts == discoveryStarts + 1, "rename did not update active metadata and advertisement")
+        require(DeviceName.current(preferences) == "Office fixture" && !model.editingName, "rename not persisted or editor left open")
+        print("PASS isolated name editor cancellation/persistence and active rename preserves listener/password while updating metadata/publication")
         model.openPasswordEditor(); model.generatePassword(); let draft = model.passwordEditor.draft
         Pairing.rejectSave = true; model.savePassword(); await until { !model.passwordEditor.saving }
         require(model.active && !original.stopped && model.secret == oldSecret && model.status == sharingStatus, "failed save stopped sharing or replaced credential")
@@ -70,7 +81,7 @@ func require(_ value: @autoclosure () -> Bool, _ message: String) {
         await until { !model.passwordEditor.saving }
         require(!model.active && !model.starting && Host.instances.count == 2 && model.status == "已停止", "stop during save restarted sharing")
         print("PASS busy dismissal guard and stop/quit during persistence never restarts sharing")
-        require(HostDiscovery.starts == 2 && HostDiscovery.stops >= 2, "discovery not tied to sharing/password lifecycle")
+        require(HostDiscovery.starts == 3 && HostDiscovery.stops >= 2, "discovery not tied to sharing/password lifecycle")
         print("PASS discovery starts with successful sharing, stops on password replacement and stop")
         print("SKIP native SwiftUI/Apple SDK/Keychain: production model compiled with explicit service doubles.")
     }

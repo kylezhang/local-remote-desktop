@@ -8,6 +8,21 @@ final class HostModel: ObservableObject {
         UiText.language = languageCode; UserDefaults.standard.set(languageCode, forKey: "language")
     } }
     @Published var status = "准备启动"
+    @Published var deviceName = ""
+    private let namePreferences: UserDefaults
+    @Published var editingName = false
+    @Published var nameDraft = ""
+    @Published var nameError = ""
+    func openNameEditor() { nameDraft = deviceName; nameError = ""; editingName = true }
+    func cancelNameEditor() { nameDraft = ""; nameError = ""; editingName = false }
+    func restoreSystemName() { nameDraft = DeviceName.system; nameError = "" }
+    func saveName() {
+        do {
+            deviceName = try DeviceName.save(nameDraft, preferences: namePreferences); host?.setDeviceName(deviceName)
+            if active { discovery.start(name: deviceName) }
+            cancelNameEditor()
+        } catch { nameError = error.localizedDescription }
+    }
     @Published var secret = ""
     @Published var active = false
     @Published var controlling = false
@@ -39,7 +54,10 @@ final class HostModel: ObservableObject {
         _ = AXIsProcessTrustedWithOptions(options)
         NSWorkspace.shared.open(URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility")!)
     }
-    init() { UiText.language = languageCode }
+    init(namePreferences: UserDefaults = .standard) {
+        self.namePreferences = namePreferences; deviceName = DeviceName.current(namePreferences)
+        UiText.language = languageCode
+    }
     func cancelFiles() { host?.cancelFiles() }
     func openReceivedFiles() {
         let root = MacFiles.receivedDirectory
@@ -160,7 +178,7 @@ final class HostModel: ObservableObject {
             self.displayPairingKey(key)
             let trusted = AXIsProcessTrusted()
             let generation = UUID(); self.hostGeneration = generation
-            let h = Host(key: key.key, passwordSalt: key.salt, clipboardAllowed: self.allowClipboard, filesAllowed: self.allowFiles,
+            let h = Host(key: key.key, deviceName: self.deviceName, passwordSalt: key.salt, clipboardAllowed: self.allowClipboard, filesAllowed: self.allowFiles,
                 fileStatus: { [weak self] text in DispatchQueue.main.async {
                     guard let self, self.hostGeneration == generation else { return }
                     self.fileStatus = text
@@ -168,7 +186,7 @@ final class HostModel: ObservableObject {
                     guard let self, self.hostGeneration == generation else { return }
                     self.status = text
                 } }
-            try h.start(); self.host = h; self.active = true; self.discovery.start()
+            try h.start(); self.host = h; self.active = true; self.discovery.start(name: self.deviceName)
             self.status = trusted ? "共享已启动，等待 Windows 连接 · TCP 47980" : "共享已启动（只能查看）· 辅助功能权限未被认可"
           } catch is CancellationError { }
           catch {

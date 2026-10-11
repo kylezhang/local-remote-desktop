@@ -55,12 +55,19 @@ Type 1 is UTF-8 JSON. Type 2 is one Annex B H.264 access unit, without timestamp
 | key_event | C→H | Windows virtual key vk, down, flags |
 | release_all | C→H | release held keys/buttons |
 | heartbeat | both | Client every 3 seconds, Host responds; 15-second timeout |
-| capabilities | H→C | accessibility bool on Mac; optional platform, inputModel, inputEnabled, clipboardText, fileClipboard |
+| capabilities | H→C | accessibility bool on Mac; optional deviceName, platform, inputModel, inputEnabled, clipboardText, fileClipboard |
 | clipboard_sync | C→H request / H→C acknowledgement | enabled bool, requestId positive monotonic integer |
 | clipboard_text | both, only while mutually enabled | requestId, encoding=utf8-base64url, text=canonical padded base64url of UTF-8 |
 | disconnect | C→H | normal disconnect; EOF also closes |
 
 Flags: Shift=1, Control=2, Option=4, Command=8. Includes left/right modifier VK mapping and numeric-pad VK 96..111 with CGEvent numeric-pad flag. Num Lock-off navigation is not converted into digits. No Windows Unicode IME composition; Mac input methods can process physical events. Mac hosts ignore unknown operations; malformed JSON closes; non-finite coordinates are rejected.
+
+Both development hosts include optional `deviceName` in authenticated capabilities
+and heartbeat replies. It is an editable app display label, 1–32 Unicode scalars
+without controls, not a pairing identity. Controllers retain their known name or
+address when the field is absent, invalid or not a string. Name updates use the
+existing session without another authentication exchange or protocol-version bump.
+Platform comes from the validated capabilities record, never from the IP or name.
 
 ### Desktop roles in v0.3.0-alpha.1
 

@@ -2,11 +2,11 @@
 
 [简体中文](zh-CN/design.md) · [Product direction](product.md) · [Delivery plan](v0.3.0-plan.md)
 
-**Revision 2 — awaiting review.** This proposal responds to feedback about settings
-organization, page logic, inconsistent executable naming and the gap between the
-mockup and native appearance. It changes the design preview only. Current native
-source and installed builds still reflect the previous reviewed iteration; see
-[native UI progress](native-ui.md) for their validation status.
+**Revision 2 — approved for incremental implementation.** This design responds to
+feedback about settings, page logic, executable naming and native appearance.
+Local display-name editing and authenticated peer metadata are now in both desktop
+sources. Other interaction and visual changes remain implementation work; see
+[native UI progress](native-ui.md) for the precise validation scope.
 
 Open the [interactive proposal](../design/review/index.html). It runs offline using
 fictional devices, passwords and content, with no networking, clipboard, storage
@@ -34,8 +34,8 @@ Names and platforms come from device announcements or saved records, never from
 the IP itself. A manual-IP dialog shows a matching record when available;
 otherwise it shows the address until connection succeeds. Authenticated peer
 metadata then updates the list and session label, without duplicate rows.
-Adding the peer's device name to the authenticated protocol remains implementation
-work; the offline preview simulates it. Failed pairing or Cancel adds no device.
+The native protocol now carries the peer name after authentication and on heartbeat;
+the offline preview simulates that flow. Failed pairing or Cancel adds no device.
 
 Share this device owns the local name, IP, masked password, availability/in-use
 state and visible stop action. Changing pages preserves sharing. Change password
@@ -54,7 +54,9 @@ preserves the saved value, and Save updates it without ending sharing or changin
 the password. The name is the same in discovery and authenticated connection
 metadata; the target app reports its platform automatically. Renaming does not
 rename the OS computer, create another device record or discard saved credentials.
-The native name editor and authenticated name field still need implementation.
+The native editor and authenticated name field are implemented. Mac advertisement
+and Windows reception use the custom name; Windows advertisement and Mac discovery
+remain follow-up work. Native saved-device history is not yet complete.
 
 The current one-role restriction has an explicit Stop sharing & connect action
 after target validation. Cancel preserves the existing sharing session; do not

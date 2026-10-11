@@ -44,6 +44,7 @@ public partial class MainWindow : Window
     CancellationTokenSource? discoveryScan;
     readonly Func<CancellationToken,Task<IReadOnlyList<LanDevice>>> browse;
     IReadOnlyList<LanDevice> discovered=[];
+    readonly Dictionary<string,LanDevice> knownPeers=new(StringComparer.OrdinalIgnoreCase);
     long discoveryFinished;
     string discoveryStatus="尚未搜索";
     bool pasteSuppressed;
@@ -64,6 +65,7 @@ public partial class MainWindow : Window
         readModifiers=modifiers ?? (()=>Keyboard.Modifiers);
         clipboard=new TextClipboardSync(board ?? (remember?new WindowsClipboard():new DisabledClipboard()));
         InitializeComponent(); var savedHost=remember?SecretStore.LastHost():""; Address.Text=savedHost.Length>0?savedHost:LocalAddress.Find(); Secret.Password=remember?SecretStore.Load(Address.Text):"";
+        LocalDeviceName.Text=remember?DeviceName.Default.Current:Environment.MachineName;
         DiscoverButton.ContextMenu=new(); RebuildDeviceMenu();
         UiText.Current.LanguageChanged+=ApplyLanguage; ApplyLanguage();
         if(remember || discovery!=null) Loaded+=(_,_)=>RefreshDevices();
@@ -86,8 +88,10 @@ public partial class MainWindow : Window
         WindowsShortcuts.Checked+=(_,_)=>KeyboardModeChanged(); WindowsShortcuts.Unchecked+=(_,_)=>KeyboardModeChanged();
         SettingsMenu.SubmenuClosed+=(_,e)=> { if(ReferenceEquals(e.OriginalSource,SettingsMenu) && connected) Surface.Focus(); };
         Address.TextChanged+=(_,_)=> {
-            if(session!=null || DeviceList.SelectedItem is not LanDevice device || Address.Text==device.Address) return;
-            DeviceList.SelectedItem=null; SelectedDeviceName.Text=UiText.Text("输入目标IP");
+            if(session!=null || DeviceList.SelectedItem is LanDevice device && Address.Text==device.Address) return;
+            DeviceList.SelectedItem=null;
+            var peer=discovered.FirstOrDefault(d=>d.Address==Address.Text.Trim());
+            SelectedDeviceName.Text=peer?.Name??UiText.Text("输入目标IP"); SelectedDeviceSystem.Text=peer?.SystemLabel??"";
         };
         Address.LostFocus+=(_,_)=> { if(!rememberConnection) return; var s=SecretStore.Load(Address.Text.Trim()); if(s.Length>0) Secret.Password=s; };
         Quality.SelectionChanged+=(_,_)=> {
@@ -127,6 +131,8 @@ public partial class MainWindow : Window
         if(page=="share" && sharingWindow==null) {
             // Reuse the tested sharing lifecycle without creating another visible window.
             var sharing=createSharing(active=>StartConnection.IsEnabled=!active);
+            sharing.NameChanged+=name=>LocalDeviceName.Text=name;
+            LocalDeviceName.Text=((TextBlock)sharing.FindName("SharingName")).Text;
             var content=sharing.Content; sharing.Content=null; SharingPage.Content=content;
             sharingWindow=sharing;
             sharing.Closed+=(_,_)=> { if(ReferenceEquals(sharingWindow,sharing)) { sharingWindow=null; SharingPage.Content=null; } };
@@ -135,12 +141,25 @@ public partial class MainWindow : Window
         SharingPage.Visibility=page=="share"?Visibility.Visible:Visibility.Collapsed;
         SettingsPage.Visibility=page=="settings"?Visibility.Visible:Visibility.Collapsed;
     }
+    internal void ApplyPeerName(JsonElement message,string ip) {
+        var previous=discovered.FirstOrDefault(d=>d.Address==ip);
+        var name=DeviceName.Peer(message,previous?.Name??ip);
+        var device=new LanDevice(name,ip,targetPlatform,desktopPort);
+        if(!knownPeers.ContainsKey(ip) && knownPeers.Count>=32) knownPeers.Remove(knownPeers.Keys.First());
+        knownPeers[ip]=device;
+        if(previous!=device) {
+            discovered=discovered.Where(d=>d.Address!=ip).Append(device).Take(32).ToArray();
+            RebuildDeviceMenu();
+        }
+        SelectedDeviceName.Text=name; SelectedDeviceSystem.Text=device.SystemLabel;
+        ConnectionTarget.Text=$"{name} · {device.SystemLabel}"; ConnectionTarget.ToolTip=ip;
+    }
     void SharingClick(object sender,RoutedEventArgs e) { if(session==null) NavShare.IsChecked=true; }
     void RefreshDevicesClick(object sender,RoutedEventArgs e)=>RefreshDevices();
     void DeviceSelected(object sender,SelectionChangedEventArgs e) {
         if(session!=null || DeviceList.SelectedItem is not LanDevice device) return;
         Address.Text=device.Address; Secret.Password=rememberConnection?SecretStore.Load(device.Address):"";
-        SelectedDeviceName.Text=device.Name;
+        SelectedDeviceName.Text=device.Name; SelectedDeviceSystem.Text=device.SystemLabel;
         SetStatus(Secret.Password.Length>0?$"已选择 {device.Name}，可直接连接。":$"已选择 {device.Name}，填写配对密码后连接。");
     }
     void SetSessionLayout(bool active) {
@@ -190,11 +209,12 @@ public partial class MainWindow : Window
     async void RefreshDevices() {
         if(windowClosing || session!=null || discoveryScan!=null) return;
         using var scan=new CancellationTokenSource(); discoveryScan=scan;
-        discovered=[]; discoveryStatus="正在搜索局域网设备…"; RebuildDeviceMenu();
+        discovered=knownPeers.Values.ToArray(); discoveryStatus="正在搜索局域网设备…"; RebuildDeviceMenu();
         try {
             var devices=await browse(scan.Token);
             if(windowClosing || scan.IsCancellationRequested) return;
-            discovered=devices.Take(32).ToArray(); discoveryStatus=discovered.Count==0?"未发现设备；请确认 Mac 已开始共享":"已发现设备";
+            discovered=devices.Concat(knownPeers.Values).DistinctBy(d=>d.Address).Take(32).ToArray();
+            discoveryStatus=devices.Count==0?"未发现设备；请确认 Mac 已开始共享":"已发现设备";
         } catch(OperationCanceledException) { return; }
         catch { discoveryStatus="发现不可用；仍可手动填写目标IP"; }
         finally {
@@ -338,8 +358,9 @@ public partial class MainWindow : Window
                         if(root.TryGetProperty("platform",out var platform)) {
                             var name=platform.GetString(); if(name is not ("windows" or "macos")) throw new IOException("Unsupported target platform");
                             if(!root.TryGetProperty("inputModel",out var model) || model.GetString()!=(name=="windows"?"win-vk-v1":"win-vk-mac-v1")) throw new IOException("Unsupported target input model");
-                            await Dispatcher.InvokeAsync(()=> { targetPlatform=name; ConnectionTarget.Text=$"{(name=="windows"?"Windows":"Mac")} · {ip}"; });
+                            await Dispatcher.InvokeAsync(()=> { targetPlatform=name; });
                         }
+                        if(root.GetProperty("op").GetString() is "capabilities" or "heartbeat") await Dispatcher.InvokeAsync(()=>ApplyPeerName(root,ip));
                         if(root.GetProperty("op").GetString() is "capabilities" or "clipboard_sync" or "clipboard_text" or "file_sync" or "file_offer")
                             await Dispatcher.InvokeAsync(()=> { ClipboardControl(root); files.Control(root); });
                         if(root.GetProperty("op").GetString()=="video_header") {
