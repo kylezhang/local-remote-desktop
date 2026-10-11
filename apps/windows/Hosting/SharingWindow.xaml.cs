@@ -11,11 +11,13 @@ public partial class SharingWindow:Window {
     readonly Action<HostCredential> save;
     readonly Func<HostCredential,byte[],bool,Action<string>,WindowsHost> create;
     readonly IDeviceAdvertisement advertisement;
+    bool clipboardAllowed=true;
+    internal void SetClipboardAllowed(bool allowed) { clipboardAllowed=allowed; }
     Task? starting,shutdown,stopping; bool shutting,closed,revealed,saving,controlActive; string status="尚未共享";
     public SharingWindow():this(_=>{}) {}
     internal SharingWindow(Action<bool> changed,Func<HostCredential>? load=null,Action<HostCredential>? save=null,Func<HostCredential,byte[],bool,Action<string>,WindowsHost>? create=null,DeviceName? deviceName=null,IDeviceAdvertisement? advertisement=null) {
         sharingChanged=changed; this.deviceName=deviceName??DeviceName.Default; this.load=load??(()=>HostCredential.Load()); this.save=save??(c=>c.Save());
-        this.create=create??((c,key,software,report)=> { var area=CaptureArea.Primary(); return new WindowsHost(key,c.Salt,area,()=>new FfmpegDesktopCapture(area,software),()=>new WindowsInput(area,CaptureArea.Virtual(),new SendInputAdapter()),report,deviceName:()=>this.deviceName.Current); });
+        this.create=create??((c,key,software,report)=> { var area=CaptureArea.Primary(); return new WindowsHost(key,c.Salt,area,()=>new FfmpegDesktopCapture(area,software),()=>new WindowsInput(area,CaptureArea.Virtual(),new SendInputAdapter()),report,deviceName:()=>this.deviceName.Current,clipboard:(wire,token)=>new WindowsHostClipboard(wire,new WindowsClipboard(),Dispatcher,()=>clipboardAllowed,token)); });
         this.advertisement=advertisement??(create!=null?new NoDeviceAdvertisement():new DeviceAdvertisement(available=>Dispatcher.BeginInvoke(()=> {if(!shutting && host!=null) DiscoveryNotice.Visibility=available?Visibility.Collapsed:Visibility.Visible;})));
         InitializeComponent(); SharingAddress.Text=LocalAddress.Find(); SharingName.Text=this.deviceName.Current;
         try { credential=this.load(); } catch { status="无法读取共享密码，请检查本机安全存储。"; SharingStart.IsEnabled=false; }

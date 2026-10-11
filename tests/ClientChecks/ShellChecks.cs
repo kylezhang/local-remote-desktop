@@ -11,6 +11,7 @@ static partial class Program {
     // Never Show/Activate a Window, capture a physical screen, access user
     // credentials/clipboard or inject OS input. Rendering stays in memory.
     static async Task CheckShell() {
+        await CheckReverseClipboard();
         int loads=0, saved=0;var advertisement=new ShellAdvertisement();
         var nameRoot=Path.Combine(Path.GetTempPath(),"lrd-shell-name-"+Guid.NewGuid().ToString("N")); Directory.CreateDirectory(nameRoot);
         var nameStore=new DeviceName(Path.Combine(nameRoot,"name.txt"),"Fixture PC");

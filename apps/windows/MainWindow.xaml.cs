@@ -95,6 +95,7 @@ public partial class MainWindow : Window
         GlobalClipboard.IsChecked=!remember || SecretStore.LoadClipboardSync();
         ClipboardSync.Checked+=(_,_)=>ClipboardModeChanged(); ClipboardSync.Unchecked+=(_,_)=>ClipboardModeChanged();
         void GlobalClipboardChanged() {
+            sharingWindow?.SetClipboardAllowed(GlobalClipboard.IsChecked==true);
             ClipboardSync.IsEnabled=GlobalClipboard.IsChecked==true; ClipboardModeChanged();
             if(rememberConnection) { try { SecretStore.SaveClipboardSync(GlobalClipboard.IsChecked==true); } catch(Exception ex) { SetClipboardStatus($"文本同步已切换，但无法保存选择：{ex.Message}"); } }
         }
@@ -158,6 +159,7 @@ public partial class MainWindow : Window
             LocalDeviceName.Text=((TextBlock)sharing.FindName("SharingName")).Text;
             var content=sharing.Content; sharing.Content=null; SharingPage.Content=content;
             sharingWindow=sharing;
+            sharing.SetClipboardAllowed(GlobalClipboard.IsChecked==true);
             sharing.Closed+=(_,_)=> { if(ReferenceEquals(sharingWindow,sharing)) { sharingWindow=null; SharingPage.Content=null; } };
         }
         ConnectPage.Visibility=page=="connect"?Visibility.Visible:Visibility.Collapsed;
@@ -295,7 +297,7 @@ public partial class MainWindow : Window
     }
     void ClipboardModeChanged() {
         clipboardTimer.Stop(); clipboard.SetEnabled(false);
-        SetClipboardStatus(!EffectiveClipboard?"文本同步：关闭":!connected?"文本同步：等待连接":!peerClipboard?"文本同步：Mac 版本不支持":"文本同步：等待 Mac 确认");
+        SetClipboardStatus(!EffectiveClipboard?"文本同步：关闭":!connected?"文本同步：等待连接":!peerClipboard?"文本同步：目标设备版本不支持":"文本同步：等待目标设备确认");
         if(connected && peerClipboard) ClipboardMessage(new {op="clipboard_sync",enabled=EffectiveClipboard,requestId=++clipboardRequestId});
     }
     void PollClipboard() {
@@ -334,7 +336,7 @@ public partial class MainWindow : Window
             bool enabled=permission.GetBoolean() && EffectiveClipboard && connected;
             clipboard.SetEnabled(enabled);
             if(enabled) clipboardTimer.Start(); else clipboardTimer.Stop();
-            SetClipboardStatus(enabled?"文本同步：已启用（双向，最多 32 KiB）":EffectiveClipboard?"文本同步：等待 Mac 开启允许同步":"文本同步：关闭");
+            SetClipboardStatus(enabled?"文本同步：已启用（双向，最多 32 KiB）":EffectiveClipboard?"文本同步：等待目标设备允许同步":"文本同步：关闭");
         } else if(op=="clipboard_text" && root.TryGetProperty("encoding",out var encoding) && encoding.GetString()=="utf8-base64url"
                   && root.TryGetProperty("text",out var text) && text.ValueKind==JsonValueKind.String) {
             _=clipboard.Receive(text.GetString()!);

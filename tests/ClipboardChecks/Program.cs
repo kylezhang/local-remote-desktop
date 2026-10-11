@@ -50,6 +50,26 @@ var received=new List<JsonElement>(); await foreach(var message in queue.ReadAll
 Assert(received.Count==3 && received[0].GetProperty("text").GetInt32()==9999 && received[1].GetProperty("op").GetString()=="key_event","clipboard/key ordering broken");
 Console.WriteLine("PASS clipboard coalescing is bounded and cannot cross paste-key boundary");
 
+var hostBoard=new FakeBoard(); bool consent=true; var hostSync=new HostTextClipboard(hostBoard,()=>consent);
+JsonElement Msg(object value)=>JsonSerializer.SerializeToElement(value);
+JsonElement Reply(object? value)=>JsonSerializer.SerializeToElement(value);
+hostBoard.Copy("offline"); Assert(hostSync.Poll()==null,"Unauthenticated/unconfigured host clipboard exposed");
+var ack=Reply(hostSync.Control(Msg(new {op="clipboard_sync",requestId=1,enabled=true})));
+Assert(ack.GetProperty("enabled").GetBoolean() && hostSync.Poll()==null,"Host leaked preconnection clipboard");
+hostSync.Control(Msg(new {op="clipboard_text",requestId=1,encoding="utf8-base64url",text=TextClipboardSync.Encode("from Mac")}));
+Assert(hostBoard.Text=="from Mac" && hostSync.Poll()==null,"Incoming text lost or echoed");
+hostBoard.Copy("from Windows"); var outgoing=Reply(hostSync.Poll()); Assert(TextClipboardSync.Decode(outgoing.GetProperty("text").GetString()!)=="from Windows","Host outgoing lost");
+consent=false; Assert(!Reply(hostSync.Poll()).GetProperty("enabled").GetBoolean(),"Local host revocation not acknowledged");
+hostSync.Control(Msg(new {op="clipboard_text",requestId=1,encoding="utf8-base64url",text=TextClipboardSync.Encode("blocked")}));
+Assert(hostBoard.Text=="from Windows","Revoked clipboard overwritten");
+consent=true; Assert(Reply(hostSync.Poll()).GetProperty("enabled").GetBoolean(),"Consent restore missing");
+hostSync.Control(Msg(new {op="clipboard_sync",requestId=2,enabled=false}));
+hostSync.Control(Msg(new {op="clipboard_sync",requestId=1,enabled=true}));
+hostSync.Control(Msg(new {op="clipboard_sync",requestId="invalid",enabled=true}));
+hostBoard.Copy("disabled copy"); Assert(hostSync.Poll()==null,"Old request enabled disabled clipboard");
+hostSync.Stop(); Assert(hostSync.Control(Msg(new {op="clipboard_sync",requestId=3,enabled=true}))==null,"Stopped state reactivated");
+Console.WriteLine("PASS Windows sharing clipboard: consent, strict IDs, baseline privacy, no echo, revoke/re-enable and teardown");
+
 sealed class FakeBoard : ITextClipboard {
     public long Revision {get;private set;}
     public string? Text; public bool BusyRead,BusyWrite; public int Reads;

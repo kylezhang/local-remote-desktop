@@ -14,6 +14,15 @@ For a clearly labeled beta, a tested Windows ZIP plus Mac source may be publishe
 The release notes must distinguish implemented features, automated test coverage, user-reported real-device behavior and unverified platforms. A 0.x release can be published as a normal release while explicitly documenting its early-product limits. Do not change repository privacy or select an open-source license implicitly.
 
 A Mac binary requires the [signing and distribution acceptance](macos-signing.md).
+
+AtomGit distinguishes the last-updated release from its homepage **latest**
+selection. After publishing, read back `release_status` through the MCP/API;
+do not infer the homepage choice from list order. Use a short release name such
+as `v0.2.0-beta.1`. On 2026-10-11, selecting the already published beta as `latest`
+also made the API's `prerelease` field false; its version and notes still explicitly
+identify it as a preview. This designation does not clear native acceptance gates.
+Existing tags and download assets were unchanged. See the
+[AtomGit update API](https://docs.atomgit.com/docs/apis/patch-api-v-5-repos-owner-repo-releases-tag/).
 Maintainers supply the Developer ID signing/notarization environment; end users
 should not need signing credentials. Shared Swift tests alone do not satisfy that gate.
 

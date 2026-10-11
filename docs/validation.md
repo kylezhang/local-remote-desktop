@@ -1,5 +1,14 @@
 # Validation
 
+## Reverse text clipboard — 2026-10-11
+
+Mac controller and Windows sharing source now reuse the existing text protocol.
+Production Windows encrypted/WPF-dispatcher, portable Swift state/model and
+independent encrypted-session checks passed with recording clipboards, without
+showing windows or using real input. See the [coverage record](../tests/results/reverse-text-clipboard-2026-10-11.txt).
+Updated Apple SDK/pasteboard and real two-device acceptance remain pending;
+reverse file sync is still in development.
+
 The v0.2.0-beta.1 preview uses the current final-package Windows checks, portable Swift/model checks and 2026-10-10 decoder samples. Mac source is provided without a native SDK/runtime claim. Earlier v0.1.0 records remain as historical baseline.
 
 [简体中文](zh-CN/validation.md)

@@ -1,5 +1,11 @@
 # 发版流程
 
+AtomGit 的“最后更新发行版”和主页“最新发行版”是两个选择。发布后应通过 MCP/API
+回读 `release_status`，不能只看列表顺序。名称仅使用版本号，如 `v0.2.0-beta.1`。
+2026-10-11 将已有 beta 设为 `latest` 时，平台也把 `prerelease` 字段改为 false；
+版本号和说明仍明确标记测试版，不代表原生验收门槛已通过。已有 tag 和下载附件不变。
+参见[官方更新接口](https://docs.atomgit.com/docs/apis/patch-api-v-5-repos-owner-repo-releases-tag/)。
+
 [English](../releasing.md)
 
 1. 确定范围与版本，从 v0.1.0 开始，后续按大/小/修订版本语义维护；两端版本、窗口与更新日志一致，Mac 内部 build number 递增。

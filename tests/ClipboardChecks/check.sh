@@ -8,6 +8,8 @@ trap 'rm -rf -- "$stage"' EXIT
 "$compiler" -parse-as-library "$root/apps/macos/Sources/LocalRemoteDesktop/SharingPreferences.swift" "$root/tests/ClipboardChecks/PreferenceCheck.swift" -o "$stage/preferences"
 "$stage/preferences"
 "$stage/check"
+"$compiler" -parse-as-library "$root/apps/macos/Sources/LocalRemoteDesktop/TextClipboardSync.swift" "$root/apps/macos/Sources/LocalRemoteDesktop/ControllerTextClipboard.swift" "$root/tests/ClipboardChecks/ControllerCheck.swift" -o "$stage/controller"
+"$stage/controller"
 if [[ "$(uname -s)" == Darwin ]]; then
     xcrun swift build --package-path "$root/apps/macos" --scratch-path "$stage/native-build" -c release
 else

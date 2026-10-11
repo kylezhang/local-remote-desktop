@@ -77,7 +77,7 @@ final class ControllerSession {
                 let packet = try transport.receivePacket()
                 if packet.0 == 2 { try decoder.decode(packet.1) }
                 else if packet.0 == 1, let message = try JSONSerialization.jsonObject(with: packet.1) as? [String: Any],
-                        message["op"] as? String == "heartbeat" { status(message) }
+                        ["heartbeat", "clipboard_sync", "clipboard_text"].contains(message["op"] as? String ?? "") { status(message) }
                 else { throw WireError.invalid }
             }
         } catch let failure { if !stopped { error = failure } }

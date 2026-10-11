@@ -51,9 +51,15 @@ final class ControllerModel: ObservableObject {
     private var hasConnected = false
     private var qualityRestart = false
     private var presentation: DispatchSourceTimer?
+    private var clipboardTimer: DispatchSourceTimer?, peerClipboard = false
+    private let textSync: TextClipboardSync
+    private lazy var clipboard = ControllerTextClipboard(sync: textSync,
+        allowed: { [weak self] in self?.host.allowClipboard ?? false },
+        send: { [weak self] message in self?.session?.send(message) })
     private let frameLock = NSLock()
     private var latest: CGImage?, frameToken: UUID?
-    init(host: HostModel, preferences: UserDefaults = .standard, credentials: ControllerCredentials = ControllerKeychain(), browser: ControllerBrowsing = ControllerDiscovery()) {
+    init(host: HostModel, preferences: UserDefaults = .standard, credentials: ControllerCredentials = ControllerKeychain(), browser: ControllerBrowsing = ControllerDiscovery(), textSync: TextClipboardSync = MacControllerClipboard.make()) {
+        self.textSync = textSync
         self.host = host; self.preferences = preferences; self.credentials = credentials; self.browser = browser
         for record in NearbyDevice.load(preferences) { known[record.address] = record }
         devices = Array(known.values).sorted { $0.name < $1.name }
@@ -176,6 +182,7 @@ final class ControllerModel: ObservableObject {
         }
     }
     private func begin() {
+        stopClipboard(); peerClipboard = false
         retry = nil; qualityRestart = false
         let generation = UUID(); token = generation
         busy = true; connected = false; inputEnabled = false; host.controlling = true
@@ -202,13 +209,19 @@ final class ControllerModel: ObservableObject {
     private func receive(_ message: [String: Any]) {
         switch message["op"] as? String {
         case "capabilities":
+            peerClipboard = message["clipboardText"] as? Bool == true
             targetName = DeviceName.peer(message, fallback: address); targetSystem = "Windows"
             inputEnabled = message["inputEnabled"] as? Bool == true
         case "video_header": width = message["width"] as? Int ?? 0; height = message["height"] as? Int ?? 0
         case "connected":
             if !hasConnected { authenticated() }
             connected = true; hasConnected = true; status = inputEnabled ? "已连接，点击画面开始操作。" : "已连接，只能查看。"
-
+            clipboard.start(supported: peerClipboard)
+            let timer = DispatchSource.makeTimerSource(queue: .main)
+            timer.schedule(deadline: .now() + .milliseconds(500), repeating: .milliseconds(500))
+            timer.setEventHandler { [weak self] in self?.clipboard.poll() }
+            clipboardTimer = timer; timer.resume()
+        case "clipboard_sync", "clipboard_text": clipboard.receive(message)
         case "heartbeat":
             targetName = DeviceName.peer(message, fallback: targetName.isEmpty ? address : targetName)
             if hasConnected, let previous = known[sessionAddress], previous.name != targetName {
@@ -224,6 +237,7 @@ final class ControllerModel: ObservableObject {
         }
     }
     private func ended(_ error: Error?) {
+        stopClipboard()
         token = nil; session = nil; connected = false; inputEnabled = false
         presentation?.cancel(); presentation = nil
         frameLock.lock(); frameToken = nil; latest = nil; frameLock.unlock()
@@ -252,6 +266,7 @@ final class ControllerModel: ObservableObject {
         guard let error = error as? WireError else { return false }; if case .authentication = error { return true }; return false
     }
     func disconnect() {
+        stopClipboard()
         browser.stop(); searching = false
         if credentialGeneration != nil && !connected && session == nil {
             credentialGeneration = nil; credentialTask?.cancel(); credentialBusy = false
@@ -276,9 +291,15 @@ final class ControllerModel: ObservableObject {
         }
         retry = job; DispatchQueue.main.asyncAfter(deadline: .now()+3, execute: job)
     }
-    func send(_ object: [String: Any]) { if connected && inputEnabled { session?.send(object) } }
+    private func stopClipboard() { clipboardTimer?.cancel(); clipboardTimer = nil; clipboard.stop() }
+    func send(_ object: [String: Any]) {
+        if connected && inputEnabled {
+            if object["op"] as? String == "key_event", object["vk"] as? Int == 86, object["down"] as? Bool == true { clipboard.poll() }
+            session?.send(object)
+        }
+    }
     func release() { if connected { session?.send(["op":"release_all"]) }; inputGeneration += 1 }
-    deinit { browser.stop(); session?.stop(); retry?.cancel(); presentation?.cancel(); credentialTask?.cancel() }
+    deinit { browser.stop(); session?.stop(); retry?.cancel(); presentation?.cancel(); clipboardTimer?.cancel(); credentialTask?.cancel() }
 }
 
 struct ControllerView: View {

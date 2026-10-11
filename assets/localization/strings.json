@@ -287,5 +287,10 @@
   "无法读取已记住的密码，请手动填写或重试。": "Cannot read the saved password. Enter it manually or retry.",
   "无法忘记密码，请重试。": "Cannot forget the password. Try again.",
   "正在读取已记住的密码…": "Reading the remembered password…",
-  "本次已发现": "Found nearby"
+  "本次已发现": "Found nearby",
+  "仅正常登录后的桌面；不支持 UAC 安全桌面或登录前控制。文字同步可在设置中关闭；此共享角色暂不传文件。": "Logged-in desktop only; UAC secure desktop and pre-login control are unsupported. Text sync can be disabled in Settings; file sync for this sharing role is still in development.",
+  "文字可在两个桌面角色中同步；Mac 控制 Windows 时的文件同步仍在开发中。": "Text sync is available in both desktop roles; file sync when controlling Windows from Mac is still in development.",
+  "文本同步：目标设备版本不支持": "Text sync: not supported by the target version",
+  "文本同步：等待目标设备确认": "Text sync: awaiting target confirmation",
+  "文本同步：等待目标设备允许同步": "Text sync: waiting for permission on the target device"
 }

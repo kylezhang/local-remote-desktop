@@ -82,7 +82,22 @@ See [validation status](validation.md) for the remaining gates.
 
 One controller, primary Windows display and the logged-in desktop. Windows UAC
 secure desktop, elevated application input, lock screen and pre-login control are
-not guaranteed. This reverse-role preview still has no clipboard/file synchronization;
-that belongs to the following role-interoperability stage. Existing Windows → Mac clipboard and
-file support remain in the original direction. Simultaneous sharing and controlling
+not guaranteed. Paired plain-text clipboard sync is implemented in this direction
+using the existing authenticated desktop connection. Settings → Clipboard → Sync
+text applies to both roles and defaults on. Consent is checked at receipt and
+before sending; a newer request ID prevents delayed acknowledgments from enabling
+a disabled session. New copies up to 32 KiB UTF-8 sync in both directions, with
+no echo and no automatic upload of preconnection clipboard contents. Text queues
+ahead of the remote paste key. Recording clipboard/transport/model checks pass;
+updated native Mac pasteboard and two-device acceptance remain pending.
+Reverse file sync is still in development. Existing Windows → Mac file support
+remains in the original direction. Simultaneous sharing and controlling
 are disabled in the interface to avoid reciprocal desktop feedback.
+
+## Routed private networks
+
+A preconfigured VPN such as WireGuard can provide the private IPv4 route; the
+app uses that route directly without a relay or new pairing flow. Enable sharing
+on Windows and enter its reachable private Target IP. TCP 47980 must be allowed
+for that route. Nearby-device multicast discovery is not assumed to cross a VPN.
+RDP connectivity alone does not open this application’s listening port.

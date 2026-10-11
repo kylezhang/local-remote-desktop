@@ -70,7 +70,10 @@ SendInput submission with acceptance by every application. Physical LAN, native
 Mac controller and longer capture/latency acceptance remain pending.
 
 Windows sharing now publishes through system DNS-SD; see [Nearby devices](discovery.md).
-Clipboard/files for this role still follow role interoperability in beta.1. Primary display only. No pre-login,
+Paired plain-text clipboard sync is now implemented for this sharing role, controlled
+by Settings → Clipboard → Sync text on both devices. The encrypted Windows
+adapter passes recording-clipboard tests; native Mac acceptance remains pending.
+Reverse file sync is still in development. Primary display only. No pre-login,
 lock-screen or UAC secure-desktop guarantee. Normal Windows input is constrained
 by application integrity levels; the app does not elevate or bypass them.
 

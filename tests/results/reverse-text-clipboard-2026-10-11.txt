@@ -1,0 +1,30 @@
+Local Remote Desktop v0.3.0-alpha.2 development — reverse text clipboard
+Date: 2026-10-11
+
+PASS Windows Release build, no warnings/errors.
+PASS C# production text/host state: Unicode, strict encoding and IDs, 32 KiB
+limits, baseline privacy, busy retry, local-copy priority, no echo, consent
+revocation/restoration, stale requests and stopped-state rejection.
+PASS actual WindowsHost/Wire + WindowsHostClipboard WPF dispatcher on encrypted
+loopback: text in both directions, negotiation, revocation/restoration, disabled
+and stale incoming text, heartbeat continuity and disconnect disposal.
+These checks use recording clipboard/input and a silent capture adapter.
+PASS unshown WPF shell: bilingual minimum/normal layouts, manual pairing,
+wrong/successful authentication, remembered-password choices, draft preservation,
+metadata, discovery lifecycle, exclusive roles and cleanup.
+PASS portable production Swift controller clipboard state: matching ack gate,
+Unicode, no echo (200 polls), local revoke, stale request/stop and old-peer fallback.
+PASS production Mac controller model with recording pasteboard/session services:
+authentication-gated start, text ahead of paste key, revoked incoming text,
+disconnect and stale-generation protection, existing pairing/reconnect checks.
+PASS production Swift wire/session against independent Python AES-GCM peer:
+RML1/RMP1, wrong proof, replay/oversize rejection, orderly cancellation and
+bidirectional clipboard_sync/clipboard_text delivery through the session reader.
+PASS Swift source syntax parse. Linux crypto/AppKit/decoder adapters are explicitly
+test doubles, not native Apple SDK or installed pasteboard acceptance.
+
+No foreground test windows, physical capture, real clipboard, OS input or Mac
+SSH were used. Updated Apple SDK build and real two-device pasteboard behavior
+remain pending. Reverse files are not implemented by this checkpoint.
+Exact-package checks/deployment are performed after the clean source commit;
+this record covers source-built checks, not an unpublished Mac binary.

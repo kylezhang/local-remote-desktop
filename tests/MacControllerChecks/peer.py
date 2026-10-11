@@ -50,7 +50,18 @@ def check(binary, mode, session=False):
                 elif mode == 'replay': conn.sendall(caps); assert conn.recv(1) == b''
                 else:
                     conn.sendall(message(dict(op='video_header',codec='h264-annexb',width=1280,height=720,fps=30)))
-                    if mode == 'oversized': conn.sendall(struct.pack('>I',8*1024*1024+1)); assert conn.recv(1) == b''
+                    if mode == 'clipboard':
+                        def control():
+                            while True:
+                                value = receive()
+                                if value['op'] != 'heartbeat': return value
+                                conn.sendall(message(dict(op='heartbeat',inputEnabled=True)))
+                        assert control() == dict(op='clipboard_sync', requestId=1, enabled=True)
+                        conn.sendall(message(dict(op='clipboard_sync', requestId=1, enabled=True)))
+                        assert control() == dict(op='clipboard_text', requestId=1, encoding='utf8-base64url', text='TWFjIOKGkiBXaW5kb3dz')
+                        conn.sendall(message(dict(op='clipboard_text', requestId=1, encoding='utf8-base64url', text='V2luZG93cyDihpIgTWFj')))
+                        assert control() == dict(op='disconnect')
+                    elif mode == 'oversized': conn.sendall(struct.pack('>I',8*1024*1024+1)); assert conn.recv(1) == b''
                     elif mode == 'stop':
                         while conn.recv(4096): pass
                     else:
@@ -70,7 +81,7 @@ def check(binary, mode, session=False):
 
 for mode in ['password','legacy','bad-proof','replay','oversized']: check(sys.argv[1],mode)
 if len(sys.argv) > 2:
-    for mode in ['session','stop','reject','auth-eof']: check(sys.argv[2],mode,session=True)
+    for mode in ['session','stop','reject','auth-eof','clipboard']: check(sys.argv[2],mode,session=True)
 print('PASS independent Python/Swift RMP1/RML1 interoperability; ' +
       ('native CryptoKit/CommonCrypto and Darwin sockets; GUI not tested' if sys.platform == 'darwin'
        else 'OpenSSL test adapters; native CryptoKit/GUI not tested'))

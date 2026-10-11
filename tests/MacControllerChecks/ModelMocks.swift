@@ -2,7 +2,10 @@ import Foundation
 protocol ObservableObject {}
 @propertyWrapper struct Published<Value> { var wrappedValue: Value }
 final class CGImage { let id: Int; init(_ id: Int) { self.id = id } }
-final class HostModel { var active = false, starting = false, controlling = false; var stops = 0; func stop() { stops += 1; active = false; starting = false } }
+final class HostModel { var active = false, starting = false, controlling = false, allowClipboard = true; var stops = 0; func stop() { stops += 1; active = false; starting = false } }
+enum MacControllerClipboard {
+    static func make() -> TextClipboardSync { TextClipboardSync(revision: { 0 }, read: { (true, nil) }, write: { _ in false }) }
+}
 enum WireError: Error { case closed, invalid, authentication }
 enum PairingCredential {
     static func validate(_ value: String) throws { if value.count < 8 || value.count > 64 || !value.utf8.allSatisfy({ $0 > 32 && $0 < 127 }) { throw WireError.invalid } }

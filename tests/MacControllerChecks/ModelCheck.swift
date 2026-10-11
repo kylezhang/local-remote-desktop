@@ -135,6 +135,28 @@ import Foundation
         try await Task.sleep(nanoseconds:30_000_000)
         precondition(!loading.busy && !loading.credentialBusy && !host.controlling && ControllerSession.instances.count == count)
         print("PASS real controller model: no automatic Keychain access; deliberate saved-password load/cancel; successful-only save, opt-out, failed-save recovery, exact-target forget, retained failed draft and bounded nonsecret history")
+        var revision=0, text="offline"
+        let board=TextClipboardSync(revision:{ revision },read:{ (true,text) },write:{ text=$0; revision+=1; return true })
+        let clipboardModel=ControllerModel(host:host,preferences:prefs,textSync:board)
+        clipboardModel.address="192.168.1.88"; clipboardModel.password="Fixture1"; clipboardModel.connect()
+        let clipboardSession=ControllerSession.instances.last!
+        clipboardSession.status(["op":"capabilities","clipboardText":true,"inputEnabled":true]); clipboardSession.status(["op":"connected"])
+        await until { clipboardModel.connected }
+        let request=clipboardSession.messages.last!["requestId"] as! Int
+        clipboardSession.status(["op":"clipboard_sync","requestId":request,"enabled":true])
+        await until { board.enabled }
+        text="paste draft"; revision+=1; let before=clipboardSession.messages.count
+        clipboardModel.send(["op":"key_event","vk":86,"down":true])
+        precondition(clipboardSession.messages[before]["op"] as? String == "clipboard_text" && clipboardSession.messages[before+1]["op"] as? String == "key_event")
+        clipboardSession.status(["op":"clipboard_text","requestId":request,"encoding":"utf8-base64url","text":TextClipboardSync.encode("target text")!])
+        await until { text=="target text" }
+        host.allowClipboard=false
+        clipboardSession.status(["op":"clipboard_text","requestId":request,"encoding":"utf8-base64url","text":TextClipboardSync.encode("blocked")!])
+        await until { !board.enabled }; precondition(text=="target text")
+        clipboardModel.disconnect(); precondition(!board.enabled)
+        clipboardSession.status(["op":"clipboard_sync","requestId":request,"enabled":true])
+        try await Task.sleep(nanoseconds:20_000_000); precondition(!board.enabled)
+        print("PASS production Mac controller model clipboard: authenticated start, text before paste key, consent revocation, stale session callbacks and disconnect cleanup (recording pasteboard)")
     }
 
 }

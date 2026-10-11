@@ -4,6 +4,13 @@
 
 ## Unreleased
 
+- Mac → Windows plain-text clipboard sync now reuses the paired encrypted desktop
+  session. Both roles obey local consent, matching acknowledgments, 32 KiB limits,
+  reconnect baselines and echo suppression; text queues before the paste key.
+  Windows/WPF encrypted-session and portable Swift state/model/transport checks
+  pass with recording clipboards. Updated native Mac pasteboard acceptance and
+  reverse file sync remain pending.
+
 - Development v0.3.0-alpha.2 adds the Mac controller source preview: native
   VideoToolbox decode/AppKit input, paired Windows connections, target-aware Mac
   shortcuts, full screen, latest-only presentation and bounded outgoing input.
