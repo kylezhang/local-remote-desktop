@@ -163,3 +163,5 @@ specific product/interface/protocol/release document in the same commit. Record
 observed results in [validation](validation.md); keep tentative conclusions labeled.
 
 Normal Mac installation uses permission preservation by default. Signature changes stop before replacement; --reset-permissions is explicit repair. Use meaningful device empty states and content-sized settings/sharing sections rather than filling spare space with unrelated controls.
+
+Deferred Windows deployment must be verified after exit, not reported as completed merely because it was queued. Compare deployed DLL hashes and SOURCE.txt against the tested candidate. Hidden Windows PowerShell helpers launched from PowerShell 7 must load required modules from their own runtime; inherited module paths can leave Get-FileHash unavailable. Record actual failure details and validate the same hidden launch path.
