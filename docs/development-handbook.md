@@ -178,3 +178,10 @@ copy, including text replacing files, cancels old file work and invalidates its 
 Check the live clipboard revision before serving a file offer; canceled workers must
 not overwrite the new transfer status. Verify disconnect repeatedly using isolated
 recording services and port reuse, independently of long-duration resource measurements.
+
+Quality changes must cancel the whole obsolete connection attempt, including
+authentication, retain only the latest selection and leave future defaults intact.
+Fullscreen/focus transitions release remote input and clear paste suppression;
+restore picture focus only while the app is active and options are closed. Ignore
+auto-repeat for fullscreen toggles. Keep unshown window-state/decoded-pixel checks
+separate from actual foreground focus, monitor geometry and physical-key acceptance.

@@ -56,10 +56,10 @@ import Foundation
         precondition(ControllerSession.instances.count == count && !model.busy && !host.controlling)
         model.connect(); let sixth = ControllerSession.instances.last!; model.restart()
         precondition(sixth.stopped && model.busy && ControllerSession.instances.count == count+1)
-        model.autoReconnect = false; model.quality = 2; model.restart()
+        model.autoReconnect = false; model.quality = 2; model.restart(); model.quality = 0; model.restart()
         precondition(model.busy && host.controlling)
         try await Task.sleep(nanoseconds:3_100_000_000)
-        precondition(ControllerSession.instances.count == count+2 && model.busy)
+        precondition(ControllerSession.instances.count == count+2 && model.busy && ControllerSession.instances.last!.quality == 0)
         model.disconnect()
         model.defaultAutoReconnect = true; model.connect()
         let seventh = ControllerSession.instances.last!

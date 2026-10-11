@@ -435,7 +435,7 @@ final class RemoteScreenView: NSView {
     }
     override func keyDown(with event: NSEvent) {
         if event.keyCode == 53 && event.modifierFlags.contains([.control,.option]) { window?.makeFirstResponder(nil); return }
-        if event.keyCode == 103 { model.release(); fullScreen(); return }
+        if event.keyCode == 103 { if !event.isARepeat { model.release(); fullScreen() }; return }
         for edge in modifiers.synchronize(flags: event.modifierFlags.rawValue, shortcuts: model.shortcuts) { model.send(edge) }
         if let vk = ControllerKeys.vk(event.keyCode, shortcuts: model.shortcuts) { model.send(["op":"key_event","vk":vk,"down":true]) }
     }

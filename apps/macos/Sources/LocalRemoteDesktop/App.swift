@@ -41,7 +41,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         let size = NSSize(width: min(640,max(1,visible.width-48)),height: min(620,max(1,visible.height-48)))
         next.minSize = NSSize(width: min(600,size.width),height: min(520,size.height)); next.acceptsMouseMovedEvents = true
         next.contentView = NSHostingView(rootView: DesktopShell(host: model, controller: controller, navigation: navigation,
-            fullScreen: { [weak next] in next?.toggleFullScreen(nil) }))
+            fullScreen: { [weak self, weak next] in guard let self, self.controller.busy else { return }; self.controller.release(); next?.toggleFullScreen(nil) }))
         next.setFrame(NSRect(x: visible.midX-size.width/2,y: visible.midY-size.height/2,width: size.width,height: size.height),display: false)
         next.delegate = self; window = next; next.makeKeyAndOrderFront(nil)
     }
@@ -53,6 +53,19 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
             NSApplication.shared.terminate(nil); return
         }
         AppBrand.applyDockIcon(); openWindow(); model.start()
+    }
+    func windowWillEnterFullScreen(_ notification: Notification) { controller.release() }
+    func windowWillExitFullScreen(_ notification: Notification) { controller.release() }
+    func windowDidEnterFullScreen(_ notification: Notification) { restoreRemoteFocus() }
+    func windowDidExitFullScreen(_ notification: Notification) { restoreRemoteFocus() }
+    private func restoreRemoteFocus() {
+        guard controller.connected, controller.inputEnabled, let window, window.isKeyWindow else { return }
+        func screen(in view: NSView) -> RemoteScreenView? {
+            if let screen = view as? RemoteScreenView { return screen }
+            for child in view.subviews { if let found = screen(in: child) { return found } }
+            return nil
+        }
+        if let content = window.contentView, let target = screen(in: content) { window.makeFirstResponder(target) }
     }
     func windowWillClose(_ notification: Notification) { controller.disconnect() }
     func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool { openWindow(); return false }

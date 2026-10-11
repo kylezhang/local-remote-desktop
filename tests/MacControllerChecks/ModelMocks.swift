@@ -23,9 +23,10 @@ final class ControllerSession {
     let status: ([String: Any]) -> Void, frame: (CGImage) -> Void, ended: (Error?) -> Void
     var started = false, stopped = false, messages = [[String: Any]]()
     let address: String, password: String
+    let quality: Int
     init(address: String, password: String, quality: Int, status: @escaping ([String: Any]) -> Void,
          frame: @escaping (CGImage) -> Void, ended: @escaping (Error?) -> Void) {
-        self.address = address; self.password = password
+        self.address = address; self.password = password; self.quality = quality
         self.status = status; self.frame = frame; self.ended = ended; Self.instances.append(self)
     }
     func start() { started = true }

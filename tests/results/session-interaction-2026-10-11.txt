@@ -1,0 +1,30 @@
+Session interaction — 2026-10-11
+
+PASS .NET 8 Windows Release build and unshown client regression suite.
+PASS production WPF controller with independent encrypted peer and generated
+320x180 H.264 test pattern: non-black decoded/presented bitmap pixels; quality
+handshakes 0 -> 1 -> 0 with rapid intermediate 2 skipped; fresh bitmap/decoder;
+automatic reconnect off still permits quality changes; future default unchanged.
+PASS quality change cancels stalled authentication socket within a two-second
+fixture deadline instead of waiting for the eight-second connection timeout.
+PASS Disconnect during quality delay cancels retry, clears picture and exits
+fullscreen; original window state/style and toolbar restored.
+PASS routed focus-loss event sends release_all over encrypted transport and
+clears suppressed-paste state. No OS input is injected.
+PASS unshown fullscreen state toggles preserve desktop focus. Window is never
+shown/activated; actual foreground focus restoration is not established by this.
+Existing encrypted clipboard/files/reconnect, 12-session cleanup and bilingual
+compact native-shell checks also pass.
+
+PASS portable production Mac controller model with explicit session doubles:
+rapid quality choices create one replacement session at the latest quality,
+even with auto-reconnect disabled; disconnect cancels delayed retry and stale
+callbacks do not restore a session. HostModel regressions pass.
+PASS Swift syntax parsing for App.swift and ControllerView.swift.
+Mac delegate focus restoration and native fullscreen handling are source changes,
+not Apple SDK/AppKit runtime results.
+
+No real desktop capture, user clipboard, physical keyboard/mouse injection,
+foreground test window or Mac SSH. Real keyboard focus, physical held-key release,
+fullscreen animation/monitor geometry, Apple SDK build and installed two-device
+acceptance remain pending. These checks do not measure live screen latency.

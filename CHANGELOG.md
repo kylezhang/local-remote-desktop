@@ -4,6 +4,11 @@
 
 ## Unreleased
 
+- Quality changes now cancel an in-progress Windows authentication attempt.
+  Fullscreen and focus transitions release remote input and clear suppressed paste;
+  focus restoration is limited to the active app. Repeated F11 presses no longer
+  toggle fullscreen repeatedly. Updated Mac fullscreen handling awaits native acceptance.
+
 - New local clipboard copies cancel obsolete file transfers on both sharing roles.
   Mac rejects expired file offers before sending; canceled workers and previous
   Windows file sessions cannot replace current transfer notices.

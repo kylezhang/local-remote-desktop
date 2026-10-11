@@ -1,5 +1,17 @@
 # Validation
 
+## Session picture and focus — 2026-10-11
+
+Windows Release/unshown fixtures pass with an independent encrypted peer and
+generated H.264: decoded pixels, fresh picture/decoder after quality changes,
+latest rapid selection, disconnected retry cancellation and prompt cancellation
+of stalled authentication. Unshown fullscreen state restoration and routed
+focus-loss release pass. Portable Mac model checks retain the latest quality;
+updated Swift UI syntax parses. See the [record](../tests/results/session-interaction-2026-10-11.txt)
+and [background check setup](../tests/ClientChecks/README.md).
+Real foreground focus, held physical input, fullscreen animation/monitor geometry
+and native Mac AppKit/Apple SDK remain pending; these are not live latency measurements.
+
 ## Disconnect and file cleanup — 2026-10-11
 
 Windows Release/unshown encrypted checks pass, including 12 alternating normal

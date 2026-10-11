@@ -116,7 +116,7 @@ public partial class MainWindow : Window
         DefaultReconnect.Checked+=(_,_)=>SaveDefaults(); DefaultReconnect.Unchecked+=(_,_)=>SaveDefaults();
         DefaultQuality.SelectionChanged+=(_,_)=> { if(session==null) HomeQuality.SelectedIndex=DefaultQuality.SelectedIndex; SaveDefaults(); };
         WindowsShortcuts.Checked+=(_,_)=>KeyboardModeChanged(); WindowsShortcuts.Unchecked+=(_,_)=>KeyboardModeChanged();
-        SettingsMenu.SubmenuClosed+=(_,e)=> { if(ReferenceEquals(e.OriginalSource,SettingsMenu) && connected) Surface.Focus(); };
+        SettingsMenu.SubmenuClosed+=(_,e)=> { if(ReferenceEquals(e.OriginalSource,SettingsMenu) && connected) RestoreRemoteFocus(); };
         Address.TextChanged+=(_,_)=> {
             if(session!=null || DeviceList.SelectedItem is LanDevice device && Address.Text==device.Address) return;
             DeviceList.SelectedItem=null; Secret.Password=loadPassword(Address.Text.Trim());
@@ -127,7 +127,7 @@ public partial class MainWindow : Window
         Quality.SelectionChanged+=(_,_)=> {
             if(session==null) return;
             requestedQuality=Quality.SelectedIndex; qualityChangePending=true;
-            Input(new {op="release_all"}); activeAttempt?.Cancel();
+            ReleaseRemoteInput(); activeAttempt?.Cancel();
             SetStatus("正在切换画质，将自动重新连接…");
         };
         render.Tick+=(_,_)=>Render();
@@ -136,9 +136,9 @@ public partial class MainWindow : Window
         Surface.MouseUp+=(_,e)=> { SendPointerButton(e.GetPosition(Surface),e.ChangedButton,false); if(e.LeftButton==MouseButtonState.Released && e.RightButton==MouseButtonState.Released && e.MiddleButton==MouseButtonState.Released) Surface.ReleaseMouseCapture(); e.Handled=true; };
         Surface.MouseWheel+=(_,e)=> { Input(new {op="scroll",delta=e.Delta}); e.Handled=true; };
         Surface.PreviewKeyDown+=(_,e)=>Key(e,true); Surface.PreviewKeyUp+=(_,e)=>Key(e,false);
-        Surface.LostKeyboardFocus+=(_,_)=>Input(new {op="release_all"}); Deactivated+=(_,_)=>Input(new {op="release_all"});
-        Surface.LostMouseCapture+=(_,_)=> { if(Mouse.LeftButton==MouseButtonState.Pressed || Mouse.RightButton==MouseButtonState.Pressed || Mouse.MiddleButton==MouseButtonState.Pressed) Input(new {op="release_all"}); };
-        PreviewKeyDown+=(_,e)=> { if(ManualDialog.Visibility!=Visibility.Visible && e.Key==System.Windows.Input.Key.F11) { ToggleFull(); e.Handled=true; } };
+        Surface.LostKeyboardFocus+=(_,_)=>ReleaseRemoteInput(); Deactivated+=(_,_)=>ReleaseRemoteInput();
+        Surface.LostMouseCapture+=(_,_)=> { if(Mouse.LeftButton==MouseButtonState.Pressed || Mouse.RightButton==MouseButtonState.Pressed || Mouse.MiddleButton==MouseButtonState.Pressed) ReleaseRemoteInput(); };
+        PreviewKeyDown+=(_,e)=> { if(session!=null && ManualDialog.Visibility!=Visibility.Visible && e.Key==System.Windows.Input.Key.F11) { if(!e.IsRepeat) ToggleFull(); e.Handled=true; } };
         Closing+=(_,e)=> {
             if(sharingWindow!=null) { e.Cancel=true; if(!closingSharingOwner) {closingSharingOwner=true; _=CloseSharingAndOwner();} return; }
             discoveryScan?.Cancel(); UiText.Current.LanguageChanged-=ApplyLanguage;
@@ -295,7 +295,7 @@ public partial class MainWindow : Window
         var key=e.Key==System.Windows.Input.Key.System?e.SystemKey:e.Key==System.Windows.Input.Key.ImeProcessed?e.ImeProcessedKey:e.Key==System.Windows.Input.Key.DeadCharProcessed?e.DeadCharProcessedKey:e.Key;
         if(key==System.Windows.Input.Key.F11) { e.Handled=true; return; }
         var modifiers=readModifiers();
-        if(down && key==System.Windows.Input.Key.Escape && modifiers.HasFlag(ModifierKeys.Control) && modifiers.HasFlag(ModifierKeys.Alt)) { Input(new {op="release_all"}); ConnectButton.Focus(); e.Handled=true; return; }
+        if(down && key==System.Windows.Input.Key.Escape && modifiers.HasFlag(ModifierKeys.Control) && modifiers.HasFlag(ModifierKeys.Alt)) { ReleaseRemoteInput(); ConnectButton.Focus(); e.Handled=true; return; }
         int flags=(modifiers.HasFlag(ModifierKeys.Shift)?1:0)|(modifiers.HasFlag(ModifierKeys.Control)?2:0)|(modifiers.HasFlag(ModifierKeys.Alt)?4:0)|(modifiers.HasFlag(ModifierKeys.Windows)?8:0);
         var mapped=KeyboardMapping.Map(KeyInterop.VirtualKeyFromKey(key),flags,WindowsShortcuts.IsChecked==true && targetPlatform!="windows");
         // Queue a fresh local clipboard change ahead of the Mac paste key.
@@ -358,8 +358,16 @@ public partial class MainWindow : Window
             _=clipboard.Receive(text.GetString()!);
         }
     }
-    void KeyboardModeChanged() {
+    void KeyboardModeChanged()=>ReleaseRemoteInput();
+    void ReleaseRemoteInput() {
+        pasteSuppressed=false;
         Input(new {op="release_all"});
+        if(Surface.IsMouseCaptured) Surface.ReleaseMouseCapture();
+    }
+    void RestoreRemoteFocus() {
+        // Reconnect must not take keyboard focus while the user works elsewhere
+        // or is still choosing an option. Explicit clicks remain the fallback.
+        if(connected && bitmap!=null && IsActive && !SettingsMenu.IsSubmenuOpen && !Quality.IsDropDownOpen) Surface.Focus();
     }
     void Input(object message) {
         if(!connected || inputs==null) return;
@@ -464,7 +472,7 @@ public partial class MainWindow : Window
             Task? heartbeat=null, controls=null; bool retryBlocked=false;
             try {
                 SetStatus("正在连接…");
-                using(var timeout=CancellationTokenSource.CreateLinkedTokenSource(ct)) { timeout.CancelAfter(TimeSpan.FromSeconds(8)); await wire.Connect(ip,secret,timeout.Token,desktopPort); }
+                using(var timeout=CancellationTokenSource.CreateLinkedTokenSource(attempt.Token)) { timeout.CancelAfter(TimeSpan.FromSeconds(8)); await wire.Connect(ip,secret,timeout.Token,desktopPort); }
                 ct.ThrowIfCancellationRequested();
                 paired=true; PairingSucceeded(ip,secret);
                 inputs=new InputQueue(); connected=true;
@@ -476,7 +484,7 @@ public partial class MainWindow : Window
                 await wire.Json(new {op="handshake",version=1,quality},attempt.Token);
                 heartbeat=Task.Run(async()=> { try { while(true) { await Task.Delay(3000,attempt.Token); await wire.Json(new {op="heartbeat"},attempt.Token); } } catch { attempt.Cancel(); } });
                 controls=Task.Run(async()=> { try { await foreach(var m in inputs.ReadAllAsync(attempt.Token)) { await wire.Json(m,attempt.Token); Interlocked.Increment(ref inputsSent); } } catch { attempt.Cancel(); } });
-                Surface.Focus(); SetStatus(passwordSaveFailed?"已连接，但无法记住密码。":"已配对，等待画面…");
+                SetStatus(passwordSaveFailed?"已连接，但无法记住密码。":"已配对，等待画面…");
                 inputAllowed=true;
                 // Receive, authenticate/decrypt and feed FFmpeg away from the UI
                 // thread; only creation of the displayed bitmap uses Dispatcher.
@@ -507,7 +515,7 @@ public partial class MainWindow : Window
                             _=decoder.Completion.ContinueWith(_=> { try { attempt.Cancel(); } catch(ObjectDisposedException) {} },TaskScheduler.Default);
                             await Dispatcher.InvokeAsync(()=> {
                                 width=videoWidth; height=videoHeight;
-                                bitmap=new WriteableBitmap(width,height,96,96,PixelFormats.Bgra32,null); Desktop.Source=bitmap;
+                                bitmap=new WriteableBitmap(width,height,96,96,PixelFormats.Bgra32,null); Desktop.Source=bitmap; RestoreRemoteFocus();
                                 stats.Restart(); Interlocked.Exchange(ref frames,0); Interlocked.Exchange(ref bytes,0);
                             });
                         } else if(root.GetProperty("op").GetString()=="metrics") Interlocked.Exchange(ref encodeMs,root.GetProperty("encodeMs").GetDouble());
@@ -573,5 +581,5 @@ public partial class MainWindow : Window
         try { if(rememberConnection) SecretStore.Forget(Address.Text.Trim()); Secret.Password=""; SetStatus("已忘记此设备的密码，目标地址保留。"); }
         catch(Exception ex) { SetStatus($"清除失败：{ex.Message}"); }
     }
-    void ToggleFull() { if(session==null) return; full=!full; if(full) { previousState=WindowState; WindowState=WindowState.Normal; WindowStyle=WindowStyle.None; WindowState=WindowState.Maximized; Toolbar.Visibility=Visibility.Collapsed; Surface.Focus(); } else { WindowState=WindowState.Normal; WindowStyle=WindowStyle.SingleBorderWindow; WindowState=previousState; Toolbar.Visibility=Visibility.Visible; } }
+    void ToggleFull() { if(session==null) return; ReleaseRemoteInput(); full=!full; if(full) { previousState=WindowState; WindowState=WindowState.Normal; WindowStyle=WindowStyle.None; WindowState=WindowState.Maximized; Toolbar.Visibility=Visibility.Collapsed; } else { WindowState=WindowState.Normal; WindowStyle=WindowStyle.SingleBorderWindow; WindowState=previousState; Toolbar.Visibility=Visibility.Visible; } RestoreRemoteFocus(); }
 }
