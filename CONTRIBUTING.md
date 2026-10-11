@@ -1,5 +1,8 @@
 # Maintaining Local Remote Desktop
 
+Start with the [development handbook](docs/development-handbook.md) / [开发约定与经验](docs/zh-CN/development-handbook.md).
+It records product decisions, shared UI flows, update/permission lessons and validation rules for every platform.
+
 Use small, focused commits with Conventional Commit-style subjects: `feat:`, `fix:`, `docs:`, `test:`, `chore:`. Describe user-visible behavior and validation; do not claim platform testing that was not performed. Keep README/roadmap statements aligned with implemented support. English is the primary documentation; update corresponding Chinese pages when changing behavior.
 
 Do not commit build output, runtime binaries, release archives, credentials, pairing keys, logs, private certificates or user connection data. Check both `.gitignore` and already-tracked files: ignore rules do not untrack existing files. Avoid broad patterns that hide required icons, test fixtures or source assets. `.gitattributes` keeps shell scripts and source files on LF across platforms.

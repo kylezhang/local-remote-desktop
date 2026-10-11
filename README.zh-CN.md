@@ -98,6 +98,7 @@ bash apps/macos/build-app.sh
 - [路线图与版本规划](docs/zh-CN/roadmap.md) · [更新日志](CHANGELOG.zh-CN.md)
 - [架构](docs/zh-CN/architecture.md) · [协议](docs/zh-CN/protocol.md) · [性能](docs/zh-CN/performance.md)
 - [多端界面规范](docs/zh-CN/interface.md) · [工程结构](docs/zh-CN/naming.md)
+- [开发约定与经验](docs/zh-CN/development-handbook.md)
 - [验证状态](docs/zh-CN/validation.md) · [发版流程](docs/zh-CN/releasing.md)
 
 ## 许可

@@ -98,6 +98,7 @@ Main is **v0.3.0-alpha.2**, with a [Windows sharing preview](docs/windows-sharin
 - [Roadmap and version plan](docs/roadmap.md) · [Changelog](CHANGELOG.md)
 - [Architecture](docs/architecture.md) · [Protocol](docs/protocol.md) · [Performance](docs/performance.md)
 - [Cross-platform interface conventions](docs/interface.md) · [Project layout](docs/naming.md)
+- [Development handbook](docs/development-handbook.md)
 - [Validation status](docs/validation.md) · [Release process](docs/releasing.md)
 
 ## License

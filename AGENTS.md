@@ -2,6 +2,8 @@
 
 Read [product direction](docs/product.md), [delivery scope](docs/v0.3.0-plan.md)
 and [interface conventions](docs/interface.md) before changing product behavior.
+Read the [development handbook](docs/development-handbook.md) before starting any
+new platform. Keep its English/Chinese agreements aligned with implementation.
 
 - Local Remote Desktop is one native application per supported platform. Desktop
   Connect and Share are session roles, not separate user-facing products.
@@ -23,5 +25,9 @@ and [interface conventions](docs/interface.md) before changing product behavior.
   brand. Avoid incidental identity, Keychain or permission changes during UI work.
 - Keep secrets, personal device data, local test logs and build outputs out of Git.
   Follow GPL-3.0-or-later notices and the documented immutable-release process.
+- After each owner-facing response, state the next concrete step. Complete independent
+  coding/checks before requesting native acceptance; consolidate owner participation.
+- Defer verified Windows deployment while the client is in use. Never close/reopen
+  it or show test windows to make a background check pass.
 
 See [中文产品方向](docs/zh-CN/product.md) and [中文交付计划](docs/zh-CN/v0.3.0-plan.md).
