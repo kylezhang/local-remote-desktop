@@ -8,6 +8,13 @@ Requirements: Apple Silicon, macOS 13+, normal logged-in GUI session, Xcode Comm
 bash apps/macos/install-app.sh
 ```
 
+The build records the physical checkout path in its ignored `.build-native`
+cache. After moving or renaming the project (or on the first build with an older,
+unmarked cache), it clears only that cache and rebuilds. This prevents stale
+`SwiftShims`/Clang module paths; subsequent builds at the same path stay incremental.
+Cache symlinks are refused. This cleanup does not reset permissions, pairing or
+signing settings, and a failed build leaves the installed app intact.
+
 This builds first, verifies the staged signature and icon resources, stops existing Host instances and a loaded login agent, preserves this app's Screen Recording and Accessibility decisions after signature compatibility checks, and replaces verified current/legacy application bundles in `/Applications` and `~/Applications`. The result is `/Applications/Local Remote Desktop.app`; old `RemoteMacLAN.app` copies are removed after verification, and any existing login job is updated to the new executable path. Old contents are never merged into the new app. Build or resource failure leaves the installed app intact. The pairing key is retained. Normal installation does not reset permissions. First installation and explicit permission repair still require OS approval.
 
 During replacement, the complete old bundles are held temporarily inside a private staging directory. If moving or verifying the new bundle fails, or installation receives an interrupt/termination signal, the installer attempts to restore those bundles. It deletes temporary backups after successful verification. If restoration fails, it reports and retains the backup directory for recovery. This protects bundle contents, not already-reset permissions, process state or hard power loss. A loaded login agent remains stopped after rollback. If only launching fails, the verified new app stays installed and the message explains how to open it.

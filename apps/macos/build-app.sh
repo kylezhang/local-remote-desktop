@@ -39,6 +39,30 @@ if [[ "$identity" == "-" && "$stable_mode" == 1 ]]; then
 fi
 # Newer SwiftPM defaults to Swift Build. Use the stable native backend and
 # a separate cache so products from different backends are never mixed.
+project_dir="$(pwd -P)"
+cd "$project_dir"
+cache_dir="$project_dir/.build-native"
+cache_origin="$cache_dir/.localremote-project-path"
+# Clang PCM files embed absolute module-cache paths. Renaming/moving a checkout
+# must not reuse those products; unmarked caches from older scripts are unknown.
+[[ ! -L "$cache_dir" && ! -L "$cache_origin" ]] || {
+  echo 'Build cache must not be a symlink; existing application retained.' >&2; exit 1
+}
+[[ ! -e "$cache_dir" || -d "$cache_dir" ]] || {
+  echo 'Build cache path must be a directory; existing application retained.' >&2; exit 1
+}
+if [[ -d "$cache_dir" ]]; then
+  previous_project=""
+  if [[ -f "$cache_origin" ]]; then previous_project="$(cat "$cache_origin")"; fi
+  if [[ "$previous_project" != "$project_dir" ]]; then
+    echo '项目路径改变或旧缓存未标记，正在清理本项目编译缓存。'
+    # Fixed child of the physical project directory; never delete a user path,
+    # installed bundle, signing setting, permission record or pairing credential.
+    rm -rf -- "$cache_dir"
+  fi
+fi
+mkdir -p "$cache_dir"
+printf '%s\n' "$project_dir" > "$cache_origin"
 xcrun swift build --build-system native --scratch-path .build-native -c release
 bin_dir="$(xcrun swift build --build-system native --scratch-path .build-native -c release --show-bin-path)"
 app="$PWD/build/Local Remote Desktop.app"

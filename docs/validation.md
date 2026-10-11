@@ -58,6 +58,17 @@ The v0.2.0-beta.1 preview uses the current final-package Windows checks, portabl
 
 [简体中文](zh-CN/validation.md)
 
+## Mac checkout relocation — 2026-10-11
+
+`tests/InstallerChecks/cache.py` passes four tests covering seven scenarios with
+mock Apple tools in Linux temporary directories: unmarked/old-path cache rebuild,
+an actual directory rename (including a space) followed by incremental reuse,
+build failure retaining the prior bundle/signing setting, and refusal of cache
+directory/marker symlinks or a regular-file cache path. Shell syntax, the 13
+signing cases and 21 installer tests also pass. This establishes script control
+flow, not an Apple SDK build or native installation. The owner's Mac build is
+still the native gate.
+
 ## Discovery and returning pairing — 2026-10-11
 
 Windows OS DNS-SD construction, registration and withdrawal passed with temporary

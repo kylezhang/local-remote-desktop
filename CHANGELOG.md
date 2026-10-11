@@ -4,6 +4,9 @@
 
 ## Unreleased
 
+- Mac builds discard stale native caches after a checkout moves or is renamed,
+  preventing absolute module-cache path errors while retaining incremental builds.
+
 - Quality changes now cancel an in-progress Windows authentication attempt.
   Fullscreen and focus transitions release remote input and clear suppressed paste;
   focus restoration is limited to the active app. Repeated F11 presses no longer
