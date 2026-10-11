@@ -246,7 +246,7 @@ struct DesktopSettings: View {
                         Toggle(UiText.text("同步文字"), isOn: $host.allowClipboard)
                         Toggle(UiText.text("同步文件"), isOn: $host.allowFiles)
                         Button(UiText.text("打开接收目录")) { host.openReceivedFiles() }
-                        Text(UiText.text("文字可在两个桌面角色中同步；Mac 控制 Windows 时的文件同步仍在开发中。"))
+                        Text(UiText.text("文字与文件可在两个桌面角色中同步；关闭后不再传输。"))
                             .font(.caption).foregroundStyle(.secondary)
                     case "about":
                         Text("Local Remote Desktop").font(.title2)

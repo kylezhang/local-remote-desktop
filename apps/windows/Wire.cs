@@ -40,9 +40,9 @@ public sealed class Wire : IDisposable
     }
     // A caller must reserve its one-controller slot and filter the peer before
     // accepting. Capture/input start only after this mutual proof succeeds.
-    internal static async Task<Wire> Accept(TcpClient peer,byte[] key,byte[]? salt,CancellationToken ct) {
+    internal static async Task<Wire> Accept(TcpClient peer,byte[] key,byte[]? salt,CancellationToken ct,bool fileChannel=false) {
         if(key.Length!=32 || (salt!=null && salt.Length!=16)) { peer.Dispose(); throw new ArgumentException("Invalid host credential"); }
-        var wire=new Wire(peer,65536,10,8*1024*1024);
+        var wire=new Wire(peer,65536,fileChannel?15:10,fileChannel?65536:8*1024*1024);
         using var deadline=CancellationTokenSource.CreateLinkedTokenSource(ct); deadline.CancelAfter(TimeSpan.FromSeconds(8));
         try {
             wire.stream=peer.GetStream(); var server=RandomNumberGenerator.GetBytes(32);

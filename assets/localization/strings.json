@@ -292,5 +292,20 @@
   "文字可在两个桌面角色中同步；Mac 控制 Windows 时的文件同步仍在开发中。": "Text sync is available in both desktop roles; file sync when controlling Windows from Mac is still in development.",
   "文本同步：目标设备版本不支持": "Text sync: not supported by the target version",
   "文本同步：等待目标设备确认": "Text sync: awaiting target confirmation",
-  "文本同步：等待目标设备允许同步": "Text sync: waiting for permission on the target device"
+  "文本同步：等待目标设备允许同步": "Text sync: waiting for permission on the target device",
+  "仅正常登录后的桌面；不支持 UAC 安全桌面或登录前控制。文字与文件同步可在设置中关闭。": "Only the logged-in desktop is supported; UAC secure desktops and pre-login control are unavailable. Text and file sync can be disabled in Settings.",
+  "文字与文件可在两个桌面角色中同步；关闭后不再传输。": "Text and files can sync in either desktop role. Turning sync off stops transfers.",
+  "文件已复制，正在等待目标设备接收…": "Files copied; waiting for the target device…",
+  "文件同步失败，请检查文件后重新复制。": "File sync failed. Check the files and copy them again.",
+  "文件传输结束或失败；重新复制可重试": "Transfer ended or failed. Copy the files again to retry.",
+  "文件已发送，可在目标设备粘贴": "Files sent; ready to paste on the target device",
+  "文件已发送；目标设备未确认剪贴板就绪": "Files sent; the target has not confirmed clipboard readiness.",
+  "文件同步：目标设备版本不支持": "File sync: not supported by this target device version",
+  "文件同步：等待目标设备允许": "File sync: waiting for permission on the target device",
+  "文件已保存到目标设备；其剪贴板已变化，请从接收目录取用": "Files saved on the target device. Its clipboard changed; open received files to use them.",
+  "目标设备未允许文件共享或连接已失效": "The target has not allowed file sharing, or the session has ended.",
+  "目标设备磁盘空间不足": "The target does not have enough disk space.",
+  "目标设备文件传输失败": "File transfer to the target failed.",
+  "关闭": "Dismiss",
+  "无法打开接收目录，请稍后重试。": "Could not open received files. Try again later."
 }

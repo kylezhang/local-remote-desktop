@@ -19,13 +19,14 @@ internal sealed class WindowsHost: IAsyncDisposable {
     readonly CancellationTokenSource stop=new();
     readonly Action<string> status; readonly Func<string> deviceName;
     readonly Func<Wire,CancellationToken,IHostTextClipboard>? clipboard;
+    readonly Func<Wire,byte[],byte[],CancellationToken,IHostFiles>? files;
     Task? accept,session; TcpClient? controller; int disposed;
     internal string LastError {get;private set;}="";
     internal int Port=>((IPEndPoint)listener.LocalEndpoint).Port;
-    internal WindowsHost(byte[] key,byte[] salt,CaptureArea area,Func<IDesktopCapture> capture,Func<WindowsInput> input,Action<string>? status=null,IPAddress? address=null,int port=47980,Func<string>? deviceName=null,Func<Wire,CancellationToken,IHostTextClipboard>? clipboard=null) {
+    internal WindowsHost(byte[] key,byte[] salt,CaptureArea area,Func<IDesktopCapture> capture,Func<WindowsInput> input,Action<string>? status=null,IPAddress? address=null,int port=47980,Func<string>? deviceName=null,Func<Wire,CancellationToken,IHostTextClipboard>? clipboard=null,Func<Wire,byte[],byte[],CancellationToken,IHostFiles>? files=null) {
         if(key.Length!=32 || salt.Length!=16) throw new ArgumentException("Invalid host credential");
         this.key=key.ToArray(); this.salt=salt.ToArray(); this.area=area; this.capture=capture; this.input=input;
-        this.status=status??(_=>{}); this.deviceName=deviceName??(()=>DeviceName.Default.Current); this.clipboard=clipboard; listener=new(address??IPAddress.Any,port);
+        this.status=status??(_=>{}); this.deviceName=deviceName??(()=>DeviceName.Default.Current); this.clipboard=clipboard; this.files=files; listener=new(address??IPAddress.Any,port);
     }
     internal void Start() {
         lock(gate) { if(disposed!=0 || accept!=null) throw new InvalidOperationException("Host already started/stopped"); listener.Start(4); accept=AcceptLoop(); }
@@ -47,7 +48,7 @@ internal sealed class WindowsHost: IAsyncDisposable {
         } catch(Exception e) when(e is OperationCanceledException or SocketException or ObjectDisposedException) { if(!stop.IsCancellationRequested) status("Listener failed"); }
     }
     async Task Serve(TcpClient peer) {
-        WindowsInput? injector=null; Task? video=null; IHostTextClipboard? textClipboard=null;
+        WindowsInput? injector=null; Task? video=null; IHostTextClipboard? textClipboard=null; IHostFiles? fileClipboard=null;
         using var lifetime=CancellationTokenSource.CreateLinkedTokenSource(stop.Token);
         try {
             using var wire=await Wire.Accept(peer,key,salt,lifetime.Token);
@@ -59,7 +60,9 @@ internal sealed class WindowsHost: IAsyncDisposable {
                 !h.TryGetProperty("quality",out var quality) || !quality.TryGetInt32(out var q) || q is <0 or >2) throw new IOException("Invalid control handshake");
             var profile=VideoProfile.For(area,q); injector=input(); LastError="";
             textClipboard=clipboard?.Invoke(wire,lifetime.Token);
-            await wire.Json(new {op="capabilities",deviceName=DeviceName.Valid(deviceName())??"Windows",platform="windows",inputModel="win-vk-v1",inputEnabled=true,clipboardText=textClipboard!=null,fileClipboard=false},lifetime.Token);
+            try { fileClipboard=files?.Invoke(wire,key,salt,lifetime.Token); }
+            catch(SocketException) { status("Files unavailable"); }
+            await wire.Json(new {op="capabilities",deviceName=DeviceName.Valid(deviceName())??"Windows",platform="windows",inputModel="win-vk-v1",inputEnabled=true,clipboardText=textClipboard!=null,fileClipboard=fileClipboard!=null,filePort=fileClipboard?.Port??47981,fileSession=fileClipboard?.Session??""},lifetime.Token);
             await wire.Json(new {op="video_header",width=profile.Width,height=profile.Height,fps=profile.Fps,codec="h264-annexb"},lifetime.Token);
             status("In use");
             // Backpressure reaches the encoder pipe; no unbounded frame queue.
@@ -76,6 +79,7 @@ internal sealed class WindowsHost: IAsyncDisposable {
                 if(name=="disconnect") break;
                 if(name=="heartbeat") { await wire.Json(new {op="heartbeat",deviceName=DeviceName.Valid(deviceName())??"Windows",inputEnabled=true,inputReceived=injector.Received,inputPosted=injector.Posted,inputBlocked=injector.Blocked,inputRejected=injector.Rejected,inputError=injector.Error},lifetime.Token); continue; }
                 if(name is "clipboard_sync" or "clipboard_text") { if(textClipboard!=null) await textClipboard.Control(m); continue; }
+                if(name=="file_sync") { if(fileClipboard!=null) await fileClipboard.Control(m); continue; }
                 if(name is "mouse_move" or "mouse_button" or "scroll" or "key_event" or "release_all") injector.Handle(m);
                 else if(name is not ("clipboard_sync" or "file_sync")) throw new IOException("Unsupported control operation");
             }
@@ -89,6 +93,7 @@ internal sealed class WindowsHost: IAsyncDisposable {
             // encoder drains/exits on a slow or failing machine.
             injector?.Release();
             if(textClipboard!=null) await textClipboard.DisposeAsync();
+            if(fileClipboard!=null) await fileClipboard.DisposeAsync();
             if(video!=null) { try { await video; } catch(Exception e) { if(e is not OperationCanceledException) LastError="capture_"+e.GetType().Name; } }
             lock(gate) { if(ReferenceEquals(controller,peer)) controller=null; }
             if(!stop.IsCancellationRequested) status("Available");

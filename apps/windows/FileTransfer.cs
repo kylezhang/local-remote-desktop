@@ -112,7 +112,7 @@ public static class FileTransfer {
             var code=message.TryGetProperty("code",out var reason)?reason.GetString():null;
             throw new IOException(code switch {
                 "invalid"=>"文件名、类型、数量或大小不支持", "changed"=>"复制后来源文件已变化", "checksum"=>"文件完整性校验失败",
-                "incomplete"=>"文件接收不完整", "denied"=>"Mac 未允许文件共享或连接已失效", "diskFull"=>"Mac 磁盘空间不足", _=>"Mac 文件传输失败"
+                "incomplete"=>"文件接收不完整", "denied"=>"目标设备未允许文件共享或连接已失效", "diskFull"=>"目标设备磁盘空间不足", _=>"目标设备文件传输失败"
             });
         }
         if(!message.TryGetProperty("op",out var value) || value.GetString()!=op) throw new IOException("File transfer rejected or interrupted");
@@ -142,7 +142,7 @@ public static class FileTransfer {
         }
         await wire.Json(new {op="file_complete"},ct);
     }
-    public static async Task<string[]> Receive(Wire wire,FileItem[] items,string root,Action<long,long>? progress,CancellationToken ct) {
+    public static async Task<string[]> Receive(Wire wire,FileItem[] items,string root,Action<long,long>? progress,CancellationToken ct,Func<bool>? canCommit=null) {
         using var sink=new FileSink(root,items); long total=items.Sum(x=>x.size),done=0;
         progress?.Invoke(0,total);
         for(int i=0;i<items.Length;i++) {
@@ -157,7 +157,9 @@ public static class FileTransfer {
                 }
             }
         }
-        Expect(await Json(wire,ct),"file_complete"); return sink.Commit();
+        Expect(await Json(wire,ct),"file_complete"); ct.ThrowIfCancellationRequested();
+        if(canCommit!=null && !canCommit()) throw new IOException("File session revoked");
+        return sink.Commit();
     }
     public static async Task<bool> Upload(string ip,string key,string token,long requestId,FileSource source,Action<long,long>? progress,CancellationToken ct,int port=47981) {
         using var wire=await Connect(ip,key,ct,port);

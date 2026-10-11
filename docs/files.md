@@ -2,7 +2,7 @@
 
 [简体中文](zh-CN/files.md)
 
-File clipboard sharing is implemented on the development branch. It is not in the
+File clipboard sharing is implemented for both desktop roles on the development branch. It is not in the
 published v0.1.0 package. Windows encrypted-peer/UI tests and portable Swift tests
 pass; native Mac and real two-device acceptance remain pending.
 
@@ -11,7 +11,7 @@ pass; native Mac and real two-device acceptance remain pending.
 1. Update both apps and connect normally using the existing pairing key.
 2. File sharing starts enabled unless previously disabled. Both apps remember
    your choice. Adjust it in **设置 → 剪贴板 → 同步文件** (Settings → Clipboard →
-   Sync Files). Wait for the enabled status in the Windows menu.
+   Sync Files). Both peers must allow it.
 3. Copy files in Explorer or Finder. Transfer starts automatically. When the status
    says ready, paste in Finder on the Mac or Explorer on Windows.
 
@@ -21,7 +21,7 @@ old clipboard contents; copy again after the session is ready. The consent appli
 to authenticated desktop sessions, not an unauthenticated LAN peer.
 
 The Windows option **Windows 快捷键** maps Ctrl+C/V to Mac Command+C/V. Click the
-remote picture before using those shortcuts there. For a Windows-to-Mac copy,
+remote picture before using those shortcuts there. Mac controller shortcuts map Command+C/V to Windows Ctrl+C/V. In either remote direction,
 Ctrl+V before completion is consumed with a waiting status: it is not queued for
 later execution against a possibly different focused Mac application. Paste
 again after completion. Paste into the local Windows application is managed by
@@ -68,7 +68,7 @@ Use **接收目录** on Windows or **打开接收目录** on Mac to open saved f
 
 | Platform | Location |
 |---|---|
-| Windows | `%LOCALAPPDATA%\LocalRemoteDesktop\ReceivedFiles` |
+| Windows | `%LOCALAPPDATA%\LocalRemote\ReceivedFiles` |
 | Mac | `~/Library/Application Support/LocalRemote/ReceivedFiles` |
 
 Each batch has its own folder. Remove files there when no longer needed; retained
@@ -79,7 +79,7 @@ Clipboard file drops represent **copy**, never a request to delete the source.
 
 ## Connection and privacy
 
-Allow TCP **47981** to the Mac in addition to desktop port **47980**. The independent
+Allow TCP **47981** to the shared device (Mac or Windows) in addition to desktop port **47980**. The independent
 connection reuses the existing pairing secret for automatic mutual authentication
 and AES-GCM, then requires a fresh desktop-session token and the current consent
 generation. These checks run in the background; no second user authentication is

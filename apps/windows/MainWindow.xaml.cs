@@ -86,6 +86,7 @@ public partial class MainWindow : Window
         }
         FileSync.Checked+=(_,_)=>FileModeChanged(); FileSync.Unchecked+=(_,_)=>FileModeChanged();
         void GlobalFilesChanged() {
+            sharingWindow?.SetFilesAllowed(GlobalFiles.IsChecked==true);
             FileSync.IsEnabled=GlobalFiles.IsChecked==true; FileModeChanged();
             if(rememberConnection) { try { SecretStore.SaveFileSync(GlobalFiles.IsChecked==true); } catch(Exception ex) { SetFileStatus($"文件同步已切换，但无法保存选择：{ex.Message}"); } }
         }
@@ -160,6 +161,7 @@ public partial class MainWindow : Window
             var content=sharing.Content; sharing.Content=null; SharingPage.Content=content;
             sharingWindow=sharing;
             sharing.SetClipboardAllowed(GlobalClipboard.IsChecked==true);
+            sharing.SetFilesAllowed(GlobalFiles.IsChecked==true);
             sharing.Closed+=(_,_)=> { if(ReferenceEquals(sharingWindow,sharing)) { sharingWindow=null; SharingPage.Content=null; } };
         }
         ConnectPage.Visibility=page=="connect"?Visibility.Visible:Visibility.Collapsed;

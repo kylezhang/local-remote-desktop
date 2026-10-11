@@ -90,14 +90,19 @@ a disabled session. New copies up to 32 KiB UTF-8 sync in both directions, with
 no echo and no automatic upload of preconnection clipboard contents. Text queues
 ahead of the remote paste key. Recording clipboard/transport/model checks pass;
 updated native Mac pasteboard and two-device acceptance remain pending.
-Reverse file sync is still in development. Existing Windows → Mac file support
-remains in the original direction. Simultaneous sharing and controlling
+Regular-file clipboard sync now also reuses the existing file protocol in this
+role. Newly copied files push to Windows; Windows copies are offered and pulled
+automatically. Sync Files applies to both roles. A temporary transfer notice offers
+cancel and the received directory. Remote paste waits for confirmed readiness;
+it is never executed later automatically. Encrypted-worker and recording-service
+checks pass; updated native Mac pasteboard and two-device file acceptance remain
+pending. See the [file guide](files.md). Simultaneous sharing and controlling
 are disabled in the interface to avoid reciprocal desktop feedback.
 
 ## Routed private networks
 
 A preconfigured VPN such as WireGuard can provide the private IPv4 route; the
 app uses that route directly without a relay or new pairing flow. Enable sharing
-on Windows and enter its reachable private Target IP. TCP 47980 must be allowed
+on Windows and enter its reachable private Target IP. TCP 47980 (and 47981 for files) must be allowed
 for that route. Nearby-device multicast discovery is not assumed to cross a VPN.
 RDP connectivity alone does not open this application’s listening port.

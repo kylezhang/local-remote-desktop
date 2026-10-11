@@ -52,13 +52,22 @@ final class ControllerModel: ObservableObject {
     private var qualityRestart = false
     private var presentation: DispatchSourceTimer?
     private var clipboardTimer: DispatchSourceTimer?, peerClipboard = false
+    @Published private(set) var fileStatus = ""
+    @Published private(set) var filesBusy = false
+    private var peerFiles = [String: Any](), heldControl = Set<Int>(), pasteSuppressed = false
+    private let fileBoard: ControllerFileClipboard, fileTransport: ControllerFileTransport
+    private lazy var files = ControllerFiles(board: fileBoard, transport: fileTransport,
+        allowed: { [weak self] in self?.host.allowFiles ?? false },
+        send: { [weak self] message in self?.session?.send(message) },
+        status: { [weak self] text, busy in self?.fileStatus = text.hasPrefix("文件同步：") ? "" : text; self?.filesBusy = busy })
     private let textSync: TextClipboardSync
     private lazy var clipboard = ControllerTextClipboard(sync: textSync,
         allowed: { [weak self] in self?.host.allowClipboard ?? false },
         send: { [weak self] message in self?.session?.send(message) })
     private let frameLock = NSLock()
     private var latest: CGImage?, frameToken: UUID?
-    init(host: HostModel, preferences: UserDefaults = .standard, credentials: ControllerCredentials = ControllerKeychain(), browser: ControllerBrowsing = ControllerDiscovery(), textSync: TextClipboardSync = MacControllerClipboard.make()) {
+    init(host: HostModel, preferences: UserDefaults = .standard, credentials: ControllerCredentials = ControllerKeychain(), browser: ControllerBrowsing = ControllerDiscovery(), textSync: TextClipboardSync = MacControllerClipboard.make(), fileBoard: ControllerFileClipboard = MacFileClipboard(), fileTransport: ControllerFileTransport = MacControllerFileTransport()) {
+        self.fileBoard = fileBoard; self.fileTransport = fileTransport
         self.textSync = textSync
         self.host = host; self.preferences = preferences; self.credentials = credentials; self.browser = browser
         for record in NearbyDevice.load(preferences) { known[record.address] = record }
@@ -182,7 +191,7 @@ final class ControllerModel: ObservableObject {
         }
     }
     private func begin() {
-        stopClipboard(); peerClipboard = false
+        stopClipboard(); peerClipboard = false; peerFiles = [:]
         retry = nil; qualityRestart = false
         let generation = UUID(); token = generation
         busy = true; connected = false; inputEnabled = false; host.controlling = true
@@ -210,6 +219,7 @@ final class ControllerModel: ObservableObject {
         switch message["op"] as? String {
         case "capabilities":
             peerClipboard = message["clipboardText"] as? Bool == true
+            peerFiles = message
             targetName = DeviceName.peer(message, fallback: address); targetSystem = "Windows"
             inputEnabled = message["inputEnabled"] as? Bool == true
         case "video_header": width = message["width"] as? Int ?? 0; height = message["height"] as? Int ?? 0
@@ -217,11 +227,13 @@ final class ControllerModel: ObservableObject {
             if !hasConnected { authenticated() }
             connected = true; hasConnected = true; status = inputEnabled ? "已连接，点击画面开始操作。" : "已连接，只能查看。"
             clipboard.start(supported: peerClipboard)
+            files.start(capabilities: peerFiles, address: sessionAddress, password: sessionPassword)
             let timer = DispatchSource.makeTimerSource(queue: .main)
             timer.schedule(deadline: .now() + .milliseconds(500), repeating: .milliseconds(500))
-            timer.setEventHandler { [weak self] in self?.clipboard.poll() }
+            timer.setEventHandler { [weak self] in self?.clipboard.poll(); self?.files.poll() }
             clipboardTimer = timer; timer.resume()
         case "clipboard_sync", "clipboard_text": clipboard.receive(message)
+        case "file_sync", "file_offer": files.receive(message)
         case "heartbeat":
             targetName = DeviceName.peer(message, fallback: targetName.isEmpty ? address : targetName)
             if hasConnected, let previous = known[sessionAddress], previous.name != targetName {
@@ -291,14 +303,28 @@ final class ControllerModel: ObservableObject {
         }
         retry = job; DispatchQueue.main.asyncAfter(deadline: .now()+3, execute: job)
     }
-    private func stopClipboard() { clipboardTimer?.cancel(); clipboardTimer = nil; clipboard.stop() }
+    private func stopClipboard() { clipboardTimer?.cancel(); clipboardTimer = nil; clipboard.stop(); files.stop(); fileStatus = ""; filesBusy = false; heldControl.removeAll(); pasteSuppressed = false }
+    func cancelFiles() { files.cancel(); fileStatus = "文件传输已取消；重新复制可重试"; filesBusy = false }
+    func dismissFiles() { if !filesBusy { fileStatus = "" } }
+    func openReceivedFiles() { MacControllerFiles.openReceivedDirectory() }
     func send(_ object: [String: Any]) {
         if connected && inputEnabled {
-            if object["op"] as? String == "key_event", object["vk"] as? Int == 86, object["down"] as? Bool == true { clipboard.poll() }
+            if object["op"] as? String == "key_event", let vk = object["vk"] as? Int, let down = object["down"] as? Bool {
+                if [162,163,17].contains(vk) { if down { heldControl.insert(vk) } else { heldControl.remove(vk) } }
+                if vk == 86 {
+                    if !down, pasteSuppressed { pasteSuppressed = false; return }
+                    if down { clipboard.poll() }
+                    if down, !heldControl.isEmpty {
+                        files.poll()
+                        if !files.pasteReady { pasteSuppressed = true; fileStatus = "文件尚未就绪；看到可粘贴提示后再按 Ctrl+V"; return }
+                    }
+                    if down { pasteSuppressed = false }
+                }
+            }
             session?.send(object)
         }
     }
-    func release() { if connected { session?.send(["op":"release_all"]) }; inputGeneration += 1 }
+    func release() { if connected { session?.send(["op":"release_all"]) }; heldControl.removeAll(); pasteSuppressed = false; inputGeneration += 1 }
     deinit { browser.stop(); session?.stop(); retry?.cancel(); presentation?.cancel(); clipboardTimer?.cancel(); credentialTask?.cancel() }
 }
 
@@ -326,6 +352,15 @@ struct ControllerView: View {
             Divider()
             RemoteScreen(model: model, fullScreen: fullScreen).frame(maxWidth: .infinity, maxHeight: .infinity)
             Divider()
+            if !model.fileStatus.isEmpty {
+                HStack(spacing: 8) {
+                    Text(UiText.text(model.fileStatus)).font(.caption).frame(maxWidth: .infinity, alignment: .leading)
+                    if model.filesBusy { Button(UiText.text("取消")) { model.cancelFiles() } }
+                    Button(UiText.text("打开接收目录")) { model.openReceivedFiles() }
+                    if !model.filesBusy { Button(UiText.text("关闭")) { model.dismissFiles() } }
+                }.padding(8).background(Color.secondary.opacity(0.06))
+                Divider()
+            }
             Text(UiText.text(host.active || host.starting ? "请先停止这台 Mac 的共享，再连接其他设备。" : model.status))
                 .font(.caption).frame(maxWidth: .infinity, alignment: .leading).padding(8)
         }.frame(minWidth: 720, minHeight: 440)

@@ -1,5 +1,14 @@
 # Validation
 
+## Reverse files — 2026-10-11
+
+Both desktop roles now implement paired regular-file sharing. Production Windows
+host push/pull and an independent Python ↔ production Swift file worker passed,
+including cancel, corruption, consent and paste-readiness checks with recording
+clipboards. No real desktop input or clipboard was used. See the
+[coverage record](../tests/results/reverse-files-2026-10-11.txt).
+Updated Apple SDK, installed Mac clipboard and two-device acceptance remain pending.
+
 ## Reverse text clipboard — 2026-10-11
 
 Mac controller and Windows sharing source now reuse the existing text protocol.
@@ -7,7 +16,7 @@ Production Windows encrypted/WPF-dispatcher, portable Swift state/model and
 independent encrypted-session checks passed with recording clipboards, without
 showing windows or using real input. See the [coverage record](../tests/results/reverse-text-clipboard-2026-10-11.txt).
 Updated Apple SDK/pasteboard and real two-device acceptance remain pending;
-reverse file sync is still in development.
+reverse files were subsequently implemented; see the newer record above.
 
 The v0.2.0-beta.1 preview uses the current final-package Windows checks, portable Swift/model checks and 2026-10-10 decoder samples. Mac source is provided without a native SDK/runtime claim. Earlier v0.1.0 records remain as historical baseline.
 

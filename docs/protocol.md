@@ -76,7 +76,9 @@ Platform comes from the validated capabilities record, never from the IP or name
 The Windows sharing role uses the same authenticated encrypted records and
 version=1. Before video_header and frames it sends capabilities:
 `platform=windows`, `inputModel=win-vk-v1`, `inputEnabled=true`,
-`clipboardText=false`, `fileClipboard=false`. New Mac hosts identify as
+`clipboardText=true` and `fileClipboard=true` when the role adapters are available.
+If the file port is unavailable it advertises `fileClipboard=false` and desktop
+sharing continues. New Mac hosts identify as
 `platform=macos`, `inputModel=win-vk-mac-v1`; legacy peers without a platform retain
 historical Mac-target behavior. Controllers validate platform/inputModel together
 and select shortcut semantics before accepting input.
@@ -129,11 +131,12 @@ the same ID only when both peers allow files. Revocation acknowledges false and
 aborts active jobs. File consent is separate from text consent and remembered on
 each device, but enable/reconnect takes a new clipboard baseline.
 
-On a new Mac file copy, Host sends file_offer {requestId,offer,items}; offer is
+On a new file copy on the shared device, Host sends file_offer {requestId,offer,items}; offer is
 32 hex characters identifying the latest source batch. Items are {name,size}
-without source paths. Windows file copies start a push instead.
+without source paths. File copies on the controlling device start a push instead.
 
-Windows always initiates TCP 47981, including Mac-to-Windows pulls. It repeats
+The controlling device always initiates TCP 47981, including pulls from the
+shared device. This applies to both Windows → Mac and Mac → Windows roles. It repeats
 RML1 or RMP1 challenge/proof and direction-key derivation automatically with fresh
 nonces, then sends a type-1 request:
 
@@ -151,7 +154,7 @@ file chunks**, then file_end {index,sha256:64 lowercase hex}. Type 3 is used onl
 on the file socket. Chunks are nonempty and at most 32 KiB, lengths match declarations.
 Then file_complete terminates the batch. Receiver validates lengths and SHA-256
 before promoting its generated staging directory. For pushes, Host replies
-file_done with clipboardReady. For pulls, Client commits, then attempts Windows
+file_done with clipboardReady. For pulls, Client commits, then attempts local
 clipboard publication on the UI thread (up to two seconds of busy retries, without
 overriding a newer copy), and replies file_done with clipboardReady. Host reports
 paste-ready only for explicit true; missing/false from legacy or headless peers

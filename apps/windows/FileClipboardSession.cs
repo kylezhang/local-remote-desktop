@@ -40,7 +40,7 @@ public sealed class FileClipboardSession {
     public void Cancel() { generation++; job?.Cancel(); job=null; }
     public void Configure(bool value) {
         requested=value; enabled=false; Cancel(); revision=board.Revision; remoteReady=true;
-        status(!requested?"文件同步：关闭":!connected?"文件同步：等待连接":!supported?"文件同步：Mac 版本不支持":"文件同步：等待 Mac 允许",false);
+        status(!requested?"文件同步：关闭":!connected?"文件同步：等待连接":!supported?"文件同步：目标设备版本不支持":"文件同步：等待目标设备允许",false);
         if(connected && supported) send(new {op="file_sync",enabled=value,requestId=++requestId});
     }
     public void Control(JsonElement message) {
@@ -56,7 +56,7 @@ public sealed class FileClipboardSession {
         if(op=="file_sync" && message.TryGetProperty("enabled",out var permission) && permission.ValueKind is JsonValueKind.True or JsonValueKind.False) {
             bool next=requested && permission.GetBoolean();
             if(next!=enabled) { Cancel(); revision=board.Revision; remoteReady=true; }
-            enabled=next; status(enabled?"文件同步：已启用，复制文件后自动传输":requested?"文件同步：等待 Mac 允许":"文件同步：关闭",false);
+            enabled=next; status(enabled?"文件同步：已启用，复制文件后自动传输":requested?"文件同步：等待目标设备允许":"文件同步：关闭",false);
         } else if(op=="file_offer" && enabled) {
             try {
                 var items=FileSource.Validate(message.GetProperty("items").Deserialize<FileItem[]>()!);
@@ -93,7 +93,7 @@ public sealed class FileClipboardSession {
                         var source=FileSource.Prepare(paths);
                         return await FileTransfer.Upload(address,secret,session,request,source,Progress,owner.Token,port);
                     },owner.Token);
-                    if(run==generation && enabled) { remoteReady=ready; status(ready?"文件已发送，可在 Mac 粘贴":"文件已保存到 Mac；其剪贴板已变化，请从接收目录取用",false); }
+                    if(run==generation && enabled) { remoteReady=ready; status(ready?"文件已发送，可在目标设备粘贴":"文件已保存到目标设备；其剪贴板已变化，请从接收目录取用",false); }
                 } else {
                     bool published=false;
                     async Task<bool> Publish(string[] received,CancellationToken ct) {

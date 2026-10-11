@@ -1,5 +1,6 @@
 // Linux-only adapter fixture. Does not validate Apple AppKit or touch a real clipboard.
 import Foundation
+public final class NSWorkspace {public static let shared = NSWorkspace(); @discardableResult public func open(_ url: URL) -> Bool {true}}
 public final class NSPasteboard {
     public struct PasteboardType: Equatable { let id: Int; public static let string = PasteboardType(id: 1); public static let fileURL = PasteboardType(id: 2) }
     public var types: [PasteboardType]? { !urls.isEmpty ? [.fileURL] : value == nil ? [] : [.string] }

@@ -252,7 +252,7 @@ static partial class Program {
                 ((Button)window.FindName("CancelFiles")).RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
                 await Until(()=>!Directory.GetDirectories(fileRoot).Any(p=>Path.GetFileName(p).StartsWith(".incoming-")),"cancel button left partial files");
                 Assert(fileBoard.Writes==1,"cancelled job changed clipboard");
-                await host.FilesConsent(false); await Until(()=>fileStatus.Text.Contains("等待 Mac"),"file consent revocation failed");
+                await host.FilesConsent(false); await Until(()=>fileStatus.Text.Contains("等待目标设备"),"file consent revocation failed");
                 fileBoard.Copy([file]); await Task.Delay(600); Assert(fileServer.Uploaded.IsEmpty,"files sent while revoked");
                 await host.FilesConsent(true); await Until(()=>fileStatus.Text.Contains("已启用"),"file consent recovery failed");
                 await Task.Delay(600); Assert(fileServer.Uploaded.IsEmpty,"re-enable sent existing files");

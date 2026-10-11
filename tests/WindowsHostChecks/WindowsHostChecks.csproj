@@ -2,6 +2,8 @@
  <PropertyGroup><OutputType>Exe</OutputType><TargetFramework>net8.0</TargetFramework><ImplicitUsings>enable</ImplicitUsings><Nullable>enable</Nullable><PlatformTarget>x64</PlatformTarget></PropertyGroup>
  <ItemGroup>
   <Compile Include="../../apps/windows/Wire.cs" Link="Wire.cs"/>
+  <Compile Include="../../apps/windows/FileTransfer.cs" Link="FileTransfer.cs"/>
+  <Compile Include="../../apps/windows/FileClipboardSession.cs" Link="FileClipboardSession.cs"/>
   <Compile Include="../../apps/windows/VideoDecoder.cs" Link="VideoDecoder.cs"/>
   <Compile Include="../../apps/windows/Hosting/*.cs" Exclude="../../apps/windows/Hosting/SharingWindow.xaml.cs" Link="Hosting/%(Filename)%(Extension)"/>
   <Compile Include="../../apps/windows/SecretStore.cs" Link="SecretStore.cs"/>

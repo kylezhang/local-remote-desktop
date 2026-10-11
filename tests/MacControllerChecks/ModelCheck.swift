@@ -157,6 +157,27 @@ import Foundation
         clipboardSession.status(["op":"clipboard_sync","requestId":request,"enabled":true])
         try await Task.sleep(nanoseconds:20_000_000); precondition(!board.enabled)
         print("PASS production Mac controller model clipboard: authenticated start, text before paste key, consent revocation, stale session callbacks and disconnect cleanup (recording pasteboard)")
+        let fileBoard=MacFileClipboard(),fileTransport=ModelFileTransport()
+        let fileModel=ControllerModel(host:host,preferences:prefs,fileBoard:fileBoard,fileTransport:fileTransport)
+        fileModel.address="192.168.1.89";fileModel.password="Fixture1";fileModel.connect()
+        let fileSession=ControllerSession.instances.last!
+        fileSession.status(["op":"capabilities","inputEnabled":true,"fileClipboard":true,"filePort":47981,"fileSession":String(repeating:"a",count:64)])
+        fileSession.status(["op":"connected"]);await until {fileModel.connected}
+        let fileID=fileSession.messages.last!["requestId"] as! Int
+        fileSession.status(["op":"file_sync","requestId":fileID,"enabled":true]);try await Task.sleep(nanoseconds:20_000_000)
+        fileBoard.copy(["recording file"])
+        fileModel.send(["op":"key_event","vk":162,"down":true]);let inputCount=fileSession.messages.count
+        fileModel.send(["op":"key_event","vk":86,"down":true]);fileModel.send(["op":"key_event","vk":86,"down":false])
+        precondition(fileTransport.job != nil && fileModel.filesBusy && fileSession.messages.count==inputCount,"Paste reached target before file readiness")
+        fileTransport.complete!(.success(true));fileModel.send(["op":"key_event","vk":86,"down":true])
+        precondition(fileSession.messages.last!["vk"] as? Int == 86 && !fileModel.filesBusy)
+        fileModel.send(["op":"key_event","vk":86,"down":false]);fileModel.release()
+        fileBoard.copy(["another recording file"])
+        fileModel.send(["op":"key_event","vk":162,"down":true]);fileModel.send(["op":"key_event","vk":86,"down":true])
+        let pending=fileTransport.job!,finish=fileTransport.complete!;fileModel.disconnect()
+        precondition(pending.canceled && !fileModel.filesBusy && fileModel.fileStatus.isEmpty)
+        finish(.success(true));precondition(fileModel.fileStatus.isEmpty,"Old transfer updated disconnected model")
+        print("PASS production Mac model file role: authenticated capability/ack, file before paste, suppressed key pair, ready retry, disconnect cancellation and stale completion; recording services")
     }
 
 }

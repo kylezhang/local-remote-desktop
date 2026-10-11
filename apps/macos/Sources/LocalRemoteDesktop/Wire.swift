@@ -11,10 +11,10 @@ final class Wire {
     private var sent: UInt64 = 0, received: UInt64 = 0
     private var closed = false
     private let maximumRead: Int, maximumWrite: Int
-    init(_ socket: Int32, controller: Bool = false) {
+    init(_ socket: Int32, controller: Bool = false, fileChannel: Bool = false) {
         fd = socket
-        maximumRead = controller ? 8*1024*1024 : 65536
-        maximumWrite = controller ? 65536 : 8*1024*1024
+        maximumRead = fileChannel ? 65536 : (controller ? 8*1024*1024 : 65536)
+        maximumWrite = fileChannel ? 65536 : (controller ? 65536 : 8*1024*1024)
         var one: Int32 = 1
         setsockopt(fd, SOL_SOCKET, SO_NOSIGPIPE, &one, socklen_t(MemoryLayout<Int32>.size))
         setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, &one, socklen_t(MemoryLayout<Int32>.size))

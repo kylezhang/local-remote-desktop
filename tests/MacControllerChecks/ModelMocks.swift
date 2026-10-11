@@ -2,7 +2,15 @@ import Foundation
 protocol ObservableObject {}
 @propertyWrapper struct Published<Value> { var wrappedValue: Value }
 final class CGImage { let id: Int; init(_ id: Int) { self.id = id } }
-final class HostModel { var active = false, starting = false, controlling = false, allowClipboard = true; var stops = 0; func stop() { stops += 1; active = false; starting = false } }
+final class HostModel { var active = false, starting = false, controlling = false, allowClipboard = true, allowFiles = true; var stops = 0; func stop() { stops += 1; active = false; starting = false } }
+final class MacFileClipboard: ControllerFileClipboard {var revision = 0, paths: [String]?;func read() -> (Bool,[String]?) {(true,paths)};func write(_ paths:[String]) -> Bool {self.paths = paths;revision += 1;return true};func copy(_ paths:[String]?) {self.paths=paths;revision += 1}}
+final class ModelFileJob:ControllerFileTask {var canceled=false;func cancel(){canceled=true}}
+final class ModelFileTransport:ControllerFileTransport {
+    var job:ModelFileJob?,complete:((Result<Bool,Error>)->Void)?
+    func start(_ request:ControllerFileRequest,publish:@escaping ([String])->Bool,progress:@escaping (String)->Void,completion:@escaping (Result<Bool,Error>)->Void)->ControllerFileTask {let next=ModelFileJob();job=next;complete=completion;return next}
+}
+struct MacControllerFileTransport: ControllerFileTransport {func start(_ request:ControllerFileRequest,publish:@escaping ([String])->Bool,progress:@escaping (String)->Void,completion:@escaping (Result<Bool,Error>)->Void)->ControllerFileTask {fatalError("Unexpected real file job in model test")}}
+enum MacControllerFiles {static func openReceivedDirectory() {}}
 enum MacControllerClipboard {
     static func make() -> TextClipboardSync { TextClipboardSync(revision: { 0 }, read: { (true, nil) }, write: { _ in false }) }
 }

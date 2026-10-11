@@ -1,0 +1,34 @@
+Reverse regular-file clipboard checkpoint — 2026-10-11
+Development source only; no new stable tag or release.
+
+PASS Windows Release build: 0 warnings, 0 errors.
+PASS unshown WPF ClientChecks with production WindowsHost/WindowsHostFiles and
+recording clipboard/input/silent capture: authenticated capability and consent,
+Unicode/empty files, encrypted push/pull and SHA256, no received-file echo,
+wrong desktop token/stale generation, revoke mid-upload, staging cleanup and stop.
+PASS existing encrypted FileChecks: source/path/quota/order rejection, empty and
+multi-chunk hashes, corruption/truncation, upload/download, cancellation and
+authentication timeout. Files and isolated preferences remain within test roots.
+PASS WindowsHostChecks: authenticated lifecycle/reconnect/input release and
+synthetic Media Foundation H264 encode/encrypted receive/actual decode at all
+three quality settings. No actual desktop capture or system input injection.
+PASS real Swift compiler: production ControllerFiles consent/baseline/request ID,
+scheduling, local-copy priority, paste readiness, cancel/stale callback/path denial.
+PASS production ControllerModel with injected services: file sync after paired
+capability/ack, withheld paste key pair until ready, retry, disconnect cleanup.
+PASS production FileTransport/FileSink paced chunks, Unicode/empty data, SHA256,
+corruption/truncation/revocation and staging cleanup. Linux hash fixture uses OpenSSL.
+PASS production MacControllerFileJob + adapted production Wire, independent
+Python AES-GCM peer: RMP1 password authentication, upload/download, checksum
+rejection, cancellation and recorded main-queue publication/progress callbacks.
+The portable fixture replaces Darwin/Apple CryptoKit with Glibc/OpenSSL and
+AppKit type fixtures. It never reads/writes the system clipboard.
+PASS previous text clipboard, controller rules/model/wire/session and source parse.
+PASS shared English/Chinese localization and static release/link/license checks.
+
+LIMITATIONS: updated Apple SDK/native Mac build and installed pasteboard/GUI
+acceptance unavailable. No direct Mac SSH attempted. Real Windows ↔ Mac files,
+keyboard/input, installation/permissions, VPN behavior, sustained performance and
+visual/native integration are still acceptance gates. These fixtures do not prove
+that arbitrary applications accept OS input or clipboard formats. No foreground
+windows, real clipboard, user desktop capture or input were used in this checkpoint.

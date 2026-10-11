@@ -16,7 +16,7 @@ Mac workflow and clipboard implementation remain available in the control role.
 ## Start, stop and passwords
 
 - Start sharing, then enter this Windows computer's LAN IP and password in a
-  compatible controller. Both installations must be reachable over TCP 47980.
+  compatible controller. Both installations must be reachable over TCP 47980, plus 47981 for files.
   Allow the application on Windows Firewall's private network profile if needed;
   the app does not modify firewall policy.
 - New passwords are 8 random characters. View/Copy does not change sharing.
@@ -73,7 +73,10 @@ Windows sharing now publishes through system DNS-SD; see [Nearby devices](discov
 Paired plain-text clipboard sync is now implemented for this sharing role, controlled
 by Settings → Clipboard → Sync text on both devices. The encrypted Windows
 adapter passes recording-clipboard tests; native Mac acceptance remains pending.
-Reverse file sync is still in development. Primary display only. No pre-login,
+The file sharing adapter now accepts session-bound pushes and offers copied files
+for automatic pulls. Both peers must allow Sync Files; canceled or revoked jobs
+close their sockets and clean incomplete files. Encrypted recording-clipboard
+checks pass; real two-device acceptance remains pending. Primary display only. No pre-login,
 lock-screen or UAC secure-desktop guarantee. Normal Windows input is constrained
 by application integrity levels; the app does not elevate or bypass them.
 
