@@ -280,7 +280,7 @@ struct SharingActionView: View {
             Text(UiText.text(model.starting ? "正在启动…" : model.active ? "停止共享" : "开始共享"))
                 .frame(maxWidth: .infinity)
         }.buttonStyle(.borderedProminent).controlSize(.large)
-            .disabled(model.credentialBusy || model.controlling || model.starting)
+            .disabled(!model.sharingActionAvailable)
     }
 }
 struct HostView: View {
@@ -319,6 +319,7 @@ struct HostView: View {
                             Text(UiText.text("本机名称")).foregroundStyle(.secondary)
                             Spacer()
                             Button(UiText.text("修改名称")) { model.openNameEditor() }
+                                .disabled(model.credentialBusy || model.editingPassword || model.controlling)
                         }
                         Text(model.deviceName).textSelection(.enabled).fixedSize(horizontal: false, vertical: true)
                     }

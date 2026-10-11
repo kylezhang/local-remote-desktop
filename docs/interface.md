@@ -23,6 +23,14 @@ must not appear as usable actions before implementation.
   during a session. Transfers use a temporary progress/cancel notice, not another
   permanent toolbar. Mobile places equivalent actions in a compact sheet.
 
+Start is unavailable while a local name/password draft is open; save or cancel
+first. An active Stop action stays available while editing. A failed password
+save keeps the old credential, draft and existing session. A successful password
+replacement closes old sharing and waits for an explicit Start with the new
+password on both desktops. Generation/cancellation never rotates credentials.
+Stop clears obsolete transfer notices; startup/shutdown retains role ownership
+until its asynchronous work settles.
+
 Connection states have the same meanings: Not connected, Searching, Connecting,
 Connected, Reconnecting and Failed. Sharing has separate Off, Starting, Available
 and In use states; changing a password never masquerades as starting a connection.

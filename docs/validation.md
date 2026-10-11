@@ -1,5 +1,12 @@
 # Validation
 
+## Sharing edit lifecycle — 2026-10-11
+
+Unshown Windows sharing/editor lifecycle and encrypted regressions pass.
+Portable production Mac HostModel checks cover failed saves, explicit restart
+and stop during persistence. See the [coverage record](../tests/results/sharing-edit-lifecycle-2026-10-11.txt).
+Native Mac UI/Keychain/TCC and actual two-device acceptance remain pending.
+
 ## Compact desktop entry — 2026-10-11
 
 Windows Release build and unshown WPF measured-layout/connection regressions passed;

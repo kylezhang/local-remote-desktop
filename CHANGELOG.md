@@ -4,6 +4,12 @@
 
 ## Unreleased
 
+- Sharing drafts must be saved or canceled before starting; active Stop stays
+  available during editing. Both desktops now end sharing after a successful
+  password change and wait for explicit Start. Failed saves preserve the current
+  password/session; stopping clears stale transfer notices.
+
+
 - Sharing uses a fixed bottom start/stop action after device information and
   pairing password. Content scrolls independently on both desktop sources.
 

@@ -18,14 +18,14 @@ static partial class Program {
         Assert(((Border)emptyWindow.FindName("DeviceEmptyState")).Visibility==Visibility.Visible,"Empty devices have no transition state");
         Assert(((TextBlock)emptyWindow.FindName("DeviceEmptyTitle")).Text.Length>0,"Empty device state has no title");
         emptyWindow.Close();
-        int loads=0, saved=0; var encoderChoices=new List<bool>();var advertisement=new ShellAdvertisement();
+        int loads=0, saved=0; bool failSave=false; var encoderChoices=new List<bool>();var advertisement=new ShellAdvertisement();
         var nameRoot=Path.Combine(Path.GetTempPath(),"lrd-shell-name-"+Guid.NewGuid().ToString("N")); Directory.CreateDirectory(nameRoot);
         var nameStore=new DeviceName(Path.Combine(nameRoot,"name.txt"),"Fixture PC");
         var credential=HostCredential.Create("Fixture-LAN#42");
         var area=new CaptureArea(0,0,320,180);
         var window=new MainWindow(false,null,discovery:_=>Task.FromResult<IReadOnlyList<LanDevice>>(
             [new("Fixture Mac","192.168.1.24","macos",47980)]),sharingFactory:changed=>new SharingWindow(changed,
-                ()=> { loads++; return credential; },c=> { saved++; credential=c; },
+                ()=> { loads++; return credential; },c=> { if(failSave) throw new IOException("Fixture persistence failure"); saved++; credential=c; },
                 (c,key,software,report)=> {encoderChoices.Add(software);return new WindowsHost(key,c.Salt,area,()=>new SharingCapture(),
                     ()=>new WindowsInput(area,area,new SharingInput()),report,IPAddress.Loopback,0,deviceName:()=>nameStore.Current);},deviceName:nameStore,advertisement:advertisement));
         ((TextBlock)window.FindName("LocalDeviceName")).Text="Fixture PC";
@@ -192,13 +192,23 @@ static partial class Program {
             var page=window.SharingController!;
             void ShareClick(string name)=>((Button)page.FindName(name)).RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
             Assert(advertisement.Names.Count==0,"Idle sharing advertised a target");
+            var startAction=(Button)page.FindName("SharingStart");
             var oldCredential=credential.Password;
+            ShareClick("ChangeDeviceName");
+            Assert(!startAction.IsEnabled,"Unsaved name permits Start sharing");
+            ShareClick("SharingStart"); Assert(!page.Sharing,"Routed Start bypassed unsaved name");
+            ShareClick("CancelDeviceName"); Assert(startAction.IsEnabled,"Cancel name did not restore Start");
             ShareClick("ChangeSharingPassword");ShareClick("GenerateSharingPassword");
+            Assert(!startAction.IsEnabled,"Unsaved password permits Start sharing");
+            ShareClick("SharingStart"); Assert(!page.Sharing,"Routed Start bypassed unsaved password");
             Assert(((TextBox)page.FindName("Draft")).Text.Length==8 && saved==0 && credential.Password==oldCredential,"Generate did not remain an eight-character draft");
-            ShareClick("CancelSharingPassword");
+            ShareClick("CancelSharingPassword"); Assert(startAction.IsEnabled,"Cancel password did not restore Start");
             ShareClick("ChangeSharingPassword");((TextBox)page.FindName("Draft")).Text="short";ShareClick("SaveSharingPassword");
             Assert(saved==0 && credential.Password==oldCredential && ((TextBlock)page.FindName("PasswordError")).Text.Length>0,"Invalid new password changed credential");
-            ((TextBox)page.FindName("Draft")).Text="Office#2";ShareClick("SaveSharingPassword");
+            ((TextBox)page.FindName("Draft")).Text="Office#2";
+            failSave=true;ShareClick("SaveSharingPassword");
+            Assert(saved==0 && credential.Password==oldCredential && !startAction.IsEnabled && !page.Sharing,"Failed idle save permits Start or replaced credential");
+            failSave=false;ShareClick("SaveSharingPassword");
             await Until(()=>((FrameworkElement)page.FindName("Editor")).Visibility==Visibility.Collapsed,"Valid new password editor stayed open");
             Assert(saved==1 && credential.Password=="Office#2" && ((TextBlock)page.FindName("CurrentPassword")).Text=="••••••••","Valid eight-character password was not adopted and hidden");
             var software=(CheckBox)page.FindName("Software");
@@ -218,6 +228,21 @@ static partial class Program {
             Assert(page.Sharing && Find<TextBlock>("ManualError").Text.Length>0,"Invalid target stopped sharing");
             Invoke("ManualCancelClick",window,new RoutedEventArgs());
             Assert(page.Sharing,"Cancel stopped sharing");
+            ShareClick("ChangeSharingPassword");((TextBox)page.FindName("Draft")).Text="Other#23";failSave=true;ShareClick("SaveSharingPassword");
+            Assert(page.Sharing && startAction.IsEnabled && credential.Password=="Office#2","Failed active save interrupted sharing or disabled Stop");
+            typeof(SharingWindow).GetMethod("FileReport",BindingFlags.Instance|BindingFlags.NonPublic)!.Invoke(page,["接收文件：fixture",true]);
+            await Until(()=>((FrameworkElement)page.FindName("SharingTransfer")).Visibility==Visibility.Visible,"Fixture transfer status did not appear");
+            failSave=false;ShareClick("SharingStart");
+            await Until(()=>!page.Sharing && !startAction.IsEnabled,"Stop while editing did not settle in draft-only state");
+            Assert(((FrameworkElement)page.FindName("SharingTransfer")).Visibility==Visibility.Collapsed,"Stopped sharing retains stale transfer notice");
+            Assert(((FrameworkElement)page.FindName("Editor")).Visibility==Visibility.Visible && ((TextBox)page.FindName("Draft")).Text=="Other#23","Stop discarded failed save draft");
+            ShareClick("CancelSharingPassword");Assert(startAction.IsEnabled,"Cancel after Stop did not restore Start");
+            ShareClick("SharingStart");await Until(()=>page.Sharing && startAction.IsEnabled,"Restart did not restore sharing action");
+            ShareClick("ChangeSharingPassword");((TextBox)page.FindName("Draft")).Text="NewKey#3";ShareClick("SaveSharingPassword");
+            await Until(()=>!page.Sharing && startAction.IsEnabled && ((FrameworkElement)page.FindName("Editor")).Visibility==Visibility.Collapsed,"Successful active password change auto-restarted sharing");
+            Assert(saved==2 && credential.Password=="NewKey#3","Successful active save did not adopt new credential");
+            ShareClick("SharingStart");await Until(()=>page.Sharing && startAction.IsEnabled,"Explicit Start after password save failed");
+            Console.WriteLine("PASS unshown sharing edits: unsaved name/password block Start; failed-save draft and active sharing preserved; Stop remains available during edits; successful password change waits for explicit Start");
             window.Close(); await Until(()=>!page.Sharing && window.SharingController==null,"Owner shutdown left listener alive");
             Assert(advertisement.Stops>0,"Owner shutdown did not withdraw discovery");
             Console.WriteLine("PASS unshown native WPF shell: English/Chinese, 584/624/820/1100/1440px layouts, 640px startup, single-column device action/dialog and vertically stacked sharing, device selection, single-window sharing, hidden password, edit cancellation, session navigation, exclusive role and listener cleanup");

@@ -35,7 +35,9 @@ records determine what is implemented; this handbook is not a support claim.
 - New passwords are exactly eight printable ASCII characters without spaces;
   automatic generation produces an eight-character draft. Existing longer secrets
   remain valid. Generate/edit/cancel does not change the current password. Save is
-  atomic; successful replacement ends the old session and requires the new password.
+  atomic; successful replacement ends the old session and waits for explicit Start
+  with the new password. Unsaved name/password drafts block Start; active Stop
+  stays available during edits. A failed save preserves the previous session/draft.
 - Remember IP/password through appropriate OS secure storage. No automatic
   Keychain credential reads merely to populate a list. Read saved credentials on
   a deliberate connection action; retain a failed draft and provide Forget.

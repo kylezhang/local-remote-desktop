@@ -15,7 +15,7 @@ public partial class SharingWindow:Window {
     bool filesAllowed=true; IHostFiles? files;
     internal void SetClipboardAllowed(bool allowed) { clipboardAllowed=allowed; }
     internal void SetFilesAllowed(bool allowed) { filesAllowed=allowed; }
-    Task? starting,shutdown,stopping; bool shutting,closed,revealed,saving,controlActive; string status="尚未共享";
+    Task? starting,shutdown,stopping; bool shutting,closed,revealed,saving,controlActive,actionBusy,stoppingBusy; string status="尚未共享";
     public SharingWindow():this(_=>{}) {}
     internal SharingWindow(Action<bool> changed,Func<HostCredential>? load=null,Action<HostCredential>? save=null,Func<HostCredential,byte[],bool,Action<string>,WindowsHost>? create=null,DeviceName? deviceName=null,IDeviceAdvertisement? advertisement=null) {
         sharingChanged=changed; this.deviceName=deviceName??DeviceName.Default; this.load=load??(()=>HostCredential.Load()); this.save=save??(c=>c.Save());
@@ -26,10 +26,17 @@ public partial class SharingWindow:Window {
         UiText.Current.LanguageChanged+=Translate; Translate();
         Closing+=(_,e)=> { if(!closed) { e.Cancel=true; _=Shutdown(); } };
     }
-    internal bool Sharing=>host!=null || starting!=null;
+    internal bool Sharing=>host!=null || starting!=null || actionBusy || stoppingBusy;
     internal event Action<string>? NameChanged;
-    internal void SetControlActive(bool active) { controlActive=active; SharingStart.IsEnabled=!active && !shutting && !saving && starting==null && credential!=null; }
-    void Translate() { SharingStatus.Text=UiText.Text(status); SharingStart.Content=UiText.Text(host==null?"开始共享":"停止共享"); Reveal.Content=UiText.Text(revealed?"隐藏":"查看"); }
+    bool CanToggleSharing => !shutting && !controlActive && !actionBusy && credential!=null &&
+        (host!=null || (!stoppingBusy && starting==null && !saving && Editor.Visibility!=Visibility.Visible && NameEditor.Visibility!=Visibility.Visible));
+    void RefreshActions() {
+        SharingStart.IsEnabled=CanToggleSharing;
+        ChangeDeviceName.IsEnabled=!shutting && !controlActive && !actionBusy && !saving && Editor.Visibility!=Visibility.Visible && NameEditor.Visibility!=Visibility.Visible;
+        ChangeSharingPassword.IsEnabled=ChangeDeviceName.IsEnabled && credential!=null;
+    }
+    internal void SetControlActive(bool active) { controlActive=active; RefreshActions(); }
+    void Translate() { SharingStatus.Text=UiText.Text(status); SharingStart.Content=UiText.Text(host==null?"开始共享":"停止共享"); Reveal.Content=UiText.Text(revealed?"隐藏":"查看"); RefreshActions(); }
     void Report(WindowsHost owner,string value) {
         Dispatcher.BeginInvoke(()=> {
             if(!ReferenceEquals(host,owner) || shutting) return;
@@ -46,13 +53,13 @@ public partial class SharingWindow:Window {
         catch {FileReport("无法打开接收目录，请稍后重试。",false);}
     }
     async void StartClick(object sender,RoutedEventArgs e) {
-        if(SharingStart.IsEnabled!=true || credential==null || shutting || saving || controlActive) return;
-        SharingStart.IsEnabled=false;
+        if(!CanToggleSharing || credential==null) return;
+        actionBusy=true; RefreshActions();
         try {
             if(host!=null) await Stop();
             else { starting=Start(credential); await starting; }
         } catch { status="无法开始共享，请检查 FFmpeg 和 TCP 47980 端口。"; }
-        finally { starting=null; SharingStart.IsEnabled=!shutting && !controlActive && credential!=null; Translate(); }
+        finally { starting=null; actionBusy=false; Translate(); }
     }
     async Task Start(HostCredential value) {
         status="正在启动共享…"; Translate(); sharingChanged(true);
@@ -71,13 +78,17 @@ public partial class SharingWindow:Window {
     internal Task Stop() {
         var old=host; host=null;
         if(old==null) return stopping??Withdraw();
+        stoppingBusy=true; RefreshActions();
         return stopping=StopCore(old);
     }
     async Task StopCore(WindowsHost old) {
-        var withdrawal=Withdraw();
-        await old.DisposeAsync();
-        await withdrawal;DiscoveryNotice.Visibility=Visibility.Collapsed;
-        Software.IsEnabled=true; sharingChanged(false); status="已停止"; Translate();
+        try {
+            var withdrawal=Withdraw();
+            await old.DisposeAsync();
+            await withdrawal;DiscoveryNotice.Visibility=Visibility.Collapsed;
+            files=null; SharingTransfer.Visibility=Visibility.Collapsed;
+            Software.IsEnabled=true; sharingChanged(false); status="已停止";
+        } finally {stoppingBusy=false; Translate();}
     }
     async Task Withdraw() {
         // A stuck OS DNS completion must not block Stop/Exit. Its native request
@@ -93,21 +104,21 @@ public partial class SharingWindow:Window {
         // canceled event finish before asking WPF to close the window again.
         await System.Windows.Threading.Dispatcher.Yield(System.Windows.Threading.DispatcherPriority.Background); Close();
     }
-    void NameEditClick(object sender,RoutedEventArgs e) { NameDraft.Text=deviceName.Current; NameError.Text=""; NameEditor.Visibility=Visibility.Visible; NameDraft.Focus(); }
+    void NameEditClick(object sender,RoutedEventArgs e) { if(!ChangeDeviceName.IsEnabled) return; NameDraft.Text=deviceName.Current; NameError.Text=""; NameEditor.Visibility=Visibility.Visible; RefreshActions(); NameDraft.Focus(); }
     void NameRestoreClick(object sender,RoutedEventArgs e) { NameDraft.Text=deviceName.SystemName; NameError.Text=""; }
-    void NameCancelClick(object sender,RoutedEventArgs e) { NameDraft.Text=""; NameError.Text=""; NameEditor.Visibility=Visibility.Collapsed; }
+    void NameCancelClick(object sender,RoutedEventArgs e) { NameDraft.Text=""; NameError.Text=""; NameEditor.Visibility=Visibility.Collapsed; RefreshActions(); }
     void NameSaveClick(object sender,RoutedEventArgs e) {
         try { deviceName.Save(NameDraft.Text); SharingName.Text=deviceName.Current; if(host!=null) advertisement.Publish(deviceName.Current,host.Port); NameChanged?.Invoke(deviceName.Current); NameCancelClick(sender,e); }
         catch(Exception error) { NameError.Text=UiText.Text(error is ArgumentException?error.Message:"无法保存名称，原名称仍有效。"); }
     }
     void RevealClick(object sender,RoutedEventArgs e) { revealed=!revealed; CurrentPassword.Text=revealed?credential?.Password??"":"••••••••"; Translate(); }
     void CopyClick(object sender,RoutedEventArgs e) { if(credential!=null) { try { Clipboard.SetText(credential.Password); } catch { status="剪贴板忙，请重试。"; Translate(); } } }
-    void EditClick(object sender,RoutedEventArgs e) { if(starting!=null || shutting || credential==null) return; Draft.Text=""; PasswordError.Text=""; Editor.Visibility=Visibility.Visible; Draft.Focus(); }
-    void GenerateClick(object sender,RoutedEventArgs e) { Draft.Text=HostCredential.Generate(); PasswordError.Text=""; }
-    void CancelEditClick(object sender,RoutedEventArgs e) { Draft.Text=""; PasswordError.Text=""; Editor.Visibility=Visibility.Collapsed; }
+    void EditClick(object sender,RoutedEventArgs e) { if(!ChangeSharingPassword.IsEnabled) return; Draft.Text=""; PasswordError.Text=""; Editor.Visibility=Visibility.Visible; RefreshActions(); Draft.Focus(); }
+    void GenerateClick(object sender,RoutedEventArgs e) { if(saving) return; Draft.Text=HostCredential.Generate(); PasswordError.Text=""; }
+    void CancelEditClick(object sender,RoutedEventArgs e) { if(saving) return; Draft.Text=""; PasswordError.Text=""; Editor.Visibility=Visibility.Collapsed; RefreshActions(); }
     async void SaveClick(object sender,RoutedEventArgs e) {
         if(starting!=null || shutting || credential==null || saving) return;
-        saving=true; SharingStart.IsEnabled=false; bool persisted=false;
+        saving=true; RefreshActions(); bool persisted=false;
         try {
             var next=HostCredential.CreateNew(Draft.Text);
             if(next.Password==credential.Password) { PasswordError.Text=UiText.Text("与当前密码相同，无需保存。"); return; }
@@ -116,6 +127,6 @@ public partial class SharingWindow:Window {
             await Stop(); Draft.Text=""; Editor.Visibility=Visibility.Collapsed;
             status="密码已保存，原连接已断开；点击开始共享后使用新密码连接。"; Translate();
         } catch(Exception error) { PasswordError.Text=UiText.Text(persisted?"密码已保存，但停止共享失败；请退出应用后重开。":error is ArgumentException?error.Message:"无法保存密码，原密码和共享状态保留。"); }
-        finally { saving=false; SharingStart.IsEnabled=!shutting && !controlActive && credential!=null; }
+        finally { saving=false; RefreshActions(); }
     }
 }

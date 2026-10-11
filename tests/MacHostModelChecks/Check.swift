@@ -25,8 +25,14 @@ func require(_ value: @autoclosure () -> Bool, _ message: String) {
         require(Pairing.readAttempts == 0 && !model.active, "development launch read credentials")
         model.openPasswordEditor(); model.generatePassword()
         require(model.editingPassword && model.passwordEditor.draft.count == 8, "generation did not fill draft")
+        model.start(requestPermission: true)
+        require(!model.sharingActionAvailable && !model.starting && Host.instances.isEmpty && Pairing.readAttempts == 0, "unsaved password draft started sharing")
         model.cancelPasswordEditor()
         require(!model.editingPassword && model.passwordEditor.draft.isEmpty && Pairing.saveAttempts == 0, "cancel saved a draft")
+        model.openNameEditor(); model.nameDraft = "Unsaved fixture"
+        model.start(requestPermission: true)
+        require(!model.sharingActionAvailable && !model.starting && Host.instances.isEmpty, "unsaved name started sharing")
+        model.cancelNameEditor(); require(model.sharingActionAvailable, "cancel did not restore start action")
         let idleStatus = model.status
         model.togglePasswordVisibility(); await until { !model.readingPassword }
         require(model.revealSecret && model.legacyCredential && !model.active && model.status == idleStatus, "view password changed sharing")
@@ -63,18 +69,23 @@ func require(_ value: @autoclosure () -> Bool, _ message: String) {
         require(model.passwordEditor.error.isEmpty, "editing retained stale error")
         print("PASS inline validation, same-password no-op and failed-save draft/session preservation")
 
+        model.fileStatus = "接收文件：fixture"
         Pairing.rejectSave = false; model.savePassword(); await until { !model.passwordEditor.saving && !model.starting }
-        require(model.active && original.stopped && Host.instances.count == 2, "successful save did not replace running host")
+        require(!model.active && original.stopped && Host.instances.count == 1 && model.sharingActionAvailable, "successful save auto-started sharing or kept old host")
+        require(model.fileStatus == "文件同步：等待连接", "password revocation retains stale file progress")
+        model.start(requestPermission: true); await until { !model.starting }
+        require(model.active && Host.instances.count == 2, "explicit start did not adopt saved password")
         require(model.secret == "Office#2" && !model.legacyCredential && !model.editingPassword && !model.revealSecret, "saved credential not adopted/hidden")
         require(Pairing.readAttempts == 1 && Host.instances.last!.passwordSalt?.count == 16, "saved host reread credentials or lost salt")
         let updatedStatus = model.status, updatedFileStatus = model.fileStatus
         original.status("stale old connection"); original.fileStatus("stale old files")
         for _ in 0..<100 { await Task.yield() }
         require(model.status == updatedStatus && model.fileStatus == updatedFileStatus, "stale host callback overwrote new session")
-        print("PASS successful save closes old host, restarts with new cached credential and filters old callbacks")
+        print("PASS successful save closes old host, waits for explicit restart with new cached credential and filters old callbacks")
 
         model.openPasswordEditor(); model.generatePassword(); Pairing.pauseSave = true
         model.savePassword(); await until { Pairing.pendingSave != nil }
+        require(model.sharingActionAvailable, "save made active Stop action unavailable")
         model.cancelPasswordEditor()
         require(model.editingPassword && model.passwordEditor.saving, "saving editor dismissed")
         model.stop(); Pairing.pendingSave?.resume(); Pairing.pendingSave = nil

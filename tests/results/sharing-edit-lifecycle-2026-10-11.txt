@@ -1,0 +1,21 @@
+Sharing editor/action lifecycle — 2026-10-11
+
+PASS .NET 8 Windows Release build without warnings/errors.
+PASS unshown native WPF sharing fixtures: unsaved name/password block Start even
+for routed clicks; cancel restores Start; invalid/failed idle saves preserve old
+credentials and block Start; failed active saves preserve the session and Stop.
+Stop during editing preserves the draft and clears stale transfer notices.
+Successful active password replacement closes old sharing and waits for explicit
+Start; the new credential is adopted. Startup/stop retain exclusive role ownership.
+PASS existing encrypted clipboard/files, authentication and reconnect regressions.
+
+PASS production Mac HostModel with explicit service doubles: unsaved drafts do
+not start sharing or access credential storage; failed-save session/draft preserved;
+success closes old host without automatic restart; explicit Start uses cached new
+credential; stop during persistence never restarts; stale callbacks ignored and
+obsolete file status cleared. Swift source syntax parsing passes.
+
+All checks are local/background. No window shown/activated, real desktop captured,
+physical input injected or real clipboard used. Mac Apple SDK/installed native UI,
+Keychain/TCC and real two-device acceptance remain pending. No Mac SSH attempted.
+Historical pairing-flow-2026-10-09 automatic restart behavior is superseded here.

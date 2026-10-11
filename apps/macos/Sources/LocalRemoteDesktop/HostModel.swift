@@ -13,7 +13,7 @@ final class HostModel: ObservableObject {
     @Published var editingName = false
     @Published var nameDraft = ""
     @Published var nameError = ""
-    func openNameEditor() { nameDraft = deviceName; nameError = ""; editingName = true }
+    func openNameEditor() { guard !credentialBusy, !editingPassword, !controlling else { return }; nameDraft = deviceName; nameError = ""; editingName = true }
     func cancelNameEditor() { nameDraft = ""; nameError = ""; editingName = false }
     func restoreSystemName() { nameDraft = DeviceName.system; nameError = "" }
     func saveName() {
@@ -65,9 +65,12 @@ final class HostModel: ObservableObject {
         catch { fileStatus = "无法打开接收目录：\(error.localizedDescription)" }
     }
     var credentialBusy: Bool { starting || readingPassword || passwordEditor.saving }
+    var sharingActionAvailable: Bool {
+        !controlling && (active || (!credentialBusy && !editingName && !editingPassword))
+    }
     var legacyCredential: Bool { pairingKey?.salt == nil && !secret.isEmpty }
     func openPasswordEditor() {
-        guard !credentialBusy else { return }
+        guard !credentialBusy, !editingName, !controlling else { return }
         passwordEditor.reset(); pairingMessage = ""; editingPassword = true
     }
     func cancelPasswordEditor() {
@@ -80,7 +83,6 @@ final class HostModel: ObservableObject {
     func savePassword() {
         guard !starting, !readingPassword,
               let password = passwordEditor.beginSave(current: secret) else { return }
-        let resumeSharing = active
         passwordOperation = Task { @MainActor [weak self] in
             guard let self else { return }
             do {
@@ -90,11 +92,14 @@ final class HostModel: ObservableObject {
                 // waiting task; cancellation must never restart sharing afterward.
                 self.hostGeneration = nil
                 self.discovery.stop(); self.host?.stop(); self.host = nil; self.active = false
+                self.fileStatus = "文件同步：等待连接"
                 self.preparation.replaceCachedKey(credential); self.displayPairingKey(credential)
                 self.revealSecret = false
                 self.passwordEditor.reset(); self.editingPassword = false
-                self.pairingMessage = "密码已更新。Windows 请使用新密码连接。"
-                if resumeSharing && !Task.isCancelled { self.start(requestPermission: true) }
+                if !Task.isCancelled {
+                    self.status = "密码已保存，原连接已断开；点击开始共享后使用新密码连接。"
+                    self.pairingMessage = ""
+                }
             } catch is CancellationError {
                 self.passwordEditor.reset(); self.editingPassword = false
             } catch {
@@ -144,7 +149,7 @@ final class HostModel: ObservableObject {
     }
     func start(requestPermission: Bool = false) {
         guard !controlling else { status = "正在控制其他设备；请先断开连接，再共享这台 Mac。"; return }
-        guard host == nil, !credentialBusy else { return }
+        guard host == nil, !credentialBusy, !editingName, !editingPassword else { return }
         if !requestPermission && pairingKey == nil && !Pairing.permitsAutomaticRead {
             keychainCheck = "等待用户操作（启动未访问钥匙串）"
             status = "点击开始共享。会先检查屏幕权限，再读取配对密码。"
