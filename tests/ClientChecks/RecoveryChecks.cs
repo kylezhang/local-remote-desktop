@@ -49,6 +49,13 @@ static partial class Program {
                 runner=(Task)typeof(MainWindow).GetMethod("StartConnectionAsync",flags)!.Invoke(window,null)!;
                 await Until(Connected,"Initial recovery fixture did not connect");closeFirst.SetResult();
                 await Until(()=>!Connected(),"Broken session stayed connected");
+                void Cleared() {
+                    foreach(var name in new[]{"clipboardTimer","fileTimer","fileNoticeTimer"})
+                        Assert(!((System.Windows.Threading.DispatcherTimer)typeof(MainWindow).GetField(name,flags)!.GetValue(window)!).IsEnabled,"Disconnected session retains polling/notice timer: "+name);
+                    var files=(FileClipboardSession)typeof(MainWindow).GetField("files",flags)!.GetValue(window)!;
+                    Assert(!files.Busy,"Disconnected session retains file job");
+                }
+                Cleared();
                 if(mode=="cancel-retry") {
                     typeof(MainWindow).GetMethod("ConnectClick",flags)!.Invoke(window,[window,new RoutedEventArgs()]);
                     await runner.WaitAsync(TimeSpan.FromSeconds(4));await Task.Delay(3200);
@@ -65,6 +72,7 @@ static partial class Program {
                     Assert(Find<TextBlock>("HomeStatus").Text==status,"Clipboard reset obscured connection failure on Connect page");
                     Assert(!status.Contains(credential.Password) && !status.Contains("3 秒"),"Failure status leaked a credential or promised another retry");
                 }
+                Cleared();
                 Assert(!window.IsVisible && !window.IsActive,"Recovery test interrupted the desktop");
             } finally {
                 deadline.Cancel();closeFirst.TrySetResult();listener.Stop();

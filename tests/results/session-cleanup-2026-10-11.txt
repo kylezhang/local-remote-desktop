@@ -1,0 +1,29 @@
+Session/transfer cleanup — 2026-10-11
+
+PASS .NET 8 Windows Release compilation and unshown WPF/encrypted regressions.
+PASS production file host: replacing a partial upload with a non-file local copy
+closes the worker, clears staging and suppresses its obsolete failure notice.
+Existing push/pull, SHA256, consent revoke, stale token/request and stop checks pass.
+PASS controller reconnect: clipboard/file/notice timers and file job cleared on
+loss and final disconnect; retry cancellation and permanent-failure handling retained.
+PASS 12 encrypted production sharing sessions alternate deliberate disconnect and
+abrupt transport loss. Each uses a fresh file-session identity, awaits text/file
+worker cleanup and permits rebinding the file port. Recording clipboard/storage
+remain unchanged during idle sessions. No capture or physical input is performed.
+PASS unshown sharing page: queued report from an obsolete file owner is rejected;
+a current-owner report is displayed, and Stop clears it.
+
+PASS portable production Mac file adapter: copied-file metadata/baselines,
+consent/recovery, text copy invalidates previous offer, partial worker canceled
+by replacement/Stop, staging removed, canceled error suppressed, stopped polling.
+The adapter uses mocked AppKit/Darwin/Wire and synthetic peer descriptors.
+PASS production Swift file worker against independent Python encrypted loopback
+peer: push, pull, checksum failure, cancel and partial cleanup.
+PASS portable Mac controller core/model: reconnect cancellation, stale callbacks,
+text before paste, file readiness/consent and disconnect cleanup with explicit doubles.
+
+No real user clipboard, desktop capture, OS input or foreground test window.
+These checks establish bounded correctness cases, not long-duration resource
+stability or live desktop latency. Updated native Apple SDK build, actual Mac
+pasteboard/permissions and real two-device acceptance are pending. No release gate
+has been cleared; no tag/release is created by this increment.

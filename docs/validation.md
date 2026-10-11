@@ -1,5 +1,15 @@
 # Validation
 
+## Disconnect and file cleanup — 2026-10-11
+
+Windows Release/unshown encrypted checks pass, including 12 alternating normal
+disconnect/transport-loss sessions, reusable file ports, renewed file identities,
+stopped controller timers and stale transfer-notice rejection. Portable Swift
+production file adapter/worker checks cover clipboard replacement, stale offers,
+partial cleanup and cancellation. See the [coverage record](../tests/results/session-cleanup-2026-10-11.txt).
+These are correctness fixtures, not long-duration CPU/memory or live latency
+measurements. Updated Apple SDK/native pasteboard and two-device acceptance remain pending.
+
 ## Sharing edit lifecycle — 2026-10-11
 
 Unshown Windows sharing/editor lifecycle and encrypted regressions pass.

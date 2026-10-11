@@ -172,3 +172,9 @@ observed results in [validation](validation.md); keep tentative conclusions labe
 Normal Mac installation uses permission preservation by default. Signature changes stop before replacement; --reset-permissions is explicit repair. Use meaningful device empty states and content-sized settings/sharing sections rather than filling spare space with unrelated controls.
 
 Deferred Windows deployment must be verified after exit, not reported as completed merely because it was queued. Compare deployed DLL hashes and SOURCE.txt against the tested candidate. Hidden Windows PowerShell helpers launched from PowerShell 7 must load required modules from their own runtime; inherited module paths can leave Get-FileHash unavailable. Record actual failure details and validate the same hidden launch path.
+
+File task callbacks belong to the initiating session and copy generation. A new local
+copy, including text replacing files, cancels old file work and invalidates its offer.
+Check the live clipboard revision before serving a file offer; canceled workers must
+not overwrite the new transfer status. Verify disconnect repeatedly using isolated
+recording services and port reuse, independently of long-duration resource measurements.

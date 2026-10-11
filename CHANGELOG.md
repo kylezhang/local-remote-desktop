@@ -4,6 +4,10 @@
 
 ## Unreleased
 
+- New local clipboard copies cancel obsolete file transfers on both sharing roles.
+  Mac rejects expired file offers before sending; canceled workers and previous
+  Windows file sessions cannot replace current transfer notices.
+
 - Sharing drafts must be saved or canceled before starting; active Stop stays
   available during editing. Both desktops now end sharing after a successful
   password change and wait for explicit Start. Failed saves preserve the current

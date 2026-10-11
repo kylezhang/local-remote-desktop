@@ -19,7 +19,7 @@ public partial class SharingWindow:Window {
     public SharingWindow():this(_=>{}) {}
     internal SharingWindow(Action<bool> changed,Func<HostCredential>? load=null,Action<HostCredential>? save=null,Func<HostCredential,byte[],bool,Action<string>,WindowsHost>? create=null,DeviceName? deviceName=null,IDeviceAdvertisement? advertisement=null) {
         sharingChanged=changed; this.deviceName=deviceName??DeviceName.Default; this.load=load??(()=>HostCredential.Load()); this.save=save??(c=>c.Save());
-        this.create=create??((c,key,software,report)=> { var area=CaptureArea.Primary(); return new WindowsHost(key,c.Salt,area,()=>new FfmpegDesktopCapture(area,software),()=>new WindowsInput(area,CaptureArea.Virtual(),new SendInputAdapter()),report,deviceName:()=>this.deviceName.Current,clipboard:(wire,token)=>new WindowsHostClipboard(wire,new WindowsClipboard(),Dispatcher,()=>clipboardAllowed,token),files:(wire,k,s,token)=>files=new WindowsHostFiles(wire,k,s,new WindowsFileClipboard(),async action=> {await Dispatcher.InvokeAsync(action);},()=>filesAllowed,token,FileReport)); });
+        this.create=create??((c,key,software,report)=> { var area=CaptureArea.Primary(); return new WindowsHost(key,c.Salt,area,()=>new FfmpegDesktopCapture(area,software),()=>new WindowsInput(area,CaptureArea.Virtual(),new SendInputAdapter()),report,deviceName:()=>this.deviceName.Current,clipboard:(wire,token)=>new WindowsHostClipboard(wire,new WindowsClipboard(),Dispatcher,()=>clipboardAllowed,token),files:(wire,k,s,token)=> { WindowsHostFiles? owner=null; owner=new WindowsHostFiles(wire,k,s,new WindowsFileClipboard(),async action=> {await Dispatcher.InvokeAsync(action);},()=>filesAllowed,token,(text,busy)=>SessionFileReport(owner!,text,busy)); Dispatcher.Invoke(()=>files=owner); return owner; }); });
         this.advertisement=advertisement??(create!=null?new NoDeviceAdvertisement():new DeviceAdvertisement(available=>Dispatcher.BeginInvoke(()=> {if(!shutting && host!=null) DiscoveryNotice.Visibility=available?Visibility.Collapsed:Visibility.Visible;})));
         InitializeComponent(); SharingAddress.Text=LocalAddress.Find(); SharingName.Text=this.deviceName.Current;
         try { credential=this.load(); } catch { status="无法读取共享密码，请检查本机安全存储。"; SharingStart.IsEnabled=false; }
@@ -45,7 +45,9 @@ public partial class SharingWindow:Window {
             status=value switch {"Available"=>owner.LastError.StartsWith("capture_")?"画面采集失败，请检查 FFmpeg，或停止共享后在故障排查中启用软件编码。":"等待连接 · TCP 47980","In use"=>"正在共享当前桌面 · 可控制","Session ended"=>"连接已结束","Off"=>"已停止",_=>"共享状态异常，请停止后重试。"}; Translate();
         });
     }
-    void FileReport(string text,bool busy) { Dispatcher.BeginInvoke(()=> {if(shutting || host==null)return;SharingTransfer.Visibility=text.StartsWith("文件同步：")?Visibility.Collapsed:Visibility.Visible;SharingFileStatus.Text=UiText.Text(text);CancelSharingFiles.Visibility=busy?Visibility.Visible:Visibility.Collapsed;DismissSharingFiles.IsEnabled=!busy;}); }
+    void SessionFileReport(IHostFiles owner,string text,bool busy) { Dispatcher.BeginInvoke(()=> {if(shutting || host==null || !ReferenceEquals(files,owner))return;ApplyFileReport(text,busy);}); }
+    void FileReport(string text,bool busy) { Dispatcher.BeginInvoke(()=> {if(shutting || host==null)return;ApplyFileReport(text,busy);}); }
+    void ApplyFileReport(string text,bool busy) { SharingTransfer.Visibility=text.StartsWith("文件同步：")?Visibility.Collapsed:Visibility.Visible;SharingFileStatus.Text=UiText.Text(text);CancelSharingFiles.Visibility=busy?Visibility.Visible:Visibility.Collapsed;DismissSharingFiles.IsEnabled=!busy; }
     void CancelSharingFilesClick(object sender,RoutedEventArgs e) {files?.Cancel();}
     void DismissSharingFilesClick(object sender,RoutedEventArgs e) {SharingTransfer.Visibility=Visibility.Collapsed;}
     void OpenSharingFilesClick(object sender,RoutedEventArgs e) {

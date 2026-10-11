@@ -14,6 +14,7 @@ static partial class Program {
         await CheckReverseClipboard();
         await CheckReverseFiles();
         await CheckRecovery();
+        await CheckSessionCleanup();
         var emptyWindow=new MainWindow(false,null);
         Assert(((Border)emptyWindow.FindName("DeviceEmptyState")).Visibility==Visibility.Visible,"Empty devices have no transition state");
         Assert(((TextBlock)emptyWindow.FindName("DeviceEmptyTitle")).Text.Length>0,"Empty device state has no title");
@@ -238,6 +239,14 @@ static partial class Program {
             Assert(((FrameworkElement)page.FindName("Editor")).Visibility==Visibility.Visible && ((TextBox)page.FindName("Draft")).Text=="Other#23","Stop discarded failed save draft");
             ShareClick("CancelSharingPassword");Assert(startAction.IsEnabled,"Cancel after Stop did not restore Start");
             ShareClick("SharingStart");await Until(()=>page.Sharing && startAction.IsEnabled,"Restart did not restore sharing action");
+            var oldFiles=new ShellFileOwner();var newFiles=new ShellFileOwner();
+            var fileField=typeof(SharingWindow).GetField("files",BindingFlags.Instance|BindingFlags.NonPublic)!;
+            var reportMethod=typeof(SharingWindow).GetMethod("SessionFileReport",BindingFlags.Instance|BindingFlags.NonPublic)!;
+            fileField.SetValue(page,oldFiles);reportMethod.Invoke(page,[oldFiles,"接收文件：old session",true]);
+            fileField.SetValue(page,newFiles);await System.Windows.Threading.Dispatcher.Yield(System.Windows.Threading.DispatcherPriority.Background);
+            Assert(((FrameworkElement)page.FindName("SharingTransfer")).Visibility==Visibility.Collapsed,"Queued old session report appeared after replacement");
+            reportMethod.Invoke(page,[newFiles,"接收文件：new session",true]);
+            await Until(()=>((TextBlock)page.FindName("SharingFileStatus")).Text.Contains("new session"),"Current session report was blocked");
             ShareClick("ChangeSharingPassword");((TextBox)page.FindName("Draft")).Text="NewKey#3";ShareClick("SaveSharingPassword");
             await Until(()=>!page.Sharing && startAction.IsEnabled && ((FrameworkElement)page.FindName("Editor")).Visibility==Visibility.Collapsed,"Successful active password change auto-restarted sharing");
             Assert(saved==2 && credential.Password=="NewKey#3","Successful active save did not adopt new credential");
@@ -254,4 +263,11 @@ sealed class ShellAdvertisement:IDeviceAdvertisement {
     public List<string> Names=new();public int Stops;
     public void Publish(string name,int port) {Names.Add(name);}
     public Task Stop() {Stops++;return Task.CompletedTask;}
+}
+
+sealed class ShellFileOwner:IHostFiles {
+    public string Session=>"fixture";public int Port=>0;
+    public Task Control(System.Text.Json.JsonElement message)=>Task.CompletedTask;
+    public void Cancel() { }
+    public ValueTask DisposeAsync()=>ValueTask.CompletedTask;
 }

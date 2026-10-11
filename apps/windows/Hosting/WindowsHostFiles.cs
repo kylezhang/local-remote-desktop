@@ -64,7 +64,7 @@ internal sealed class WindowsHostFiles : IHostFiles {
                 });
                 if(!copy.changed) continue;
                 lock(gate) { offer=null; job?.Cancel(); }
-                if(copy.paths is not {Length:>0}) continue;
+                if(copy.paths is not {Length:>0}) {status("文件同步：已启用，复制文件后自动传输",false);continue;}
                 try {
                     var source=FileSource.Prepare(copy.paths); string name=Guid.NewGuid().ToString("N");
                     lock(gate) { if(!Valid(id)) continue; offer=(name,source); offerRevision=copy.version; }
@@ -89,13 +89,20 @@ internal sealed class WindowsHostFiles : IHostFiles {
     }
     async Task Transfer(TcpClient peer,CancellationTokenSource current) {
         using(peer) {
+            long id=0;
+            void Report(string text,bool busy) {
+                lock(gate) {
+                    if(stopped || !enabled || requestId!=id || !ReferenceEquals(job,current) || current.IsCancellationRequested) return;
+                    status(text,busy);
+                }
+            }
             try {
                 using var wire=await Wire.Accept(peer,key,salt,current.Token,fileChannel:true);
                 var message=await FileTransfer.Json(wire,current.Token);
-                var supplied=message.GetProperty("session").GetString(); var id=message.GetProperty("requestId").GetInt64();
+                var supplied=message.GetProperty("session").GetString(); id=message.GetProperty("requestId").GetInt64();
                 if(supplied==null || supplied.Length!=64 || !CryptographicOperations.FixedTimeEquals(System.Text.Encoding.ASCII.GetBytes(supplied),System.Text.Encoding.ASCII.GetBytes(Session)) || !Valid(id) || !await OnUI(allowed)) throw new IOException("Session denied");
                 var clock=System.Diagnostics.Stopwatch.StartNew(); double last=-1; string direction="接收";
-                void Progress(long done,long total) {if(clock.Elapsed.TotalSeconds-last<0.25 && done!=total)return;last=clock.Elapsed.TotalSeconds;status(FileTransfer.ProgressText(direction,done,total,clock.Elapsed.TotalSeconds),true);}
+                void Progress(long done,long total) {if(clock.Elapsed.TotalSeconds-last<0.25 && done!=total)return;last=clock.Elapsed.TotalSeconds;Report(FileTransfer.ProgressText(direction,done,total,clock.Elapsed.TotalSeconds),true);}
                 if(message.GetProperty("op").GetString()=="file_push") {
                     var items=FileSource.Validate(message.GetProperty("items").Deserialize<FileItem[]>()!);
                     var baseline=await OnUI(()=>board.Revision);
@@ -111,7 +118,7 @@ internal sealed class WindowsHostFiles : IHostFiles {
                         if(ready || changed)break; await Task.Delay(100,current.Token);
                     }
                     await wire.Json(new {op="file_done",clipboardReady=ready},current.Token);
-                    status(ready?"文件已接收，可在 Windows 粘贴":"文件已接收；剪贴板已变化，可打开接收目录",false);
+                    Report(ready?"文件已接收，可在 Windows 粘贴":"文件已接收；剪贴板已变化，可打开接收目录",false);
                 } else if(message.GetProperty("op").GetString()=="file_pull") {
                     direction="发送"; (string id,FileSource source)? candidate; long baseline;
                     lock(gate) {candidate=offer;baseline=offerRevision;}
@@ -119,9 +126,9 @@ internal sealed class WindowsHostFiles : IHostFiles {
                     await wire.Json(new {op="file_ready",items=candidate.Value.source.Items},current.Token);
                     await FileTransfer.Send(wire,candidate.Value.source,Progress,current.Token);
                     var done=await FileTransfer.Json(wire,current.Token); FileTransfer.Expect(done,"file_done");
-                    status(done.GetProperty("clipboardReady").GetBoolean()?"文件已发送，可在目标设备粘贴":"文件已发送；目标设备未确认剪贴板就绪",false);
+                    Report(done.GetProperty("clipboardReady").GetBoolean()?"文件已发送，可在目标设备粘贴":"文件已发送；目标设备未确认剪贴板就绪",false);
                 } else throw new IOException("Invalid file operation");
-            } catch { if(!lifetime.IsCancellationRequested) status("文件传输结束或失败；重新复制可重试",false); }
+            } catch { Report("文件传输结束或失败；重新复制可重试",false); }
             finally {lock(gate) {if(ReferenceEquals(job,current))job=null;} current.Dispose();}
         }
     }

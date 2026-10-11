@@ -8,11 +8,12 @@ static partial class Program {
     static async Task CheckReverseFiles() {
         var root=Path.Combine(Path.GetTempPath(),"lrd-reverse-files-"+Guid.NewGuid().ToString("N"));Directory.CreateDirectory(root);
         var board=new ReverseFileBoard(); bool allowed=true; WindowsHostFiles? files=null;
+        var reports=new System.Collections.Concurrent.ConcurrentQueue<string>();
         var area=new CaptureArea(0,0,320,180);var credential=HostCredential.Create("Fixture1");
         try {
             await using var host=new WindowsHost(PairingPassword.Derive(credential.Password,credential.Salt),credential.Salt,area,
                 ()=>new SilentCapture(),()=>new WindowsInput(area,area,new SharingInput()),address:IPAddress.Loopback,port:0,
-                files:(wire,key,salt,ct)=>files=new WindowsHostFiles(wire,key,salt,board,async action=>{await Application.Current.Dispatcher.InvokeAsync(action);},()=>allowed,ct,root:Path.Combine(root,"received"),address:IPAddress.Loopback,port:0));
+                files:(wire,key,salt,ct)=>files=new WindowsHostFiles(wire,key,salt,board,async action=>{await Application.Current.Dispatcher.InvokeAsync(action);},()=>allowed,ct,(text,_)=>reports.Enqueue(text),root:Path.Combine(root,"received"),address:IPAddress.Loopback,port:0));
             host.Start();using var deadline=new CancellationTokenSource(TimeSpan.FromSeconds(60));
             using var control=new Wire();await control.Connect("127.0.0.1",credential.Password,deadline.Token,host.Port);
             await control.Json(new {op="handshake",version=1,quality=0},deadline.Token);
@@ -35,6 +36,17 @@ static partial class Program {
                 await Until(()=>!files!.HasTransfer,"Rejected file worker did not release slot");
             }
             await Rejected(new string('0',64),1);await Rejected(session,99);
+            // A newer local non-file copy closes the old worker and removes staging.
+            using(var replaced=new Wire(65536,15)) {
+                await replaced.Connect("127.0.0.1",credential.Password,deadline.Token,port);
+                await replaced.Json(new {op="file_push",session,requestId=1,items=source.Items},deadline.Token);FileTransfer.Expect(await FileTransfer.Json(replaced,deadline.Token),"file_ready");
+                await replaced.Json(new {op="file_start",index=0},deadline.Token);await replaced.Send(3,new byte[]{1},deadline.Token);
+                await Until(()=>Directory.EnumerateDirectories(Path.Combine(root,"received"),".incoming-*").Any(),"Replacement fixture did not create staging");
+                reports.Clear();board.Copy(null);
+                await Until(()=>!files!.HasTransfer,"Newer local copy left old worker running");
+                Assert(!Directory.EnumerateDirectories(Path.Combine(root,"received"),".incoming-*").Any(),"Replacement retained partial files");
+                Assert(!reports.Any(text=>text.Contains("失败")),"Canceled worker overwrote replacement status with an error");
+            }
             // Hold a partial encrypted upload, then revoke local consent.
             using(var pending=new Wire(65536,15)) {
                 await pending.Connect("127.0.0.1",credential.Password,deadline.Token,port);
@@ -48,7 +60,7 @@ static partial class Program {
             await control.Json(new {op="file_sync",requestId=1,enabled=true},deadline.Token);await control.Json(new {op="heartbeat"},deadline.Token);
             Assert((await Read()).GetProperty("op").GetString()=="heartbeat" && board.Revision==before,"Old consent re-enabled file channel");
             await control.Json(new {op="disconnect"},deadline.Token);await host.DisposeAsync();
-            Console.WriteLine("PASS production Windows file host encrypted push/pull: Unicode/empty files, SHA256, no echo, wrong session/stale generation, revoke mid-upload, staging cleanup and stop; recording clipboard/input, unshown");
+            Console.WriteLine("PASS production Windows file host encrypted push/pull: Unicode/empty files, SHA256, no echo, wrong session/stale generation, replace/revoke mid-upload, stale error suppression, staging cleanup and stop; recording clipboard/input, unshown");
         } finally {Directory.Delete(root,true);}
     }
 }
