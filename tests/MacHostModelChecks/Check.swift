@@ -24,7 +24,7 @@ func require(_ value: @autoclosure () -> Bool, _ message: String) {
         model.start()
         require(Pairing.readAttempts == 0 && !model.active, "development launch read credentials")
         model.openPasswordEditor(); model.generatePassword()
-        require(model.editingPassword && model.passwordEditor.draft.count == 12, "generation did not fill draft")
+        require(model.editingPassword && model.passwordEditor.draft.count == 8, "generation did not fill draft")
         model.cancelPasswordEditor()
         require(!model.editingPassword && model.passwordEditor.draft.isEmpty && Pairing.saveAttempts == 0, "cancel saved a draft")
         let idleStatus = model.status
@@ -59,13 +59,13 @@ func require(_ value: @autoclosure () -> Bool, _ message: String) {
         Pairing.rejectSave = true; model.savePassword(); await until { !model.passwordEditor.saving }
         require(model.active && !original.stopped && model.secret == oldSecret && model.status == sharingStatus, "failed save stopped sharing or replaced credential")
         require(model.editingPassword && model.passwordEditor.draft == draft && !model.passwordEditor.error.isEmpty, "failed save lost editor")
-        model.passwordEditor.draft = "Office-LAN#42"
+        model.passwordEditor.draft = "Office#2"
         require(model.passwordEditor.error.isEmpty, "editing retained stale error")
         print("PASS inline validation, same-password no-op and failed-save draft/session preservation")
 
         Pairing.rejectSave = false; model.savePassword(); await until { !model.passwordEditor.saving && !model.starting }
         require(model.active && original.stopped && Host.instances.count == 2, "successful save did not replace running host")
-        require(model.secret == "Office-LAN#42" && !model.legacyCredential && !model.editingPassword && !model.revealSecret, "saved credential not adopted/hidden")
+        require(model.secret == "Office#2" && !model.legacyCredential && !model.editingPassword && !model.revealSecret, "saved credential not adopted/hidden")
         require(Pairing.readAttempts == 1 && Host.instances.last!.passwordSalt?.count == 16, "saved host reread credentials or lost salt")
         let updatedStatus = model.status, updatedFileStatus = model.fileStatus
         original.status("stale old connection"); original.fileStatus("stale old files")

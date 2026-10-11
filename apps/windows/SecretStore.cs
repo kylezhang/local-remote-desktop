@@ -49,11 +49,16 @@ static class SecretStore
         }
     }
     static string PathFor(string host,string? directory=null) => Path.Combine(directory??DirectoryPath(),Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(host)))+".dpapi");
-    public static void Save(string host,string secret) => File.WriteAllBytes(PathFor(host), Transform(System.Text.Encoding.UTF8.GetBytes(secret),true));
-    public static string Load(string host) { try { return System.Text.Encoding.UTF8.GetString(Transform(File.ReadAllBytes(PathFor(host)),false)); } catch { return ""; } }
+    static void AtomicWrite(string path,byte[] value) {
+        var temporary=path+"."+Guid.NewGuid().ToString("N")+".tmp";
+        try {File.WriteAllBytes(temporary,value);File.Move(temporary,path,true);}
+        finally {if(File.Exists(temporary)) File.Delete(temporary);}
+    }
+    public static void Save(string host,string secret,string? directory=null) => AtomicWrite(PathFor(host,directory), Transform(System.Text.Encoding.UTF8.GetBytes(secret),true));
+    public static string Load(string host,string? directory=null) { try { return System.Text.Encoding.UTF8.GetString(Transform(File.ReadAllBytes(PathFor(host,directory)),false)); } catch { return ""; } }
     public static void Remember(string host,string secret) {
         Save(host,secret);
-        File.WriteAllBytes(Path.Combine(DirectoryPath(),"last-host.dpapi"),Transform(System.Text.Encoding.UTF8.GetBytes(host),true));
+        AtomicWrite(Path.Combine(DirectoryPath(),"last-host.dpapi"),Transform(System.Text.Encoding.UTF8.GetBytes(host),true));
     }
     public static string LastHost() { try { return System.Text.Encoding.UTF8.GetString(Transform(File.ReadAllBytes(Path.Combine(DirectoryPath(),"last-host.dpapi")),false)); } catch { return ""; } }
     public static void SaveWindowsShortcuts(bool enabled,string? preferencePath=null) => File.WriteAllBytes(preferencePath??Path.Combine(DirectoryPath(),"windows-shortcuts.dpapi"),Transform(new byte[]{enabled?(byte)1:(byte)0},true));

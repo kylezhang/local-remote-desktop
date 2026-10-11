@@ -5,8 +5,9 @@ namespace LocalRemoteDesktop;
 
 internal sealed record HostCredential(string Password,byte[] Salt) {
     const string Alphabet="ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-    internal static string Generate()=>new(Enumerable.Range(0,12).Select(_=>Alphabet[RandomNumberGenerator.GetInt32(Alphabet.Length)]).ToArray());
+    internal static string Generate()=>new(Enumerable.Range(0,8).Select(_=>Alphabet[RandomNumberGenerator.GetInt32(Alphabet.Length)]).ToArray());
     internal static HostCredential Create(string password) { PairingPassword.Validate(password); return new(password,RandomNumberGenerator.GetBytes(16)); }
+    internal static HostCredential CreateNew(string password) { PairingPassword.ValidateNew(password); return Create(password); }
     internal static HostCredential Load(string? path=null) {
         var file=path??SecretStore.HostCredentialPath();
         if(!File.Exists(file)) { var generated=Create(Generate()); generated.Save(file); return generated; }

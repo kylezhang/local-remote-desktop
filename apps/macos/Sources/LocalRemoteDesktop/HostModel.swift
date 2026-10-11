@@ -75,7 +75,7 @@ final class HostModel: ObservableObject {
         passwordEditor.reset(); editingPassword = false
     }
     func generatePassword() {
-        passwordEditor.generate(PairingCredential.generated(using: randomBytes(12)))
+        passwordEditor.generate(PairingCredential.generated(using: randomBytes(8)))
     }
     func savePassword() {
         guard !starting, !readingPassword,

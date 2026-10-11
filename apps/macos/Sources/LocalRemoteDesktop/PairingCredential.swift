@@ -11,6 +11,12 @@ struct PairingCredential {
             throw NSError(domain: "LocalRemoteDesktop.Pairing", code: 1, userInfo: [NSLocalizedDescriptionKey:"密码需为 8–64 位英文字母、数字或符号，不含空格。"])
         }
     }
+    static func validateNew(_ password: String) throws {
+        try validate(password)
+        guard password.utf8.count == 8 else {
+            throw NSError(domain: "LocalRemoteDesktop.Pairing", code: 1, userInfo: [NSLocalizedDescriptionKey:"新密码需为 8 位英文字母、数字或符号，不含空格。"])
+        }
+    }
     static func password(_ text: String, salt: Data) throws -> PairingCredential {
         try validate(text)
         guard salt.count == 16 else { throw NSError(domain: "LocalRemoteDesktop.Pairing", code: 2) }
@@ -38,7 +44,7 @@ struct PairingCredential {
     }
     var encoded: Data { if let salt { return Self.marker + salt + Data(text.utf8) }; return key }
     static func generated(using bytes: Data) -> String {
-        precondition(bytes.count == 12)
+        precondition(bytes.count == 8)
         let alphabet = Array("ABCDEFGHJKLMNPQRSTUVWXYZ23456789".utf8)
         return String(bytes: bytes.map { alphabet[Int($0 & 31)] }, encoding: .utf8)!
     }

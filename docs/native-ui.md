@@ -3,8 +3,10 @@
 The [second design revision](design.md) is approved and being implemented in stages.
 Both desktop sources now include local-name editing and authenticated target
 names. Both sources also use four settings categories and separate connection
-defaults from active session options. Pairing flow, theme and other visual details
-remain pending.
+defaults from active session options. Windows manual pairing uses one dialog and
+saves credentials only after authentication. New sharing passwords are 8 characters
+on both sources; existing longer credentials remain unchanged. Mac controller
+pairing parity, theme and other visual details remain pending.
 
 [简体中文](zh-CN/native-ui.md) · [Design](design.md) · [Delivery plan](v0.3.0-plan.md)
 
@@ -44,6 +46,18 @@ across refreshes; this is not persistent device history or proof of availability
 Mac updates its session label. Missing/invalid legacy metadata uses the known name
 or address. Changing a manual address clears unrelated name/system information.
 
+## Manual pairing and password policy
+
+Windows uses one manual Target IP/password/remember dialog. Known targets show
+real metadata; unknown targets get metadata only from an authenticated peer.
+Cancel or failed authentication makes no credential write and creates no peer
+record. Successful authentication saves at most once per logical connection;
+storage failure does not abort that connection. An unchecked remember choice
+uses the input for this session without deleting older stored credentials.
+Role switching validates the target before stopping sharing and requires an
+explicit choice. New passwords are 8 characters; record/wire validation still
+accepts existing longer values. See the [pairing check record](../tests/results/manual-pairing-2026-10-11.txt).
+
 ## Verification
 
 Connection defaults are saved separately for quality, reconnect and shortcut
@@ -72,9 +86,9 @@ encrypted backend rename propagation pass. Swift Foundation checks cover isolate
 name preferences, active host-model rename without changing pairing, publication
 lifecycle and controller label updates using explicit service doubles.
 
-Swift source syntax checks passed. The development Mac's SSH connection timed
-out, so the changed Mac UI has **not** had an Apple SDK build or installed
-interaction check. Earlier SDK results apply to the earlier interface only.
+Swift source syntax and portable pairing/model checks passed. The development
+Mac is outside this LAN; SSH attempts are stopped. The changed Mac UI has **not**
+had an Apple SDK build or installed interaction check. Earlier SDK results apply to the earlier interface only.
 Do not publish a new tag or release on the basis of these checks.
 
 `ClientChecks` now runs the unshown shell check by default. The older integration

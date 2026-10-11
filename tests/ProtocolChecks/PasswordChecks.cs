@@ -15,6 +15,11 @@ static class PasswordChecks {
             bool rejected=false; try { PairingPassword.Validate(invalid); } catch(ArgumentException) { rejected=true; }
             Require(rejected,"invalid password accepted");
         }
+        PairingPassword.ValidateNew("Office#2");
+        foreach(string invalid in new[]{"1234567","123456789","Office-LAN#42","abc defg","中文abcdef"}) {
+            bool rejected=false;try {PairingPassword.ValidateNew(invalid);}catch(ArgumentException){rejected=true;}
+            Require(rejected,"invalid new password accepted");
+        }
         foreach(string mode in new[]{"valid","wrong-password","bad-server-proof","changed-salt"}) {
             var listener=new TcpListener(IPAddress.Loopback,0); listener.Start();
             using var timeout=new CancellationTokenSource(TimeSpan.FromSeconds(10));

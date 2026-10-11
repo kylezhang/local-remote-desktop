@@ -87,7 +87,8 @@ behavior**, not claims of implementation in the current alpha.
   whether typed or generated. Generate is a visible bordered secondary button
   with a refresh icon; Save remains primary. Existing native long passwords must
   remain usable until explicitly changed, rather than being truncated or rotated
-  during an update. This preview policy is not yet a native authentication change.
+  during an update. Native creation/editing now enforces this policy; network validation and
+  record loading retain the legacy range.
 - Connection defaults apply to **new logical connections**. Session controls have
   a distinct scope and survive temporary quality reconnects. The active session
   does not silently adopt edited future defaults.

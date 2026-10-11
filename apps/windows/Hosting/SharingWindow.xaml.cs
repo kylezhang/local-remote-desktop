@@ -53,7 +53,7 @@ public partial class SharingWindow:Window {
             catch { host=null; await next.DisposeAsync(); throw; }
         } finally { if(key!=null) CryptographicOperations.ZeroMemory(key); if(host==null) sharingChanged(false); }
     }
-    Task Stop() {
+    internal Task Stop() {
         var old=host; host=null;
         if(old==null) return stopping??Task.CompletedTask;
         return stopping=StopCore(old);
@@ -78,7 +78,7 @@ public partial class SharingWindow:Window {
         try { deviceName.Save(NameDraft.Text); SharingName.Text=deviceName.Current; NameChanged?.Invoke(deviceName.Current); NameCancelClick(sender,e); }
         catch(Exception error) { NameError.Text=UiText.Text(error is ArgumentException?error.Message:"无法保存名称，原名称仍有效。"); }
     }
-    void RevealClick(object sender,RoutedEventArgs e) { revealed=!revealed; CurrentPassword.Text=revealed?credential?.Password??"":"••••••••••••"; Translate(); }
+    void RevealClick(object sender,RoutedEventArgs e) { revealed=!revealed; CurrentPassword.Text=revealed?credential?.Password??"":"••••••••"; Translate(); }
     void CopyClick(object sender,RoutedEventArgs e) { if(credential!=null) { try { Clipboard.SetText(credential.Password); } catch { status="剪贴板忙，请重试。"; Translate(); } } }
     void EditClick(object sender,RoutedEventArgs e) { if(starting!=null || shutting || credential==null) return; Draft.Text=""; PasswordError.Text=""; Editor.Visibility=Visibility.Visible; Draft.Focus(); }
     void GenerateClick(object sender,RoutedEventArgs e) { Draft.Text=HostCredential.Generate(); PasswordError.Text=""; }
@@ -87,10 +87,10 @@ public partial class SharingWindow:Window {
         if(starting!=null || shutting || credential==null || saving) return;
         saving=true; SharingStart.IsEnabled=false; bool persisted=false;
         try {
-            var next=HostCredential.Create(Draft.Text);
+            var next=HostCredential.CreateNew(Draft.Text);
             if(next.Password==credential.Password) { PasswordError.Text=UiText.Text("与当前密码相同，无需保存。"); return; }
             // Persist atomically before disrupting the old authorized session.
-            save(next); persisted=true; credential=next; revealed=false; CurrentPassword.Text="••••••••••••";
+            save(next); persisted=true; credential=next; revealed=false; CurrentPassword.Text="••••••••";
             await Stop(); Draft.Text=""; Editor.Visibility=Visibility.Collapsed;
             status="密码已保存，原连接已断开；点击开始共享后使用新密码连接。"; Translate();
         } catch(Exception error) { PasswordError.Text=UiText.Text(persisted?"密码已保存，但停止共享失败；请退出应用后重开。":error is ArgumentException?error.Message:"无法保存密码，原密码和共享状态保留。"); }

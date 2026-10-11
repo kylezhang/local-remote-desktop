@@ -8,7 +8,7 @@ struct PairingEditor {
 
     func validation(current: String) -> String? {
         if draft.isEmpty { return nil }
-        do { try PairingCredential.validate(draft) }
+        do { try PairingCredential.validateNew(draft) }
         catch { return error.localizedDescription }
         return draft == current ? "与当前密码相同，无需保存。" : nil
     }

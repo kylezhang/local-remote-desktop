@@ -57,11 +57,13 @@ try {
     using var cancel=new CancellationTokenSource(TimeSpan.FromSeconds(10)); await decoder.Feed(await File.ReadAllBytesAsync(sample),cancel.Token); await got.Task.WaitAsync(cancel.Token);
     Console.WriteLine($"PASS actual H.264 → BGRA decoding: at least {count} frames, 320x180");
 } finally { Directory.Delete(directory,true); }
-// A unique synthetic host/key exercises DPAPI without touching a real pairing.
+// Synthetic credentials in isolated storage; never touch user pairing settings.
 var fake="test-"+Guid.NewGuid().ToString("N"); var secret=Convert.ToHexString(RandomNumberGenerator.GetBytes(32));
-SecretStore.Save(fake,secret); Assert(SecretStore.Load(fake)==secret,"DPAPI roundtrip");
-SecretStore.Save(fake,"Office-LAN#42"); Assert(SecretStore.Load(fake)=="Office-LAN#42","short password DPAPI roundtrip");
-var store=Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),"LocalRemote",Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(fake)))+".dpapi"); File.Delete(store);
+var pairingRoot=Path.Combine(Path.GetTempPath(),"localremote-protocol-pairing-"+Guid.NewGuid().ToString("N"));Directory.CreateDirectory(pairingRoot);
+try {
+    SecretStore.Save(fake,secret,pairingRoot); Assert(SecretStore.Load(fake,pairingRoot)==secret,"DPAPI roundtrip");
+    SecretStore.Save(fake,"Office-LAN#42",pairingRoot); Assert(SecretStore.Load(fake,pairingRoot)=="Office-LAN#42","short password DPAPI roundtrip");
+} finally {Directory.Delete(pairingRoot,true);}
 Console.WriteLine("PASS Windows current-user DPAPI roundtrip");
 
 var migrationRoot=Path.Combine(Path.GetTempPath(),"localremote-migration-"+Guid.NewGuid().ToString("N"));

@@ -29,6 +29,10 @@ public partial class MainWindow : Window
     long inputsQueued, inputsSent, hostReceived, hostPosted, hostBlocked, hostRejected;
     string hostInputError = "";
     readonly bool rememberConnection;
+    readonly Func<string,string> loadPassword;
+    readonly Action<string,string> saveConnection;
+    bool connectionShouldRemember, credentialSaved, manualConnecting, passwordSaveFailed, manualCancelled;
+    IInputElement? manualReturnFocus;
     readonly Func<ModifierKeys> readModifiers;
     readonly object decoderGate=new();
     IVideoDecoder? activeDecoder;
@@ -57,14 +61,16 @@ public partial class MainWindow : Window
     readonly DispatcherTimer render = new() { Interval=TimeSpan.FromMilliseconds(16) };
     public MainWindow():this(true) {}
     internal MainWindow(bool remember):this(remember,null) {}
-    internal MainWindow(bool remember, Func<ModifierKeys>? modifiers, ITextClipboard? board=null, IFileClipboard? fileBoard=null, string? fileRoot=null, int desktopPort=47980, int filePort=47981, Func<CancellationToken,Task<IReadOnlyList<LanDevice>>>? discovery=null, Func<Action<bool>,SharingWindow>? sharingFactory=null) {
+    internal MainWindow(bool remember, Func<ModifierKeys>? modifiers, ITextClipboard? board=null, IFileClipboard? fileBoard=null, string? fileRoot=null, int desktopPort=47980, int filePort=47981, Func<CancellationToken,Task<IReadOnlyList<LanDevice>>>? discovery=null, Func<Action<bool>,SharingWindow>? sharingFactory=null, Func<string,string>? passwordLoader=null, Action<string,string>? connectionSaver=null) {
         rememberConnection=remember; UiText.Current.Configure(remember);
+        loadPassword=passwordLoader??(host=>remember?SecretStore.Load(host):"");
+        saveConnection=connectionSaver??((host,password)=> {if(remember) SecretStore.Remember(host,password);});
         createSharing=sharingFactory??(changed=>remember?new SharingWindow(changed):new SharingWindow(changed,()=>HostCredential.Create(HostCredential.Generate()),_=>{}));
         this.desktopPort=desktopPort;
         browse=discovery??MdnsDiscovery.Scan;
         readModifiers=modifiers ?? (()=>Keyboard.Modifiers);
         clipboard=new TextClipboardSync(board ?? (remember?new WindowsClipboard():new DisabledClipboard()));
-        InitializeComponent(); var savedHost=remember?SecretStore.LastHost():""; Address.Text=savedHost.Length>0?savedHost:LocalAddress.Find(); Secret.Password=remember?SecretStore.Load(Address.Text):"";
+        InitializeComponent(); var savedHost=remember?SecretStore.LastHost():""; Address.Text=savedHost.Length>0?savedHost:LocalAddress.Find(); Secret.Password=loadPassword(Address.Text); RememberPassword.IsChecked=remember;
         LocalDeviceName.Text=remember?DeviceName.Default.Current:Environment.MachineName;
         DiscoverButton.ContextMenu=new(); RebuildDeviceMenu();
         UiText.Current.LanguageChanged+=ApplyLanguage; ApplyLanguage();
@@ -105,11 +111,11 @@ public partial class MainWindow : Window
         SettingsMenu.SubmenuClosed+=(_,e)=> { if(ReferenceEquals(e.OriginalSource,SettingsMenu) && connected) Surface.Focus(); };
         Address.TextChanged+=(_,_)=> {
             if(session!=null || DeviceList.SelectedItem is LanDevice device && Address.Text==device.Address) return;
-            DeviceList.SelectedItem=null;
+            DeviceList.SelectedItem=null; Secret.Password=loadPassword(Address.Text.Trim());
             var peer=discovered.FirstOrDefault(d=>d.Address==Address.Text.Trim());
             SelectedDeviceName.Text=peer?.Name??UiText.Text("输入目标IP"); SelectedDeviceSystem.Text=peer?.SystemLabel??"";
         };
-        Address.LostFocus+=(_,_)=> { if(!rememberConnection) return; var s=SecretStore.Load(Address.Text.Trim()); if(s.Length>0) Secret.Password=s; };
+
         Quality.SelectionChanged+=(_,_)=> {
             if(session==null) return;
             requestedQuality=Quality.SelectedIndex; qualityChangePending=true;
@@ -124,7 +130,7 @@ public partial class MainWindow : Window
         Surface.PreviewKeyDown+=(_,e)=>Key(e,true); Surface.PreviewKeyUp+=(_,e)=>Key(e,false);
         Surface.LostKeyboardFocus+=(_,_)=>Input(new {op="release_all"}); Deactivated+=(_,_)=>Input(new {op="release_all"});
         Surface.LostMouseCapture+=(_,_)=> { if(Mouse.LeftButton==MouseButtonState.Pressed || Mouse.RightButton==MouseButtonState.Pressed || Mouse.MiddleButton==MouseButtonState.Pressed) Input(new {op="release_all"}); };
-        PreviewKeyDown+=(_,e)=> { if(e.Key==System.Windows.Input.Key.F11) { ToggleFull(); e.Handled=true; } };
+        PreviewKeyDown+=(_,e)=> { if(ManualDialog.Visibility!=Visibility.Visible && e.Key==System.Windows.Input.Key.F11) { ToggleFull(); e.Handled=true; } };
         Closing+=(_,e)=> {
             if(sharingWindow!=null) { e.Cancel=true; if(!closingSharingOwner) {closingSharingOwner=true; _=CloseSharingAndOwner();} return; }
             discoveryScan?.Cancel(); UiText.Current.LanguageChanged-=ApplyLanguage;
@@ -189,7 +195,7 @@ public partial class MainWindow : Window
     void RefreshDevicesClick(object sender,RoutedEventArgs e)=>RefreshDevices();
     void DeviceSelected(object sender,SelectionChangedEventArgs e) {
         if(session!=null || DeviceList.SelectedItem is not LanDevice device) return;
-        Address.Text=device.Address; Secret.Password=rememberConnection?SecretStore.Load(device.Address):"";
+        Address.Text=device.Address; Secret.Password=loadPassword(device.Address);
         SelectedDeviceName.Text=device.Name; SelectedDeviceSystem.Text=device.SystemLabel;
         SetStatus(Secret.Password.Length>0?$"已选择 {device.Name}，可直接连接。":$"已选择 {device.Name}，填写配对密码后连接。");
     }
@@ -203,7 +209,7 @@ public partial class MainWindow : Window
         RebuildDeviceMenu(); DiscoverButton.ContextMenu.PlacementTarget=DiscoverButton; DiscoverButton.ContextMenu.IsOpen=true;
         if(discoveryScan==null && (discoveryFinished==0 || Environment.TickCount64-discoveryFinished>10000)) RefreshDevices();
     }
-    void SetStatus(string value) { rawStatus=value; statusSuffix=""; Status.Text=HomeStatus.Text=UiText.Text(value); }
+    void SetStatus(string value) { if(manualConnecting && ManualDialog.Visibility==Visibility.Visible) ManualError.Text=UiText.Text(value); rawStatus=value; statusSuffix=""; Status.Text=HomeStatus.Text=UiText.Text(value); }
     void AppendStatus(string value) { statusSuffix+=value; Status.Text=HomeStatus.Text=UiText.Text(rawStatus)+UiText.Text(statusSuffix); }
     void SetClipboardStatus(string value) { rawClipboardStatus=value; ClipboardStatus.Text=HomeStatus.Text=UiText.Text(value); }
     void SetFileStatus(string value) { rawFileStatus=value; FileStatus.Text=HomeStatus.Text=UiText.Text(value); }
@@ -212,7 +218,7 @@ public partial class MainWindow : Window
         ClipboardStatus.Text=UiText.Text(rawClipboardStatus); FileStatus.Text=UiText.Text(rawFileStatus);
         ConnectButton.Content=UiText.Text(session==null?"连接":"断开");
         LanguageEnglish.IsChecked=UiText.Current.Language=="en"; LanguageChinese.IsChecked=!LanguageEnglish.IsChecked;
-        RebuildDeviceMenu();
+        RebuildDeviceMenu(); UpdateManualPeer();
     }
     void LanguageClick(object sender,RoutedEventArgs e) {
         if(sender is not FrameworkElement {Tag:string code}) return;
@@ -227,7 +233,7 @@ public partial class MainWindow : Window
             var item=new MenuItem {Header=device.ToString(),ToolTip=UiText.Text("只填写地址；连接仍需配对密码"),IsEnabled=session==null};
             item.Click+=(_,_)=> {
                 if(session!=null) return;
-                Address.Text=device.Address; Secret.Password=rememberConnection?SecretStore.Load(device.Address):"";
+                Address.Text=device.Address; Secret.Password=loadPassword(device.Address);
                 SetStatus($"已选择 {device.Name}，填写配对密码后连接。"); Secret.Focus();
             };
             menu.Items.Add(item);
@@ -334,15 +340,84 @@ public partial class MainWindow : Window
         if(inputs.TryWrite(message)) Interlocked.Increment(ref inputsQueued);
         else { SetStatus("输入队列拥堵，已断开以避免按键卡住"); session?.Cancel(); }
     }
-    async void ConnectClick(object sender,RoutedEventArgs e) {
+    void ManualClick(object sender,RoutedEventArgs e) {
+        if(session!=null) return;
+        manualCancelled=false;
+        manualReturnFocus=Keyboard.FocusedElement;
+        ManualAddress.Text=Address.Text; ManualSecret.Password=loadPassword(ManualAddress.Text.Trim());
+        ManualRemember.IsChecked=RememberPassword.IsChecked; ManualError.Text="";
+        ManualStopSharing.Visibility=sharingWindow?.Sharing==true?Visibility.Visible:Visibility.Collapsed;
+        ManualStopSharing.IsChecked=false;
+        UpdateManualPeer(); SetManualVisible(true); ManualAddress.Focus();
+    }
+    void SetManualVisible(bool visible) {
+        ManualDialog.Visibility=visible?Visibility.Visible:Visibility.Collapsed;
+        HomeShell.IsEnabled=SessionPage.IsEnabled=!visible;
+        if(!visible) { ManualSecret.Password=""; if(manualReturnFocus is {} focus) Keyboard.Focus(focus); }
+    }
+    void UpdateManualPeer() {
+        if(ManualDeviceName==null || ManualDeviceSystem==null) return;
+        var peer=discovered.FirstOrDefault(d=>d.Address==ManualAddress.Text.Trim());
+        ManualDeviceName.Text=peer?.Name??"";
+        ManualDeviceName.Visibility=peer==null?Visibility.Collapsed:Visibility.Visible;
+        ManualDeviceSystem.Text=peer?.SystemLabel??UiText.Text("连接后获取设备信息。");
+    }
+    void ManualAddressChanged(object sender,TextChangedEventArgs e) {
+        if(ManualSecret==null) return;
+        ManualSecret.Password=loadPassword(ManualAddress.Text.Trim());
+        ManualError.Text=""; UpdateManualPeer();
+    }
+    void ManualCancelClick(object sender,RoutedEventArgs e) {
+        if(manualConnecting) { manualCancelled=true; session?.Cancel(); return; }
+        SetManualVisible(false);
+    }
+    void ManualKeyDown(object sender,KeyEventArgs e) {
+        if(e.Key==System.Windows.Input.Key.Escape) {ManualCancelClick(sender,new RoutedEventArgs()); e.Handled=true;}
+        else if(e.Key==System.Windows.Input.Key.Enter && !manualConnecting) {ManualConnectClick(sender,new RoutedEventArgs());e.Handled=true;}
+    }
+    static void ValidateTarget(string ip,string secret) {
+        if(!System.Net.IPAddress.TryParse(ip,out var address) || address.AddressFamily!=System.Net.Sockets.AddressFamily.InterNetwork ||
+           ip!=address.ToString() || !WindowsHost.IsLan(address)) throw new ArgumentException("请填写局域网 IPv4 地址。");
+        PairingPassword.Validate(secret);
+    }
+    async void ManualConnectClick(object sender,RoutedEventArgs e) {
+        if(manualConnecting || session!=null) return;
+        var ip=ManualAddress.Text.Trim(); var password=ManualSecret.Password;
+        try { ValidateTarget(ip,password); }
+        catch(Exception error) { ManualError.Text=UiText.Text(error.Message); return; }
+        if(sharingWindow?.Sharing==true && ManualStopSharing.IsChecked!=true) {
+            ManualError.Text=UiText.Text("这将停止本机共享并断开当前控制者。"); return;
+        }
+        manualConnecting=true; ManualAddress.IsEnabled=ManualSecret.IsEnabled=ManualRemember.IsEnabled=ManualConnect.IsEnabled=ManualStopSharing.IsEnabled=false;
+        try {
+            if(sharingWindow?.Sharing==true) await sharingWindow.Stop();
+            if(manualCancelled || windowClosing) return;
+            Address.Text=ip; Secret.Password=password; RememberPassword.IsChecked=ManualRemember.IsChecked;
+            await StartConnectionAsync();
+        } catch(Exception error) {ManualError.Text=UiText.Text($"无法连接：{error.Message}");}
+        finally {
+            manualConnecting=false; ManualAddress.IsEnabled=ManualSecret.IsEnabled=ManualRemember.IsEnabled=ManualConnect.IsEnabled=ManualStopSharing.IsEnabled=true;
+            if(manualCancelled) SetManualVisible(false);
+        }
+    }
+    internal void PairingSucceeded(string ip,string password) {
+        if(connectionShouldRemember && !credentialSaved) {
+            credentialSaved=true;
+            try {saveConnection(ip,password);}
+            catch {passwordSaveFailed=true;}
+        }
+        if(manualConnecting) SetManualVisible(false);
+    }
+    async void ConnectClick(object sender,RoutedEventArgs e) => await StartConnectionAsync();
+    async Task StartConnectionAsync() {
+        if(windowClosing) return;
         if(sharingWindow?.Sharing==true) return;
         if(session!=null) { session.Cancel(); return; }
-        var ip=Address.Text.Trim(); var secret=Secret.Password.Trim(); int quality=HomeQuality.SelectedIndex;
+        var ip=Address.Text.Trim(); var secret=Secret.Password; int quality=HomeQuality.SelectedIndex;
         try {
-            if(ip.Length==0) throw new ArgumentException("请填写目标IP。");
-            PairingPassword.Validate(secret);
-            if(rememberConnection) SecretStore.Remember(ip,secret);
-        } catch(Exception ex) { SetStatus($"无法记住连接：{ex.Message}"); return; }
+            ValidateTarget(ip,secret);
+        } catch(Exception ex) { SetStatus($"无法连接：{ex.Message}"); return; }
+        connectionShouldRemember=RememberPassword.IsChecked==true; credentialSaved=false; passwordSaveFailed=false;
         BeginConnectionOptions(); requestedQuality=quality; qualityChangePending=false;
         discoveryScan?.Cancel();
         targetPlatform="macos"; NavShare.IsEnabled=false; sharingWindow?.SetControlActive(true);
@@ -362,7 +437,8 @@ public partial class MainWindow : Window
             try {
                 SetStatus("正在连接…");
                 using(var timeout=CancellationTokenSource.CreateLinkedTokenSource(ct)) { timeout.CancelAfter(TimeSpan.FromSeconds(8)); await wire.Connect(ip,secret,timeout.Token,desktopPort); }
-                paired=true; if(rememberConnection) SecretStore.Save(ip,secret);
+                ct.ThrowIfCancellationRequested();
+                paired=true; PairingSucceeded(ip,secret);
                 inputs=new InputQueue(); connected=true;
                 files.Connect(ip,secret); files.Configure(EffectiveFiles); fileTimer.Start();
                 Interlocked.Exchange(ref inputsQueued,0); Interlocked.Exchange(ref inputsSent,0);
@@ -372,7 +448,7 @@ public partial class MainWindow : Window
                 await wire.Json(new {op="handshake",version=1,quality},attempt.Token);
                 heartbeat=Task.Run(async()=> { try { while(true) { await Task.Delay(3000,attempt.Token); await wire.Json(new {op="heartbeat"},attempt.Token); } } catch { attempt.Cancel(); } });
                 controls=Task.Run(async()=> { try { await foreach(var m in inputs.ReadAllAsync(attempt.Token)) { await wire.Json(m,attempt.Token); Interlocked.Increment(ref inputsSent); } } catch { attempt.Cancel(); } });
-                Surface.Focus(); SetStatus("已配对，等待画面…");
+                Surface.Focus(); SetStatus(passwordSaveFailed?"已连接，但无法记住密码。":"已配对，等待画面…");
                 inputAllowed=true;
                 // Receive, authenticate/decrypt and feed FFmpeg away from the UI
                 // thread; only creation of the displayed bitmap uses Dispatcher.

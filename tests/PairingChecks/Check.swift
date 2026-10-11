@@ -14,8 +14,12 @@ import Foundation
         for data in [Data(), Data(repeating:0,count:60)] {
             do { _=try PairingCredential.decode(data); fatalError("corrupt key silently reset") } catch { }
         }
-        let generated=PairingCredential.generated(using:Data(0..<12))
-        precondition(generated.count == 12 && !generated.contains("0") && !generated.contains("1"))
+        let generated=PairingCredential.generated(using:Data(0..<8))
+        precondition(generated.count == 8 && !generated.contains("0") && !generated.contains("1"))
+        try PairingCredential.validateNew("Office#2")
+        for text in ["1234567", "123456789", "Office-LAN#42", "abc defg", "中文abcdef"] {
+            do { try PairingCredential.validateNew(text); fatalError("invalid new password accepted") } catch { }
+        }
         let prep=SharingPreparation<PairingCredential>()
         _=try await prep.readKey { legacy }
         prep.replaceCachedKey(value)

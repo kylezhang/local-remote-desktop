@@ -31,15 +31,15 @@
   <DockPanel Margin="0,10,0,0">
    <Button DockPanel.Dock="Right" Content="{local:Translate Key='复制'}" Click="CopyClick" Padding="8,4" Margin="6,0,0,0"/>
    <Button x:Name="Reveal" DockPanel.Dock="Right" Content="{local:Translate Key='查看'}" Click="RevealClick" Padding="8,4" Margin="6,0,0,0"/>
-   <TextBlock x:Name="CurrentPassword" Text="••••••••••••" FontFamily="Consolas" VerticalAlignment="Center" TextWrapping="Wrap"/>
+   <TextBlock x:Name="CurrentPassword" Text="••••••••" FontFamily="Consolas" VerticalAlignment="Center" TextWrapping="Wrap"/>
   </DockPanel>
   <StackPanel x:Name="Editor" Visibility="Collapsed" Margin="0,14,0,0">
    <TextBlock Text="{local:Translate Key='新密码'}" FontWeight="SemiBold"/>
    <DockPanel Margin="0,6,0,6">
-    <Button x:Name="GenerateSharingPassword" DockPanel.Dock="Right" Content="{local:Translate Key='自动生成'}" Click="GenerateClick" Margin="6,0,0,0" Padding="8,4"/>
-    <TextBox x:Name="Draft" Padding="5" MaxLength="64"/>
+    <Button x:Name="GenerateSharingPassword" DockPanel.Dock="Right" Content="{local:Translate Key='↻ 自动生成'}" Click="GenerateClick" Margin="6,0,0,0" Padding="8,4"/>
+    <TextBox x:Name="Draft" Padding="5" MaxLength="8"/>
    </DockPanel>
-   <TextBlock Text="{local:Translate Key='8–64 位字母、数字或符号，不含空格；自动生成 12 位。'}" FontSize="12" TextWrapping="Wrap"/>
+   <TextBlock Text="{local:Translate Key='8 位英文字母、数字或符号，不含空格。'}" FontSize="12" TextWrapping="Wrap"/>
    <TextBlock x:Name="PasswordError" Foreground="#A82435" TextWrapping="Wrap" Margin="0,6,0,6"/>
    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
     <Button x:Name="CancelSharingPassword" Content="{local:Translate Key='取消'}" Click="CancelEditClick" Padding="8,4" Margin="0,0,6,0"/>

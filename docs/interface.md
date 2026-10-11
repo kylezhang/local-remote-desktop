@@ -72,9 +72,8 @@ menu. Equivalent actions may have different native presentations.
 ## Design review
 
 [Revision 2](design.md) reorganizes settings and sharpens page/state/visual rules.
-It is awaiting a new user review; do not apply it to clients yet. The existing
-native implementation below belongs to the earlier approved iteration. The
-proposed settings structure is General / Connection / Clipboard / About, with
+It is approved for incremental native implementation. The settings structure
+is General / Connection / Clipboard / About, with
 sharing permissions and credentials owned by their task pages. See the
 [implementation contract](../design/review/revision-2.md) before implementing.
 

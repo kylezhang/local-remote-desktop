@@ -1,0 +1,13 @@
+Development verification, 2026-10-11. Not a release or real two-device acceptance.
+PASS .NET 8 Windows native build and unshown English/Chinese WPF layouts.
+PASS manual dialog known/unknown metadata, cancellation and unrelated password clearing.
+PASS production mutual authentication over loopback: wrong password retains draft;
+     no credential write/peer record before authentication; opt-out makes no write;
+     success saves once; storage failure preserves connection; repeated address has one row.
+PASS canceling a sharing-role transition preserves the sharing listener.
+PASS eight-character new password policy/generator; existing long records and RML1/RMP1 compatibility.
+PASS Windows isolated DPAPI credentials and encrypted host regression (synthetic video, recording input).
+PASS portable Swift pairing KDF/vector, credential decoding, host model and source syntax.
+No foreground windows, physical screen capture or OS input were used.
+Mac is off this LAN; SSH stopped. Current Apple SDK build and installed UI/Keychain
+acceptance remain pending. No tag/release created.

@@ -15,7 +15,7 @@ static partial class Program {
         string Text(string name)=>((TextBlock)sharing.FindName(name)).Text;
         void Draft(string value)=>((TextBox)sharing.FindName("Draft")).Text=value;
         try {
-            sharing.Show(); Assert(!enabled && creates==0 && Text("CurrentPassword")=="••••••••••••","Sharing opened a listener/revealed password without action");
+            sharing.Show(); Assert(!enabled && creates==0 && Text("CurrentPassword")=="••••••••","Sharing opened a listener/revealed password without action");
             Click("Reveal"); Assert(Text("CurrentPassword")==credential.Password && !enabled,"Password viewing starts sharing"); Click("Reveal");
             Click("SharingStart"); await Until(()=>current!=null && ((Button)sharing.FindName("SharingStart")).IsEnabled,"Sharing failed to start");
             Assert(enabled,"Connect role not disabled while sharing");
@@ -24,16 +24,16 @@ static partial class Program {
             await client.Read(deadline.Token); await client.Read(deadline.Token); await client.Read(deadline.Token);
             await client.Json(new {op="key_event",vk=162,down=true},deadline.Token); await Until(()=>input.Held==1,"Sharing UI backend did not receive input");
             Click("ChangeSharingPassword"); Click("GenerateSharingPassword");
-            Assert(((TextBox)sharing.FindName("Draft")).Text.Length==12 && credential.Password=="Office-LAN#42" && input.Held==1,"Generation changed credential/session instead of draft");
+            Assert(((TextBox)sharing.FindName("Draft")).Text.Length==8 && credential.Password=="Office-LAN#42" && input.Held==1,"Generation changed credential/session instead of draft");
             Draft("Office-LAN#42"); Click("SaveSharingPassword");
             Assert(Text("PasswordError").Length>0 && credential.Password=="Office-LAN#42" && input.Held==1 && enabled,"Same password unnecessarily revoked session");
             Draft("hello world"); Click("SaveSharingPassword");
             Assert(Text("PasswordError").Length>0 && input.Held==1,"Invalid draft interrupted sharing");
             Click("CancelSharingPassword"); Assert(input.Held==1 && ((FrameworkElement)sharing.FindName("Editor")).Visibility==Visibility.Collapsed,"Cancel interrupted sharing");
-            Click("ChangeSharingPassword"); Draft("New-Office#42"); failSave=true; Click("SaveSharingPassword");
+            Click("ChangeSharingPassword"); Draft("New#2345"); failSave=true; Click("SaveSharingPassword");
             Assert(credential.Password=="Office-LAN#42" && input.Held==1 && enabled,"Failed password save lost previous session");
             failSave=false; Click("SaveSharingPassword"); await Until(()=>!enabled && input.Held==0 && ((FrameworkElement)sharing.FindName("Editor")).Visibility==Visibility.Collapsed,"Saved credential did not stop/release previous session");
-            Assert(credential.Password=="New-Office#42" && Text("CurrentPassword")=="••••••••••••","Saved password not hidden");
+            Assert(credential.Password=="New#2345" && Text("CurrentPassword")=="••••••••","Saved password not hidden");
             UiText.Current.Use("en"); Assert(((Button)sharing.FindName("SharingStart")).Content.ToString()=="Start sharing" && Text("SharingStatus").StartsWith("Password saved"),"Sharing English labels/status missing");
             if(Environment.GetEnvironmentVariable("LOCALREMOTE_UI_SNAPSHOTS") is string root) {
                 sharing.UpdateLayout(); Directory.CreateDirectory(root); var png=new System.Windows.Media.Imaging.PngBitmapEncoder(); var image=new System.Windows.Media.Imaging.RenderTargetBitmap((int)sharing.ActualWidth,(int)sharing.ActualHeight,96,96,System.Windows.Media.PixelFormats.Pbgra32);

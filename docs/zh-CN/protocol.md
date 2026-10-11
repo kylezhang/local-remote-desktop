@@ -27,8 +27,9 @@ encoding=utf8-base64url、text；关闭、旧 ID 或非法载荷忽略。RML1/ve
 
 ## 短密码认证（RMP1，开发更新）
 
-手填 8–64 位可打印 ASCII（33–126），区分大小写、不含空格；新记录默认生成 12 位随机字符，
-字符集 `ABCDEFGHJKLMNPQRSTUVWXYZ23456789`，共 60 位随机熵。原始 32 字节旧密钥保持 RML1，直到用户主动保存。
+新建或主动修改的密码统一为 8 位可打印 ASCII（33–126），区分大小写、不含空格；
+随机生成使用字符集 `ABCDEFGHJKLMNPQRSTUVWXYZ23456789`，共 40 位随机熵。
+已有 8–64 位密码记录仍可读取和认证，线上校验保留该范围；更新不截断、不轮换旧密码。原始 32 字节旧密钥保持 RML1，直到用户主动保存。
 新 Windows 依据 Host 的 magic 选择模式，不根据输入是否像 hex 判断；64 位 hex 也可作为 RMP1 密码。
 
 原有钥匙串项存储 `LOCALREMOTE-PAIRING-PASSWORD-V1:` 标记、16 字节随机 salt、UTF-8 密码。

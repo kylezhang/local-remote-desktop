@@ -23,6 +23,24 @@ the setup instructions to either interface:
 | Windows 快捷键 | Windows Shortcuts (development update) |
 | 设置 → 剪贴板 → 同步文字 / 同步文件 | Text / File Sharing (both apps, development update) |
 
+## Manual connection (development update)
+
+Choose **Enter Target IP** on Connect. One dialog contains the address, password
+and **Remember password**. A matching known device shows its supplied name and
+system; an unknown address shows no invented identity. Authentication updates
+one address-matched device row. Discovery is never authorization.
+
+Windows securely saves the address/password only after mutual authentication.
+Wrong passwords retain the draft and do not overwrite a remembered password.
+Cancel makes no credential change. Unchecking Remember uses the password for
+this connection only; it does not erase an older saved password. Use Forget
+password to remove that target's saved credential. Storage errors do not end an
+already authenticated connection. Connecting while sharing requires the explicit
+Stop sharing & connect choice; cancel keeps sharing enabled.
+
+The Mac controller still uses its existing form; the equivalent compact dialog
+and secure controller remembrance remain pending.
+
 ## Interface organization
 
 Development desktop builds use Connect, Share this device and Settings in one
@@ -75,8 +93,9 @@ Update both apps from main. On Mac, click **修改密码…** (Change Password) 
 **当前密码** (Current Password). In the editor, type a new password or click
 **自动生成** (Generate), then **保存密码** (Save).
 Generating only fills the edit field; it takes effect when saved. Manual passwords
-accept 8–64 English letters, digits or printable symbols, without spaces, and are
-case-sensitive. Generated passwords use 12 random uppercase letters/digits,
+are exactly 8 English letters, digits or printable symbols, without spaces, and
+are case-sensitive. Existing longer passwords continue to work until explicitly
+changed. Generated passwords use 8 random uppercase letters/digits,
 avoiding 0, 1, I and O. Prefer generation over a common word or numeric PIN.
 
 Saving replaces the existing Keychain item and disconnects current controllers.

@@ -51,6 +51,15 @@ static partial class Program {
                 Assert(Find<TextBox>("Address").Text=="192.168.1.24" && Find<PasswordBox>("Secret").Password=="","Forget password cleared address or kept credential");
                 Find<PasswordBox>("Secret").Password="Fixture-LAN#42";
                 foreach(int width in new[]{820,1100,1440}) Snapshot("connect-"+lang+"-"+width,width);
+                Invoke("ManualClick",window,new RoutedEventArgs());
+                Assert(Visible("ManualDialog") && !Find<Grid>("HomeShell").IsEnabled,"Manual dialog did not isolate navigation");
+                Assert(Find<TextBlock>("ManualDeviceName").Text=="Fixture Mac" && Find<TextBlock>("ManualDeviceSystem").Text=="macOS","Known target metadata missing from manual dialog");
+                Snapshot("manual-known-"+lang,820);
+                Find<TextBox>("ManualAddress").Text="192.168.1.99";
+                Assert(Find<TextBlock>("ManualDeviceName").Visibility==Visibility.Collapsed && Find<PasswordBox>("ManualSecret").Password=="","Unknown IP fabricated metadata or retained another password");
+                Snapshot("manual-unknown-"+lang,820,144);
+                Invoke("ManualCancelClick",window,new RoutedEventArgs());
+                Assert(!Visible("ManualDialog") && Find<TextBox>("Address").Text=="192.168.1.24","Cancel changed the target");
                 Nav("NavSettings");
                 Assert(Visible("SettingsPage") && !Visible("ConnectPage"),"Settings did not replace connection page");
                 var tabs=Find<TabControl>("SettingsTabs");
@@ -98,7 +107,7 @@ static partial class Program {
                 var sharing=window.SharingController!;
                 ((TextBlock)sharing.FindName("SharingAddress")).Text="192.168.1.50";
                 Assert(!sharing.IsVisible && sharing.Content==null && Find<ContentControl>("SharingPage").Content!=null,"Sharing opened another window");
-                Assert(((TextBlock)sharing.FindName("CurrentPassword")).Text=="••••••••••••","Password revealed while navigating");
+                Assert(((TextBlock)sharing.FindName("CurrentPassword")).Text=="••••••••","Password revealed while navigating");
                 ((Button)sharing.FindName("ChangeSharingPassword")).RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
                 ((TextBox)sharing.FindName("Draft")).Text="Uncommitted#42";
                 ((Button)sharing.FindName("CancelSharingPassword")).RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
@@ -106,7 +115,7 @@ static partial class Program {
                 ((Button)sharing.FindName("ChangeDeviceName")).RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
                 ((TextBox)sharing.FindName("NameDraft")).Text="Office fixture";
                 ((Button)sharing.FindName("SaveDeviceName")).RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
-                Assert(nameStore.Current=="Office fixture" && Find<TextBlock>("LocalDeviceName").Text=="Office fixture","Saved name not adopted in sharing/sidebar");
+                Assert(nameStore.Current=="Office fixture" && Find<TextBlock>("LocalDeviceName").Text=="Office fixture",$"Saved name not adopted in sharing/sidebar; fixture name={nameStore.Current}; sidebar={Find<TextBlock>("LocalDeviceName").Text}; error={((TextBlock)sharing.FindName("NameError")).Text}");
                 ((Button)sharing.FindName("ChangeDeviceName")).RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
                 ((TextBox)sharing.FindName("NameDraft")).Text="Discarded name";
                 ((Button)sharing.FindName("CancelDeviceName")).RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
@@ -118,6 +127,8 @@ static partial class Program {
                 Assert(Find<ListBox>("DeviceList").Items.OfType<LanDevice>().Count(d=>d.Address=="192.168.1.70")==1,"Refresh lost an authenticated manual peer");
                 Find<TextBox>("Address").Text="192.168.1.99";
                 Assert(Find<TextBlock>("SelectedDeviceSystem").Text=="" && Find<TextBlock>("SelectedDeviceName").Text!= "Renamed fixture","New manual address inherited unrelated peer metadata");
+                Assert(Find<PasswordBox>("Secret").Password=="","New IP retained an unrelated password");
+                Find<PasswordBox>("Secret").Password="Fixture-LAN#42";
                 Snapshot("sharing-"+lang,1100);
                 Invoke("SetSessionLayout",true);
                 Assert(!Visible("HomeShell") && Visible("SessionPage"),"Session leaves credential navigation visible");
@@ -126,10 +137,28 @@ static partial class Program {
                 Assert(Visible("ConnectPage") && Find<PasswordBox>("Secret").Password=="Fixture-LAN#42","Session exit lost local pairing draft");
                 Find<PasswordBox>("Secret").Password="";
             }
+            await CheckPairingDialog();
             var page=window.SharingController!;
+            void ShareClick(string name)=>((Button)page.FindName(name)).RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+            var oldCredential=credential.Password;
+            ShareClick("ChangeSharingPassword");ShareClick("GenerateSharingPassword");
+            Assert(((TextBox)page.FindName("Draft")).Text.Length==8 && saved==0 && credential.Password==oldCredential,"Generate did not remain an eight-character draft");
+            ShareClick("CancelSharingPassword");
+            ShareClick("ChangeSharingPassword");((TextBox)page.FindName("Draft")).Text="short";ShareClick("SaveSharingPassword");
+            Assert(saved==0 && credential.Password==oldCredential && ((TextBlock)page.FindName("PasswordError")).Text.Length>0,"Invalid new password changed credential");
+            ((TextBox)page.FindName("Draft")).Text="Office#2";ShareClick("SaveSharingPassword");
+            await Until(()=>((FrameworkElement)page.FindName("Editor")).Visibility==Visibility.Collapsed,"Valid new password editor stayed open");
+            Assert(saved==1 && credential.Password=="Office#2" && ((TextBlock)page.FindName("CurrentPassword")).Text=="••••••••","Valid eight-character password was not adopted and hidden");
             ((Button)page.FindName("SharingStart")).RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
             await Until(()=>page.Sharing && ((Button)page.FindName("SharingStart")).IsEnabled,"Fixture sharing did not start");
             Assert(!Find<Button>("StartConnection").IsEnabled,"Active sharing permits control role");
+            Invoke("ManualClick",window,new RoutedEventArgs());
+            Assert(Find<CheckBox>("ManualStopSharing").Visibility==Visibility.Visible,"Sharing role transition was not disclosed");
+            Find<TextBox>("ManualAddress").Text="8.8.8.8";Find<PasswordBox>("ManualSecret").Password="Office#2";Find<CheckBox>("ManualStopSharing").IsChecked=true;
+            Invoke("ManualConnectClick",window,new RoutedEventArgs());
+            Assert(page.Sharing && Find<TextBlock>("ManualError").Text.Length>0,"Invalid target stopped sharing");
+            Invoke("ManualCancelClick",window,new RoutedEventArgs());
+            Assert(page.Sharing,"Cancel stopped sharing");
             window.Close(); await Until(()=>!page.Sharing && window.SharingController==null,"Owner shutdown left listener alive");
             Console.WriteLine("PASS unshown native WPF shell: English/Chinese, 820/1100/1440px layouts, device selection, single-window sharing, hidden password, edit cancellation, session navigation, exclusive role and listener cleanup");
         } finally { if(window.SharingController is {} sharing) await sharing.Shutdown(); window.Close(); Directory.Delete(nameRoot,true); }

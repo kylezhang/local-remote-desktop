@@ -108,14 +108,28 @@ static class Program {
         Console.WriteLine("PASS independent fragmented RMP1/RML1 controller → production host authentication, direction keys, 100KiB video, wrong proof/tamper/replay/64KiB input bound");
     }
     static void Credentials() {
+        Require(HostCredential.Generate().Length==8,"New generated credential must have eight characters");
+        _=HostCredential.CreateNew("Office#2");
+        bool rejected=false;try {_=HostCredential.CreateNew("Office-LAN#42");} catch(ArgumentException) {rejected=true;}
+        Require(rejected,"New long password accepted");
         var root=Path.Combine(Path.GetTempPath(),"localremote-host-store-"+Guid.NewGuid().ToString("N")); Directory.CreateDirectory(root);
         try {
             var path=Path.Combine(root,"sharing.dpapi"); var first=HostCredential.Load(path); var second=HostCredential.Load(path);
-            Require(first.Password.Length==12 && first.Password==second.Password && first.Salt.SequenceEqual(second.Salt),"Generated sharing credential not persisted");
+            Require(first.Password.Length==8 && first.Password==second.Password && first.Salt.SequenceEqual(second.Salt),"Generated sharing credential not persisted");
             Require(!Encoding.UTF8.GetString(File.ReadAllBytes(path)).Contains(first.Password),"Sharing password stored in plaintext");
             var changed=HostCredential.Create("Office-LAN#42"); changed.Save(path); var restored=HostCredential.Load(path);
             Require(restored.Password==changed.Password && restored.Salt.SequenceEqual(changed.Salt) && !restored.Salt.SequenceEqual(first.Salt),"Explicit password update/salt failed");
             Require(Directory.GetFiles(root).Length==1,"Atomic credential save left temporary files");
+            var targetRoot=Path.Combine(root,"target-passwords");Directory.CreateDirectory(targetRoot);
+            SecretStore.Save("fixture-target","Old#1234",targetRoot);
+            var targetFile=Directory.GetFiles(targetRoot).Single();bool writeFailed=false;
+            using(var locked=File.Open(targetFile,FileMode.Open,FileAccess.Read,FileShare.None)) {
+                try {SecretStore.Save("fixture-target","New#1234",targetRoot);}catch(IOException) {writeFailed=true;}catch(UnauthorizedAccessException) {writeFailed=true;}
+            }
+            Require(writeFailed && SecretStore.Load("fixture-target",targetRoot)=="Old#1234" && Directory.GetFiles(targetRoot).Length==1,"Failed atomic target save damaged previous DPAPI credential or left a temporary file");
+            SecretStore.Save("fixture-target","New#1234",targetRoot);
+            Require(SecretStore.Load("fixture-target",targetRoot)=="New#1234","Atomic target credential update failed");
+            Console.WriteLine("PASS isolated target DPAPI atomic replacement and locked-file failure preserves old password without temporary files");
             var quality=Path.Combine(root,"quality.dpapi");var reconnect=Path.Combine(root,"reconnect.dpapi");
             Require(SecretStore.LoadConnectionQuality(quality)==0 && SecretStore.LoadAutoReconnect(reconnect),"Missing defaults changed startup behavior");
             SecretStore.SaveConnectionQuality(2,quality);SecretStore.SaveAutoReconnect(false,reconnect);

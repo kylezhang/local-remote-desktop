@@ -265,5 +265,17 @@
   "连接本设备时，使用下方密码。": "Use the password below to connect to this device.",
   "连接设置": "Connection",
   "忘记密码": "Forget password",
-  "已忘记此设备的密码，目标地址保留。": "Password forgotten. The target address is retained."
+  "已忘记此设备的密码，目标地址保留。": "Password forgotten. The target address is retained.",
+  "8 位英文字母、数字或符号，不含空格。": "8 letters, numbers or symbols, without spaces.",
+  "新密码需为 8 位英文字母、数字或符号，不含空格。": "New passwords must contain 8 letters, numbers or symbols, without spaces.",
+  "↻ 自动生成": "↻ Generate",
+  "手动连接": "Manual connection",
+  "记住密码": "Remember password",
+  "认证成功后安全保存。": "Saved securely after successful authentication.",
+  "连接后获取设备信息。": "Device information is available after connection.",
+  "请填写局域网 IPv4 地址。": "Enter a local network IPv4 address.",
+  "无法连接：{0}": "Could not connect: {0}",
+  "已连接，但无法记住密码。": "Connected, but the password could not be saved.",
+  "停止共享并连接": "Stop sharing & connect",
+  "这将停止本机共享并断开当前控制者。": "This stops sharing this device and disconnects its current controller."
 }

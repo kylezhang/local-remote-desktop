@@ -13,6 +13,10 @@ public static class PairingPassword {
         if(value.Length<8 || value.Length>64 || value.Any(c=>c<=32 || c>=127))
             throw new ArgumentException("配对密码需为 8–64 位英文字母、数字或符号，不含空格；旧的 64 位密钥也可用。");
     }
+    public static void ValidateNew(string value) {
+        Validate(value);
+        if(value.Length!=8) throw new ArgumentException("新密码需为 8 位英文字母、数字或符号，不含空格。");
+    }
     public static byte[] Derive(string password,byte[] salt) {
         Validate(password); if(salt.Length!=16) throw new ArgumentException("Invalid pairing salt");
         return Rfc2898DeriveBytes.Pbkdf2(Encoding.UTF8.GetBytes(password),salt,Rounds,HashAlgorithmName.SHA256,32);

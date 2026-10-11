@@ -59,7 +59,7 @@ enum Pairing {
         // Missing items are created only after a deliberate sharing/retry click.
         // No silent rotation on denial, cancellation, corruption or startup.
         guard allowInteraction else { throw keychainError(errSecItemNotFound) }
-        let credential = try PairingCredential.password(PairingCredential.generated(using: randomBytes(12)), salt: randomBytes(16))
+        let credential = try PairingCredential.password(PairingCredential.generated(using: randomBytes(8)), salt: randomBytes(16))
         q = query; q[kSecValueData as String] = credential.encoded
         q[kSecAttrAccessible as String] = kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly
         counterLock.lock(); creates += 1; counterLock.unlock()
@@ -67,7 +67,7 @@ enum Pairing {
         guard added == errSecSuccess else { throw NSError(domain: NSOSStatusErrorDomain, code: Int(added)) }; return credential
     }
     static func savePassword(_ password: String) async throws -> PairingCredential {
-        try PairingCredential.validate(password)
+        try PairingCredential.validateNew(password)
         return try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<PairingCredential, Error>) in
             queue.async {
                 do {

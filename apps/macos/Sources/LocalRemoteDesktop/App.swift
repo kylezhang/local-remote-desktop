@@ -206,7 +206,7 @@ struct HostView: View {
     }
     private var passwordText: String {
         if model.secret.isEmpty { return "尚未读取" }
-        return model.revealSecret ? PairingEditor.displayed(model.secret) : "••••••••••••"
+        return model.revealSecret ? PairingEditor.displayed(model.secret) : "••••••••"
     }
     var body: some View {
         VStack(alignment: .leading, spacing: 18) {
@@ -313,9 +313,11 @@ struct PasswordEditorView: View {
                 HStack {
                     TextField(UiText.text("输入新密码"), text: $model.passwordEditor.draft)
                         .textFieldStyle(.roundedBorder).disabled(model.passwordEditor.saving)
-                    Button(UiText.text("自动生成")) { model.generatePassword() }.disabled(model.passwordEditor.saving)
+                    Button { model.generatePassword() } label: {
+                        Label(UiText.text("自动生成"), systemImage: "arrow.clockwise")
+                    }.buttonStyle(.bordered).disabled(model.passwordEditor.saving)
                 }
-                Text(UiText.text("8–64 位字母、数字或符号，不含空格；自动生成 12 位。"))
+                Text(UiText.text("8 位英文字母、数字或符号，不含空格。"))
                     .font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
                 if let message = model.passwordEditor.validation(current: model.secret) {
                     Text(UiText.text(message)).font(.caption).foregroundStyle(.red).fixedSize(horizontal: false, vertical: true)

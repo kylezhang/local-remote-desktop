@@ -13,9 +13,11 @@ TCP 47980, IPv4, one controller. Integers are big-endian. Legacy RML1 uses a 32-
 
 ### Password authentication (RMP1, development)
 
-Manual passwords are 8–64 printable ASCII characters excluding spaces (bytes
-33–126), case-sensitive. New credentials default to 12 uniformly random characters
-from `ABCDEFGHJKLMNPQRSTUVWXYZ23456789` (60 bits). Existing raw 32-byte credentials
+Newly created or explicitly changed passwords are exactly 8 printable ASCII
+characters excluding spaces (bytes 33–126), case-sensitive. Generated credentials
+use `ABCDEFGHJKLMNPQRSTUVWXYZ23456789` (40 random bits). Existing 8–64-character
+password records remain readable and authenticate unchanged; the wire protocol
+still accepts that range. Updates never truncate or rotate old credentials. Existing raw 32-byte credentials
 stay RML1 until explicitly replaced. A 64-character hex password can be used in
 RMP1; the Host's magic selects the mode, not the password's appearance.
 
