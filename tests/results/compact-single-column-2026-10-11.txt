@@ -1,0 +1,22 @@
+Compact desktop entry refinement — 2026-10-11
+
+PASS Windows .NET 8 Release build; zero warnings/errors.
+PASS unshown production WPF shell in English/Chinese at 584/624/820/1100/1440 logical content widths.
+Default outer window: 640 x 620; minimum width: 600; rail: 144.
+Actual device-row button opens the sole pairing form; no permanent editable right pane.
+Refreshing discovery does not open pairing. Unknown IP has no invented name/system.
+Connection dialog retains address/password on authentication failure; cancel preserves prior target.
+Forgetting a manually edited target's password does not erase another target's draft.
+Sharing password is measured below start/stop within one vertical surface.
+Settings remain content-sized; navigation preserves user resize.
+Software encoding is off by default; selected value reaches host creation and is disabled while sharing.
+PASS encrypted Windows clipboard/files and reconnect fixtures with recording input/clipboard.
+PASS real wrong/successful pairing, opt-out, save failure and authenticated metadata fixtures.
+PASS shared Foundation localization (318 strings), portable Swift controller/model tests and syntax parsing.
+Mac model tests include exact manually edited target forget without changing another draft.
+
+Tests never Show/Activate an application window, touch real OS input/clipboard,
+or capture the user's desktop. These are layout measurements and service fixtures,
+not visual screenshot acceptance or actual two-device acceptance.
+Updated Apple SDK/native Mac UI/TCC/Keychain acceptance remains pending.
+No Mac SSH attempted. No new tag or release; native release gates remain in force.

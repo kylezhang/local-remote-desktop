@@ -124,3 +124,10 @@ an active session for deployment.
 Native builds and actual two-device pairing/input/clipboard/files/reconnect checks
 remain release gates. Browser visual review cannot replace those checks. No new
 tag or release is implied by this revision.
+
+## Owner refinement — 2026-10-11
+
+The newer [interface conventions](interface.md) supersede the earlier desktop proportions:
+640 × 620 startup window, a roughly 144-unit rail, one device list/Add device entry,
+on-demand pairing dialog and vertically stacked sharing information/password.
+The approved palette, task ownership and native interactions remain.

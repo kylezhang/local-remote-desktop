@@ -18,7 +18,7 @@ static partial class Program {
         Assert(((Border)emptyWindow.FindName("DeviceEmptyState")).Visibility==Visibility.Visible,"Empty devices have no transition state");
         Assert(((TextBlock)emptyWindow.FindName("DeviceEmptyTitle")).Text.Length>0,"Empty device state has no title");
         emptyWindow.Close();
-        int loads=0, saved=0;var advertisement=new ShellAdvertisement();
+        int loads=0, saved=0; var encoderChoices=new List<bool>();var advertisement=new ShellAdvertisement();
         var nameRoot=Path.Combine(Path.GetTempPath(),"lrd-shell-name-"+Guid.NewGuid().ToString("N")); Directory.CreateDirectory(nameRoot);
         var nameStore=new DeviceName(Path.Combine(nameRoot,"name.txt"),"Fixture PC");
         var credential=HostCredential.Create("Fixture-LAN#42");
@@ -26,13 +26,20 @@ static partial class Program {
         var window=new MainWindow(false,null,discovery:_=>Task.FromResult<IReadOnlyList<LanDevice>>(
             [new("Fixture Mac","192.168.1.24","macos",47980)]),sharingFactory:changed=>new SharingWindow(changed,
                 ()=> { loads++; return credential; },c=> { saved++; credential=c; },
-                (c,key,software,report)=>new WindowsHost(key,c.Salt,area,()=>new SharingCapture(),
-                    ()=>new WindowsInput(area,area,new SharingInput()),report,IPAddress.Loopback,0,deviceName:()=>nameStore.Current),deviceName:nameStore,advertisement:advertisement));
+                (c,key,software,report)=> {encoderChoices.Add(software);return new WindowsHost(key,c.Salt,area,()=>new SharingCapture(),
+                    ()=>new WindowsInput(area,area,new SharingInput()),report,IPAddress.Loopback,0,deviceName:()=>nameStore.Current);},deviceName:nameStore,advertisement:advertisement));
         ((TextBlock)window.FindName("LocalDeviceName")).Text="Fixture PC";
         T Find<T>(string name)=>(T)window.FindName(name);
         void Nav(string name)=>Find<RadioButton>(name).IsChecked=true;
         void Invoke(string name,params object[] args)=>typeof(MainWindow).GetMethod(name,BindingFlags.Instance|BindingFlags.NonPublic)!.Invoke(window,args);
         bool Visible(string name)=>Find<FrameworkElement>(name).Visibility==Visibility.Visible;
+        IEnumerable<T> Descendants<T>(DependencyObject root) where T:DependencyObject {
+            for(int i=0;i<VisualTreeHelper.GetChildrenCount(root);i++) {
+                var child=VisualTreeHelper.GetChild(root,i);
+                if(child is T match) yield return match;
+                foreach(var nested in Descendants<T>(child)) yield return nested;
+            }
+        }
         bool warnedUnavailableRender=false;
         void Snapshot(string name,int width,int dpi=96,int height=640) {
             var content=(FrameworkElement)window.Content;
@@ -65,17 +72,25 @@ static partial class Program {
                 Find<PasswordBox>("Secret").Password="Fixture-LAN#42";
                 Invoke("RefreshDevicesClick",window,new RoutedEventArgs());
                 Assert(Find<PasswordBox>("Secret").Password=="Fixture-LAN#42","Refresh overwrote an unsaved password draft");
-                foreach(int width in new[]{820,920,1100,1440}) Snapshot("connect-"+lang+"-"+width,width);
-                Snapshot("connect-default-"+lang,904,96,620);
-                var selected=Find<TextBlock>("SelectedDeviceName");
-                Assert(selected.ActualWidth>=250 && Find<ListBox>("DeviceList").ActualWidth>=310,"Default window squeezed either connection column");
-                Invoke("ManualClick",window,new RoutedEventArgs());
+                foreach(int width in new[]{584,624,820,1100,1440}) Snapshot("connect-"+lang+"-"+width,width);
+                Snapshot("connect-default-"+lang,624,96,580);
+                Assert(window.Width==640 && window.MinWidth==600,"Compact startup width changed");
+                Assert(Find<ListBox>("DeviceList").ActualWidth>=400,"Device list does not use the single-column page width");
+                Assert(!Visible("ManualDialog") && Find<TextBox>("Address").ActualWidth==0,"Permanent connection form remains visible");
+                var targetButton=Descendants<Button>(Find<ListBox>("DeviceList")).First(button=>button.DataContext is LanDevice);
+                targetButton.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
                 Assert(Visible("ManualDialog") && !Find<Grid>("HomeShell").IsEnabled,"Manual dialog did not isolate navigation");
                 Assert(Find<TextBlock>("ManualDeviceName").Text=="Fixture Mac" && Find<TextBlock>("ManualDeviceSystem").Text=="macOS","Known target metadata missing from manual dialog");
-                Snapshot("manual-known-"+lang,820);
+                Snapshot("manual-known-"+lang,584,96,450);
+                Assert(Find<TextBox>("ManualAddress").ActualWidth>=300 && Find<ComboBox>("HomeQuality").ActualWidth>=300,"Compact connection dialog clipped its fields");
+                Assert(Find<Button>("ManualConnect").TranslatePoint(new Point(0,0),Find<Grid>("ManualDialog")).X>=0,"Modal actions extend outside the compact window");
+                Find<PasswordBox>("Secret").Password="Fixture-LAN#42";
                 Find<TextBox>("ManualAddress").Text="192.168.1.99";
                 Assert(Find<TextBlock>("ManualDeviceName").Visibility==Visibility.Collapsed && Find<PasswordBox>("ManualSecret").Password=="","Unknown IP fabricated metadata or retained another password");
-                Snapshot("manual-unknown-"+lang,820,144);
+                Find<PasswordBox>("ManualSecret").Password="Different#42";
+                Find<Button>("ForgetButton").RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                Assert(Find<PasswordBox>("ManualSecret").Password=="" && Find<PasswordBox>("Secret").Password=="Fixture-LAN#42","Dialog forget modified another target's draft");
+                Snapshot("manual-unknown-"+lang,624,144);
                 Invoke("ManualCancelClick",window,new RoutedEventArgs());
                 Assert(!Visible("ManualDialog") && Find<TextBox>("Address").Text=="192.168.1.24","Cancel changed the target");
                 Nav("NavSettings");
@@ -84,9 +99,9 @@ static partial class Program {
                 Assert(tabs.Items.Count==4,"Settings category count incorrect");
                 for(int tab=0;tab<4;tab++) {
                     tabs.SelectedIndex=tab; Snapshot("settings-"+lang+"-"+tab,1100);
-                    Snapshot("settings-"+lang+"-"+tab+"-820",820);
+                    Snapshot("settings-"+lang+"-"+tab+"-584",584);
                     foreach(int dpi in new[]{120,144}) Snapshot("settings-"+lang+"-"+tab+"-dpi"+dpi,820,dpi);
-                    Snapshot("settings-default-"+lang+"-"+tab,904,96,620);
+                    Snapshot("settings-default-"+lang+"-"+tab,624,96,580);
                     var surface=(Border)tabs.Template.FindName("SettingsSurface",tabs);
                     Assert(surface.ActualHeight<420,"Settings surface stretches into an empty panel");
                     if(tab==0) Assert(surface.ActualHeight<180,"Single language setting occupies a full-height panel");
@@ -152,10 +167,14 @@ static partial class Program {
                 Assert(Find<PasswordBox>("Secret").Password=="","New IP retained an unrelated password");
                 Find<PasswordBox>("Secret").Password="Fixture-LAN#42";
                 Snapshot("sharing-"+lang,1100);
-                Snapshot("sharing-default-"+lang,904,96,620);
+                Snapshot("sharing-default-"+lang,624,96,580);
                 var deviceSurface=(Border)sharing.FindName("SharingDeviceSurface");
                 var passwordSurface=(Border)sharing.FindName("SharingPasswordSurface");
-                Assert(deviceSurface.ActualWidth>=270 && passwordSurface.ActualWidth>=270,"Sharing retains a narrow left-only form");
+                Assert(deviceSurface.ActualWidth>=390 && passwordSurface.ActualWidth>=340,"Sharing does not fit the compact content width");
+                var start=(Button)sharing.FindName("SharingStart");
+                var startPosition=start.TranslatePoint(new Point(0,start.ActualHeight),deviceSurface);
+                var passwordPosition=passwordSurface.TranslatePoint(new Point(0,0),deviceSurface);
+                Assert(passwordPosition.Y>startPosition.Y && Math.Abs(passwordPosition.X-20)<1,"Password is not stacked below sharing controls");
                 Invoke("SetSessionLayout",true);
                 Assert(!Visible("HomeShell") && Visible("SessionPage"),"Session leaves credential navigation visible");
                 Snapshot("session-"+lang,1100);
@@ -176,10 +195,14 @@ static partial class Program {
             ((TextBox)page.FindName("Draft")).Text="Office#2";ShareClick("SaveSharingPassword");
             await Until(()=>((FrameworkElement)page.FindName("Editor")).Visibility==Visibility.Collapsed,"Valid new password editor stayed open");
             Assert(saved==1 && credential.Password=="Office#2" && ((TextBlock)page.FindName("CurrentPassword")).Text=="••••••••","Valid eight-character password was not adopted and hidden");
+            var software=(CheckBox)page.FindName("Software");
+            Assert(!((Expander)page.FindName("SharingTroubleshooting")).IsExpanded && software.IsChecked!=true,"Software fallback became the default sharing path");
+            software.IsChecked=true;
             ((Button)page.FindName("SharingStart")).RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
             await Until(()=>page.Sharing && ((Button)page.FindName("SharingStart")).IsEnabled,"Fixture sharing did not start");
             Assert(!Find<Button>("StartConnection").IsEnabled,"Active sharing permits control role");
             Assert(advertisement.Names.Count==1,"Started sharing not advertised exactly once");
+            Assert(encoderChoices.SequenceEqual(new[]{true}) && !software.IsEnabled,"Software fallback was not wired or can change mid-session");
             ShareClick("ChangeDeviceName");((TextBox)page.FindName("NameDraft")).Text="Renamed active PC";ShareClick("SaveDeviceName");
             Assert(advertisement.Names.Last()=="Renamed active PC" && page.Sharing && credential.Password=="Office#2","Active rename changed listener or password");
             Invoke("ManualClick",window,new RoutedEventArgs());
@@ -191,7 +214,7 @@ static partial class Program {
             Assert(page.Sharing,"Cancel stopped sharing");
             window.Close(); await Until(()=>!page.Sharing && window.SharingController==null,"Owner shutdown left listener alive");
             Assert(advertisement.Stops>0,"Owner shutdown did not withdraw discovery");
-            Console.WriteLine("PASS unshown native WPF shell: English/Chinese, 820/920/1100/1440px layouts and compact default viewport, device selection, single-window sharing, hidden password, edit cancellation, session navigation, exclusive role and listener cleanup");
+            Console.WriteLine("PASS unshown native WPF shell: English/Chinese, 584/624/820/1100/1440px layouts, 640px startup, single-column device action/dialog and vertically stacked sharing, device selection, single-window sharing, hidden password, edit cancellation, session navigation, exclusive role and listener cleanup");
         } finally { if(window.SharingController is {} sharing) await sharing.Shutdown(); window.Close(); Directory.Delete(nameRoot,true); }
     }
 }

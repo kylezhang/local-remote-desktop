@@ -1,5 +1,12 @@
 # Validation
 
+## Compact desktop entry — 2026-10-11
+
+Windows Release build and unshown WPF measured-layout/connection regressions passed;
+portable Swift model, localization and syntax checks passed. See the
+[coverage record](../tests/results/compact-single-column-2026-10-11.txt).
+Updated native Mac UI and real two-device acceptance remain pending.
+
 ## Reverse files — 2026-10-11
 
 Both desktop roles now implement paired regular-file sharing. Production Windows

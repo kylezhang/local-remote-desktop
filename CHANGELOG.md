@@ -4,8 +4,10 @@
 
 ## Unreleased
 
-- Desktop entry pages now have actionable empty device states, balanced sharing
-  sections and content-sized settings surfaces. Keep the 920 × 660 startup size.
+- Desktop entry windows now start at 640 × 620. Connect has one device list and
+  Add device entry, with credentials/quality shown on demand. Sharing information
+  and password are stacked vertically; settings surfaces fit their content.
+  Windows software encoding remains an optional troubleshooting fallback.
 - Windows reconnect stops on rejected authentication or incompatible targets;
   transient network loss still retries and Disconnect cancels a pending retry.
 - Normal Mac installation preserves permissions after signature checks; reset is

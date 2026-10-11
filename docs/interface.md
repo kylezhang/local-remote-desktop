@@ -31,7 +31,7 @@ is inline; system permission prompts retain their native presentation.
 
 ## Appearance and interaction
 
-Desktop entry windows start at approximately 920 × 660 logical units including
+Desktop entry windows start at approximately 640 × 620 logical units including
 native chrome, centered inside the available screen with a margin. Fit smaller
 work areas; keep settings/forms sized to their content rather than increasing
 empty space. Navigation does not reset a user’s resized window. Long content
@@ -90,4 +90,15 @@ the next interface iteration. The desktop proposal was reviewed on 2026-10-10. N
 are being applied incrementally; see [native UI progress](native-ui.md) for
 verified coverage and remaining work. Future platform views remain references.
 
-Empty device lists expose a manual action without invented history or metadata. Sharing uses two balanced content-sized sections; settings surfaces fit their actual content instead of stretching into empty panels. Preserve window size across navigation.
+The Connect page is one device list with a single **Add device** entry. Selecting
+or refreshing a list must never authenticate automatically. Explicitly activating
+a device opens the connection dialog, prefilled with its real address and metadata;
+Add device opens the same form for manual IP entry. Keep password, remember,
+forget and picture quality in that dialog, with errors retaining the draft.
+An empty list explains how to discover or add a target without duplicating actions.
+
+Share places device information, start/stop and pairing password vertically in
+one content-sized surface. Settings fit the available width and their actual
+content height. Preserve window size across navigation. Windows software encoding
+is an optional troubleshooting fallback, disabled during sharing; system limitations
+belong in documentation, not a permanent compatibility panel.

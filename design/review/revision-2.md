@@ -153,3 +153,10 @@ reduced motion and use native dark colors rather than simply inverting images.
 
 Browser checks confirm the proposal's simulated interactions, not remote desktop
 performance, native accessibility, credential security or platform capability.
+
+## Owner refinement — 2026-10-11
+
+The newer [interface conventions](../../docs/interface.md) supersede the earlier desktop proportions:
+640 × 620 startup window, a roughly 144-unit rail, one device list/Add device entry,
+on-demand pairing dialog and vertically stacked sharing information/password.
+The approved palette, task ownership and native interactions remain.

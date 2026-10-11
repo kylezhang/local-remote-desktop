@@ -177,16 +177,20 @@ final class ControllerModel: ObservableObject {
             } catch { self.pairingNotice = "已连接，但无法记住密码。" }
         }
     }
-    func forgetPassword() {
+    func forgetPassword() { forgetPassword(address: address) }
+    func forgetManualPassword() { forgetPassword(address: manualAddress) }
+    private func forgetPassword(address target: String) {
         guard !busy, !credentialBusy else { return }
-        let target = address; credentialBusy = true
+        credentialBusy = true
         credentialTask = Task { @MainActor [weak self] in
             guard let self else { return }; defer { self.credentialBusy = false }
             do {
                 try await self.credentials.forget(address: target)
                 self.cachedPasswords.removeValue(forKey: target); self.savedPasswords.removeValue(forKey: target)
                 if var record = self.known[target] { record.remembered = false; self.known[target] = record }
-                self.password = ""; self.persistPeers(); self.pairingNotice = "已忘记此设备的密码，目标地址保留。"
+                if self.address == target { self.password = "" }
+                if self.manualAddress == target { self.manualPassword = "" }
+                self.persistPeers(); self.pairingNotice = "已忘记此设备的密码，目标地址保留。"
             } catch { self.pairingNotice = "无法忘记密码，请重试。" }
         }
     }
@@ -363,7 +367,7 @@ struct ControllerView: View {
             }
             Text(UiText.text(host.active || host.starting ? "请先停止这台 Mac 的共享，再连接其他设备。" : model.status))
                 .font(.caption).frame(maxWidth: .infinity, alignment: .leading).padding(8)
-        }.frame(minWidth: 720, minHeight: 440)
+        }.frame(minWidth: 600, minHeight: 440)
         .onChange(of: model.quality) { _ in model.restart() }
         .onChange(of: model.shortcuts) { _ in model.release() }
     }

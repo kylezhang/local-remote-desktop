@@ -310,5 +310,11 @@
   "无法打开接收目录，请稍后重试。": "Could not open received files. Try again later.",
   "目标设备身份验证未完成，请检查配对密码后重新连接。": "Target authentication did not complete. Check the pairing password and reconnect.",
   "暂无设备记录": "No devices yet",
-  "开启目标设备的共享后刷新，也可以输入目标IP连接。": "Start sharing on the target and refresh, or enter its Target IP."
+  "开启目标设备的共享后刷新，也可以输入目标IP连接。": "Start sharing on the target and refresh, or enter its Target IP.",
+  "添加目标": "Add device",
+  "连接设备": "Connect to device",
+  "开启目标设备的共享后刷新，或点击“添加目标”输入目标IP。": "Enable sharing on the other device and refresh, or choose Add device to enter its IP.",
+  "使用软件编码": "Use software encoding",
+  "硬件编码不可用时再开启；需停止共享后切换，CPU 占用较高。": "Use only if hardware encoding is unavailable. Stop sharing before changing this option; CPU usage is higher.",
+  "画面采集失败，请检查 FFmpeg，或停止共享后在故障排查中启用软件编码。": "Screen capture failed. Check FFmpeg, or stop sharing and enable software encoding under Troubleshooting."
 }

@@ -130,6 +130,11 @@ import Foundation
         precondition(store.saves.count == 1)
         fresh.disconnect(); fresh.forgetPassword(); await until { !fresh.credentialBusy }
         precondition(store.forgotten == [peer.address] && fresh.address == peer.address && !fresh.hasRememberedPassword && fresh.password.isEmpty)
+        fresh.openManual(); fresh.manualAddress = "192.168.1.99"; fresh.manualPassword = "OtherPW1"
+        fresh.password = "KeepMain1"; store.values[fresh.manualAddress] = "OtherPW1"
+        fresh.forgetManualPassword(); await until { !fresh.credentialBusy }
+        precondition(store.forgotten.last == "192.168.1.99" && fresh.manualPassword.isEmpty && fresh.password == "KeepMain1" && fresh.address == peer.address)
+        fresh.cancelManual(); fresh.password = ""
         fresh.openManual(); fresh.manualPassword = "Fixture2"; fresh.manualRemember = false; fresh.connectManual()
         ControllerSession.instances.last!.status(["op":"connected"]); await until { fresh.connected && !fresh.credentialBusy }
         precondition(store.saves.count == 1 && !fresh.hasRememberedPassword)

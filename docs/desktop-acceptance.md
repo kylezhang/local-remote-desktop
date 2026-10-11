@@ -25,7 +25,7 @@ clipboard contents or captured work in results.
 | Check | Required outcome |
 |---|---|
 | First and returning connection | Correct target name/system come from its app; wrong password stays editable; remember is opt-in and returning connection needs no repeated entry. |
-| Entry UI | Compact default window; empty devices have a useful manual action; discovered/remembered rows remove the empty placeholder. Share uses available width and settings content does not become a full-height empty panel. Test English/Chinese and minimum width. |
+| Entry UI | 640 × 620 default window; one Add device entry; activating a device opens its connection dialog and refresh never opens one. Empty/discovered/recent states are distinct. Share information/password are stacked vertically; settings fit content. Test English/Chinese and minimum width. |
 | Current session | Real target screen updates; pointer alignment/click/drag/scroll, letters, digits and numeric keypad reach the intended app. Disconnect preserves the target's work. |
 | Shortcuts and escape | Copy/paste matches the target OS; leaving focus or disconnect releases held keys/buttons. Local escape/full screen do not trap input. Submitted-event counters alone are insufficient. |
 | Text clipboard | After enabling, copy fresh Unicode text both ways and paste; received content does not echo or replace a newer local copy. |

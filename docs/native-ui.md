@@ -20,7 +20,10 @@ hidden; quality, full screen, options and disconnect stay on the session bar.
 Sharing retains explicit start/stop, masked passwords and edit/cancel behavior.
 Existing transport, credential identities and installation permissions are retained.
 
-Windows shows discovered devices beside the connection form. Its current secure
+The 2026-10-11 refinement replaces the permanent connection form with one device
+list and one Add device entry. Explicitly activating a device opens its pairing
+dialog; refreshing does not. Default desktop windows are 640 × 620, with sharing
+information and password stacked in one surface. Its current secure
 address/password memory and paired clipboard/file workflow remain in place.
 The sharing view reuses the existing lifecycle controller without displaying a
 second window. Settings uses General, Connection, Clipboard and About. The rail

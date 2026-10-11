@@ -35,7 +35,7 @@ public partial class SharingWindow:Window {
             if(!ReferenceEquals(host,owner) || shutting) return;
             if(value=="Files unavailable") {FileReport("文件通道不可用，请检查 47981 端口；桌面共享可继续",false);return;}
             if(value is "Available" or "Off") {files=null;SharingTransfer.Visibility=Visibility.Collapsed;}
-            status=value switch {"Available"=>owner.LastError.StartsWith("capture_")?"画面采集失败，请检查 FFmpeg 或选择兼容编码后重试。":"等待连接 · TCP 47980","In use"=>"正在共享当前桌面 · 可控制","Session ended"=>"连接已结束","Off"=>"已停止",_=>"共享状态异常，请停止后重试。"}; Translate();
+            status=value switch {"Available"=>owner.LastError.StartsWith("capture_")?"画面采集失败，请检查 FFmpeg，或停止共享后在故障排查中启用软件编码。":"等待连接 · TCP 47980","In use"=>"正在共享当前桌面 · 可控制","Session ended"=>"连接已结束","Off"=>"已停止",_=>"共享状态异常，请停止后重试。"}; Translate();
         });
     }
     void FileReport(string text,bool busy) { Dispatcher.BeginInvoke(()=> {if(shutting || host==null)return;SharingTransfer.Visibility=text.StartsWith("文件同步：")?Visibility.Collapsed:Visibility.Visible;SharingFileStatus.Text=UiText.Text(text);CancelSharingFiles.Visibility=busy?Visibility.Visible:Visibility.Collapsed;DismissSharingFiles.IsEnabled=!busy;}); }

@@ -23,7 +23,7 @@ public partial class MainWindow : Window
     int width,height; long frames,bytes; double encodeMs;
     readonly Stopwatch stats=Stopwatch.StartNew(), mouseClock=Stopwatch.StartNew();
     bool full, connected;
-    string rawStatus="输入目标IP和配对密码，连接后点击画面开始操作。", statusSuffix="";
+    string rawStatus="", statusSuffix="";
     string rawClipboardStatus="文本同步：等待连接", rawFileStatus="文件同步：等待连接";
     volatile bool inputAllowed = true;
     volatile bool hostReportsInput;
@@ -209,6 +209,13 @@ public partial class MainWindow : Window
         StartConnection.IsEnabled=device.Online && sharingWindow?.Sharing!=true;
         SelectedDeviceName.Text=device.Name; SelectedDeviceSystem.Text=device.SystemLabel;
         SetStatus(Secret.Password.Length>0?$"已选择 {device.Name}，可直接连接。":$"已选择 {device.Name}，填写配对密码后连接。");
+    }
+    void DeviceConnectClick(object sender,RoutedEventArgs e) {
+        if(session!=null || sender is not FrameworkElement {DataContext:LanDevice device}) return;
+        DeviceList.SelectedItem=device;
+        Address.Text=device.Address;
+        ManualClick(sender,e);
+        ManualSecret.Focus();
     }
     void SetSessionLayout(bool active) {
         HomeShell.Visibility=active?Visibility.Collapsed:Visibility.Visible;
@@ -408,7 +415,7 @@ public partial class MainWindow : Window
         if(sharingWindow?.Sharing==true && ManualStopSharing.IsChecked!=true) {
             ManualError.Text=UiText.Text("这将停止本机共享并断开当前控制者。"); return;
         }
-        manualConnecting=true; ManualAddress.IsEnabled=ManualSecret.IsEnabled=ManualRemember.IsEnabled=ManualConnect.IsEnabled=ManualStopSharing.IsEnabled=false;
+        manualConnecting=true; HomeQuality.IsEnabled=ForgetButton.IsEnabled=false; ManualAddress.IsEnabled=ManualSecret.IsEnabled=ManualRemember.IsEnabled=ManualConnect.IsEnabled=ManualStopSharing.IsEnabled=false;
         try {
             if(sharingWindow?.Sharing==true) await sharingWindow.Stop();
             if(manualCancelled || windowClosing) return;
@@ -416,7 +423,7 @@ public partial class MainWindow : Window
             await StartConnectionAsync();
         } catch(Exception error) {ManualError.Text=UiText.Text($"无法连接：{error.Message}");}
         finally {
-            manualConnecting=false; ManualAddress.IsEnabled=ManualSecret.IsEnabled=ManualRemember.IsEnabled=ManualConnect.IsEnabled=ManualStopSharing.IsEnabled=true;
+            manualConnecting=false; HomeQuality.IsEnabled=ForgetButton.IsEnabled=true; ManualAddress.IsEnabled=ManualSecret.IsEnabled=ManualRemember.IsEnabled=ManualConnect.IsEnabled=ManualStopSharing.IsEnabled=true;
             if(manualCancelled) SetManualVisible(false);
         }
     }
@@ -552,6 +559,15 @@ public partial class MainWindow : Window
     void DiagnosticsClick(object sender,RoutedEventArgs e) {
         Clipboard.SetText($"Local Remote Desktop input diagnostics\nConnected: {connected}\nKeyboardFocus: {Surface.IsKeyboardFocusWithin}\nWindowsShortcuts: {WindowsShortcuts.IsChecked==true}\nTargetPlatform: {targetPlatform}\nInputAllowed: {inputAllowed}\nHostReportsInput: {hostReportsInput}\nQueued: {Interlocked.Read(ref inputsQueued)}\nSent: {Interlocked.Read(ref inputsSent)}\nHostReceived: {Interlocked.Read(ref hostReceived)}\nHostPosted: {Interlocked.Read(ref hostPosted)}\nHostBlocked: {Interlocked.Read(ref hostBlocked)}\nHostRejected: {Interlocked.Read(ref hostRejected)}\nHostError: {hostInputError}\nPosted means submitted to native OS input, not confirmed application acceptance.");
         SetStatus("诊断已复制（不包含密钥、IP 或输入内容）");
+    }
+    void ManualForgetClick(object sender,RoutedEventArgs e) {
+        try {
+            var ip=ManualAddress.Text.Trim();
+            if(rememberConnection) SecretStore.Forget(ip);
+            ManualSecret.Password="";
+            if(Address.Text.Trim()==ip) Secret.Password="";
+            ManualError.Text=UiText.Text("已忘记此设备的密码，目标地址保留。");
+        } catch(Exception ex) {ManualError.Text=UiText.Text($"清除失败：{ex.Message}");}
     }
     void ForgetClick(object sender,RoutedEventArgs e) {
         try { if(rememberConnection) SecretStore.Forget(Address.Text.Trim()); Secret.Password=""; SetStatus("已忘记此设备的密码，目标地址保留。"); }
