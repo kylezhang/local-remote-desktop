@@ -28,16 +28,21 @@ static partial class Program {
         void Nav(string name)=>Find<RadioButton>(name).IsChecked=true;
         void Invoke(string name,params object[] args)=>typeof(MainWindow).GetMethod(name,BindingFlags.Instance|BindingFlags.NonPublic)!.Invoke(window,args);
         bool Visible(string name)=>Find<FrameworkElement>(name).Visibility==Visibility.Visible;
-        void Snapshot(string name,int width,int dpi=96) {
+        bool warnedUnavailableRender=false;
+        void Snapshot(string name,int width,int dpi=96,int height=640) {
             var content=(FrameworkElement)window.Content;
-            content.Measure(new Size(width,640)); content.Arrange(new Rect(0,0,width,640)); content.UpdateLayout();
+            content.Measure(new Size(width,height)); content.Arrange(new Rect(0,0,width,height)); content.UpdateLayout();
             Assert(!window.IsVisible && !window.IsActive,"Background check opened/activated a window");
-            var image=new RenderTargetBitmap((int)Math.Ceiling(width*dpi/96d),(int)Math.Ceiling(640*dpi/96d),dpi,dpi,PixelFormats.Pbgra32); image.Render(content);
             var root=Environment.GetEnvironmentVariable("LOCALREMOTE_UI_SNAPSHOTS");
-            if(root!=null) {
-                Directory.CreateDirectory(root); var png=new PngBitmapEncoder(); png.Frames.Add(BitmapFrame.Create(image));
-                using var file=File.Create(Path.Combine(root,name+".png")); png.Save(file);
+            if(root==null)return;
+            var image=new RenderTargetBitmap((int)Math.Ceiling(width*dpi/96d),(int)Math.Ceiling(height*dpi/96d),dpi,dpi,PixelFormats.Pbgra32);image.Render(content);
+            var pixels=new byte[image.PixelWidth*image.PixelHeight*4];image.CopyPixels(pixels,image.PixelWidth*4,0);
+            if(!pixels.Any(value=>value!=0)) {
+                if(!warnedUnavailableRender) {Console.WriteLine("SKIP visual screenshot acceptance: hidden WPF rendering returned an empty bitmap; layout measurements still checked, no window will be shown.");warnedUnavailableRender=true;}
+                return;
             }
+            Directory.CreateDirectory(root);var png=new PngBitmapEncoder();png.Frames.Add(BitmapFrame.Create(image));
+            using var file=File.Create(Path.Combine(root,name+".png"));png.Save(file);
         }
         try {
             foreach(var lang in new[]{"en","zh-Hans"}) {
@@ -54,7 +59,10 @@ static partial class Program {
                 Find<PasswordBox>("Secret").Password="Fixture-LAN#42";
                 Invoke("RefreshDevicesClick",window,new RoutedEventArgs());
                 Assert(Find<PasswordBox>("Secret").Password=="Fixture-LAN#42","Refresh overwrote an unsaved password draft");
-                foreach(int width in new[]{820,1100,1440}) Snapshot("connect-"+lang+"-"+width,width);
+                foreach(int width in new[]{820,920,1100,1440}) Snapshot("connect-"+lang+"-"+width,width);
+                Snapshot("connect-default-"+lang,904,96,620);
+                var selected=Find<TextBlock>("SelectedDeviceName");
+                Assert(selected.ActualWidth>=250 && Find<ListBox>("DeviceList").ActualWidth>=310,"Default window squeezed either connection column");
                 Invoke("ManualClick",window,new RoutedEventArgs());
                 Assert(Visible("ManualDialog") && !Find<Grid>("HomeShell").IsEnabled,"Manual dialog did not isolate navigation");
                 Assert(Find<TextBlock>("ManualDeviceName").Text=="Fixture Mac" && Find<TextBlock>("ManualDeviceSystem").Text=="macOS","Known target metadata missing from manual dialog");
@@ -72,6 +80,7 @@ static partial class Program {
                     tabs.SelectedIndex=tab; Snapshot("settings-"+lang+"-"+tab,1100);
                     Snapshot("settings-"+lang+"-"+tab+"-820",820);
                     foreach(int dpi in new[]{120,144}) Snapshot("settings-"+lang+"-"+tab+"-dpi"+dpi,820,dpi);
+                    Snapshot("settings-default-"+lang+"-"+tab,904,96,620);
                 }
                 Find<ComboBox>("DefaultQuality").SelectedIndex=0;
                 Find<CheckBox>("DefaultShortcuts").IsChecked=true; Find<CheckBox>("DefaultReconnect").IsChecked=true;
@@ -169,7 +178,7 @@ static partial class Program {
             Assert(page.Sharing,"Cancel stopped sharing");
             window.Close(); await Until(()=>!page.Sharing && window.SharingController==null,"Owner shutdown left listener alive");
             Assert(advertisement.Stops>0,"Owner shutdown did not withdraw discovery");
-            Console.WriteLine("PASS unshown native WPF shell: English/Chinese, 820/1100/1440px layouts, device selection, single-window sharing, hidden password, edit cancellation, session navigation, exclusive role and listener cleanup");
+            Console.WriteLine("PASS unshown native WPF shell: English/Chinese, 820/920/1100/1440px layouts and compact default viewport, device selection, single-window sharing, hidden password, edit cancellation, session navigation, exclusive role and listener cleanup");
         } finally { if(window.SharingController is {} sharing) await sharing.Shutdown(); window.Close(); Directory.Delete(nameRoot,true); }
     }
 }

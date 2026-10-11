@@ -1,0 +1,9 @@
+Desktop startup window checks — 2026-10-11
+Windows/Mac target: 920 x 660 logical outer units, fit usable screen with margins.
+Windows Release build and unshown WPF layout checks passed.
+English/Chinese Connect and all settings categories checked at compact viewport;
+820/920/1100/1440 widths also checked. Device list/form minimum widths asserted.
+Hidden WPF rendering returned empty bitmap: visual screenshot acceptance skipped.
+No foreground app, real clipboard, desktop capture or OS input used.
+Mac source parse passed; current Apple SDK build/native sizing acceptance pending.
+This record is layout evidence, not real two-device or native Mac acceptance.

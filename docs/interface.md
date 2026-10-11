@@ -31,6 +31,14 @@ is inline; system permission prompts retain their native presentation.
 
 ## Appearance and interaction
 
+Desktop entry windows start at approximately 920 × 660 logical units including
+native chrome, centered inside the available screen with a margin. Fit smaller
+work areas; keep settings/forms sized to their content rather than increasing
+empty space. Navigation does not reset a user’s resized window. Long content
+scrolls, and the remote desktop supports resize/fullscreen. Mobile layouts use
+native safe areas and available space, not a fixed desktop window. See the
+[development handbook](development-handbook.md) for the recorded agreements.
+
 Keep the approved blueberry icon and existing palette during this implementation:
 accent #5265EC, text #202435, secondary #697183, white content, rail #F6F7FA and
 rules #E5E8F0; use readable system/dark equivalents. Do not add a second

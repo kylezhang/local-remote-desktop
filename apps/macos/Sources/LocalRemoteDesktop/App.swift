@@ -34,13 +34,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     func openSettings() { navigation.page = "settings"; openWindow() }
     private func openWindow() {
         if let window { window.makeKeyAndOrderFront(nil); return }
-        let next = ControllerWindow(contentRect: NSRect(x: 0,y: 0,width: 1000,height: 660),
+        let next = ControllerWindow(contentRect: NSRect(x: 0,y: 0,width: 920,height: 638),
             styleMask: [.titled,.closable,.miniaturizable,.resizable], backing: .buffered, defer: false)
         next.title = "Local Remote Desktop"; next.isReleasedWhenClosed = false
-        next.minSize = NSSize(width: 820,height: 520); next.acceptsMouseMovedEvents = true
+        let visible = NSScreen.main?.visibleFrame ?? NSRect(x: 0,y: 0,width: 1440,height: 900)
+        let size = NSSize(width: min(920,max(1,visible.width-48)),height: min(660,max(1,visible.height-48)))
+        next.minSize = NSSize(width: min(820,size.width),height: min(520,size.height)); next.acceptsMouseMovedEvents = true
         next.contentView = NSHostingView(rootView: DesktopShell(host: model, controller: controller, navigation: navigation,
             fullScreen: { [weak next] in next?.toggleFullScreen(nil) }))
-        next.delegate = self; next.center(); window = next; next.makeKeyAndOrderFront(nil)
+        next.setFrame(NSRect(x: visible.midX-size.width/2,y: visible.midY-size.height/2,width: size.width,height: size.height),display: false)
+        next.delegate = self; window = next; next.makeKeyAndOrderFront(nil)
     }
     func applicationDidFinishLaunching(_ notification: Notification) {
         let current = ProcessInfo.processInfo.processIdentifier
@@ -84,7 +87,7 @@ struct DesktopShell: View {
                     }.frame(maxWidth: .infinity,maxHeight: .infinity)
                 }
             }
-        }.font(.system(size: 14)).tint(accent).frame(minWidth: 820,minHeight: 480)
+        }.font(.system(size: 14)).tint(accent).frame(minWidth: min(820,max(1,(NSScreen.main?.visibleFrame.width ?? 1440)-48)),minHeight: min(480,max(1,(NSScreen.main?.visibleFrame.height ?? 900)-80)))
         .sheet(isPresented: $controller.manualOpen) { ManualConnectionView(model: controller, host: host) }
     }
     private func navigationButton(_ title: String, symbol: String, page: String) -> some View {

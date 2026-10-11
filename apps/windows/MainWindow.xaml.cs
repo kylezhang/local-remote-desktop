@@ -72,6 +72,10 @@ public partial class MainWindow : Window
         readModifiers=modifiers ?? (()=>Keyboard.Modifiers);
         clipboard=new TextClipboardSync(board ?? (remember?new WindowsClipboard():new DisabledClipboard()));
         InitializeComponent(); var savedHost=remember?SecretStore.LastHost():""; Address.Text=savedHost.Length>0?savedHost:LocalAddress.Find(); Secret.Password=loadPassword(Address.Text); RememberPassword.IsChecked=remember;
+        var workArea=SystemParameters.WorkArea;
+        var availableWidth=Math.Max(1,workArea.Width-48); var availableHeight=Math.Max(1,workArea.Height-48);
+        MinWidth=Math.Min(MinWidth,availableWidth); MinHeight=Math.Min(MinHeight,availableHeight);
+        Width=Math.Min(Width,availableWidth); Height=Math.Min(Height,availableHeight);
         LocalDeviceName.Text=remember?DeviceName.Default.Current:Environment.MachineName;
         DiscoverButton.ContextMenu=new(); RebuildDeviceMenu();
         UiText.Current.LanguageChanged+=ApplyLanguage; ApplyLanguage();
