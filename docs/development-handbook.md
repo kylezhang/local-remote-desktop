@@ -56,6 +56,9 @@ records determine what is implemented; this handbook is not a support claim.
   and its password vertically in one surface. Long content scrolls;
   do not fill a wide window with empty fixed-width forms. Users may resize/fullscreen;
   navigation and connection should not repeatedly reset their window size.
+- Sharing is a configure-then-start task. Place its start/stop action in a fixed
+  bottom area after name/IP/password, with the content independently scrollable.
+  Never bury Stop inside a form or below overflowing editors.
 - Future desktop clients follow the same content proportions, rather than blindly
   copying physical pixels. Phones/tablets adapt to available space, touch and native
   safe areas; they do not inherit a fixed desktop window.

@@ -4,6 +4,10 @@
 
 ## Unreleased
 
+- Sharing uses a fixed bottom start/stop action after device information and
+  pairing password. Content scrolls independently on both desktop sources.
+
+
 - Desktop entry windows now start at 640 × 620. Connect has one device list and
   Add device entry, with credentials/quality shown on demand. Sharing information
   and password are stacked vertically; settings surfaces fit their content.

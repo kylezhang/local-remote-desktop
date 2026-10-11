@@ -80,7 +80,12 @@ struct DesktopShell: View {
                     Divider()
                     Group {
                         switch navigation.page {
-                        case "share": ScrollView { HostView(model: host) }.frame(maxWidth: .infinity,maxHeight: .infinity)
+                        case "share":
+                            VStack(spacing: 0) {
+                                ScrollView { HostView(model: host) }.frame(maxWidth: .infinity,maxHeight: .infinity)
+                                Divider().padding(.horizontal, 24)
+                                SharingActionView(model: host).padding(.horizontal, 24).padding(.top, 16).padding(.bottom, 24)
+                            }.frame(maxWidth: .infinity,maxHeight: .infinity)
                         case "settings": DesktopSettings(host: host, controller: controller)
                         default: ConnectionPage(model: controller, host: host)
                         }
@@ -266,6 +271,18 @@ struct DesktopSettings: View {
         }.padding(24).frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
     }
 }
+struct SharingActionView: View {
+    @ObservedObject var model: HostModel
+    var body: some View {
+        Button {
+            if model.active { model.stop() } else { model.start(requestPermission: true) }
+        } label: {
+            Text(UiText.text(model.starting ? "正在启动…" : model.active ? "停止共享" : "开始共享"))
+                .frame(maxWidth: .infinity)
+        }.buttonStyle(.borderedProminent).controlSize(.large)
+            .disabled(model.credentialBusy || model.controlling || model.starting)
+    }
+}
 struct HostView: View {
     @ObservedObject var model: HostModel
     private let blueberry = Color(red: 82.0 / 255.0, green: 101.0 / 255.0, blue: 236.0 / 255.0)
@@ -296,9 +313,6 @@ struct HostView: View {
                             Button(UiText.text("允许键盘和鼠标控制")) { model.openAccessibilitySettings() }
                         }
                     }.frame(maxWidth: .infinity, alignment: .leading)
-                    Button(UiText.text(model.starting ? "正在启动…" : model.active ? "停止共享" : "开始共享")) {
-                        if model.active { model.stop() } else { model.start(requestPermission: true) }
-                    }.buttonStyle(.borderedProminent).disabled(model.credentialBusy || model.controlling)
                     VStack(alignment: .leading, spacing: 12) {
                         Text(UiText.text("被另一台设备来连接")).font(.headline)
                         HStack {

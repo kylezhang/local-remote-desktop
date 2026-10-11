@@ -97,8 +97,12 @@ Add device opens the same form for manual IP entry. Keep password, remember,
 forget and picture quality in that dialog, with errors retaining the draft.
 An empty list explains how to discover or add a target without duplicating actions.
 
-Share places device information, start/stop and pairing password vertically in
-one content-sized surface. Settings fit the available width and their actual
+Place Start sharing / Stop sharing in a fixed bottom action area on the Share
+page, after device information and pairing password in the task flow. The content
+scrolls independently so Stop stays reachable when editing or in a small window.
+
+Share groups device information and pairing password vertically in one
+content-sized surface. Settings fit the available width and their actual
 content height. Preserve window size across navigation. Windows software encoding
 is an optional troubleshooting fallback, disabled during sharing; system limitations
 belong in documentation, not a permanent compatibility panel.

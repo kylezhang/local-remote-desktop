@@ -1,0 +1,15 @@
+Sharing bottom action — 2026-10-11
+
+Owner direction: show device information/password first, then start sharing from
+this page's bottom. Start and Stop occupy the same fixed action area.
+
+PASS Windows .NET 8 Release build and unshown native WPF shell regressions.
+English/Chinese: measured action follows the visible password content at the
+624 x 580 content viewport; it remains inside the 584 x 450 small viewport while
+sharing content scrolls independently. Password edits and lifecycle checks passed.
+Encrypted pairing, reconnect, text/file host fixtures passed with recording input
+and clipboard. No test windows were shown, activated or physical desktop captured.
+PASS Swift frontend syntax parsing for updated Mac source.
+
+Mac AppKit/SwiftUI SDK build and actual installed UI acceptance remain pending.
+No remote Mac access, real two-device input or new tag/release performed.

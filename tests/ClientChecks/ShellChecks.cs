@@ -172,9 +172,15 @@ static partial class Program {
                 var passwordSurface=(Border)sharing.FindName("SharingPasswordSurface");
                 Assert(deviceSurface.ActualWidth>=390 && passwordSurface.ActualWidth>=340,"Sharing does not fit the compact content width");
                 var start=(Button)sharing.FindName("SharingStart");
-                var startPosition=start.TranslatePoint(new Point(0,start.ActualHeight),deviceSurface);
+                var sharePage=Find<ContentControl>("SharingPage");
                 var passwordPosition=passwordSurface.TranslatePoint(new Point(0,0),deviceSurface);
-                Assert(passwordPosition.Y>startPosition.Y && Math.Abs(passwordPosition.X-20)<1,"Password is not stacked below sharing controls");
+                Assert(passwordPosition.Y>20 && Math.Abs(passwordPosition.X-20)<1,"Password no longer follows the device information");
+                var passwordBottom=passwordSurface.TranslatePoint(new Point(0,passwordSurface.ActualHeight),sharePage);
+                var startPosition=start.TranslatePoint(new Point(0,0),sharePage);
+                Assert(startPosition.Y>passwordBottom.Y && start.ActualWidth>=390,"Sharing action does not follow IP/password at the page bottom");
+                Snapshot("sharing-minimum-"+lang,584,96,450);
+                var actionBottom=start.TranslatePoint(new Point(start.ActualWidth,start.ActualHeight),sharePage);
+                Assert(actionBottom.Y<=sharePage.ActualHeight && actionBottom.X<=sharePage.ActualWidth && start.ActualWidth>=340,"Bottom sharing action becomes unreachable in a small window");
                 Invoke("SetSessionLayout",true);
                 Assert(!Visible("HomeShell") && Visible("SessionPage"),"Session leaves credential navigation visible");
                 Snapshot("session-"+lang,1100);
