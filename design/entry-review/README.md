@@ -24,3 +24,6 @@ Headless browser review covered EN/ZH × Windows/macOS within the 560 × 568 dra
 frame, no horizontal overflow at a narrower viewport, entry actions, pairing
 feedback, password draft/cancel/save, permission state and role confirmation.
 Native build/acceptance evidence is recorded separately in [native progress](../../docs/native-ui.md).
+
+Current interactive/native default: 600 × 680. Stored PNGs above are earlier
+560 × 568 browser captures; native overflow evidence is in the progress document.

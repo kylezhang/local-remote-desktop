@@ -104,8 +104,8 @@ select {
 }
 .app {
   position:relative;
-  width:560px;
-  height:568px;
+  width:600px;
+  height:680px;
   max-width:100%;
   overflow:hidden;
   border:1px solid #d9deea;

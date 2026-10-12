@@ -65,7 +65,8 @@ static partial class Program {
                 Invoke("HomeBackClick",window,new RoutedEventArgs());
                 Assert(Visible("EntryPage") && !Visible("ConnectPage") && !Visible("SharingPage"),"Back did not return to the role chooser");
                 Assert(loads==(lang=="en"?0:1),"Role chooser accessed the sharing credential");
-                Snapshot("entry-default-"+lang,544,96,528);
+                Snapshot("entry-default-"+lang,584,96,640);
+                Assert(Find<ScrollViewer>("EntryPage").ScrollableHeight<=0.5,"Default homepage unnecessarily scrolls");
                 foreach(var art in new[]{"InitiateIllustration","AcceptIllustration"})
                     Assert(Find<Image>(art).Source is BitmapSource bitmap && bitmap.PixelWidth==960,"Native role illustration is missing");
                 var left=Find<RadioButton>("NavConnect");var right=Find<RadioButton>("NavShare");
@@ -86,14 +87,23 @@ static partial class Program {
                 Invoke("RefreshDevicesClick",window,new RoutedEventArgs());
                 Assert(Find<PasswordBox>("Secret").Password=="Fixture-LAN#42","Refresh overwrote an unsaved password draft");
                 foreach(int width in new[]{584,624,820,1100,1440}) Snapshot("connect-"+lang+"-"+width,width);
-                Snapshot("connect-default-"+lang,544,96,528);
-                Assert(window.Width==560 && window.MinWidth==520,"Compact startup width changed");
+                Snapshot("connect-default-"+lang,584,96,640);
+                Assert(window.Width==Math.Min(600,SystemParameters.WorkArea.Width-48) && window.Height==Math.Min(680,SystemParameters.WorkArea.Height-48) && window.MinWidth<=520,"Compact startup width changed");
                 Assert(Find<ListBox>("DeviceList").ActualWidth>=400,"Device list does not use the single-column page width");
                 Assert(!Visible("ManualDialog") && Find<TextBox>("Address").ActualWidth==0,"Permanent connection form remains visible");
+                Assert(Descendants<ScrollViewer>(Find<ListBox>("DeviceList")).All(scroll=>scroll.ScrollableHeight<=0.5),"Routine device list needs scrolling at startup");
                 var targetButton=Descendants<Button>(Find<ListBox>("DeviceList")).First(button=>button.DataContext is LanDevice);
                 targetButton.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
                 Assert(Visible("ManualDialog") && !Find<Grid>("HomeShell").IsEnabled,"Manual dialog did not isolate navigation");
                 Assert(Find<TextBlock>("ManualDeviceName").Text=="Fixture Mac" && Find<TextBlock>("ManualDeviceSystem").Text=="macOS","Known target metadata missing from manual dialog");
+                Snapshot("manual-default-"+lang,584,96,640);
+                Assert(Find<ScrollViewer>("ManualFieldsScroll").ScrollableHeight<=0.5,"Routine target dialog scrolls at the default size");
+                Find<TextBlock>("ManualError").Text=string.Join("\n",Enumerable.Repeat("Fixture long authentication error",30));
+                Snapshot("manual-error-"+lang,584,96,450);
+                var manualActions=Find<Button>("ManualConnect");
+                var manualBottom=manualActions.TranslatePoint(new Point(0,manualActions.ActualHeight),Find<Grid>("ManualDialog"));
+                Assert(manualBottom.Y<=450 && Find<Button>("ManualCancel").ActualHeight>0,"Long pairing error hides Cancel/Connect");
+                Find<TextBlock>("ManualError").Text="";
                 Snapshot("manual-known-"+lang,584,96,450);
                 Assert(Find<TextBox>("ManualAddress").ActualWidth>=300 && Find<ComboBox>("HomeQuality").ActualWidth>=300,"Compact connection dialog clipped its fields");
                 Assert(Find<Button>("ManualConnect").TranslatePoint(new Point(0,0),Find<Grid>("ManualDialog")).X>=0,"Modal actions extend outside the compact window");
@@ -114,7 +124,8 @@ static partial class Program {
                     tabs.SelectedIndex=tab; Snapshot("settings-"+lang+"-"+tab,1100);
                     Snapshot("settings-"+lang+"-"+tab+"-584",584);
                     foreach(int dpi in new[]{120,144}) Snapshot("settings-"+lang+"-"+tab+"-dpi"+dpi,820,dpi);
-                    Snapshot("settings-default-"+lang+"-"+tab,544,96,528);
+                    Snapshot("settings-default-"+lang+"-"+tab,584,96,640);
+                    Assert(Descendants<ScrollViewer>(tabs).All(scroll=>scroll.ScrollableHeight<=0.5 && scroll.ScrollableWidth<=0.5),"Routine settings create an unnecessary scrollbar");
                     var surface=(Border)tabs.Template.FindName("SettingsSurface",tabs);
                     Assert(surface.ActualHeight<420,"Settings surface stretches into an empty panel");
                     if(tab==0) Assert(surface.ActualHeight<180,"Single language setting occupies a full-height panel");
@@ -180,7 +191,9 @@ static partial class Program {
                 Assert(Find<PasswordBox>("Secret").Password=="","New IP retained an unrelated password");
                 Find<PasswordBox>("Secret").Password="Fixture-LAN#42";
                 Snapshot("sharing-"+lang,1100);
-                Snapshot("sharing-default-"+lang,544,96,528);
+                Snapshot("sharing-default-"+lang,584,96,640);
+                var sharingScroll=(ScrollViewer)sharing.FindName("SharingScroll");
+                Assert(sharingScroll.ScrollableHeight<=0.5,"Routine Accept connections page does not fit the default window");
                 var deviceSurface=(Border)sharing.FindName("SharingDeviceSurface");
                 var passwordSurface=(Border)sharing.FindName("SharingPasswordSurface");
                 Assert(deviceSurface.ActualWidth>=390 && passwordSurface.ActualWidth>=340,"Sharing does not fit the compact content width");
@@ -273,7 +286,7 @@ static partial class Program {
             Console.WriteLine("PASS unshown sharing edits: unsaved name/password block Start; failed-save draft and active sharing preserved; Stop remains available during edits; successful password change waits for explicit Start");
             window.Close(); await Until(()=>!page.Sharing && window.SharingController==null,"Owner shutdown left listener alive");
             Assert(advertisement.Stops>0,"Owner shutdown did not withdraw discovery");
-            Console.WriteLine("PASS unshown native WPF shell: English/Chinese, 584/624/820/1100/1440px layouts, 560px startup + role chooser, draft/active-listener retention, single-column device action/dialog and vertically stacked sharing, device selection, single-window sharing, hidden password, edit cancellation, session navigation, exclusive role and listener cleanup");
+            Console.WriteLine("PASS unshown native WPF shell: English/Chinese, 584/624/820/1100/1440px layouts, 600x680 startup + role chooser, draft/active-listener retention, single-column device action/dialog and vertically stacked sharing, device selection, single-window sharing, hidden password, edit cancellation, session navigation, exclusive role and listener cleanup");
         } finally { if(window.SharingController is {} sharing) await sharing.Shutdown(); window.Close(); Directory.Delete(nameRoot,true); }
     }
 }

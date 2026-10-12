@@ -43,7 +43,7 @@ is inline; system permission prompts retain their native presentation.
 
 ## Appearance and interaction
 
-Desktop entry windows start at approximately 560 × 568 logical units including
+Desktop entry windows start at approximately 600 × 680 logical units including
 native chrome, centered inside the available screen with a margin. Fit smaller
 work areas; keep settings/forms sized to their content rather than increasing
 empty space. Navigation does not reset a user’s resized window. Long content
@@ -134,3 +134,12 @@ of a bitmap effect. The Settings gear uses the approved vector geometry, not a
 Unicode symbol/emoji. Check real native glyph runs and weights as well as layout.
 Windows interface revision is `entry-2026-10-12-r2`; Mac remains build 24 from the
 preceding implementation, with native acceptance pending.
+
+## Routine page fit — 2026-10-12
+
+Current source revision is `entry-2026-10-12-r3`, Mac internal build 25. Use a
+600 × 680 default, clamp to work area, and balance the homepage vertically.
+Routine forms should fit without scrolling; long content and small windows
+retain accessible scrolling. Target Cancel/Connect stays outside the scroll.
+Do not change a user-resized window on navigation or hide overflow to pass a
+layout check. Mac native page fit still needs SDK/installed acceptance.

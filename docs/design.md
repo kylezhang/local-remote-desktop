@@ -32,7 +32,7 @@ old sharing session and waits for explicit Start. Existing longer credentials
 remain valid until deliberately replaced. Mac screen/input permission recovery
 belongs here; role navigation itself never requests those permissions.
 
-The default frame is approximately 560 × 568 logical units, including native
+The default frame is approximately 600 × 680 logical units, including native
 chrome. Use native typography and window controls, consistent spacing, white
 content, neutral surfaces and #5265EC accents. Long content scrolls without
 hiding Stop. Windows and Mac reuse the same approved illustration assets.

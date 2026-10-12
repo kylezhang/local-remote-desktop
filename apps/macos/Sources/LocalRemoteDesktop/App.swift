@@ -42,11 +42,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     func openSettings() { navigation.page = "settings"; openWindow() }
     private func openWindow() {
         if let window { window.makeKeyAndOrderFront(nil); return }
-        let next = ControllerWindow(contentRect: NSRect(x: 0,y: 0,width: 560,height: 546),
+        let next = ControllerWindow(contentRect: NSRect(x: 0,y: 0,width: 600,height: 658),
             styleMask: [.titled,.closable,.miniaturizable,.resizable], backing: .buffered, defer: false)
         next.title = "Local Remote Desktop"; next.isReleasedWhenClosed = false
         let visible = NSScreen.main?.visibleFrame ?? NSRect(x: 0,y: 0,width: 1440,height: 900)
-        let size = NSSize(width: min(560,max(1,visible.width-48)),height: min(568,max(1,visible.height-48)))
+        let size = NSSize(width: min(600,max(1,visible.width-48)),height: min(680,max(1,visible.height-48)))
         next.minSize = NSSize(width: min(520,size.width),height: min(480,size.height)); next.acceptsMouseMovedEvents = true
         next.contentView = NSHostingView(rootView: DesktopShell(host: model, controller: controller, navigation: navigation,
             fullScreen: { [weak self, weak next] in guard let self, self.controller.busy else { return }; self.controller.release(); next?.toggleFullScreen(nil) }))
@@ -81,7 +81,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool { false }
 }
 enum EntryBuild {
-    static let revision = "entry-2026-10-12"
+    static let revision = "entry-2026-10-12-r3"
     static var source: String {
         guard let url = Bundle.main.url(forResource: "source-revision", withExtension: "txt"),
             let text = try? String(contentsOf: url, encoding: .utf8) else { return "unknown" }
@@ -146,7 +146,7 @@ struct DesktopShell: View {
                     Group {
                         switch navigation.page {
                         case "home":
-                            ScrollView {
+                            GeometryReader { viewport in ScrollView {
                                 VStack(alignment: .leading,spacing: 30) {
                                     Text(UiText.text("你想如何使用？")).font(.system(size: 26,weight: .medium))
                                     HStack(spacing: 18) {
@@ -157,7 +157,8 @@ struct DesktopShell: View {
                                         Button(UiText.text("正在接受连接 · 查看或停止")) { navigation.page = "share" }
                                     }
                                 }.padding(.horizontal,28).padding(.top,34).padding(.bottom,24)
-                            }
+                                    .frame(maxWidth: .infinity,minHeight: viewport.size.height,alignment: .center)
+                            }}
                         case "share":
                             VStack(spacing: 0) {
                                 ScrollView { HostView(model: host) }.frame(maxWidth: .infinity,maxHeight: .infinity)
@@ -383,11 +384,11 @@ struct HostView: View {
         return model.revealSecret ? PairingEditor.displayed(model.secret) : "••••••••"
     }
     var body: some View {
-        VStack(alignment: .leading, spacing: 18) {
+        VStack(alignment: .leading, spacing: 10) {
             Text(UiText.text("接受连接")).font(.system(size: 24, weight: .medium))
             Text(UiText.text("让另一台设备连接并操作你的当前屏幕。")).foregroundStyle(.secondary)
-            VStack(alignment: .leading, spacing: 20) {
-                VStack(alignment: .leading, spacing: 18) {
+            VStack(alignment: .leading, spacing: 14) {
+                VStack(alignment: .leading, spacing: 10) {
                     VStack(alignment: .leading, spacing: 6) {
                         Text(UiText.text(sharingTitle)).font(.headline)
                         Text(UiText.text(model.status)).font(.callout).foregroundStyle(.secondary)
@@ -396,7 +397,7 @@ struct HostView: View {
                             Button(UiText.text("允许键盘和鼠标控制")) { model.openAccessibilitySettings() }
                         }
                     }.frame(maxWidth: .infinity, alignment: .leading)
-                    VStack(alignment: .leading, spacing: 12) {
+                    VStack(alignment: .leading, spacing: 10) {
                         HStack {
                             Text(UiText.text("本机名称")).foregroundStyle(.secondary)
                             Spacer()
@@ -417,7 +418,7 @@ struct HostView: View {
                     }
                 }
                 Divider()
-                VStack(alignment: .leading, spacing: 18) {
+                VStack(alignment: .leading, spacing: 10) {
                     Text(UiText.text("连接本设备时，使用下方密码。"))
                         .font(.callout).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
                     VStack(alignment: .leading, spacing: 10) {
@@ -426,7 +427,7 @@ struct HostView: View {
                             Spacer()
                             Button(UiText.text("修改密码…")) { model.openPasswordEditor() }.disabled(model.credentialBusy)
                         }
-                        HStack(alignment: .top, spacing: 12) {
+                        HStack(alignment: .top, spacing: 10) {
                             Text(model.secret.isEmpty ? UiText.text(passwordText) : passwordText).font(.system(.body, design: .monospaced))
                                 .fixedSize(horizontal: false, vertical: true).textSelection(.enabled)
                                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -445,7 +446,7 @@ struct HostView: View {
                         }
                     }
                 }.frame(maxWidth: .infinity, alignment: .leading)
-            }.padding(20).background(Color.secondary.opacity(0.06)).cornerRadius(10)
+            }.padding(18).background(Color.secondary.opacity(0.06)).cornerRadius(10)
             if hasFileNotice {
                 HStack {
                     Text(UiText.text(model.fileStatus)).font(.caption).frame(maxWidth: .infinity, alignment: .leading)
@@ -463,7 +464,7 @@ struct HostView: View {
                     Button(UiText.text("辅助功能权限")) { model.openAccessibilitySettings() }
                 }.padding(.top, 12)
             }
-        }.frame(maxWidth: 480, alignment: .leading).padding(28).frame(maxWidth: .infinity,alignment: .leading).tint(blueberry)
+        }.frame(maxWidth: 520, alignment: .leading).padding(24).frame(maxWidth: .infinity,alignment: .leading).tint(blueberry)
         .sheet(isPresented: $model.editingName, onDismiss: { model.cancelNameEditor() }) {
             DeviceNameEditorView(model: model).tint(blueberry)
         }

@@ -214,7 +214,7 @@ final class HostModel: ObservableObject {
         LocalRemoteDesktop \(Bundle.main.object(forInfoDictionaryKey: "LocalRemoteDesktopReleaseVersion") as? String ?? Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "unknown")
         Build: \(Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "unknown")
         SourceCommit: \(Bundle.main.url(forResource: "source-revision", withExtension: "txt").flatMap { try? String(contentsOf: $0, encoding: .utf8).trimmingCharacters(in: .whitespacesAndNewlines) } ?? "unknown")
-        InterfaceRevision: entry-2026-10-12
+        InterfaceRevision: entry-2026-10-12-r3
         Executable: \(Bundle.main.executablePath ?? "unknown")
         macOS: \(ProcessInfo.processInfo.operatingSystemVersionString)
         InstalledAtApplications: \(Bundle.main.bundlePath == "/Applications/Local Remote Desktop.app")

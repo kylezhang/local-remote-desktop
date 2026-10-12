@@ -7,7 +7,7 @@
 The owner approved the [task-first design](entry-design.md). Both desktop sources
 now implement the Start a connection / Accept connections homepage and the shared
 approved display illustrations. The old permanent rail is replaced by Back and
-one labeled upper-right Settings shortcut. Default frames are 560 × 568 logical
+one labeled upper-right Settings shortcut. Default frames are 600 × 680 logical
 units, with work-area bounds and scrolling for long content.
 
 Role selection navigates only. Back preserves active sharing and drafts; the
@@ -23,7 +23,7 @@ credential-save and role-conflict guards remain. Settings remains four categorie
 next-connection defaults and temporary/global consent rules are unchanged.
 
 Windows About/diagnostics includes its assembly source identity and interface
-revision `entry-2026-10-12`. Mac internal build is **24**; its signed
+revision `entry-2026-10-12`. Mac internal build is **25**; its signed
 `source-revision.txt`, About/diagnostics and permission diagnostic script identify
 the source and installed executable. A ZIP without Git says unknown, and modified
 source is labeled. A failed build/signature preservation check retains the old
@@ -52,7 +52,7 @@ copying into an idle usual launch directory; running clients are left untouched.
 
 ## Next acceptance
 
-Use one consolidated Mac build/install review to check source build 24, homepage,
+Use one consolidated Mac build/install review to check source build 25, homepage,
 Back/Settings, explicit accepting, denied/granted permissions and secure password
 editing. Then verify both remote-control directions, held-key release, real
 clipboard/files, quality/reconnect and stop/resource cleanup. Keep existing
@@ -75,3 +75,20 @@ Native glyph-run and unshown ClientChecks passed. Revision is
 `entry-2026-10-12-r2`; this is a Windows-only correction, with no Mac permission,
 identity or version change. Physical/installed visual acceptance remains distinct
 from the font/layout checks. Final packaged assembly is rechecked before deployment.
+
+## Routine page fit — 2026-10-12
+
+The 560 × 568 Windows frame left the normal accepting page with a 480-unit extent
+and a 397-unit viewport in the native unshown measurement. The default is now
+600 × 680 (work-area constrained). Routine English/Chinese Home, device list,
+Accept, four settings categories and the target dialog have no vertical scroll
+at the default frame in the native layout checks. Sharing spacing is tighter,
+and target Cancel/Connect remains outside the scrolling fields when errors grow.
+Small work areas, long lists, editors and diagnostics retain real scrolling;
+user resizing is preserved. The homepage content is vertically balanced.
+
+Mac source adopts the same size/compact sharing structure and build 25;
+interface revision is `entry-2026-10-12-r3` on both sources. Swift syntax,
+portable host model and package fixtures are checked; actual Mac SDK/UI page fit
+remains pending. Interactive preview dimensions are updated; stored PNGs are
+older browser captures, not evidence of this native size refinement.

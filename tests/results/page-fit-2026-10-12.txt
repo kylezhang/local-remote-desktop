@@ -1,0 +1,17 @@
+Routine page fit — 2026-10-12
+Public version unchanged; interface revision entry-2026-10-12-r3.
+Default: 600x680 logical outer frame, clamped to current work area.
+
+Before: Windows regular accepting-page extent 480, viewport 397 at 560x568.
+PASS Windows native build (zero warnings/errors) and unshown ClientChecks.
+PASS EN/ZH default Home, routine device list, Accept, four settings categories
+and target dialog have no vertical scrollbar. No horizontal settings scroll.
+PASS long pairing errors and reduced-height dialog retain visible Cancel/Connect.
+PASS minimum-height accepting page retains Stop below scrollable information.
+PASS prior glyph/ink/vector, pairing, draft/role safety and encrypted regression.
+No foreground window, capture, physical input or real clipboard access.
+
+Mac source size/compact sharing layout synchronized, internal build 25.
+Mac source/API layout acceptance remains pending on Apple hardware; no SSH.
+Interactive preview dimensions aligned; existing PNGs remain older captures.
+Final committed Windows package is rechecked before deployment into idle paths.

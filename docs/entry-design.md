@@ -87,7 +87,7 @@ sheet only sketches their existing scope, not a new settings specification.
 
 Use the approved icon and #5265EC accent, neutral white/grey content and native
 fonts/chrome. The same hierarchy and wording apply to Windows/macOS, without
-copying one OS's title bar to the other. Approved frame: 560 × 568 logical pixels,
+copying one OS's title bar to the other. Current native frame: 600 × 680 logical pixels,
 22 × 28 content padding, two equally prominent entrances, no permanent rail.
 The exact native minimum and scaling remain acceptance work. Normal task content
 fits the frame; additional permission text/long content scrolls with the sharing
@@ -199,3 +199,12 @@ The owner approved these three task screens on 2026-10-12. Implement the
 shared flow incrementally, preserve encrypted transport/session behavior, and
 verify native builds and actual installed launches separately from headless checks.
 This is not a new release or a promise of future-platform availability.
+
+## Routine page fit refinement — 2026-10-12
+
+Owner feedback on interior scrollbars prompted a native default of 600 × 680,
+with tighter accepting-page spacing and a fixed target-dialog action footer.
+Preserve small-screen/long-content scrolling and user resizing. Interactive
+preview dimensions are aligned; previous stored screenshots remain historical
+560 × 568 browser captures. See native progress for measured Windows results;
+Mac actual page fit is pending SDK/installed acceptance.
