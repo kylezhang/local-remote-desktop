@@ -14,11 +14,12 @@ static partial class Program {
                 content.Measure(new Size(544,528));content.Arrange(new Rect(0,0,544,528));content.UpdateLayout();
                 foreach(var name in new[]{"EntryPrompt","InitiateLabel","AcceptLabel"}) {
                     var label=(TextBlock)window.FindName(name);
+                    Assert(label.Foreground is SolidColorBrush ink && ink.Color==Color.FromRgb(41,50,71),"Native role theme replaced the approved text color with system black");
                     var drawing=new DrawingVisual();
                     using(var context=drawing.RenderOpen()) context.DrawText(new FormattedText(label.Text,
                         CultureInfo.GetCultureInfo("en-US"),FlowDirection.LeftToRight,
                         new Typeface(label.FontFamily,label.FontStyle,label.FontWeight,label.FontStretch),
-                        label.FontSize,Brushes.Black,1),new Point(0,0));
+                        label.FontSize,label.Foreground,1),new Point(0,0));
                     var runs=TextRuns(drawing.Drawing).ToArray();
                     Assert(runs.Length>0,"Native formatter produced no glyph runs");
                     Assert(label.FontWeight==FontWeights.Normal,"Entry type selected an unsupported medium weight");
@@ -37,7 +38,7 @@ static partial class Program {
                 Assert(((Image)window.FindName("SettingsGlyph")).Source is DrawingImage,"Settings is an OS-dependent text/emoji glyph");
                 Assert(!window.IsVisible && !window.IsActive,"Typography check displayed or activated an app");
             }
-            Console.WriteLine("PASS native WPF glyph runs under en-US fallback: Chinese entry text uses only Microsoft YaHei UI, Latin Segoe UI, uniform real Regular weights; shadow has no text ancestors; Settings is vector; no visible window");
+            Console.WriteLine("PASS native WPF glyph runs under en-US fallback: Chinese entry text uses only Microsoft YaHei UI, Latin Segoe UI, uniform real Regular weights and approved ink; shadow has no text ancestors; Settings is vector; no visible window");
         } finally {UiText.Current.Use(previous,false);}
     }
     static IEnumerable<GlyphRun> TextRuns(Drawing drawing) {

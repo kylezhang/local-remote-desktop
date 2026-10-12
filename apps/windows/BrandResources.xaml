@@ -55,11 +55,13 @@
   </ControlTemplate></Setter.Value></Setter>
  </Style>
  <Style x:Key="SettingsShortcut" TargetType="RadioButton">
+ <Setter Property="Foreground" Value="#697183"/>
  <Setter Property="FontSize" Value="12"/><Setter Property="Padding" Value="10,7"/><Setter Property="Cursor" Value="Hand"/>
  <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="RadioButton"><Border x:Name="Shortcut" Background="White" CornerRadius="7" BorderThickness="1" BorderBrush="#E8EBF3" Padding="{TemplateBinding Padding}"><ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/></Border><ControlTemplate.Triggers>
  <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="Shortcut" Property="Background" Value="#F6F7FB"/></Trigger><Trigger Property="IsKeyboardFocused" Value="True"><Setter TargetName="Shortcut" Property="BorderBrush" Value="#5265EC"/></Trigger>
  </ControlTemplate.Triggers></ControlTemplate></Setter.Value></Setter></Style>
  <Style x:Key="EntryRole" TargetType="RadioButton">
+ <Setter Property="Foreground" Value="#293247"/>
  <Setter Property="Cursor" Value="Hand"/><Setter Property="MinHeight" Value="252"/><Setter Property="Padding" Value="12,20,12,22"/>
  <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="RadioButton">
  <Grid>

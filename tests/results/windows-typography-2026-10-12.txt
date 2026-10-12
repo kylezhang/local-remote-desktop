@@ -8,6 +8,8 @@ Segoe UI Medium: JhengHei Regular mixed with Yu Gothic Semibold.
 PASS corrected production font/role text: Chinese glyphs use Microsoft YaHei UI,
 Latin uses Segoe UI, actual weights are all Regular in the entry title/labels.
 PASS role text has no effect ancestor; Settings is vector artwork.
+Native theme also changed role text to system black: styles now explicitly retain
+the approved #293247 role text and #697183 secondary Settings text.
 PASS native Windows build, zero warnings/errors.
 PASS unshown ClientChecks: bilingual layouts, pairing, role/lifecycle/draft safety,
 consent/defaults, encrypted text/files, synthetic H264/quality/reconnect/cleanup.
