@@ -92,6 +92,19 @@ cp Info.plist "$app/Contents/Info.plist"
 cp ../../assets/brand/LocalRemoteDesktop.icns "$app/Contents/Resources/LocalRemoteDesktop.icns"
 cp ../../assets/brand/icon.png "$app/Contents/Resources/LocalRemoteDesktop.png"
 cp ../../assets/localization/strings.json "$app/Contents/Resources/strings.json"
+cp ../../assets/interface/initiate-connection.png "$app/Contents/Resources/initiate-connection.png"
+cp ../../assets/interface/accept-connection.png "$app/Contents/Resources/accept-connection.png"
+# Source identity is signed with the bundle; downloaded source without Git is explicit.
+source_revision=unknown
+source_root="$(cd ../.. && pwd -P)"
+if [[ "$(git rev-parse --show-toplevel 2>/dev/null || true)" == "$source_root" ]]; then
+  source_revision="$(git rev-parse HEAD 2>/dev/null || printf unknown)"
+fi
+if [[ "$source_revision" != unknown ]] && [[ -n "$(git status --porcelain --untracked-files=normal 2>/dev/null)" ]]; then
+  source_revision="$source_revision (modified)"
+fi
+printf '%s\n' "$source_revision" > "$app/Contents/Resources/source-revision.txt"
+
 [[ -s "$app/Contents/Resources/LocalRemoteDesktop.icns" && -s "$app/Contents/Resources/LocalRemoteDesktop.png" ]] || {
   echo '图标资源缺失，构建中止。' >&2; exit 1
 }

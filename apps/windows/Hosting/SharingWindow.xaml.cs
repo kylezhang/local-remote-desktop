@@ -15,7 +15,7 @@ public partial class SharingWindow:Window {
     bool filesAllowed=true; IHostFiles? files;
     internal void SetClipboardAllowed(bool allowed) { clipboardAllowed=allowed; }
     internal void SetFilesAllowed(bool allowed) { filesAllowed=allowed; }
-    Task? starting,shutdown,stopping; bool shutting,closed,revealed,saving,controlActive,actionBusy,stoppingBusy; string status="尚未共享";
+    Task? starting,shutdown,stopping; bool shutting,closed,revealed,saving,controlActive,actionBusy,stoppingBusy; string status="尚未接受连接";
     public SharingWindow():this(_=>{}) {}
     internal SharingWindow(Action<bool> changed,Func<HostCredential>? load=null,Action<HostCredential>? save=null,Func<HostCredential,byte[],bool,Action<string>,WindowsHost>? create=null,DeviceName? deviceName=null,IDeviceAdvertisement? advertisement=null) {
         sharingChanged=changed; this.deviceName=deviceName??DeviceName.Default; this.load=load??(()=>HostCredential.Load()); this.save=save??(c=>c.Save());
@@ -36,13 +36,13 @@ public partial class SharingWindow:Window {
         ChangeSharingPassword.IsEnabled=ChangeDeviceName.IsEnabled && credential!=null;
     }
     internal void SetControlActive(bool active) { controlActive=active; RefreshActions(); }
-    void Translate() { SharingStatus.Text=UiText.Text(status); SharingStart.Content=UiText.Text(host==null?"开始共享":"停止共享"); Reveal.Content=UiText.Text(revealed?"隐藏":"查看"); RefreshActions(); }
+    void Translate() { SharingStatus.Text=UiText.Text(status); SharingStart.Content=UiText.Text(host==null?"开始接受连接":"停止接受连接"); Reveal.Content=UiText.Text(revealed?"隐藏":"查看"); RefreshActions(); }
     void Report(WindowsHost owner,string value) {
         Dispatcher.BeginInvoke(()=> {
             if(!ReferenceEquals(host,owner) || shutting) return;
             if(value=="Files unavailable") {FileReport("文件通道不可用，请检查 47981 端口；桌面共享可继续",false);return;}
             if(value is "Available" or "Off") {files=null;SharingTransfer.Visibility=Visibility.Collapsed;}
-            status=value switch {"Available"=>owner.LastError.StartsWith("capture_")?"画面采集失败，请检查 FFmpeg，或停止共享后在故障排查中启用软件编码。":"等待连接 · TCP 47980","In use"=>"正在共享当前桌面 · 可控制","Session ended"=>"连接已结束","Off"=>"已停止",_=>"共享状态异常，请停止后重试。"}; Translate();
+            status=value switch {"Available"=>owner.LastError.StartsWith("capture_")?"画面采集失败，请检查 FFmpeg，或停止接受连接后在故障排查中启用软件编码。":"等待连接 · TCP 47980","In use"=>"正在共享当前桌面 · 可控制","Session ended"=>"连接已结束","Off"=>"已停止",_=>"共享状态异常，请停止后重试。"}; Translate();
         });
     }
     void SessionFileReport(IHostFiles owner,string text,bool busy) { Dispatcher.BeginInvoke(()=> {if(shutting || host==null || !ReferenceEquals(files,owner))return;ApplyFileReport(text,busy);}); }
@@ -60,7 +60,7 @@ public partial class SharingWindow:Window {
         try {
             if(host!=null) await Stop();
             else { starting=Start(credential); await starting; }
-        } catch { status="无法开始共享，请检查 FFmpeg 和 TCP 47980 端口。"; }
+        } catch { status="无法开始接受连接，请检查 FFmpeg 和 TCP 47980 端口。"; }
         finally { starting=null; actionBusy=false; Translate(); }
     }
     async Task Start(HostCredential value) {
@@ -127,8 +127,8 @@ public partial class SharingWindow:Window {
             // Persist atomically before disrupting the old authorized session.
             save(next); persisted=true; credential=next; revealed=false; CurrentPassword.Text="••••••••";
             await Stop(); Draft.Text=""; Editor.Visibility=Visibility.Collapsed;
-            status="密码已保存，原连接已断开；点击开始共享后使用新密码连接。"; Translate();
-        } catch(Exception error) { PasswordError.Text=UiText.Text(persisted?"密码已保存，但停止共享失败；请退出应用后重开。":error is ArgumentException?error.Message:"无法保存密码，原密码和共享状态保留。"); }
+            status="密码已保存，原连接已断开；点击开始接受连接后使用新密码连接。"; Translate();
+        } catch(Exception error) { PasswordError.Text=UiText.Text(persisted?"密码已保存，但停止接受连接失败；请退出应用后重开。":error is ArgumentException?error.Message:"无法保存密码，原密码和共享状态保留。"); }
         finally { saving=false; RefreshActions(); }
     }
 }

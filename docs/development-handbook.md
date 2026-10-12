@@ -51,9 +51,10 @@ records determine what is implemented; this handbook is not a support claim.
   progress/cancel notices. Avoid duplicate logos, oversized headers, repeated LAN
   disclaimers and implementation details in normal product flows.
 - Keep the approved brand assets and palette, native Segoe UI/San Francisco and
-  shared hierarchy. Desktop entry windows start around **640 × 620 logical units**
+  shared hierarchy. Desktop entry windows start around **560 × 568 logical units**
   including native chrome, centered within usable screen bounds with a margin.
-  Keep the navigation rail near 144. Use one device list and one Add device entry;
+  Use the approved Start a connection / Accept connections homepage, no permanent
+  rail, Back and one labeled upper-right Settings shortcut. Use one device list and one Add target entry;
   show credentials/quality only in the connection dialog. Stack sharing information
   and its password vertically in one surface. Long content scrolls;
   do not fill a wide window with empty fixed-width forms. Users may resize/fullscreen;

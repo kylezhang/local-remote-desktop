@@ -50,4 +50,21 @@
    </ControlTemplate.Triggers>
   </ControlTemplate></Setter.Value></Setter>
  </Style>
+ <Style x:Key="SettingsShortcut" TargetType="RadioButton">
+ <Setter Property="FontSize" Value="12"/><Setter Property="Padding" Value="10,7"/><Setter Property="Cursor" Value="Hand"/>
+ <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="RadioButton"><Border x:Name="Shortcut" Background="White" CornerRadius="7" BorderThickness="1" BorderBrush="#E8EBF3" Padding="{TemplateBinding Padding}"><ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/></Border><ControlTemplate.Triggers>
+ <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="Shortcut" Property="Background" Value="#F6F7FB"/></Trigger><Trigger Property="IsKeyboardFocused" Value="True"><Setter TargetName="Shortcut" Property="BorderBrush" Value="#5265EC"/></Trigger>
+ </ControlTemplate.Triggers></ControlTemplate></Setter.Value></Setter></Style>
+ <Style x:Key="EntryRole" TargetType="RadioButton">
+ <Setter Property="Cursor" Value="Hand"/><Setter Property="MinHeight" Value="252"/><Setter Property="Padding" Value="12,20,12,22"/>
+ <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="RadioButton">
+ <Border x:Name="Tile" CornerRadius="20" BorderBrush="#E7EBF4" BorderThickness="1" Background="#F8F9FC" Padding="{TemplateBinding Padding}">
+ <Border.Effect><DropShadowEffect Color="#344264" BlurRadius="14" ShadowDepth="3" Opacity="0.035"/></Border.Effect>
+ <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+ </Border><ControlTemplate.Triggers>
+ <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="Tile" Property="Background" Value="White"/><Setter TargetName="Tile" Property="BorderBrush" Value="#BDC9EF"/></Trigger>
+ <Trigger Property="IsPressed" Value="True"><Setter TargetName="Tile" Property="Background" Value="#F1F4FD"/></Trigger>
+ <Trigger Property="IsKeyboardFocused" Value="True"><Setter TargetName="Tile" Property="BorderBrush" Value="#5265EC"/></Trigger>
+ <Trigger Property="IsEnabled" Value="False"><Setter Property="Opacity" Value="0.45"/></Trigger>
+ </ControlTemplate.Triggers></ControlTemplate></Setter.Value></Setter></Style>
  </ResourceDictionary>

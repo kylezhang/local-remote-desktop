@@ -58,6 +58,9 @@ def bundle(app):
         (app/'Contents/Resources'/target).write_bytes((root/'assets/brand'/source).read_bytes())
     (app/'Contents/Resources/signing-mode.txt').write_text('certificate\n')
     (app/'Contents/Resources/strings.json').write_bytes((root/'assets/localization/strings.json').read_bytes())
+    for name in ('initiate-connection.png','accept-connection.png'):
+        (app/'Contents/Resources'/name).write_bytes((root/'assets/interface'/name).read_bytes())
+    (app/'Contents/Resources/source-revision.txt').write_text(commit+'\n')
     (app/'Contents/_CodeSignature/CodeResources').write_text('mock signature, not cryptographic verification')
 
 
@@ -68,7 +71,7 @@ class PackageChecks(unittest.TestCase):
         return Path(temporary.name).resolve()
 
     def test_bundle_validation(self):
-        for change in ('none', 'missing-icon', 'missing-language', 'bad-language', 'wrong-version', 'prerelease-as-stable', 'wrong-cpu', 'adhoc', 'extra-key', 'bad-icns'):
+        for change in ('none', 'missing-icon', 'missing-language', 'bad-language', 'wrong-version', 'prerelease-as-stable', 'wrong-cpu', 'adhoc', 'extra-key', 'bad-icns', 'missing-entry', 'dirty-source'):
             with self.subTest(change=change):
                 app = self.fixture()/'Local Remote Desktop.app'
                 bundle(app)
@@ -87,6 +90,8 @@ class PackageChecks(unittest.TestCase):
                 if change == 'adhoc': (app/'Contents/Resources/signing-mode.txt').write_text('ad-hoc')
                 if change == 'extra-key': (app/'Contents/Resources/secret.key').write_text('fixture')
                 if change == 'bad-icns': (app/'Contents/Resources/LocalRemoteDesktop.icns').write_bytes(b'icns0000')
+                if change == 'missing-entry': (app/'Contents/Resources/initiate-connection.png').unlink()
+                if change == 'dirty-source': (app/'Contents/Resources/source-revision.txt').write_text(commit+' (modified)')
                 if change == 'none': checker.check_app(app, '0.1.1')
                 else:
                     with self.assertRaises(ValueError): checker.check_app(app, '0.1.1')

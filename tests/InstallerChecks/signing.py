@@ -36,6 +36,8 @@ for mode, script_name, success in [
         (root/'LocalRemoteDesktop.icns').write_text('mock icon')
         (root/'icon.png').write_text('mock PNG icon')
         (root/'strings.json').write_text('{}')
+        (root/'initiate-connection.png').write_bytes(b'fixture art')
+        (root/'accept-connection.png').write_bytes(b'fixture art')
         if mode == 'stable-missing': (root/'.require-stable-signature').touch()
         if mode == 'invalid-saved': (root/'.signing-identity').write_text('INVALID')
         if mode == 'legacy-pinned':
@@ -73,6 +75,7 @@ mv() {
         fixture = fixture.replace('../../assets/brand/LocalRemoteDesktop.icns', 'LocalRemoteDesktop.icns')
         fixture = fixture.replace('../../assets/brand/icon.png', 'icon.png')
         fixture = fixture.replace('../../assets/localization/strings.json', 'strings.json')
+        fixture = fixture.replace('../../assets/interface/', '')
         path = root/script_name
         path.write_text(fixture, encoding='utf-8', newline='\n')
         result = subprocess.run([args.bash, str(path)], capture_output=True, text=True, encoding='utf-8', timeout=20)

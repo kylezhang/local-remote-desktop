@@ -1,6 +1,7 @@
 import SwiftUI
 import AppKit
 import ApplicationServices
+import Darwin
 enum AppBrand {
     static let icon: NSImage? = {
         for ext in ["png", "icns"] {
@@ -8,6 +9,13 @@ enum AppBrand {
                let image = NSImage(contentsOf: url), image.isValid { return image }
         }
         return nil
+    }()
+    static let entryArt: [String: NSImage] = {
+        var images: [String: NSImage] = [:]
+        for name in ["initiate-connection", "accept-connection"] {
+            if let url = Bundle.main.url(forResource: name, withExtension: "png"), let image = NSImage(contentsOf: url) { images[name] = image }
+        }
+        return images
     }()
     static func applyDockIcon() {
         if let icon { NSApplication.shared.applicationIconImage = icon }
@@ -25,7 +33,7 @@ struct LocalRemoteDesktopApp: App {
             }
     }
 }
-final class DesktopNavigation: ObservableObject { @Published var page = "connect" }
+final class DesktopNavigation: ObservableObject { @Published var page = "home" }
 final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     let model = HostModel()
     private lazy var controller = ControllerModel(host: model)
@@ -34,12 +42,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     func openSettings() { navigation.page = "settings"; openWindow() }
     private func openWindow() {
         if let window { window.makeKeyAndOrderFront(nil); return }
-        let next = ControllerWindow(contentRect: NSRect(x: 0,y: 0,width: 640,height: 598),
+        let next = ControllerWindow(contentRect: NSRect(x: 0,y: 0,width: 560,height: 546),
             styleMask: [.titled,.closable,.miniaturizable,.resizable], backing: .buffered, defer: false)
         next.title = "Local Remote Desktop"; next.isReleasedWhenClosed = false
         let visible = NSScreen.main?.visibleFrame ?? NSRect(x: 0,y: 0,width: 1440,height: 900)
-        let size = NSSize(width: min(640,max(1,visible.width-48)),height: min(620,max(1,visible.height-48)))
-        next.minSize = NSSize(width: min(600,size.width),height: min(520,size.height)); next.acceptsMouseMovedEvents = true
+        let size = NSSize(width: min(560,max(1,visible.width-48)),height: min(568,max(1,visible.height-48)))
+        next.minSize = NSSize(width: min(520,size.width),height: min(480,size.height)); next.acceptsMouseMovedEvents = true
         next.contentView = NSHostingView(rootView: DesktopShell(host: model, controller: controller, navigation: navigation,
             fullScreen: { [weak self, weak next] in guard let self, self.controller.busy else { return }; self.controller.release(); next?.toggleFullScreen(nil) }))
         next.setFrame(NSRect(x: visible.midX-size.width/2,y: visible.midY-size.height/2,width: size.width,height: size.height),display: false)
@@ -72,6 +80,50 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     func applicationWillTerminate(_ notification: Notification) { controller.disconnect(); model.stop() }
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool { false }
 }
+enum EntryBuild {
+    static let revision = "entry-2026-10-12"
+    static var source: String {
+        guard let url = Bundle.main.url(forResource: "source-revision", withExtension: "txt"),
+            let text = try? String(contentsOf: url, encoding: .utf8) else { return "unknown" }
+        return text.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+}
+// Enumerate local interfaces only; never infer a peer name/system from its IP.
+enum LocalInterfaces {
+    static var addresses: [String] {
+        var list: UnsafeMutablePointer<ifaddrs>?
+        guard getifaddrs(&list) == 0 else { return [] }
+        defer { freeifaddrs(list) }
+        var cursor = list, found: [(String, String)] = []
+        while let item = cursor {
+            defer { cursor = item.pointee.ifa_next }
+            let info = item.pointee
+            guard let address = info.ifa_addr, address.pointee.sa_family == UInt8(AF_INET),
+                info.ifa_flags & UInt32(IFF_UP) != 0, info.ifa_flags & UInt32(IFF_LOOPBACK) == 0 else { continue }
+            var buffer = [CChar](repeating: 0, count: Int(NI_MAXHOST))
+            if getnameinfo(address, socklen_t(MemoryLayout<sockaddr_in>.size), &buffer, socklen_t(buffer.count), nil, 0, NI_NUMERICHOST) == 0 {
+                found.append((String(cString: info.ifa_name), String(cString: buffer)))
+            }
+        }
+        let sorted = found.sorted { a, b in
+            let ap = a.0.hasPrefix("en") ? 0 : 1, bp = b.0.hasPrefix("en") ? 0 : 1
+            return ap == bp ? a.0 < b.0 : ap < bp
+        }.map { $0.1 }
+        var seen = Set<String>()
+        return sorted.filter { seen.insert($0).inserted }
+    }
+}
+struct EntryTileStyle: ButtonStyle {
+    @State private var hovering = false
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label.frame(maxWidth: .infinity, minHeight: 252)
+            .background(configuration.isPressed ? Color(red: 0.945,green: 0.957,blue: 0.992) : hovering ? .white : Color(red: 0.973,green: 0.976,blue: 0.988))
+            .clipShape(RoundedRectangle(cornerRadius: 20))
+            .overlay(RoundedRectangle(cornerRadius: 20).stroke(hovering ? Color.accentColor.opacity(0.32) : Color(red: 0.906,green: 0.922,blue: 0.957),lineWidth: 1))
+            .shadow(color: Color.black.opacity(0.025),radius: 7,x: 0,y: 3)
+            .onHover { hovering = $0 }
+    }
+}
 struct DesktopShell: View {
     @ObservedObject var host: HostModel
     @ObservedObject var controller: ControllerModel
@@ -82,41 +134,57 @@ struct DesktopShell: View {
         Group {
             if controller.busy { ControllerView(model: controller, host: host, fullScreen: fullScreen) }
             else {
-                HStack(spacing: 0) {
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text(host.deviceName).font(.caption).foregroundStyle(.secondary).padding(.bottom, 18)
-                        navigationButton("连接", symbol: "rectangle.connected.to.line.below", page: "connect")
-                        navigationButton("共享此设备", symbol: "arrow.left.arrow.right", page: "share")
+                VStack(spacing: 0) {
+                    HStack {
+                        if navigation.page != "home" {
+                            Button { navigation.page = "home" } label: { Label(UiText.text("返回"),systemImage: "chevron.left") }
+                        }
                         Spacer()
-                        navigationButton("设置", symbol: "gearshape", page: "settings")
-                    }.padding(12).frame(width: 144).background(Color(nsColor: .windowBackgroundColor))
-                    Divider()
+                        Button { navigation.page = "settings" } label: { Label(UiText.text("设置"),systemImage: "gearshape") }
+                            .font(.system(size: 12,weight: .medium))
+                    }.controlSize(.regular).padding(.horizontal,28).padding(.top,16)
                     Group {
                         switch navigation.page {
+                        case "home":
+                            ScrollView {
+                                VStack(alignment: .leading,spacing: 30) {
+                                    Text(UiText.text("你想如何使用？")).font(.system(size: 26,weight: .medium))
+                                    HStack(spacing: 18) {
+                                        entry("发起连接",art: "initiate-connection",page: "connect")
+                                        entry("接受连接",art: "accept-connection",page: "share")
+                                    }
+                                    if host.active || host.starting {
+                                        Button(UiText.text("正在接受连接 · 查看或停止")) { navigation.page = "share" }
+                                    }
+                                }.padding(.horizontal,28).padding(.top,34).padding(.bottom,24)
+                            }
                         case "share":
                             VStack(spacing: 0) {
                                 ScrollView { HostView(model: host) }.frame(maxWidth: .infinity,maxHeight: .infinity)
-                                Divider().padding(.horizontal, 24)
-                                SharingActionView(model: host).padding(.horizontal, 24).padding(.top, 16).padding(.bottom, 24)
+                                Divider().padding(.horizontal,28)
+                                SharingActionView(model: host).padding(.horizontal,28).padding(.top,16).padding(.bottom,24)
                             }.frame(maxWidth: .infinity,maxHeight: .infinity)
                         case "settings": DesktopSettings(host: host, controller: controller)
                         default: ConnectionPage(model: controller, host: host)
                         }
                     }.frame(maxWidth: .infinity,maxHeight: .infinity)
-                }
+                }.background(Color.white)
             }
-        }.font(.system(size: 14)).tint(accent).frame(minWidth: min(600,max(1,(NSScreen.main?.visibleFrame.width ?? 1440)-48)),minHeight: min(480,max(1,(NSScreen.main?.visibleFrame.height ?? 900)-80)))
+        }.font(.system(size: 14)).foregroundStyle(Color(red: 41.0/255,green: 50.0/255,blue: 71.0/255)).tint(accent)
+        .frame(minWidth: min(520,max(1,(NSScreen.main?.visibleFrame.width ?? 1440)-48)),minHeight: min(450,max(1,(NSScreen.main?.visibleFrame.height ?? 900)-80)))
         .sheet(isPresented: $controller.manualOpen) { ManualConnectionView(model: controller, host: host) }
+        .onChange(of: host.active) { active in if active && navigation.page == "home" { navigation.page = "share" } }
+        .onChange(of: controller.busy) { busy in if busy { navigation.page = "connect" } }
     }
-    private func navigationButton(_ title: String, symbol: String, page: String) -> some View {
+    private func entry(_ title: String, art: String, page: String) -> some View {
         Button { navigation.page = page } label: {
-            HStack(spacing: 8) {
-                Image(systemName: symbol).frame(width: 16)
-                Text(UiText.text(title)).fixedSize(horizontal: false, vertical: true)
-            }.frame(maxWidth: .infinity,alignment: .leading).padding(10)
-                .background(navigation.page == page ? accent.opacity(0.12) : Color.clear)
-                .cornerRadius(9)
-        }.buttonStyle(.plain)
+            VStack(spacing: 17) {
+                if let image = AppBrand.entryArt[art] {
+                    Image(nsImage: image).resizable().scaledToFit().frame(width: 188,height: 146).accessibilityHidden(true)
+                }
+                Text(UiText.text(title)).font(.system(size: 20,weight: .medium)).multilineTextAlignment(.center)
+            }.padding(.horizontal,12)
+        }.buttonStyle(EntryTileStyle()).accessibilityLabel(UiText.text(title))
     }
 }
 struct ConnectionPage: View {
@@ -126,7 +194,7 @@ struct ConnectionPage: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 24) {
                 HStack {
-                    Text(UiText.text("连接")).font(.system(size: 25, weight: .semibold))
+                    Text(UiText.text("发起连接")).font(.system(size: 24, weight: .medium))
                     Spacer()
                     Button(UiText.text("添加目标")) { model.openManual() }.disabled(model.credentialBusy)
                 }
@@ -140,17 +208,17 @@ struct ConnectionPage: View {
                     if model.searching {
                         Text(UiText.text("正在搜索局域网设备…")).font(.caption).foregroundStyle(.secondary)
                     } else if model.devices.isEmpty {
-                        Text(UiText.text("未发现设备；请确认目标设备已开始共享。"))
+                        Text(UiText.text("未发现设备；请确认目标设备已开始接受连接。"))
                             .foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
                     }
                     if model.devices.isEmpty {
                         VStack(spacing: 12) {
                             Image(systemName: "list.bullet.rectangle").font(.system(size: 30)).foregroundStyle(.secondary)
                             Text(UiText.text(model.searching ? "正在搜索局域网设备…" : "暂无设备记录")).fontWeight(.semibold)
-                            Text(UiText.text("开启目标设备的共享后刷新，或点击“添加目标”输入目标IP。"))
+                            Text(UiText.text("让目标设备开始接受连接后刷新，也可以添加目标IP。"))
                                 .font(.callout).foregroundStyle(.secondary).multilineTextAlignment(.center)
                                 .fixedSize(horizontal: false, vertical: true)
-                        }.padding(24).frame(maxWidth: .infinity, minHeight: 182)
+                        }.padding(28).frame(maxWidth: .infinity, minHeight: 182)
                             .background(Color.secondary.opacity(0.06)).cornerRadius(10)
                     }
                     ForEach(model.devices) { device in
@@ -172,7 +240,7 @@ struct ConnectionPage: View {
                     }
                 }.frame(maxWidth: .infinity, alignment: .leading)
 
-            }.padding(24).frame(maxWidth: .infinity, alignment: .leading)
+            }.padding(28).frame(maxWidth: .infinity, alignment: .leading)
         }.onAppear { model.refreshDevices() }.onDisappear { model.pauseDiscovery() }
     }
 }
@@ -203,8 +271,8 @@ struct ManualConnectionView: View {
                 Button(UiText.text("忘记密码")) { model.forgetManualPassword() }.disabled(model.busy || model.credentialBusy)
             }
             if host.active || host.starting {
-                Toggle(UiText.text("停止共享并连接"), isOn: $model.stopSharingToConnect).disabled(model.busy)
-                Text(UiText.text("这将停止本机共享并断开当前控制者。"))
+                Toggle(UiText.text("停止接受连接并连接"), isOn: $model.stopSharingToConnect).disabled(model.busy)
+                Text(UiText.text("这将停止本机接受连接并断开当前控制者。"))
                     .font(.caption).foregroundStyle(.secondary)
             }
             if model.busy || !model.pairingNotice.isEmpty {
@@ -227,7 +295,7 @@ struct DesktopSettings: View {
     @State private var category = "general"
     var body: some View {
         VStack(alignment: .leading, spacing: 24) {
-            Text(UiText.text("设置")).font(.system(size: 25, weight: .semibold))
+            Text(UiText.text("设置")).font(.system(size: 24, weight: .medium))
             Picker(UiText.text("设置"), selection: $category) {
                 Text(UiText.text("通用")).tag("general")
                 Text(UiText.text("连接设置")).tag("connection")
@@ -260,6 +328,8 @@ struct DesktopSettings: View {
                     case "about":
                         Text("Local Remote Desktop").font(.title2)
                         Text("Local Remote Desktop 0.3.0-alpha.2").font(.caption).foregroundStyle(.secondary)
+                        Text("\(UiText.text("构建")) \(Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "unknown") · \(EntryBuild.revision)").font(.caption).foregroundStyle(.secondary)
+                        Text("\(UiText.text("源码提交")): \(EntryBuild.source)").font(.caption).foregroundStyle(.secondary).textSelection(.enabled)
                         Text(UiText.text("许可")).font(.headline)
                         Text("GPL-3.0-or-later").textSelection(.enabled)
                         DisclosureGroup(UiText.text("故障排查")) {
@@ -281,7 +351,7 @@ struct DesktopSettings: View {
                     .background(Color.secondary.opacity(0.06)).cornerRadius(10)
                     .frame(maxWidth: 640, alignment: .leading).frame(maxWidth: .infinity, alignment: .leading)
             }
-        }.padding(24).frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        }.padding(28).frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
     }
 }
 struct SharingActionView: View {
@@ -290,7 +360,7 @@ struct SharingActionView: View {
         Button {
             if model.active { model.stop() } else { model.start(requestPermission: true) }
         } label: {
-            Text(UiText.text(model.starting ? "正在启动…" : model.active ? "停止共享" : "开始共享"))
+            Text(UiText.text(model.starting ? "正在启动…" : model.active ? "停止接受连接" : "开始接受连接"))
                 .frame(maxWidth: .infinity)
         }.buttonStyle(.borderedProminent).controlSize(.large)
             .disabled(!model.sharingActionAvailable)
@@ -306,7 +376,7 @@ struct HostView: View {
         model.fileStatus.hasPrefix("文件传输：") || model.fileStatus.hasPrefix("发送文件：") || model.fileStatus.hasPrefix("接收文件：") || model.fileStatus.hasPrefix("文件已复制")
     }
     private var sharingTitle: String {
-        model.active ? "正在共享" : model.starting ? "正在启动共享…" : "尚未共享"
+        model.active ? "正在接受连接" : model.starting ? "正在启动…" : "尚未接受连接"
     }
     private var passwordText: String {
         if model.secret.isEmpty { return "尚未读取" }
@@ -314,7 +384,7 @@ struct HostView: View {
     }
     var body: some View {
         VStack(alignment: .leading, spacing: 18) {
-            Text(UiText.text("共享此设备")).font(.system(size: 25, weight: .semibold))
+            Text(UiText.text("接受连接")).font(.system(size: 24, weight: .medium))
             Text(UiText.text("让另一台设备连接并操作你的当前屏幕。")).foregroundStyle(.secondary)
             VStack(alignment: .leading, spacing: 20) {
                 VStack(alignment: .leading, spacing: 18) {
@@ -327,7 +397,6 @@ struct HostView: View {
                         }
                     }.frame(maxWidth: .infinity, alignment: .leading)
                     VStack(alignment: .leading, spacing: 12) {
-                        Text(UiText.text("被另一台设备来连接")).font(.headline)
                         HStack {
                             Text(UiText.text("本机名称")).foregroundStyle(.secondary)
                             Spacer()
@@ -337,6 +406,16 @@ struct HostView: View {
                         Text(model.deviceName).textSelection(.enabled).fixedSize(horizontal: false, vertical: true)
                     }
                 }.frame(maxWidth: .infinity, alignment: .leading)
+                VStack(alignment: .leading,spacing: 8) {
+                    Text(UiText.text("本机 IP")).font(.caption).foregroundStyle(.secondary)
+                    ForEach(LocalInterfaces.addresses,id: \.self) { address in
+                        HStack { Text(address).font(.system(.body,design: .monospaced)).textSelection(.enabled)
+                            Spacer()
+                            Button(UiText.text("复制")) { NSPasteboard.general.clearContents(); NSPasteboard.general.setString(address,forType: .string) }
+                                .accessibilityLabel(UiText.text("复制") + " " + address)
+                        }
+                    }
+                }
                 Divider()
                 VStack(alignment: .leading, spacing: 18) {
                     Text(UiText.text("连接本设备时，使用下方密码。"))
@@ -384,7 +463,7 @@ struct HostView: View {
                     Button(UiText.text("辅助功能权限")) { model.openAccessibilitySettings() }
                 }.padding(.top, 12)
             }
-        }.frame(maxWidth: 480, alignment: .leading).padding(24).frame(maxWidth: .infinity,alignment: .leading).tint(blueberry)
+        }.frame(maxWidth: 480, alignment: .leading).padding(28).frame(maxWidth: .infinity,alignment: .leading).tint(blueberry)
         .sheet(isPresented: $model.editingName, onDismiss: { model.cancelNameEditor() }) {
             DeviceNameEditorView(model: model).tint(blueberry)
         }

@@ -14,8 +14,8 @@ new platform. Keep its English/Chinese agreements aligned with implementation.
   Discovery is not authorization; clipboard/files belong to paired session roles.
 - Make routine use simple: remembered secure pairing, clear sharing/stop actions,
   compact session controls, native shortcuts and predictable updates.
-- The current UI proposal is in `design/review/`. Apply it to native apps only
-  after user review. Future platform mockups are not support claims.
+- The current approved UI is in `design/entry-review/` (2026-10-12).
+  Keep its role-first hierarchy across native apps; archive older proposals. Future platform mockups are not support claims.
 - Prefer background/headless checks. Do not open foreground test windows, take
   keyboard focus or inject real OS input during the user's work. Native input
   acceptance needs an agreed test period and a dedicated target.

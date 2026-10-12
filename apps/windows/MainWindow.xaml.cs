@@ -78,6 +78,7 @@ public partial class MainWindow : Window
         MinWidth=Math.Min(MinWidth,availableWidth); MinHeight=Math.Min(MinHeight,availableHeight);
         Width=Math.Min(Width,availableWidth); Height=Math.Min(Height,availableHeight);
         LocalDeviceName.Text=remember?DeviceName.Default.Current:Environment.MachineName;
+        BuildIdentity.Text=BuildInfo.Display;
         DiscoverButton.ContextMenu=new(); RebuildDeviceMenu();
         UiText.Current.LanguageChanged+=ApplyLanguage; ApplyLanguage();
         if(remember || discovery!=null) Loaded+=(_,_)=>RefreshDevices();
@@ -157,10 +158,21 @@ public partial class MainWindow : Window
         if(ConnectPage==null || SharingPage==null || SettingsPage==null || session!=null || sender is not FrameworkElement {Tag:string page}) return;
         ShowPage(page);
     }
+    void HomeBackClick(object sender,RoutedEventArgs e) {
+        if(session!=null) return;
+        NavConnect.IsChecked=NavShare.IsChecked=NavSettings.IsChecked=false;
+        ShowPage("home");
+    }
     void ShowPage(string page) {
+        EntryPage.Visibility=page=="home"?Visibility.Visible:Visibility.Collapsed;
+        HomeBack.Visibility=page=="home"?Visibility.Collapsed:Visibility.Visible;
+        ActiveSharingShortcut.Visibility=sharingWindow?.Sharing==true?Visibility.Visible:Visibility.Collapsed;
         if(page=="share" && sharingWindow==null) {
             // Reuse the tested sharing lifecycle without creating another visible window.
-            var sharing=createSharing(active=>StartConnection.IsEnabled=!active && (DeviceList.SelectedItem is not LanDevice peer || peer.Online));
+            var sharing=createSharing(active=> {
+                StartConnection.IsEnabled=!active && (DeviceList.SelectedItem is not LanDevice peer || peer.Online);
+                ActiveSharingShortcut.Visibility=active?Visibility.Visible:Visibility.Collapsed;
+            });
             sharing.NameChanged+=name=>LocalDeviceName.Text=name;
             LocalDeviceName.Text=((TextBlock)sharing.FindName("SharingName")).Text;
             var content=sharing.Content; sharing.Content=null; SharingPage.Content=content;
@@ -565,7 +577,7 @@ public partial class MainWindow : Window
     }
     void FullscreenClick(object sender,RoutedEventArgs e)=>ToggleFull();
     void DiagnosticsClick(object sender,RoutedEventArgs e) {
-        Clipboard.SetText($"Local Remote Desktop input diagnostics\nConnected: {connected}\nKeyboardFocus: {Surface.IsKeyboardFocusWithin}\nWindowsShortcuts: {WindowsShortcuts.IsChecked==true}\nTargetPlatform: {targetPlatform}\nInputAllowed: {inputAllowed}\nHostReportsInput: {hostReportsInput}\nQueued: {Interlocked.Read(ref inputsQueued)}\nSent: {Interlocked.Read(ref inputsSent)}\nHostReceived: {Interlocked.Read(ref hostReceived)}\nHostPosted: {Interlocked.Read(ref hostPosted)}\nHostBlocked: {Interlocked.Read(ref hostBlocked)}\nHostRejected: {Interlocked.Read(ref hostRejected)}\nHostError: {hostInputError}\nPosted means submitted to native OS input, not confirmed application acceptance.");
+        Clipboard.SetText($"Local Remote Desktop input diagnostics\n{BuildInfo.Display}\nExecutable: {Environment.ProcessPath}\nConnected: {connected}\nKeyboardFocus: {Surface.IsKeyboardFocusWithin}\nWindowsShortcuts: {WindowsShortcuts.IsChecked==true}\nTargetPlatform: {targetPlatform}\nInputAllowed: {inputAllowed}\nHostReportsInput: {hostReportsInput}\nQueued: {Interlocked.Read(ref inputsQueued)}\nSent: {Interlocked.Read(ref inputsSent)}\nHostReceived: {Interlocked.Read(ref hostReceived)}\nHostPosted: {Interlocked.Read(ref hostPosted)}\nHostBlocked: {Interlocked.Read(ref hostBlocked)}\nHostRejected: {Interlocked.Read(ref hostRejected)}\nHostError: {hostInputError}\nPosted means submitted to native OS input, not confirmed application acceptance.");
         SetStatus("诊断已复制（不包含密钥、IP 或输入内容）");
     }
     void ManualForgetClick(object sender,RoutedEventArgs e) {

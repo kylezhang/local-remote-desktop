@@ -97,7 +97,7 @@ final class HostModel: ObservableObject {
                 self.revealSecret = false
                 self.passwordEditor.reset(); self.editingPassword = false
                 if !Task.isCancelled {
-                    self.status = "密码已保存，原连接已断开；点击开始共享后使用新密码连接。"
+                    self.status = "密码已保存，原连接已断开；点击开始接受连接后使用新密码连接。"
                     self.pairingMessage = ""
                 }
             } catch is CancellationError {
@@ -152,7 +152,7 @@ final class HostModel: ObservableObject {
         guard host == nil, !credentialBusy, !editingName, !editingPassword else { return }
         if !requestPermission && pairingKey == nil && !Pairing.permitsAutomaticRead {
             keychainCheck = "等待用户操作（启动未访问钥匙串）"
-            status = "点击开始共享。会先检查屏幕权限，再读取配对密码。"
+            status = "点击开始接受连接。会先检查屏幕权限，再读取配对密码。"
             return
         }
         starting = true; status = "正在检查屏幕访问…"
@@ -162,7 +162,7 @@ final class HostModel: ObservableObject {
           // Explicit sharing checks ScreenCaptureKit even if the legacy
           // preflight reports false. Login must not request screen permission.
           if !requestPermission && !CGPreflightScreenCaptureAccess() {
-            self.status = "尚未启动：点击开始共享，检查屏幕访问。授权后只需退出重开，不要重新安装。"
+            self.status = "尚未启动：点击开始接受连接，检查屏幕访问。授权后只需退出重开，不要重新安装。"
             return
           }
           var checkingScreen = true
@@ -192,7 +192,7 @@ final class HostModel: ObservableObject {
                     self.status = text
                 } }
             try h.start(); self.host = h; self.active = true; self.discovery.start(name: self.deviceName)
-            self.status = trusted ? "共享已启动，等待 Windows 连接 · TCP 47980" : "共享已启动（只能查看）· 辅助功能权限未被认可"
+            self.status = trusted ? "共享已启动，等待设备连接 · TCP 47980" : "共享已启动（只能查看）· 辅助功能权限未被认可"
           } catch is CancellationError { }
           catch {
             let e = error as NSError
@@ -213,6 +213,9 @@ final class HostModel: ObservableObject {
         let text = """
         LocalRemoteDesktop \(Bundle.main.object(forInfoDictionaryKey: "LocalRemoteDesktopReleaseVersion") as? String ?? Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "unknown")
         Build: \(Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "unknown")
+        SourceCommit: \(Bundle.main.url(forResource: "source-revision", withExtension: "txt").flatMap { try? String(contentsOf: $0, encoding: .utf8).trimmingCharacters(in: .whitespacesAndNewlines) } ?? "unknown")
+        InterfaceRevision: entry-2026-10-12
+        Executable: \(Bundle.main.executablePath ?? "unknown")
         macOS: \(ProcessInfo.processInfo.operatingSystemVersionString)
         InstalledAtApplications: \(Bundle.main.bundlePath == "/Applications/Local Remote Desktop.app")
         AppIconLoaded: \(AppBrand.icon != nil)

@@ -1,3 +1,5 @@
+> Archived revision 2. The [approved task-first design](../entry-review/README.md) replaces this desktop proposal.
+
 # Local Remote Desktop design review
 
 New task-first entrance proposal: [draft preview](../entry-review/index.html), [English notes](../../docs/entry-design.md), [中文说明](../../docs/zh-CN/entry-design.md). It has not replaced this revision in native clients.

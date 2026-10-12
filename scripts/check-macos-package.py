@@ -45,13 +45,14 @@ def check_files(files, version):
     }
     if not required.issubset(files):
         raise ValueError('Missing required application files')
+    entry_files = {'Contents/Resources/initiate-connection.png', 'Contents/Resources/accept-connection.png', 'Contents/Resources/source-revision.txt'}
     # Stapler may add a ticket at Contents/CodeResources. No arbitrary resources
     # or credentials from a previous local build are permitted in the bundle.
-    if set(files) - required - {'Contents/CodeResources'}:
+    if set(files) - required - entry_files - {'Contents/CodeResources'}:
         raise ValueError('Unexpected application files')
     info = plistlib.loads(files['Contents/Info.plist'])
     catalog = json.loads(files['Contents/Resources/strings.json'])
-    if (not isinstance(catalog, dict) or catalog.get('开始共享') != 'Start sharing'
+    if (not isinstance(catalog, dict) or catalog.get('开始共享') not in {'Start sharing', 'Start accepting connections'}
             or catalog.get('目标IP') != 'Target IP'
             or any(not isinstance(k, str) or not isinstance(v, str) for k, v in catalog.items())):
         raise ValueError('Invalid shared language catalog')
@@ -62,6 +63,15 @@ def check_files(files, version):
             or info.get('CFBundleIconFile') != 'LocalRemoteDesktop.icns'
             or not re.fullmatch(r'[1-9][0-9]*', str(info.get('CFBundleVersion', '')))):
         raise ValueError('Incorrect application identity, version or icon')
+    if int(info['CFBundleVersion']) >= 24:
+        if not entry_files.issubset(files):
+            raise ValueError('Missing entry art or source identity')
+        if not re.fullmatch(rb'[0-9a-f]{40}', files['Contents/Resources/source-revision.txt'].strip()):
+            raise ValueError('Release source identity is unknown or modified')
+        for path in sorted(entry_files - {'Contents/Resources/source-revision.txt'}):
+            data = files[path]
+            if not data.startswith(b'\x89PNG\r\n\x1a\n') or len(data) < 24 or struct.unpack('>II',data[16:24]) != (960,744):
+                raise ValueError('Invalid entry illustration')
     executable = files['Contents/MacOS/LocalRemoteDesktop']
     if len(executable) < 32 or struct.unpack('<II', executable[:8]) != (0xFEEDFACF, 0x0100000C):
         raise ValueError('Expected a thin Apple Silicon Mach-O executable')
@@ -140,7 +150,10 @@ def check_archive(archive, version, commit):
     if commit not in source_notice or 'GPL-3.0-or-later' not in source_notice:
         raise ValueError('Corresponding source notice mismatch')
     check_source_archive(files[folder + '/source.zip'], commit, license_text)
-    check_files({n[len(app_prefix):]: b for n, b in files.items() if n.startswith(app_prefix)}, version)
+    app_files = {n[len(app_prefix):]: b for n, b in files.items() if n.startswith(app_prefix)}
+    check_files(app_files, version)
+    if 'Contents/Resources/source-revision.txt' in app_files and app_files['Contents/Resources/source-revision.txt'].strip() != commit.encode('ascii'):
+        raise ValueError('Application and source archive commits differ')
     manifest = json.loads(files[folder + '/release.json'])
     if manifest.get('version') != version or manifest.get('commit') != commit:
         raise ValueError('Release provenance mismatch')

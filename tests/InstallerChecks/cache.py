@@ -22,7 +22,7 @@ class BuildCacheChecks(unittest.TestCase):
         self.assertTrue(parent.is_relative_to(work))
         project = parent / 'project'
         project.mkdir()
-        for name in ('Info.plist', 'LocalRemoteDesktop.icns', 'icon.png', 'strings.json'):
+        for name in ('Info.plist', 'LocalRemoteDesktop.icns', 'icon.png', 'strings.json', 'initiate-connection.png', 'accept-connection.png'):
             (project / name).write_text('fixture resource', encoding='utf-8')
         old = project / 'build/Local Remote Desktop.app/Contents/old-resource'
         old.parent.mkdir(parents=True)
@@ -51,6 +51,7 @@ xcrun() {
         fixture = fixture.replace('../../assets/brand/LocalRemoteDesktop.icns', 'LocalRemoteDesktop.icns')
         fixture = fixture.replace('../../assets/brand/icon.png', 'icon.png')
         fixture = fixture.replace('../../assets/localization/strings.json', 'strings.json')
+        fixture = fixture.replace('../../assets/interface/', '')
         (project / 'build-app.sh').write_text(fixture, encoding='utf-8', newline='\n')
         return parent, project
 

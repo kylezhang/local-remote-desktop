@@ -1,0 +1,25 @@
+Local Remote Desktop — approved task-first entry, 2026-10-12
+Public version: 0.3.0-alpha.2; Mac internal build 24.
+Interface revision: entry-2026-10-12.
+
+PASS Windows .NET 8 native build.
+PASS unshown production ClientChecks: English/Chinese role chooser and compact
+layouts, loaded 960x744 illustration resources, equal role choices, Back without
+credential reads, retained unsaved drafts/active listener and visible stop route,
+manual pairing and metadata, settings consent/default scope, session navigation.
+PASS existing encrypted text/files, 12-session cleanup, synthetic H264 decode,
+latest quality/reconnect cancellation and input-release regressions.
+No window shown/activated, no physical capture/input or real clipboard access.
+
+PASS Swift source syntax; production host/controller/startup/localization logic
+using explicit platform doubles. Apple UI/framework behavior is not simulated
+as proven. 346 shared strings/placeholders checked.
+PASS 21 installer recovery fixtures, 4 moved-cache/build fixtures, local/release
+signing fixtures and Mac package/provenance/release-pipeline fixtures.
+PASS bilingual document links, version/identity/license alignment, tracked-file
+hygiene and native resource integration.
+
+PENDING Apple SDK build, installed Mac UI/Keychain/TCC and real two-device
+acceptance/latency/resource measurements. No Mac SSH attempts.
+No new public tag/release; old bundle/Keychain identities remain stable.
+Final Windows packaging and idle-directory deployment are separate delivery steps.

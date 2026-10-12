@@ -9,10 +9,14 @@ must not appear as usable actions before implementation.
 
 ## Structure and actions
 
-- **Connect**: choose a nearby device or enter its **Target IP**, enter **Pairing
+The [approved homepage](entry-design.md) presents two equal role choices, without
+a permanent side rail. Role navigation has no session side effects; Back preserves
+active sharing and unsaved drafts. Settings is one labeled upper-right shortcut.
+
+- **Start a connection**: choose a nearby device or enter its **Target IP**, enter **Pairing
   password**, then connect. Discovery fills the address; it never pairs or starts
   control automatically. Remembered connections stay convenient.
-- **Share this device**: start/stop sharing the current desktop and manage its
+- **Accept connections**: start/stop sharing the current desktop and manage its
   password. Keep the local stop action reachable. Sharing is explicitly enabled.
 - **Settings**: General, Connection, Clipboard and About. Connection defaults
   affect new logical connections; current-session options are temporary. Clipboard
@@ -39,7 +43,7 @@ is inline; system permission prompts retain their native presentation.
 
 ## Appearance and interaction
 
-Desktop entry windows start at approximately 640 × 620 logical units including
+Desktop entry windows start at approximately 560 × 568 logical units including
 native chrome, centered inside the available screen with a margin. Fit smaller
 work areas; keep settings/forms sized to their content rather than increasing
 empty space. Navigation does not reset a user’s resized window. Long content
@@ -48,7 +52,7 @@ native safe areas and available space, not a fixed desktop window. See the
 [development handbook](development-handbook.md) for the recorded agreements.
 
 Keep the approved blueberry icon and existing palette during this implementation:
-accent #5265EC, text #202435, secondary #697183, white content, rail #F6F7FA and
+accent #5265EC, text #202435, secondary #697183, white content, surfaces #F6F7FA and
 rules #E5E8F0; use readable system/dark equivalents. Do not add a second
 logo to a desktop title bar. Use Segoe UI on Windows and system San Francisco on
 Mac; future Linux/mobile apps use their native system typography.

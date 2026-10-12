@@ -2,8 +2,7 @@
 
 [简体中文](zh-CN/entry-design.md) · [Previous UI proposal](design.md)
 
-Recorded 2026-10-12. The owner agreed to explore two initial entrances and confirmed their names. These
-three screens are **a design draft for review**, not approved native changes.
+Recorded 2026-10-12. **The three-screen design is approved for native implementation.**
 Open the [interactive draft](../design/entry-review/index.html) or see the
 [three-screen overview](../design/entry-review/overview-zh.png).
 
@@ -50,7 +49,7 @@ This does not remove pairing or change protocol authorization. Internally the
 code can retain the sharing role name; users do not need that extra term. File
 clipboard settings say Sync files / 同步文件. Statuses identify not accepting,
 waiting and connected states in their page context. The entrance names are agreed;
-the full visual proposal still needs review.
+the full visual proposal was approved on 2026-10-12.
 
 The homepage keeps only the main question: no explanatory subtitle or role
 subtitles. Each role's icon and label are centered as one group. Both
@@ -88,7 +87,7 @@ sheet only sketches their existing scope, not a new settings specification.
 
 Use the approved icon and #5265EC accent, neutral white/grey content and native
 fonts/chrome. The same hierarchy and wording apply to Windows/macOS, without
-copying one OS's title bar to the other. Draft frame: 560 × 568 logical pixels,
+copying one OS's title bar to the other. Approved frame: 560 × 568 logical pixels,
 22 × 28 content padding, two equally prominent entrances, no permanent rail.
 The exact native minimum and scaling remain acceptance work. Normal task content
 fits the frame; additional permission text/long content scrolls with the sharing
@@ -196,7 +195,7 @@ must be recorded separately.
 
 ## Review and implementation
 
-Confirm these three task screens before changing clients. Then implement the
+The owner approved these three task screens on 2026-10-12. Implement the
 shared flow incrementally, preserve encrypted transport/session behavior, and
 verify native builds and actual installed launches separately from headless checks.
 This is not a new release or a promise of future-platform availability.

@@ -2,7 +2,7 @@
 
 [简体中文](README.zh-CN.md) · [Design notes](../../docs/entry-design.md)
 
-**Draft for review. Native clients have not been changed for this proposal.**
+**Approved on 2026-10-12; current native implementation reference.**
 First launch chooses Start a connection or Accept connections (接受连接); the next screen owns
 its task. Open `index.html` offline, or serve the repository and open
 `design/entry-review/index.html`. The outside page/platform/language controls are
@@ -23,4 +23,4 @@ mockups, not evidence of native runtime behavior.
 Headless browser review covered EN/ZH × Windows/macOS within the 560 × 568 draft
 frame, no horizontal overflow at a narrower viewport, entry actions, pairing
 feedback, password draft/cancel/save, permission state and role confirmation.
-The owner still needs to approve this draft before native implementation.
+Native build/acceptance evidence is recorded separately in [native progress](../../docs/native-ui.md).
