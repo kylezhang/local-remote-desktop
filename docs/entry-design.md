@@ -2,15 +2,15 @@
 
 [简体中文](zh-CN/entry-design.md) · [Previous UI proposal](design.md)
 
-Recorded 2026-10-12. The owner agreed to explore two initial entrances. These
+Recorded 2026-10-12. The owner agreed to explore two initial entrances and confirmed their names. These
 three screens are **a design draft for review**, not approved native changes.
 Open the [interactive draft](../design/entry-review/index.html) or see the
 [three-screen overview](../design/entry-review/overview-zh.png).
 
 ## Structure
 
-First launch presents two equally clear choices: **Connect to a device** (operate another
-device) and **Allow connections** (Chinese: **允许连接**, let another device operate
+First launch presents two equally clear choices: **Start a connection** (operate another
+device) and **Accept connections** (Chinese: **接受连接**, let another device operate
 this one). Choosing a role opens its task screen; it never starts a connection
 or enables sharing. One application still provides both roles. No permanent
 sidebar or credential form on the first screen.
@@ -18,8 +18,8 @@ sidebar or credential form on the first screen.
 | Screen | Content and primary action |
 |---|---|
 | Home | Two large role buttons; a secondary Settings entry. |
-| Connect to a device | One device list, refresh and one Add target button. Credentials appear only in the target/pairing dialog. Empty state explains what to do. |
-| Allow connections | Vertically stacked local name, IP and masked password. Allow connections is the page's bottom action after those details. |
+| Start a connection | One device list, refresh and one Add target button. Credentials appear only in the target/pairing dialog. Empty state explains what to do. |
+| Accept connections | Vertically stacked local name, IP and masked password. Accept connections is the page's bottom action after those details. |
 
 Back returns to the role chooser without discarding credentials, saved history
 or an active sharing session. It is navigation, not Disconnect or Stop. An
@@ -35,28 +35,31 @@ on reload and stores nothing.
 
 ## Vocabulary refinement
 
-The owner asked to avoid mixing a passive “被连接” entrance with “sharing”
-actions. Proposed visible terms now form one connection vocabulary:
+The owner confirmed 发起连接 / 接受连接 on 2026-10-12 after reviewing the
+passive/permission wording. Visible terms now form one connection vocabulary:
 
 | Context | English | Chinese |
 |---|---|---|
-| Operate another device | Connect to a device | 连接设备 |
-| Receive access to this device | Allow connections | 允许连接 |
-| Open the local listener | Allow connections | 允许连接 |
-| Stop the local listener/session | Stop accepting connections | 停止接收连接 |
+| Operate another device | Start a connection | 发起连接 |
+| Receive access to this device | Accept connections | 接受连接 |
+| Open the local listener | Start accepting connections | 开始接受连接 |
+| Stop the local listener/session | Stop accepting connections | 停止接受连接 |
 | Establish/end a remote session | Connect / Disconnect | 连接 / 断开 |
 
 This does not remove pairing or change protocol authorization. Internally the
 code can retain the sharing role name; users do not need that extra term. File
 clipboard settings say Sync files / 同步文件. Statuses identify not accepting,
-waiting and connected states in their page context. This vocabulary is part of
-the draft and still subject to review.
+waiting and connected states in their page context. The entrance names are agreed;
+the full visual proposal still needs review.
 
 The homepage keeps only the main question: no explanatory subtitle or role
-subtitles. Each role's icon and label are centered as one group. Icons share the
-approved logo's rounded screen and opposing-arrow geometry; the first contains
-a pointer, the second an incoming arrow. They are supporting symbols, not two
-new application logos. Native title-bar icons retain OS conventions.
+subtitles. Each role's icon and label are centered as one group. Both
+illustrations keep the larger local screen on the left in brand blue
+and the smaller remote screen on the right in neutral grey. One arrow reverses
+direction to show connection initiation, not video-data direction. The pointer
+sits on the operated screen: remote for Start, local for Accept. Rounded screens
+and palette echo the approved brand; these are functional illustrations, not new
+application logos. Native title-bar icons retain OS conventions.
 
 ## Task details
 
@@ -74,7 +77,7 @@ an obvious Generate button; Cancel changes nothing. Save ends sharing and waits
 for explicit Start. Existing longer passwords remain valid until deliberately
 changed. Show/Copy and consent behavior keep the established implementation rules.
 
-Mac permission recovery appears on Allow connections when relevant, not on the
+Mac permission recovery appears on Accept connections when relevant, not on the
 first screen or connection-to-another-device form. Opening the screen does not
 request Keychain or TCC access. Permission grants remain system-controlled.
 Settings retains General, Connection, Clipboard and About; the small preview
@@ -117,6 +120,16 @@ Next implementation should expose non-secret source/build identity and compare
 built, installed and running executable paths before concluding an update worked.
 Keep stable bundle/Keychain identities and never reset permissions as a UI fix.
 No Mac SSH or native validation was performed for this draft.
+
+## Design responsibility
+
+Review the complete flow before asking for owner feedback: vocabulary, device
+identity, connection direction, operated-screen cues, action/confirmation states,
+English/Chinese lengths, visual centering, spacing, hover/pressed/focus feedback
+and a narrow viewport. Do not ask the owner to discover each alignment or state
+mistake separately. Role choice navigates; it never grants control or ends an
+active session. Owner review is for product/design decisions; native evidence
+must be recorded separately.
 
 ## Review and implementation
 

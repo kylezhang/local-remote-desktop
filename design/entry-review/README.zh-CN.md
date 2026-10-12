@@ -2,7 +2,7 @@
 
 [English](README.md) · [设计说明](../../docs/zh-CN/entry-design.md)
 
-**待评审草图，本轮尚未修改原生客户端。** 首次打开先选“连接设备”或“允许连接”，再进入
+**待评审草图，本轮尚未修改原生客户端。** 首次打开先选“发起连接”或“接受连接”，再进入
 对应任务。可离线打开 `index.html`，或在本地服务中预览。应用外的平台、语言、页面
 选择按钮只用于评审，实际产品不需要这套导航。
 
@@ -12,7 +12,7 @@
 浏览器草图，不代表 Mac/Windows 原生运行通过。
 
 [三页总览](overview-zh.png) · [首页](windows-home-zh.png) ·
-[连接设备](windows-connect-zh.png) · [允许连接](mac-share-zh.png) ·
+[发起连接](windows-connect-zh.png) · [接受连接](mac-share-zh.png) ·
 [空列表](mac-connect-empty-zh.png) · [添加目标](mac-add-target-zh.png)
 
 后台浏览器检查覆盖中英文 × 两端窗口外观、560 × 568 默认尺寸、窄窗口不横向溢出、
