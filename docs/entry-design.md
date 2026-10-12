@@ -55,7 +55,8 @@ the full visual proposal still needs review.
 The homepage keeps only the main question: no explanatory subtitle or role
 subtitles. Each role's icon and label are centered as one group. Both
 illustrations keep the local screen in the foreground at lower left, with a
-neutral remote screen behind it at upper right. A curved connection path reverses
+remote screen behind it at upper right. Brand blue now marks the operated
+desktop, not the identity of the local machine. A curved connection path reverses
 direction to show connection initiation, not video-data direction. The pointer
 sits on the operated screen: remote for Start, local for Accept. Rounded screens
 and palette echo the approved brand; these are functional illustrations, not new
@@ -160,6 +161,28 @@ shortcut. Navigating from the homepage reached the expected task screens; the
 labeled Settings shortcut opened its existing preview panel. Updated renders
 are browser mockups, not native client evidence. Earlier empty/error scenario
 screenshots remain earlier captures, not updated harmony-pass images.
+
+## Finished-product visual pass — 2026-10-12
+
+The owner asked for a visibly larger aesthetic improvement. This iteration
+rebuilds the illustrations rather than reporting an unmeasurable percentage.
+Each display has a precise casing, inset desktop, restrained depth and a
+fictional application window. The operated desktop is lit in the existing blue
+palette, with a native-like pointer; the other stays neutral. Local/remote
+positions, connection direction, role names and pairing logic remain unchanged.
+Blue is confined to the functional illustration instead of spreading across the
+page. No real screen content, OS logos or new product logos are used.
+
+The prompt is 26px, tiles 252px high, and illustrations 188 × 145.7px. This
+increases useful visual content and reduces the earlier empty-space imbalance.
+Equal roles retain equal size; hover/press responds through border/background/
+shadow with no movement and a 120ms transition disabled for reduced motion.
+
+Browser review observed four Windows/Mac × English/Chinese homepage variants:
+all vector assets loaded, content fit, labels stayed single-line and image/text
+centers matched within 0.01px. These are browser-layout observations, not native
+GUI acceptance or evidence of a measured percentage improvement. Other task
+pages retain the preceding harmony pass.
 
 ## Design responsibility
 

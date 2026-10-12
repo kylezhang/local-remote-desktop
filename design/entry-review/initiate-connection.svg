@@ -1,22 +1,37 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="200" height="148" viewBox="0 0 200 148">
-  <title>Start a connection</title>
-  <desc>A local screen in the foreground and a remote screen behind it. A curved arrow shows the connection direction; the pointer marks the controlled screen.</desc>
-  <defs>
-    <linearGradient id="surface" x1="20" y1="62" x2="120" y2="126" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#FFFFFF"/><stop offset="1" stop-color="#F0F3FD"/>
-    </linearGradient>
-    <filter id="depth" x="-25%" y="-30%" width="160%" height="180%">
-      <feDropShadow dx="0" dy="3" stdDeviation="3" flood-color="#36436A" flood-opacity=".10"/>
-    </filter>
-  </defs>
-  <rect x="87" y="20" width="85" height="55" rx="10" fill="#F0F2F7" stroke="#C8D0DE" stroke-width="1.4"/>
-  <rect x="93" y="26" width="73" height="43" rx="5" fill="#F9FAFD"/>
-  <g filter="url(#depth)">
-    <rect x="20" y="61" width="100" height="64" rx="12" fill="url(#surface)" stroke="#8795E6" stroke-width="1.5"/>
-    <path d="M32 66H108" stroke="#FFFFFF" stroke-width="1.5" stroke-linecap="round"/>
-  </g>
-  <path d="M128 98C164 98 189 76 178 47m-5 7 5-7 7 3" fill="none" stroke="#5265EC" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"/>
-  <g transform="translate(128 36) scale(.77)">
-    <path d="M0 0 21 14 12 15 17 25 12.5 27 7.5 17 1.3 23Z" fill="#5265EC" stroke="#FFFFFF" stroke-width="1.5" stroke-linejoin="round"/>
-  </g>
+<svg xmlns="http://www.w3.org/2000/svg" width="240" height="186" viewBox="0 0 240 186">
+<title>Start a connection</title>
+<desc>The local display stays in front at lower left; the remote display stays behind at upper right. Blue lights the controlled desktop. The connection arrow reverses between roles.</desc>
+<defs>
+  <linearGradient id="desktop-blue" x1="0" y1="0" x2="1" y2="1">
+    <stop stop-color="#6177F1"/><stop offset=".52" stop-color="#5265EC"/><stop offset="1" stop-color="#3849BD"/>
+  </linearGradient>
+  <linearGradient id="idle-surface" x1="0" y1="0" x2="0" y2="1">
+    <stop stop-color="#F5F7FC"/><stop offset="1" stop-color="#E4EAF3"/>
+  </linearGradient>
+  <filter id="case-depth" x="-25%" y="-25%" width="160%" height="180%">
+    <feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#334366" flood-opacity=".12"/>
+  </filter>
+  <filter id="cursor-depth" x="-40%" y="-30%" width="180%" height="190%">
+    <feDropShadow dx="0" dy="1" stdDeviation=".8" flood-color="#203565" flood-opacity=".18"/>
+  </filter>
+</defs>
+<g filter="url(#case-depth)"><rect x="96" y="18" width="136" height="92" rx="13" fill="#FFFFFF" stroke="#CBD4EA" stroke-width="1.2"/></g>
+<rect x="100" y="22" width="128" height="84" rx="9" fill="url(#desktop-blue)"/>
+<rect x="113" y="35" width="102" height="62" rx="6" fill="#FFFFFF" fill-opacity=".96"/>
+<path d="M119 45H209" stroke="#E6EAF3" stroke-width="1"/>
+<circle cx="120" cy="40.5" r="1.5" fill="#A8B3C9"/><circle cx="125" cy="40.5" r="1.5" fill="#CCD4E3"/>
+<rect x="118" y="51" width="16" height="41" rx="3" fill="#EFF2FA"/>
+<rect x="122" y="56" width="8" height="2" rx="1" fill="#8B99DC"/><rect x="122" y="62" width="7" height="2" rx="1" fill="#C9D1E5"/>
+<rect x="140" y="52" width="68" height="34" rx="3" fill="#F2F4FA"/>
+<path d="M143 90H201" stroke="#C7D0E2" stroke-width="2" stroke-linecap="round"/>
+<path d="M112 22.8H216" stroke="#FFFFFF" stroke-opacity=".55" stroke-width=".8" stroke-linecap="round"/>
+<g filter="url(#case-depth)"><rect x="14" y="86" width="126" height="86" rx="13" fill="#FFFFFF" stroke="#C7D0DE" stroke-width="1.2"/></g>
+<rect x="18" y="90" width="118" height="78" rx="9" fill="url(#idle-surface)"/>
+<rect x="34" y="106" width="86" height="47" rx="6" fill="#FFFFFF" fill-opacity=".62" stroke="#E5EAF3" stroke-width="1"/>
+<path d="M43 117H109" stroke="#DFE5F0" stroke-width="2" stroke-linecap="round"/>
+<path d="M30 90.8H124" stroke="#FFFFFF" stroke-opacity=".55" stroke-width=".8" stroke-linecap="round"/>
+<path d="M149 141C196 141 230 112 235 80C237 68 235 61 230 56m-3 8 3-8 8 3" fill="none" stroke="#5265EC" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"/>
+<g transform="translate(190 68) scale(.72)" filter="url(#cursor-depth)">
+  <path d="M0 0 21 14 12 15 17 25 12.5 27 7.5 17 1.3 23Z" fill="#FFFFFF" stroke="#253C76" stroke-width="1.1" stroke-linejoin="round"/>
+</g>
 </svg>
