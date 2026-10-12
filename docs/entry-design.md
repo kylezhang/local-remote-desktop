@@ -54,8 +54,8 @@ the full visual proposal still needs review.
 
 The homepage keeps only the main question: no explanatory subtitle or role
 subtitles. Each role's icon and label are centered as one group. Both
-illustrations keep the larger local screen on the left in brand blue
-and the smaller remote screen on the right in neutral grey. One arrow reverses
+illustrations keep the local screen in the foreground at lower left, with a
+neutral remote screen behind it at upper right. A curved connection path reverses
 direction to show connection initiation, not video-data direction. The pointer
 sits on the operated screen: remote for Start, local for Accept. Rounded screens
 and palette echo the approved brand; these are functional illustrations, not new
@@ -120,6 +120,28 @@ Next implementation should expose non-secret source/build identity and compare
 built, installed and running executable paths before concluding an update worked.
 Keep stable bundle/Keychain identities and never reset permissions as a UI fix.
 No Mac SSH or native validation was performed for this draft.
+
+## Homepage visual refinement — 2026-10-12
+
+The owner found the earlier literal screen/arrow diagram visually unfinished.
+The homepage now uses two layered display illustrations with a restrained
+surface treatment, rounded hardware outlines and a curved connection path.
+Depth is subtle; the brand blue is concentrated on the connection/pointer cues.
+Neither illustration is a new logo or a platform-specific PC silhouette.
+
+Task tiles use a quiet neutral surface instead of large white outlined boxes.
+Heading/role type is 24/20px at weight 500. The role tiles are equally prominent,
+with centered 176 × 130.24 illustrations and 15px image/title spacing. The app
+frame stays 560 × 568; navigation, credential forms and role state rules are
+unchanged. Hover/pressed/focus styles are defined distinctly, without unsolicited
+motion. Duplicate homepage CSS was consolidated into a single readable section.
+
+Browser checks observed Windows/Mac English/Chinese homepage rendering, single-line
+English labels, loaded vector assets, complete content and exact icon/label
+centering. Keyboard Tab focus had a visible outline. Hover/pressed CSS rules were
+inspected; physical mouse interaction/native clients were not tested. Previous
+narrow-browser checks apply to the earlier mockup; the updated narrow layout rules
+have not been separately exercised at a forced viewport in this pass.
 
 ## Design responsibility
 
