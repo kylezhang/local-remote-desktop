@@ -143,6 +143,24 @@ inspected; physical mouse interaction/native clients were not tested. Previous
 narrow-browser checks apply to the earlier mockup; the updated narrow layout rules
 have not been separately exercised at a forced viewport in this pass.
 
+## Visual harmony pass — 2026-10-12
+
+Retain the accepted illustration direction and entrance names. Tighten the
+heading/tiles gap to 26px and illustration/title gap to 13px; tile separation is
+18px. A quiet 18px corner and fine neutral boundary unify the two equal choices.
+Settings is now a labeled secondary shortcut on the same upper-right baseline
+across all three screens. Gear geometry is centered; device-list symbols use the
+same rounded-display vocabulary. Task headings/dialog titles adopt the homepage's
+medium weight rather than heavier competing headings. Window dimensions and all
+connection/pairing/permission behavior are unchanged.
+
+Browser review covered all three default screens in English/Chinese and
+Windows/Mac preview chrome: 12 layouts fit the frame, each with one Settings
+shortcut. Navigating from the homepage reached the expected task screens; the
+labeled Settings shortcut opened its existing preview panel. Updated renders
+are browser mockups, not native client evidence. Earlier empty/error scenario
+screenshots remain earlier captures, not updated harmony-pass images.
+
 ## Design responsibility
 
 Review the complete flow before asking for owner feedback: vocabulary, device
