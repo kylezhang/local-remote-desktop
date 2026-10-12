@@ -186,3 +186,15 @@ Fullscreen/focus transitions release remote input and clear paste suppression;
 restore picture focus only while the app is active and options are closed. Ignore
 auto-repeat for fullscreen toggles. Keep unshown window-state/decoded-pixel checks
 separate from actual foreground focus, monitor geometry and physical-key acceptance.
+
+### Native font fallback and effects
+
+The 2026-10-12 Windows entry screenshot exposed mixed Chinese glyph families,
+which the earlier layout/resource checks did not cover. Native WPF glyph runs
+reproduced JhengHei/Yu Gothic mixing under en-US Segoe UI fallback and inconsistent
+Medium face selection. Explicit CJK font mapping and real supported weights fix
+the cause. Keep this glyph-level regression in future desktop typography work.
+Separate card shadows from text, and use vector UI icons instead of font symbols
+whose shape or emoji presentation varies by platform. Do not claim visual native
+acceptance from measured layout alone; never open foreground test windows to
+work around unavailable unshown rendering.

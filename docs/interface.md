@@ -118,3 +118,19 @@ content-sized surface. Settings fit the available width and their actual
 content height. Preserve window size across navigation. Windows software encoding
 is an optional troubleshooting fallback, disabled during sharing; system limitations
 belong in documentation, not a permanent compatibility panel.
+
+## Windows typography refinement — 2026-10-12
+
+Use explicit composite font mappings: CJK/full-width characters use Microsoft
+YaHei UI (YaHei/system fallback if unavailable), Latin text uses Segoe UI.
+Do not leave Chinese labels to Segoe UI's implicit en-US fallback: the native
+formatter can mix JhengHei and Yu Gothic inside one word, with different actual
+weights. Windows entry headings/roles use supported Regular faces; native Mac
+system weights remain native. Preserve the approved hierarchy through size and
+spacing rather than an unsupported intermediate weight.
+
+Card shadows belong on a separate background layer; text must not be a descendant
+of a bitmap effect. The Settings gear uses the approved vector geometry, not a
+Unicode symbol/emoji. Check real native glyph runs and weights as well as layout.
+Windows interface revision is `entry-2026-10-12-r2`; Mac remains build 24 from the
+preceding implementation, with native acceptance pending.

@@ -1,4 +1,8 @@
 <ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+  <DrawingImage x:Key="SettingsVector"><DrawingImage.Drawing><DrawingGroup>
+   <GeometryDrawing><GeometryDrawing.Pen><Pen Brush="#697183" Thickness="1.6" LineJoin="Round"/></GeometryDrawing.Pen><GeometryDrawing.Geometry><PathGeometry Figures="M18.56 9.28 L20.86 10.44 20.86 13.56 18.56 14.72 19.37 17.16 17.16 19.37 14.72 18.56 13.56 20.86 10.44 20.86 9.28 18.56 6.84 19.37 4.63 17.16 5.44 14.72 3.14 13.56 3.14 10.44 5.44 9.28 4.63 6.84 6.84 4.63 9.28 5.44 10.44 3.14 13.56 3.14 14.72 5.44 17.16 4.63 19.37 6.84 Z"/></GeometryDrawing.Geometry></GeometryDrawing>
+   <GeometryDrawing><GeometryDrawing.Pen><Pen Brush="#697183" Thickness="1.6"/></GeometryDrawing.Pen><GeometryDrawing.Geometry><EllipseGeometry Center="12,12" RadiusX="3.1" RadiusY="3.1"/></GeometryDrawing.Geometry></GeometryDrawing>
+  </DrawingGroup></DrawingImage.Drawing></DrawingImage>
   <SolidColorBrush x:Key="{x:Static SystemColors.HighlightBrushKey}" Color="#5265EC"/>
   <SolidColorBrush x:Key="{x:Static SystemColors.HighlightTextBrushKey}" Color="White"/>
   <Style TargetType="TextBox"><Setter Property="SelectionBrush" Value="#5265EC"/></Style>
@@ -58,10 +62,14 @@
  <Style x:Key="EntryRole" TargetType="RadioButton">
  <Setter Property="Cursor" Value="Hand"/><Setter Property="MinHeight" Value="252"/><Setter Property="Padding" Value="12,20,12,22"/>
  <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="RadioButton">
- <Border x:Name="Tile" CornerRadius="20" BorderBrush="#E7EBF4" BorderThickness="1" Background="#F8F9FC" Padding="{TemplateBinding Padding}">
+ <Grid>
+ <!-- Shadow has no text descendants: effects rasterize their subtree and blur glyphs. -->
+ <Border x:Name="TileShadow" CornerRadius="20" Background="#F8F9FC" IsHitTestVisible="False">
  <Border.Effect><DropShadowEffect Color="#344264" BlurRadius="14" ShadowDepth="3" Opacity="0.035"/></Border.Effect>
+ </Border>
+ <Border x:Name="Tile" CornerRadius="20" BorderBrush="#E7EBF4" BorderThickness="1" Background="#F8F9FC" Padding="{TemplateBinding Padding}">
  <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
- </Border><ControlTemplate.Triggers>
+ </Border></Grid><ControlTemplate.Triggers>
  <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="Tile" Property="Background" Value="White"/><Setter TargetName="Tile" Property="BorderBrush" Value="#BDC9EF"/></Trigger>
  <Trigger Property="IsPressed" Value="True"><Setter TargetName="Tile" Property="Background" Value="#F1F4FD"/></Trigger>
  <Trigger Property="IsKeyboardFocused" Value="True"><Setter TargetName="Tile" Property="BorderBrush" Value="#5265EC"/></Trigger>

@@ -17,6 +17,7 @@ static partial class Program {
         await CheckSessionCleanup();
         await CheckSessionInteraction();
         var emptyWindow=new MainWindow(false,null);
+        CheckTypography(emptyWindow);
         Assert(((Border)emptyWindow.FindName("DeviceEmptyState")).Visibility==Visibility.Visible,"Empty devices have no transition state");
         Assert(((TextBlock)emptyWindow.FindName("DeviceEmptyTitle")).Text.Length>0,"Empty device state has no title");
         emptyWindow.Close();

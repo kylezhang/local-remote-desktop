@@ -1,0 +1,18 @@
+Windows entry typography correction — 2026-10-12
+Interface revision: entry-2026-10-12-r2. Public version unchanged.
+
+Reproduced with native WPF FormattedText + GlyphRun under en-US:
+Segoe UI Normal: one Chinese label mixed Microsoft JhengHei and Yu Gothic.
+Segoe UI Medium: JhengHei Regular mixed with Yu Gothic Semibold.
+
+PASS corrected production font/role text: Chinese glyphs use Microsoft YaHei UI,
+Latin uses Segoe UI, actual weights are all Regular in the entry title/labels.
+PASS role text has no effect ancestor; Settings is vector artwork.
+PASS native Windows build, zero warnings/errors.
+PASS unshown ClientChecks: bilingual layouts, pairing, role/lifecycle/draft safety,
+consent/defaults, encrypted text/files, synthetic H264/quality/reconnect/cleanup.
+No foreground window, physical capture/input or real clipboard access.
+
+This checks native font selection and layout, not physical installed visual
+acceptance. Final clean-source package is rechecked before idle deployment.
+Mac source/SDK/UI unchanged this correction; previous acceptance limits remain.

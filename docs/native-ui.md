@@ -62,3 +62,16 @@ needed; never reset permissions as a visual-update workaround.
 Earlier records remain historical evidence for their source revisions:
 [shell](../tests/results/native-ui-2026-10-10.txt) and
 [device names](../tests/results/device-names-2026-10-11.txt).
+
+## Windows typography correction — 2026-10-12
+
+The owner's installed screenshot revealed mixed CJK fonts that layout checks had
+missed. Native WPF glyph-run reproduction identified JhengHei/Yu Gothic fallback
+and differing actual weights. The composite mapping now explicitly selects
+Microsoft YaHei UI for CJK and Segoe UI for Latin; entry labels/headings use
+Regular faces. The gear is vector, and the card shadow is isolated from text.
+
+Native glyph-run and unshown ClientChecks passed. Revision is
+`entry-2026-10-12-r2`; this is a Windows-only correction, with no Mac permission,
+identity or version change. Physical/installed visual acceptance remains distinct
+from the font/layout checks. Final packaged assembly is rechecked before deployment.
