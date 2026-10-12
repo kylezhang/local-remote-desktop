@@ -1,5 +1,7 @@
 # Local Remote Desktop design review
 
+New task-first entrance proposal: [draft preview](../entry-review/index.html), [English notes](../../docs/entry-design.md), [中文说明](../../docs/zh-CN/entry-design.md). It has not replaced this revision in native clients.
+
 Revision 2 is **approved for incremental implementation**. Local-name editing and
 authenticated peer names are in native source; the rest of the revision is not yet
 fully applied. See [English specification](../../docs/design.md),

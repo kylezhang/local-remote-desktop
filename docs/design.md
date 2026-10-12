@@ -1,5 +1,7 @@
 # Interface proposal
 
+Next entry-flow draft: [task-first screens](entry-design.md). The two-entrance concept is agreed; the three-screen mockup still needs review before native changes.
+
 [简体中文](zh-CN/design.md) · [Product direction](product.md) · [Delivery plan](v0.3.0-plan.md)
 
 **Revision 2 — approved for incremental implementation.** This design responds to
