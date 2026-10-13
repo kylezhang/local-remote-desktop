@@ -76,7 +76,7 @@ Source archive: source.zip (included here; repository access is not required)
 Extract source.zip and follow README.md and apps/macos/build-app.sh on macOS.
 For distribution signing, see docs/macos-signing.md. Third-party licenses: NOTICE.md.
 
-相应源码已附在 source.zip，提交为 $commit；解压后按 README.zh-CN.md
+相应源码已附在 source.zip，提交为 ${commit}；解压后按 README.zh-CN.md
 和 apps/macos/build-app.sh 构建。分发签名见 docs/zh-CN/macos-signing.md。
 EOF
 cat > "$payload/START-HERE.txt" <<EOF

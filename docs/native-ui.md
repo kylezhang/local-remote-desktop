@@ -40,9 +40,9 @@ No foreground window, physical input or real clipboard is used.
 
 Swift syntax and portable production host/controller/startup/localization logic
 are checked with explicit platform doubles. Installer, moved-cache, signing and
-Mac package checks use disposable fixtures, not native Apple services. Native
-Mac UI/API compilation and installed Keychain/TCC acceptance remain **pending**;
-no Mac SSH is attempted because the Mac is outside this development LAN.
+Mac package checks use disposable fixtures, not installed Apple services. Native
+SDK compilation and unshown Mac layout checks passed on 2026-10-13 after SSH
+access resumed. Installed Keychain/TCC and physical acceptance remain **pending**.
 
 These checks do not establish physical input acceptance, live desktop latency or
 native Mac visual fidelity. Public version remains 0.3.0-alpha.2. No new tag or
@@ -52,7 +52,7 @@ copying into an idle usual launch directory; running clients are left untouched.
 
 ## Next acceptance
 
-Use one consolidated Mac build/install review to check source build 25, homepage,
+Use one consolidated Mac install review to check source build 27, homepage,
 Back/Settings, explicit accepting, denied/granted permissions and secure password
 editing. Then verify both remote-control directions, held-key release, real
 clipboard/files, quality/reconnect and stop/resource cleanup. Keep existing
@@ -118,3 +118,28 @@ existing capture Sendable and legacy Keychain deprecation warnings. Native SDK
 compilation is now verified; installed UI/layout, TCC/Keychain and physical two-device
 acceptance remain pending. No new tag/release is implied. See the
 [native record](../tests/results/mac-native-2026-10-13.txt).
+
+## Native layout and packaging correction — 2026-10-13
+
+The new [Mac layout harness](../tests/MacLayoutChecks/README.md) compiled production
+views/models and rendered 18 English/Chinese cases without showing a window.
+Home, empty list, Accept and four settings categories fitted their inspected native
+scroll containers at the default frame. Target/password dialogs rendered with
+bounded fixture sizes. Review found a redundant settings picker label and a
+missing English target-metadata hint; both are corrected. Direct Mac translation
+keys are now checked against the shared catalog (347 strings).
+
+Actual bundle creation exposed Bash 3.2 failures missed by a newer shell: empty
+signing-option array expansion and variables adjacent to Chinese punctuation.
+Signing paths now use explicit arguments and affected messages use braced
+variables. The installer parses both plain and comment-prefixed codesign
+requirements, retaining exact comparison and cross-verification. Changed ad-hoc
+requirements still abort preservation before stopping/replacing the old app.
+
+System Bash 3.2 passed 13 signing cases, four cache cases and 22 installer fixture
+methods, including comment-prefixed requirements, failures and recovery. The real
+isolated production bundle built and strictly verified with resources and internal
+build 27. Development ad-hoc verification is not distribution signing acceptance.
+Installed app and permissions were left untouched. Unshown inactive renders do not
+verify active-window colors/focus, actual sheets, TCC/Keychain or two-device input.
+See the [sanitized evidence](../tests/results/mac-layout-install-2026-10-13.txt).

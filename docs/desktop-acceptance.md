@@ -11,8 +11,9 @@ with a dedicated target and non-sensitive fixture content.
 
 The maintainer builds the exact committed Windows package and current Mac source
 with the Apple SDK, records commit/OS/build/signature, and fixes build failures
-before asking for interaction testing. Mac SDK/UI/permissions for the current
-source remain pending. Do not retry the stopped SSH route.
+before asking for interaction testing. Native Mac SDK, isolated app bundle and
+unshown layout checks passed on 2026-10-13 after authorized SSH resumed.
+Installed interaction/permissions and real two-device acceptance remain pending.
 
 Use a reachable private route (LAN or an existing VPN). Start sharing on the target;
 TCP 47980 carries desktop/control and TCP 47981 carries regular files. Discovery
@@ -25,7 +26,7 @@ clipboard contents or captured work in results.
 | Check | Required outcome |
 |---|---|
 | First and returning connection | Correct target name/system come from its app; wrong password stays editable; remember is opt-in and returning connection needs no repeated entry. |
-| Entry UI | 640 × 620 default window; one Add device entry; activating a device opens its connection dialog and refresh never opens one. Empty/discovered/recent states are distinct. Share information/password are stacked vertically; settings fit content. Test English/Chinese and minimum width. |
+| Entry UI | 600 × 680 default frame, constrained to the work area; task-first homepage; one Add device entry; activating a device opens its connection dialog and refresh never opens one. Empty/discovered/recent states are distinct. Accept information/password are stacked vertically, with the primary action at the bottom; settings fit content. Test English/Chinese and minimum width. |
 | Current session | Real target screen updates; pointer alignment/click/drag/scroll, letters, digits and numeric keypad reach the intended app. Disconnect preserves the target's work. |
 | Shortcuts and escape | Copy/paste matches the target OS; leaving focus or disconnect releases held keys/buttons. Local escape/full screen do not trap input. Submitted-event counters alone are insufficient. |
 | Text clipboard | After enabling, copy fresh Unicode text both ways and paste; received content does not echo or replace a newer local copy. |

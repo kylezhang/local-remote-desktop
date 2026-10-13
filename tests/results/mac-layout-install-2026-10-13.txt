@@ -1,0 +1,42 @@
+Mac native layout and packaging validation — 2026-10-13
+Environment: Apple Silicon, macOS 27.0.1, Apple Swift 6.4, system Bash 3.2.57,
+Command Line Tools Python 3.9. Production baseline: 7edc3cc with this correction.
+Public version unchanged: 0.3.0-alpha.2. Mac internal build advances to 27.
+
+PASS production SwiftUI/AppKit views/models compiled in a separate harness;
+18 unshown English/Chinese native renders: Home, empty device list, Accept,
+General/Connection/Clipboard/About, ordinary target/password dialogs.
+Seven shell cases per language used 600x658 content within a 600x680 frame;
+one inspected native scroll container per shell case, zero overflowing.
+Dialog fixture bounds: 476x500 and 468x380; actual sheet sizing not accepted.
+Visual review found duplicate settings picker label and one missing English hint.
+Label hidden; shared catalog corrected. Production Swift translation checks passed
+347 strings plus new direct Mac UI key coverage. Inactive native controls render
+gray; this is not active-window theme/focus acceptance.
+
+Actual bundle build initially failed on system Bash 3.2 at empty array expansion
+with nounset. Explicit signing branches fix development and hardened release paths.
+Actual codesign emitted '# designated =>'; installer now accepts both output
+formats while retaining full equality and cross-verification. Installer fixture
+success/recovery output also exposed Bash 3.2 parsing of variables next to Chinese
+punctuation; affected variables are braced, including Mac release source metadata.
+
+PASS 13 signing cases, 4 cache methods, 22 installer methods on system Bash 3.2,
+including compatible/incompatible commented requirements, complete replacement,
+failure/rollback, retained backups, startup failure and explicit permission scope.
+All installer service/process/TCC paths were mocked in disposable directories.
+Python fixture output now supports the installed Python 3.9 without extra packages.
+PASS actual production build-app.sh: bundle build 27, required icon/entry/catalog
+resources and strict ad-hoc codesign verification. Built in an isolated snapshot;
+no installed bundle replacement. No distribution certificate/notarization claim.
+
+PASS Windows unshown ClientChecks after the shared catalog correction: paired
+text/files, session cleanup, quality/reconnect, typography and bilingual shell.
+PASS portable Mac package/archive and mocked release pipeline checks on Windows;
+these use fixtures and do not submit anything to Apple or publish a release.
+
+No foreground window, physical input, screen capture, real clipboard/Keychain
+access, network configuration or permission reset. Installed application untouched.
+PENDING installed active UI/sheets/focus, native permissions/Keychain and updates,
+real two-device input/clipboard/files/reconnect and latency/resource acceptance.
+No new tag/release based on these background results.

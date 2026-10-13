@@ -117,9 +117,13 @@ printf '%s\n' "$signing_mode" > "$app/Contents/Resources/signing-mode.txt"
 find "$app" -type d -exec chmod 755 {} +
 find "$app" -type f -exec chmod 644 {} +
 chmod 755 "$app/Contents/MacOS/LocalRemoteDesktop"
-sign_options=()
-if [[ "$release_mode" == 1 ]]; then sign_options=(--options runtime --timestamp); fi
-codesign --force --sign "$identity" --identifier com.remotemaclan.host "${sign_options[@]}" "$app"
+# macOS ships Bash 3.2: expanding an empty array with nounset aborts even
+# though modern Bash accepts it. Keep both signing paths explicit.
+if [[ "$release_mode" == 1 ]]; then
+  codesign --force --sign "$identity" --identifier com.remotemaclan.host --options runtime --timestamp "$app"
+else
+  codesign --force --sign "$identity" --identifier com.remotemaclan.host "$app"
+fi
 codesign --verify --strict "$app"
 if [[ -e "$output_app" ]]; then mv "$output_app" "$stage/previous.app"; fi
 if ! mv "$app" "$output_app"; then

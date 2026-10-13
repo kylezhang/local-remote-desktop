@@ -77,7 +77,8 @@ mv() {
         fixture = fixture.replace('../../assets/localization/strings.json', 'strings.json')
         fixture = fixture.replace('../../assets/interface/', '')
         path = root/script_name
-        path.write_text(fixture, encoding='utf-8', newline='\n')
+        with path.open('w', encoding='utf-8', newline='\n') as stream:
+            stream.write(fixture)
         result = subprocess.run([args.bash, str(path)], capture_output=True, text=True, encoding='utf-8', timeout=20)
         assert (result.returncode == 0) == success, result.stdout + result.stderr
         actions = (root/'actions').read_text() if (root/'actions').exists() else ''

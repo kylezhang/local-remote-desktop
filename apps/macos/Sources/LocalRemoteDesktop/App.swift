@@ -307,7 +307,7 @@ struct DesktopSettings: View {
                 Text(UiText.text("连接设置")).tag("connection")
                 Text(UiText.text("剪贴板")).tag("clipboard")
                 Text(UiText.text("关于")).tag("about")
-            }.pickerStyle(.segmented).frame(maxWidth: 580)
+            }.labelsHidden().pickerStyle(.segmented).frame(maxWidth: 580)
             ScrollView {
                 VStack(alignment: .leading, spacing: 20) {
                     switch category {

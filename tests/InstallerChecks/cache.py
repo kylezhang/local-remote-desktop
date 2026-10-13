@@ -52,7 +52,8 @@ xcrun() {
         fixture = fixture.replace('../../assets/brand/icon.png', 'icon.png')
         fixture = fixture.replace('../../assets/localization/strings.json', 'strings.json')
         fixture = fixture.replace('../../assets/interface/', '')
-        (project / 'build-app.sh').write_text(fixture, encoding='utf-8', newline='\n')
+        with (project / 'build-app.sh').open('w', encoding='utf-8', newline='\n') as stream:
+            stream.write(fixture)
         return parent, project
 
     def run_build(self, project, success=True):

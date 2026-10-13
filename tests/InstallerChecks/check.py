@@ -17,7 +17,7 @@ work = Path(options.work_dir).resolve()
 work.mkdir(parents=True, exist_ok=True)
 
 class InstallerChecks(unittest.TestCase):
-    def run_case(self, mode='normal', loaded=False, duplicate=False, option='--reset-permissions', legacy=False, prior_brand=False):
+    def run_case(self, mode='normal', loaded=False, duplicate=False, option='--reset-permissions', legacy=False, prior_brand=False, commented_requirement=False):
         temporary = tempfile.TemporaryDirectory(prefix='installer-', dir=work)
         root = Path(temporary.name).resolve()
         self.assertTrue(root.is_relative_to(work))
@@ -49,7 +49,8 @@ class InstallerChecks(unittest.TestCase):
         if legacy:
             bundle(apps/'RemoteMacLAN.app', old=True, identifier='other.app' if mode == 'wrong-legacy-id' else 'com.remotemaclan.host')
             bundle(personal/'RemoteMacLAN.app', old=True)
-        (root/'process').write_text('12345\n', newline='\n')
+        with (root/'process').open('w', encoding='utf-8', newline='\n') as stream:
+            stream.write('12345\n')
         (root/'agent.plist').write_text('configured agent')
         if loaded: (root/'loaded').touch()
         (project/'build-app.sh').write_text("#!/bin/bash\n[[ ! -f ../build-fail ]]\n", encoding='utf-8')
@@ -142,15 +143,34 @@ tccutil() {
 }
 open() { echo "open $*" >> "$_test_root/actions"; [[ "$_mode" != launch-fail ]]; }
 '''.replace('ROOT', root.as_posix()).replace('MODE', mode)
+        if commented_requirement:
+            prefix = prefix.replace("echo 'designated =>", "echo '# designated =>")
         lines = fixture.splitlines(keepends=True)
         fixture = ''.join(lines[:2]) + prefix + ''.join(lines[2:])
         script = project/'install-app.sh'
-        script.write_text(fixture, encoding='utf-8', newline='\n')
+        with script.open('w', encoding='utf-8', newline='\n') as stream:
+            stream.write(fixture)
         command = [options.bash, str(script)]
         if option: command.append(option)
-        result = subprocess.run(command, capture_output=True, text=True, encoding='utf-8', timeout=30)
+        result = subprocess.run(command, capture_output=True, text=True, encoding='utf-8', errors='backslashreplace', timeout=30)
+        if result.returncode == 0:
+            self.assertNotIn('unbound variable', result.stderr)
+            self.assertIn('安装完成：', result.stdout, result.stdout + result.stderr)
         actions = (root/'actions').read_text() if (root/'actions').exists() else ''
         return root, result, actions
+
+    def test_commented_codesign_requirement_preserves_compatibility_gate(self):
+        for mode in ('normal', 'unchanged-adhoc', 'changed-adhoc', 'requirement-rejected'):
+            with self.subTest(mode=mode):
+                root, result, actions = self.run_case(mode, loaded=True, duplicate=True,
+                    option='--keep-permissions', commented_requirement=True)
+                success = mode in ('normal', 'unchanged-adhoc')
+                self.assertEqual(result.returncode == 0, success, result.stdout + result.stderr)
+                self.assertNotIn('tccutil reset', actions)
+                if not success:
+                    self.assertNotIn('kill ', actions)
+                    self.assertNotIn('launchctl bootout', actions)
+                    self.assertTrue((root/'apps/Local Remote Desktop.app/Contents/obsolete-resource').exists())
 
     def test_previous_product_name_migration_and_rollback(self):
         root,result,actions=self.run_case('prior-brand-only',prior_brand=True,loaded=True,option='--keep-permissions')

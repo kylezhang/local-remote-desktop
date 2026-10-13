@@ -344,5 +344,6 @@
   "先停止接受连接，再连接另一台设备。": "Stop accepting connections before connecting to another device.",
   "硬件编码不可用时再开启；需停止接受连接后切换，CPU 占用较高。": "Use only if hardware encoding is unavailable. Stop accepting connections before changing this option; CPU usage is higher.",
   "画面采集失败，请检查 FFmpeg，或停止接受连接后在故障排查中启用软件编码。": "Screen capture failed. Check FFmpeg, or stop accepting connections and enable software encoding under Troubleshooting.",
-  "共享已启动，等待设备连接 · TCP 47980": "Accepting connections; waiting for a device · TCP 47980"
+  "共享已启动，等待设备连接 · TCP 47980": "Accepting connections; waiting for a device · TCP 47980",
+  "连接后显示目标设备名称和系统。": "The target device name and operating system appear after connecting."
 }

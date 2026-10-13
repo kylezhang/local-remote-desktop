@@ -88,3 +88,7 @@ rm ~/Library/LaunchAgents/com.remotemaclan.host.plist
 此 SDK 将 @State 暴露为宏，测试工具中缺少 SwiftUIMacros 插件。应用的 ViewState 别名改用
 原有 SwiftUI State 属性包装器，保留 macOS 13 基线。构建前更新源码即可；缺少编译宏与权限
 无关，不应重装应用或重置 TCC。构建成功不等于安装界面、钥匙串授权或真实输入验收通过。
+
+同轮原生验证发现系统 Bash 3.2 的打包/中文输出问题及新版 codesign 签名要求前缀。
+构建 27 已修复，不重置授权、不放宽签名保留检查。原生后台布局与隔离包检查见
+[原生进度](native-ui.md)；正常安装遇到签名不兼容时，仍在替换旧应用之前中止。

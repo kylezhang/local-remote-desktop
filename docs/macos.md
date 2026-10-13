@@ -93,3 +93,9 @@ existing SwiftUI State property wrapper instead and keeps the macOS 13 baseline.
 Update source before building; missing-macro failures are not permission failures
 and do not call for reinstalling/resetting TCC. Native build success does not prove
 installed UI, Keychain approval or remote input acceptance.
+
+The same native validation found system Bash 3.2 packaging/Chinese-output issues
+and a newer codesign requirement prefix. Build 27 fixes these without resetting
+permissions or weakening signature preservation. Native unshown layout and
+isolated bundle checks are recorded in [native progress](native-ui.md); normal
+installation still rejects incompatible signing before replacing the old app.

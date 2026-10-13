@@ -62,7 +62,7 @@ cleanup() {
       rm -rf -- "$target" || preserve_stage=true
     fi
     if [[ "$preserve_stage" == true ]]; then
-      echo "自动恢复未完成；完整备份保留在：$stage_dir。请勿删除此目录。" >&2
+      echo "自动恢复未完成；完整备份保留在：${stage_dir}。请勿删除此目录。" >&2
     else
       echo '安装恢复处理完成；已经重置的权限不会回滚，应用未自动启动。' >&2
     fi
@@ -113,7 +113,9 @@ done
 # requirement. Check BEFORE stopping the working Host or changing any decision.
 if [[ "$reset_screen" == false && "$reset_accessibility" == false ]]; then
   designated_requirement() {
-    codesign -d -r- "$1" 2>&1 | sed -n 's/^designated => //p'
+    # New codesign versions prefix the same requirement with "# ". Parse
+    # both formats; still compare and verify the full requirement unchanged.
+    codesign -d -r- "$1" 2>&1 | sed -n -e 's/^designated => //p' -e 's/^# designated => //p'
   }
   if ! new_requirement="$(designated_requirement "$app")"; then
     echo '无法读取新版本签名要求；保留旧应用，安装中止。' >&2; exit 1
@@ -217,14 +219,14 @@ echo '[6/6] 启动唯一的新版本。'
 if [[ "$agent_was_loaded" == true ]]; then
   [[ -f "$agent" ]] || { echo '新应用已安装；原登录自启动配置缺失，请重新安装 LaunchAgent。' >&2; exit 1; }
   if ! launchctl bootstrap "$domain" "$agent"; then
-    echo "新应用已安装，但登录自启动失败；可手动打开 $target，之后重新配置 LaunchAgent。" >&2; exit 1
+    echo "新应用已安装，但登录自启动失败；可手动打开 ${target}，之后重新配置 LaunchAgent。" >&2; exit 1
   fi
 else
   if ! open "$target"; then
-    echo "新应用已安装，但自动打开失败；请手动打开 $target。" >&2; exit 1
+    echo "新应用已安装，但自动打开失败；请手动打开 ${target}。" >&2; exit 1
   fi
 fi
-echo "安装完成：Local Remote Desktop $version，位置 $target"
+echo "安装完成：Local Remote Desktop ${version}，位置 $target"
 echo '配对密钥保留；新图标会在启动时主动设置到程序坞。'
 if [[ "$reset_screen" == true || "$reset_accessibility" == true ]]; then
   echo '已按选项重置本应用授权；需要重新允许相应权限，然后退出并重开，不要再次 install。'
