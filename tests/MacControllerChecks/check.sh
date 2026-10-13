@@ -11,9 +11,7 @@ trap 'rm -rf -- "$stage"' EXIT
 "$stage/model"
 if [[ "$(uname -s)" == Darwin ]]; then
     if [[ "${LOCALREMOTE_SKIP_NATIVE_BUILD:-0}" != 1 ]]; then
-    if [[ "${LOCALREMOTE_SKIP_NATIVE_BUILD:-0}" != 1 ]]; then
-            xcrun swift build --package-path "$root/apps/macos" --scratch-path "$stage/native-build" -c release
-    fi
+        xcrun swift build --package-path "$root/apps/macos" --scratch-path "$stage/native-build" -c release
     fi
 else
     echo 'SKIP native AppKit/SwiftUI/VideoToolbox; Foundation controller checks only.'

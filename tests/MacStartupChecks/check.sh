@@ -9,9 +9,7 @@ trap 'rm -rf -- "$stage"' EXIT
 if [[ "$(uname -s)" == Darwin ]]; then
     # Apple SDK compile gate. Does not sign/install/open the app or reset TCC.
     if [[ "${LOCALREMOTE_SKIP_NATIVE_BUILD:-0}" != 1 ]]; then
-    if [[ "${LOCALREMOTE_SKIP_NATIVE_BUILD:-0}" != 1 ]]; then
-            xcrun swift build --package-path "$root/apps/macos" --scratch-path "$stage/native-build" -c release
-    fi
+        xcrun swift build --package-path "$root/apps/macos" --scratch-path "$stage/native-build" -c release
     fi
 else
     echo 'SKIP Apple SDK compilation: macOS required. Shared startup logic ran with the real Swift compiler.'

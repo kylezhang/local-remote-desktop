@@ -12,9 +12,7 @@ trap 'rm -rf -- "$stage"' EXIT
 "$stage/controller"
 if [[ "$(uname -s)" == Darwin ]]; then
     if [[ "${LOCALREMOTE_SKIP_NATIVE_BUILD:-0}" != 1 ]]; then
-    if [[ "${LOCALREMOTE_SKIP_NATIVE_BUILD:-0}" != 1 ]]; then
-            xcrun swift build --package-path "$root/apps/macos" --scratch-path "$stage/native-build" -c release
-    fi
+        xcrun swift build --package-path "$root/apps/macos" --scratch-path "$stage/native-build" -c release
     fi
 else
     "$compiler" -emit-library -emit-module -module-name AppKit -emit-module-path "$stage/AppKit.swiftmodule" "$root/tests/ClipboardChecks/MockAppKit.swift" -o "$stage/libAppKit.so"
