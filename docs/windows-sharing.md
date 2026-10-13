@@ -52,6 +52,10 @@ not silently convert Control into Command. Windows controllers retain native
 Ctrl shortcuts for a Windows target, while preserving their Mac shortcut option.
 Pointers use normalized primary-display coordinates converted to the full virtual
 desktop for `SendInput`. A wheel packet can retain the current cursor position.
+Display bounds come from DPI-independent physical display modes. Capture and input
+share one layout snapshot; each synchronous input submission enters a per-monitor
+DPI context and restores its worker's previous context. This avoids mixing WPF
+system-scale coordinates with mixed-scale or portrait-monitor desktop coordinates.
 Malformed input is rejected; held keys/buttons are released on disconnect or
 failure before waiting for encoder shutdown.
 
@@ -63,11 +67,13 @@ cleanup, actual WPF sharing/password flow and Windows-target shortcut routing.
 Actual Windows desktop → hardware H.264 → encrypted loopback → decoder passes.
 See [the record](../tests/results/windows-sharing-2026-10-10.txt).
 
-Input-state tests use a recording adapter. The optional real SendInput check
-targets only a test-owned window with foreground guards; this environment refused
-its focus, so event acceptance remains unverified. Do not equate a successful
-SendInput submission with acceptance by every application. Physical LAN, native
-Mac controller and longer capture/latency acceptance remain pending.
+Input-state and DPI regression tests use a recording adapter. Native Mac decoding
+over a physical LAN and test-field letter/top-row input have been observed;
+pointer/wheel acceptance failed and remains open after the DPI fix. The optional
+real SendInput check targets only a test-owned window in an agreed period, with
+foreground guards. Do not equate submitted events with application acceptance.
+See [the current acceptance record](../tests/results/desktop-acceptance-2026-10-13.md).
+Longer capture/latency acceptance remains pending.
 
 Windows sharing now publishes through system DNS-SD; see [Nearby devices](discovery.md).
 Paired plain-text clipboard sync is now implemented for this sharing role, controlled

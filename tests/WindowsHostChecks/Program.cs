@@ -18,7 +18,7 @@ static class Program {
     static byte[] Nonce(ulong n) { var result=new byte[12]; BinaryPrimitives.WriteUInt64BigEndian(result.AsSpan(4),n); return result; }
     static async Task Main() {
         if(Environment.GetEnvironmentVariable("LOCALREMOTE_LAN_TRANSPORT_CHECK")=="1") { await LANTransport(); return; }
-        await Framing(); Input(); Credentials(); await Authentication(); await Lifecycle(); await FailureCleanup();
+        await Framing(); Input(); PointerGeometryChecks.Run(); Credentials(); await Authentication(); await Lifecycle(); await FailureCleanup();
         if(OperatingSystem.IsWindows()) { foreach(int quality in new[]{0,1,2}) await Capture(false,quality); if(Environment.GetEnvironmentVariable("LOCALREMOTE_REAL_CAPTURE_CHECK")=="1") await Capture(true,0); }
         Console.WriteLine("PASS Windows sharing backend checks; no system input or clipboard injection");
     }

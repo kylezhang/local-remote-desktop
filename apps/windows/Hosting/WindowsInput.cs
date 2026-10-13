@@ -16,9 +16,14 @@ namespace LocalRemoteDesktop;
     internal ushort Vk,Scan; internal uint Flags,Time; internal nuint Extra;
 }
 internal interface INativeInput { bool Post(NativeInput value); }
-internal sealed class SendInputAdapter:INativeInput {
+internal sealed class SendInputAdapter(Func<NativeInput,bool>? submit=null):INativeInput {
     [DllImport("user32.dll",SetLastError=true)] static extern uint SendInput(uint count,NativeInput[] inputs,int size);
-    public bool Post(NativeInput value)=>SendInput(1,[value],Marshal.SizeOf<NativeInput>())==1;
+    public bool Post(NativeInput value) {
+        try {
+            using var dpi=new PhysicalDpiScope();
+            return submit?.Invoke(value)??SendInput(1,[value],Marshal.SizeOf<NativeInput>())==1;
+        } catch(InvalidOperationException) { return false; }
+    }
 }
 internal sealed class WindowsInput(CaptureArea area, CaptureArea virtualArea,INativeInput native) {
     readonly HashSet<int> keys=[],buttons=[];

@@ -13,7 +13,11 @@ The maintainer builds the exact committed Windows package and current Mac source
 with the Apple SDK, records commit/OS/build/signature, and fixes build failures
 before asking for interaction testing. Native Mac SDK, isolated app bundle and
 unshown layout checks passed on 2026-10-13 after authorized SSH resumed.
-Installed interaction/permissions and real two-device acceptance remain pending.
+The [2026-10-13 progress record](../tests/results/desktop-acceptance-2026-10-13.md)
+separates passed background LAN interoperability from partial native interaction.
+Pointer/wheel acceptance failed; its DPI correction has background coverage but
+has not been physically retested. Effective Mac permissions and the complete
+two-device workflow remain open. Foreground testing stops when the owner resumes work.
 
 Use a reachable private route (LAN or an existing VPN). Start sharing on the target;
 TCP 47980 carries desktop/control and TCP 47981 carries regular files. Discovery

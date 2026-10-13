@@ -4,18 +4,8 @@ using System.Runtime.InteropServices;
 namespace LocalRemoteDesktop;
 
 internal readonly record struct CaptureArea(int X,int Y,int Width,int Height) {
-    [DllImport("user32.dll")] static extern int GetSystemMetrics(int index);
-    [DllImport("user32.dll")] static extern nint SetThreadDpiAwarenessContext(nint context);
-    internal static CaptureArea Primary() {
-        var previous=SetThreadDpiAwarenessContext(-4);
-        try { return new(0,0,GetSystemMetrics(0),GetSystemMetrics(1)); }
-        finally { if(previous!=0) SetThreadDpiAwarenessContext(previous); }
-    }
-    internal static CaptureArea Virtual() {
-        var previous=SetThreadDpiAwarenessContext(-4);
-        try { return new(GetSystemMetrics(76),GetSystemMetrics(77),GetSystemMetrics(78),GetSystemMetrics(79)); }
-        finally { if(previous!=0) SetThreadDpiAwarenessContext(previous); }
-    }
+    internal static CaptureArea Primary()=>DisplayGeometry.Read().Primary;
+    internal static CaptureArea Virtual()=>DisplayGeometry.Read().Virtual;
 }
 internal readonly record struct VideoProfile(int Width,int Height,int Fps,int Bitrate) {
     internal static VideoProfile For(CaptureArea area,int quality) {

@@ -10,6 +10,12 @@ The default suite uses generated video, loopback sockets and a recording input
 adapter. DPAPI credentials use a unique temporary path and are removed. It does
 not inject system input, read the user clipboard or record a desktop file.
 
+Pointer regression covers single/left/above/mixed-scale portrait layouts and
+move/click/wheel landing points. On Windows, display modes are read under three
+DPI contexts; the production native boundary uses a recording submission to
+verify per-monitor awareness and restoration, including failure. No `SendInput`
+call occurs in these tests. Physical click acceptance is a separate scheduled gate.
+
 To additionally exercise brief actual primary-desktop capture into memory:
 
 ```powershell
