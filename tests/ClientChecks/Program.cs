@@ -27,6 +27,8 @@ static partial class Program {
         } await Task.Delay(20); }
     }
     static async Task Check() {
+        if(Environment.GetEnvironmentVariable("LOCALREMOTE_LIVE_MAC_CHECK")=="1") { await CheckLiveMac(); return; }
+        if(Environment.GetEnvironmentVariable("LOCALREMOTE_LAN_BACKGROUND_CHECK")=="1") { await CheckLANBackground(); return; }
         if(Environment.GetEnvironmentVariable("LOCALREMOTE_SHELL_CHECK")=="1") { await CheckShell(); return; }
         if(Environment.GetEnvironmentVariable("LOCALREMOTE_LAN_INPUT_CHECK")=="1") { await CheckLANWindowsInput(); return; }
         // Legacy integration fixtures create real windows. Keep routine/CI runs

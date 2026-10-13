@@ -40,6 +40,9 @@ is not a native AppKit/SwiftUI/VideoToolbox compile or real-device acceptance.
 
 ## Native fixtures
 
+See [cross-device checks](native-acceptance.md) for background LAN interoperability
+and the separately scheduled physical acceptance helpers.
+
 On a Mac, `bash tests/MacControllerChecks/native-video.sh` generates known-color
 H.264 frames with VideoToolbox and verifies production decoder pixels and bounds.
 It does not capture a desktop or accept native input.

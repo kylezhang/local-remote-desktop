@@ -55,9 +55,13 @@ static partial class Program {
     }
     sealed class GuardedNative(Func<bool> owned):INativeInput {
         readonly SendInputAdapter native=new();
+        internal int LostForeground,NativeFailures,NativeError;
         public bool Post(NativeInput value) {
             bool release=value.Type==1?(value.Data.Key.Flags&2)!=0:(value.Data.Mouse.Flags&(4|16|64))!=0;
-            return (owned() || release) && native.Post(value);
+            if(!owned() && !release) {LostForeground++;return false;}
+            bool posted=native.Post(value);
+            if(!posted) {NativeFailures++;NativeError=Marshal.GetLastWin32Error();}
+            return posted;
         }
     }
 }

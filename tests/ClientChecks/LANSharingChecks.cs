@@ -24,14 +24,16 @@ static partial class Program {
         var seen=new List<int>(); int clicks=0,wheels=0;
         field.PreviewKeyDown+=(_,e)=>seen.Add(KeyInterop.VirtualKeyFromKey(e.Key));
         field.PreviewMouseDown+=(_,_)=>clicks++; field.PreviewMouseWheel+=(_,_)=>wheels++;
-        WindowsHost? host=null; WindowsInput? input=null; FfmpegDesktopCapture? capture=null;
+        WindowsHost? host=null; WindowsInput? input=null; FfmpegDesktopCapture? capture=null; GuardedNative? guarded=null;
         nint hwnd=0; Point? target=null;
         try {
             window.Show(); window.UpdateLayout(); hwnd=new WindowInteropHelper(window).Handle;
             Console.WriteLine("MANUAL: Activate this test window and focus its field when ready. No foreground activation is automated.");
-            await Until(()=>GetForegroundWindow()==hwnd && field.IsKeyboardFocusWithin,"Manual test-field focus required",45000);
+            await Until(()=>GetForegroundWindow()==hwnd && field.IsKeyboardFocusWithin,"Manual test-field focus required",120000);
+            seen.Clear(); clicks=0; wheels=0; // Manual focus clicks are not remote acceptance.
             var area=CaptureArea.Primary(); target=field.PointToScreen(new Point(field.ActualWidth/2,field.ActualHeight/2));
-            input=new WindowsInput(area,CaptureArea.Virtual(),new GuardedNative(()=>GetForegroundWindow()==hwnd));
+            guarded=new GuardedNative(()=>GetForegroundWindow()==hwnd);
+            input=new WindowsInput(area,CaptureArea.Virtual(),guarded);
             var credential=HostCredential.Create("Office-LAN#42");
             host=new WindowsHost(PairingPassword.Derive(credential.Password,credential.Salt),credential.Salt,area,
                 ()=>capture=new FfmpegDesktopCapture(area,software:false,synthetic:true),()=>input,address:address);
@@ -46,6 +48,8 @@ static partial class Program {
             Console.WriteLine("PASS actual Mac controller -> LAN RMP1 -> production WindowsHost -> SendInput -> WPF test field: text, mouse click, wheel and release");
         } finally {
             Console.WriteLine($"Native test summary: received={input?.Received}, posted={input?.Posted}, blocked={input?.Blocked}, rejected={input?.Rejected}; keys={string.Join(',',seen)}, expectedText={field.Text.ToUpperInvariant().StartsWith("A1")}, clicks={clicks}, wheels={wheels}");
+            Console.WriteLine($"Native refusal details: lostForeground={guarded?.LostForeground}, driverFailures={guarded?.NativeFailures}, driverError={guarded?.NativeError}");
+            if(target is Point expected && GetCursorPos(out var actual)) Console.WriteLine($"Test pointer delta: x={actual.X-expected.X:F1}, y={actual.Y-expected.Y:F1}");
             if(host!=null) await host.DisposeAsync(); input?.Release();
             bool stillOwned=hwnd!=0 && GetForegroundWindow()==hwnd;
             if(stillOwned && target is Point point && GetCursorPos(out var now) && Math.Abs(now.X-point.X)<3 && Math.Abs(now.Y-point.Y)<3) SetCursorPos(previousPoint.X,previousPoint.Y);
