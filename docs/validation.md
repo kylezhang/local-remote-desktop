@@ -1,5 +1,15 @@
 # Validation
 
+## GitHub Actions native builds — 2026-10-13
+
+The [first online build](../tests/results/github-actions-2026-10-13.md) passed
+source/package fixtures, native Windows build/background checks, and native Mac
+Swift fixtures/full Apple SDK compilation/unshown layout/preview packaging.
+Downloaded package and source hashes were independently verified. CI is now the
+primary build environment; local compilation is optional. Mac preview is ad-hoc,
+not notarized. Real desktop/input, TCC/Keychain, clipboard and sustained hardware
+performance remain separate acceptance items.
+
 ## Session picture and focus — 2026-10-11
 
 Windows Release/unshown fixtures pass with an independent encrypted peer and

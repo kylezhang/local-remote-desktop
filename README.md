@@ -89,7 +89,7 @@ Build the Mac application on macOS:
 bash apps/macos/build-app.sh
 ```
 
-Main is **v0.3.0-alpha.2**, with a [Windows sharing preview](docs/windows-sharing.md). A [Mac controller preview](docs/mac-controller.md) is implemented in source with automated transport and state checks. Earlier native Apple SDK and VideoToolbox fixture checks passed; the [new desktop UI](docs/native-ui.md) still needs a Mac SDK build. Installed interaction, real Mac → Windows input and update acceptance remain pending; development changes do not replace existing release downloads. Check [validation status](docs/validation.md) and [Contributing](CONTRIBUTING.md) before preparing a release.
+Main is **v0.3.0-alpha.2**, with a [Windows sharing preview](docs/windows-sharing.md) and [Mac controller preview](docs/mac-controller.md). Native Windows/Mac builds, background checks and unshown bilingual layouts passed in [GitHub Actions](tests/results/github-actions-2026-10-13.md), producing a Windows package and an ad-hoc Mac preview. Installed interaction, physical pointer acceptance and stable signed-update verification remain open; development changes do not replace existing release downloads. Check [validation status](docs/validation.md) and [Contributing](CONTRIBUTING.md) before preparing a release.
 
 ## Documentation
 

@@ -88,7 +88,7 @@ dotnet run --project apps/windows/LocalRemoteDesktop.csproj -c Release
 bash apps/macos/build-app.sh
 ```
 
-主分支为 **v0.3.0-alpha.2**，包含 [Windows 共享预览](docs/zh-CN/windows-sharing.md)。[Mac 控制端预览](docs/zh-CN/mac-controller.md)已在源码中实现，并完成传输与状态自动检查；先前原生 SDK 与 VideoToolbox 样例检查通过；[新版桌面界面](docs/zh-CN/native-ui.md)的 Mac SDK 构建、安装后交互、真实 Mac → Windows 输入及升级验收仍待完成；开发分支不替换已有发布包。准备发版前请查看 [验证状态](docs/zh-CN/validation.md)与 [参与维护](CONTRIBUTING.md)。
+主分支为 **v0.3.0-alpha.2**，包含 [Windows 共享预览](docs/zh-CN/windows-sharing.md)和 [Mac 控制端预览](docs/zh-CN/mac-controller.md)。Windows/Mac 原生编译、后台检查及不显示窗口的中英文布局已通过 [GitHub Actions](tests/results/github-actions-2026-10-13.md)，生成 Windows 包与临时签名 Mac 预览包。安装后交互、真实鼠标落点及稳定签名升级验收仍待完成；开发分支不替换已有发布包。准备发版前请查看 [验证状态](docs/zh-CN/validation.md)与 [参与维护](CONTRIBUTING.md)。
 
 ## 文档
 

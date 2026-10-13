@@ -6,6 +6,9 @@ GitHub Actions 是主要编译和自动测试环境，本地编译用于开发�
 AtomGit 保持源码主仓库，现有流程将提交同步到
 [GitHub 镜像](https://github.com/kylezhang/local-remote-desktop)。工作流直接构建镜像提交，不管理同步过程。
 
+[首轮在线构建记录](../../tests/results/github-actions-2026-10-13.md)：2026-10-13 三个任务全部通过，
+下载的 Windows/Mac 包也已核对产物与应用摘要、包内资源和对应源码提交。
+
 ## 触发与下载
 
 GitHub 收到 `main` 更新、`v*` 标签或面向 `main` 的 PR 时运行 `Desktop CI`；

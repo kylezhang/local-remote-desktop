@@ -7,6 +7,10 @@ are optional for development. AtomGit remains the source repository; the existin
 mirror sends commits to [GitHub](https://github.com/kylezhang/local-remote-desktop).
 The workflow checks out that mirrored commit directly and does not manage mirroring.
 
+The [first verified online build](../tests/results/github-actions-2026-10-13.md)
+passed all three jobs on 2026-10-13. Downloaded Windows/Mac packages were checked
+against their artifact/package hashes and corresponding source commit.
+
 ## When builds run
 
 `Desktop CI` runs when `main` or a `v*` tag reaches GitHub, on pull requests to
