@@ -1,0 +1,28 @@
+Mac native background validation — 2026-10-13
+Environment: Apple Silicon, macOS 27.0.1, Apple Swift 6.4, macOS 27 SDK.
+Production baseline: 7049df6 plus ViewState property-wrapper compatibility patch.
+The tested App.swift is the production source in this correction. Other Swift
+sources are unchanged. Internal bundle build advances to 26 separately.
+
+Initial complete build failed: SwiftUIMacros.StateMacro plugin absent in installed
+Command Line Tools. A State<Value> type-alias wrapper probe then passed, followed
+by a full release build targeting macOS 13. No Xcode/toolchain installation.
+Existing Sendable capture and legacy Keychain deprecation warnings remain.
+
+PASS startup preparation, production HostModel/ControllerModel using explicit
+recording service doubles and isolated UserDefaults, pairing KDF/vectors/legacy,
+clipboard consent/echo/baseline/cancel, file pacing/chunks/hash/cleanup,
+Bonjour browser/publication doubles, local name persistence and 346 strings.
+The complete native SDK build was reused rather than repeated after each fixture.
+
+PASS native VideoToolbox synthetic H264 encode -> production ViewerDecoder ->
+CGImage: nine frames with RGB pixel checks; header/coded/SPS size validation.
+PASS independent Python/Swift RMP1/RML1 using native CryptoKit/CommonCrypto/Darwin:
+mutual auth, 100 KiB fragmented video, ordered input, bad proof/replay/oversize,
+one session start/end, interruptible stop, auth EOF and session clipboard case.
+
+No GUI launched, real screen captured, physical input posted or real clipboard/
+Keychain accessed. No installed app, network setting or privacy permission changed.
+PENDING installed UI/layout, real Keychain/TCC, desktop capture/input acceptance,
+both-direction two-device workflow, latency/resource measurements and update signing.
+No tag/release created based on these background checks.

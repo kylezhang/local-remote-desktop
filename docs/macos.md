@@ -83,3 +83,13 @@ rm ~/Library/LaunchAgents/com.remotemaclan.host.plist
 No FileVault Preboot bypass, new login session or guaranteed login/lock-screen control. Sleeping or closed-lid devices may be unreachable; the app does not alter power policy.
 
 In development builds, change pairing in **当前密码 → 修改密码… → 保存密码**: enter an eight-character password or Generate an eight-character draft; only Save applies it. Saving replaces the existing credential and disconnects all current controllers; enter the new password on updated Windows clients. Existing legacy keys remain until saved. Do not delete the Keychain item for a normal password change or publish the password. Application files use Local Remote Desktop; the established bundle/credential/launchd identities remain stable. See [naming migration](naming.md).
+
+## SDK 27 Command Line Tools compatibility
+
+The 2026-10-13 native build verified macOS 27 SDK / Apple Swift 6.4 with only
+Command Line Tools. This SDK exposes @State as a macro, but the tested tools
+lacked its SwiftUIMacros plugin. The application's ViewState alias uses the
+existing SwiftUI State property wrapper instead and keeps the macOS 13 baseline.
+Update source before building; missing-macro failures are not permission failures
+and do not call for reinstalling/resetting TCC. Native build success does not prove
+installed UI, Keychain approval or remote input acceptance.

@@ -81,3 +81,10 @@ rm ~/Library/LaunchAgents/com.remotemaclan.host.plist
 不绕过 FileVault 预启动，不创建新会话，不保证登录界面、锁屏或安全框控制。休眠合盖可能不可达，不修改电源策略。
 
 开发版本在“当前密码 → 修改密码 → 保存密码”中更换：手填 8 位密码或自动生成 8 位草稿，保存才生效。保存更新原有记录并断开所有当前控制端，在已更新的 Windows 填新密码即可。旧密钥保留到主动保存。正常改密码无需删除钥匙串项，不要公开密码。程序文件改为 Local Remote Desktop，系统授权、钥匙串和自启动身份保持稳定，见[命名迁移](naming.md)。
+
+## SDK 27 命令行工具兼容
+
+2026-10-13 已在只有 Command Line Tools 的 macOS 27 SDK / Apple Swift 6.4 环境完成原生构建。
+此 SDK 将 @State 暴露为宏，测试工具中缺少 SwiftUIMacros 插件。应用的 ViewState 别名改用
+原有 SwiftUI State 属性包装器，保留 macOS 13 基线。构建前更新源码即可；缺少编译宏与权限
+无关，不应重装应用或重置 TCC。构建成功不等于安装界面、钥匙串授权或真实输入验收通过。

@@ -2,6 +2,11 @@ import SwiftUI
 import AppKit
 import ApplicationServices
 import Darwin
+
+// SDK 27 exposes @State as a macro whose plugin may be absent in Command Line Tools.
+// A type alias selects the existing State property wrapper on macOS 13+ and
+// preserves SwiftUI DynamicProperty/Binding behavior without a compiler plugin.
+typealias ViewState<Value> = SwiftUI.State<Value>
 enum AppBrand {
     static let icon: NSImage? = {
         for ext in ["png", "icns"] {
@@ -114,7 +119,7 @@ enum LocalInterfaces {
     }
 }
 struct EntryTileStyle: ButtonStyle {
-    @State private var hovering = false
+    @ViewState private var hovering = false
     func makeBody(configuration: Configuration) -> some View {
         configuration.label.frame(maxWidth: .infinity, minHeight: 252)
             .background(configuration.isPressed ? Color(red: 0.945,green: 0.957,blue: 0.992) : hovering ? .white : Color(red: 0.973,green: 0.976,blue: 0.988))
@@ -293,7 +298,7 @@ struct ManualConnectionView: View {
 struct DesktopSettings: View {
     @ObservedObject var host: HostModel
     @ObservedObject var controller: ControllerModel
-    @State private var category = "general"
+    @ViewState private var category = "general"
     var body: some View {
         VStack(alignment: .leading, spacing: 24) {
             Text(UiText.text("设置")).font(.system(size: 24, weight: .medium))

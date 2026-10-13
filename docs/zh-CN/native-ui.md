@@ -67,3 +67,22 @@ Windows 最终提交打包后再次检查，再复制到空闲的常用启动目
 Mac 源码同步尺寸和紧凑共享结构，内部构建 25；两端修订为 `entry-2026-10-12-r3`。
 Swift 语法、可移植 Host 模型和打包夹具检查通过，Mac SDK/实际界面能否完整显示仍待验收。
 交互预览同步尺寸；仓库 PNG 是先前浏览器截图，不作为这一轮原生尺寸验证证据。
+
+## 恢复 Mac 原生 SDK 验证 — 2026-10-13
+
+按用户授权恢复 SSH。完整生产应用在 Apple Silicon、macOS 27.0.1、Apple Swift 6.4、
+macOS 27 SDK 上编译通过，最低部署目标仍为 macOS 13。当前 Command Line Tools 缺少
+SDK 的 @State 宏所需 SwiftUIMacros 插件；ViewState 别名明确选用原有 State 属性包装器，
+保留悬停状态与设置绑定。最小探针和完整 release 构建均通过，无需安装 Xcode 或切换工具链。
+Mac 内部构建为 26，bundle/钥匙串身份保留。
+
+原生 VideoToolbox 生成并通过生产 ViewerDecoder 解码 9 帧已知颜色 H.264，验证像素及
+编码/头部/SPS 尺寸。独立 Python/Swift 回环检查以原生 CryptoKit/CommonCrypto/Darwin
+验证密码/旧密钥双向认证、100 KiB 视频、输入顺序、错误证明、重放、超长记录、取消及
+会话剪贴板。Host/控制端/启动、配对、文字/文件、发现、名称和 346 条翻译以记录型服务和
+隔离偏好测试通过。
+
+构建和测试使用独立源码快照；未启动 GUI、捕获真实桌面、投递 OS 输入，未访问真实剪贴板/
+钥匙串，未改变网络或权限。构建仍有既有采集 Sendable 与旧钥匙串 API 弃用警告。
+原生 SDK 编译现已验证，安装后界面/布局、TCC/钥匙串与真实双机验收仍待完成，不据此发版。
+见[原生记录](../../tests/results/mac-native-2026-10-13.txt)。

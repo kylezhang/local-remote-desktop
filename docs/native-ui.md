@@ -92,3 +92,29 @@ interface revision is `entry-2026-10-12-r3` on both sources. Swift syntax,
 portable host model and package fixtures are checked; actual Mac SDK/UI page fit
 remains pending. Interactive preview dimensions are updated; stored PNGs are
 older browser captures, not evidence of this native size refinement.
+
+## Native Mac SDK validation resumed — 2026-10-13
+
+Owner-authorized SSH access is reachable again. The complete production app was
+built on Apple Silicon with macOS 27.0.1, Apple Swift 6.4 and the macOS 27 SDK,
+deploying to macOS 13+. The installed Command Line Tools lacked the SwiftUIMacros
+plugin used by the SDK's unqualified @State macro. A ViewState type alias explicitly
+selects the existing State property wrapper for hover/settings bindings; the
+minimal probe and full release build passed without installing Xcode or changing
+the toolchain. Mac internal build is now 26; bundle/Keychain identities are retained.
+
+Native VideoToolbox generated/decoded nine known-color H.264 frames through the
+production ViewerDecoder, including pixel and coded/header/SPS bounds checks.
+The independent Python/Swift loopback peer passed password/legacy mutual auth,
+100 KiB video, ordered input, bad proof, replay, oversized records, cancellation
+and session clipboard cases using native CryptoKit/CommonCrypto/Darwin sockets.
+Host/controller/startup, pairing, text/files, discovery, names and 346 localization
+strings passed with explicitly recording services and isolated preferences.
+
+The full build and tests used a separate source snapshot. No GUI app was launched,
+no actual desktop captured, no OS input posted and no real clipboard/Keychain
+access or network/permission configuration change occurred. The build still has
+existing capture Sendable and legacy Keychain deprecation warnings. Native SDK
+compilation is now verified; installed UI/layout, TCC/Keychain and physical two-device
+acceptance remain pending. No new tag/release is implied. See the
+[native record](../tests/results/mac-native-2026-10-13.txt).
