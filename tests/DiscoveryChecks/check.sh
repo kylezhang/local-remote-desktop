@@ -9,5 +9,9 @@ trap 'rm -rf -- "$stage"' EXIT
 "$compiler" -parse-as-library "$root/apps/macos/Sources/LocalRemoteDesktop/DeviceName.swift" "$root/apps/macos/Sources/LocalRemoteDesktop/ControllerCore.swift" "$root/apps/macos/Sources/LocalRemoteDesktop/ControllerMemory.swift" "$root/apps/macos/Sources/LocalRemoteDesktop/ControllerDiscovery.swift" "$root/tests/DiscoveryChecks/MockBrowser.swift" -o "$stage/browser"
 "$stage/browser"
 if [[ "$(uname -s)" == Darwin ]]; then
-    xcrun swift build --package-path "$root/apps/macos" --scratch-path "$stage/native-build" -c release
+    if [[ "${LOCALREMOTE_SKIP_NATIVE_BUILD:-0}" != 1 ]]; then
+    if [[ "${LOCALREMOTE_SKIP_NATIVE_BUILD:-0}" != 1 ]]; then
+            xcrun swift build --package-path "$root/apps/macos" --scratch-path "$stage/native-build" -c release
+    fi
+    fi
 fi

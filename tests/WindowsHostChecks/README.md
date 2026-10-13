@@ -10,6 +10,12 @@ The default suite uses generated video, loopback sockets and a recording input
 adapter. DPAPI credentials use a unique temporary path and are removed. It does
 not inject system input, read the user clipboard or record a desktop file.
 
+GitHub Actions uses `LOCALREMOTE_CI_CHECKS=1`: the generated-video transport tests
+use software encoding, so they do not require a GPU. Hardware/physical acceptance
+is explicitly Not run. An absent hosted display skips only native display
+enumeration; synthetic pointer layouts still run. The normal local default keeps
+the MF hardware check. See [online builds](../../docs/continuous-integration.md).
+
 Pointer regression covers single/left/above/mixed-scale portrait layouts and
 move/click/wheel landing points. On Windows, display modes are read under three
 DPI contexts; the production native boundary uses a recording submission to

@@ -120,6 +120,11 @@ records determine what is implemented; this handbook is not a support claim.
 
 ## Development and validation workflow
 
+- GitHub Actions is the primary native compilation and automated-test environment.
+  Local compilation is optional. Push source to AtomGit; the existing mirror feeds
+  GitHub CI directly. Use the successful run's exact commit/artifacts and reports;
+  do not manage mirroring or require local builds to substitute for an online run.
+  See [online builds](continuous-integration.md). Physical acceptance remains separate.
 - Continue clearly authorized work; avoid repeated confirmation for routine edits.
   Finish coding and applicable independent checks before asking the owner to test.
   Report the concrete outcome, remaining uncertainty and next step after each turn.
@@ -135,7 +140,8 @@ records determine what is implemented; this handbook is not a support claim.
   Explicitly record what did not run. Never turn a mock into a native success claim.
 - Consolidate genuine native acceptance into a prepared checklist instead of making
   the owner repeatedly debug coding mistakes. Fix independent failures first.
-- Rebuild Windows after code changes and deploy the verified package to the existing
+- Build Windows through Actions after code changes (local builds are optional),
+  and deploy the verified package to the existing
   agreed launch locations. Keep one product executable. If a client is in use, defer
   replacement until it exits; do not close/reopen it or spawn a competing instance.
   Only the newest verified candidate may be queued for deferred deployment.

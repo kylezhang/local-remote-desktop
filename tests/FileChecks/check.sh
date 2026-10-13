@@ -9,7 +9,11 @@ trap 'rm -rf -- "$stage"' EXIT
 if [[ "$(uname -s)" == Darwin ]]; then
     "$compiler" -parse-as-library "$root/apps/macos/Sources/LocalRemoteDesktop/FileModels.swift" "$root/apps/macos/Sources/LocalRemoteDesktop/FileTransport.swift" "$root/tests/FileChecks/MockWire.swift" "$root/tests/FileChecks/Check.swift" -o "$stage/check"
     "$stage/check"
-    xcrun swift build --package-path "$root/apps/macos" --scratch-path "$stage/native-build" -c release
+    if [[ "${LOCALREMOTE_SKIP_NATIVE_BUILD:-0}" != 1 ]]; then
+    if [[ "${LOCALREMOTE_SKIP_NATIVE_BUILD:-0}" != 1 ]]; then
+            xcrun swift build --package-path "$root/apps/macos" --scratch-path "$stage/native-build" -c release
+    fi
+    fi
 else
     "$compiler" -emit-library -emit-module -module-name CryptoKit -emit-module-path "$stage/CryptoKit.swiftmodule" "$root/tests/FileChecks/MockCryptoKit.swift" -o "$stage/libCryptoKit.so"
     "$compiler" -parse-as-library -I "$stage" -L "$stage" -lCryptoKit -Xlinker -rpath -Xlinker "$stage" \

@@ -37,7 +37,12 @@ static class PointerGeometryChecks {
         Require(VideoProfile.For(mixed.Primary,0).Width==1280 && VideoProfile.For(mixed.Primary,2).Width==1920,"Capture quality sizing wrong");
         Console.WriteLine("PASS primary/left/above/mixed-scale portrait layouts: move/click/wheel map to capture pixels");
         if(!OperatingSystem.IsWindows()) return;
-        var physical=DisplayGeometry.Read();
+        DisplayGeometry physical;
+        try { physical=DisplayGeometry.Read(); }
+        catch(ArgumentException) when(Environment.GetEnvironmentVariable("LOCALREMOTE_CI_CHECKS")=="1") {
+            Console.WriteLine("NOT RUN native physical-display enumeration: hosted CI has no active display; synthetic layout checks passed");
+            return;
+        }
         foreach(var context in new nint[] {-1,-2,-4}) {
             var original=SetThreadDpiAwarenessContext(context);
             Require(original!=0,"Cannot enter test DPI context");

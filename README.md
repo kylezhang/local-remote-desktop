@@ -73,7 +73,10 @@ Currently, one controller and one display are supported. The Mac must be awake a
 
 The native applications use **Swift** on macOS and **C# / .NET 8 / WPF** on Windows. Mac capture and encoding use ScreenCaptureKit and VideoToolbox; the Windows viewer currently decodes through FFmpeg. Sessions use authenticated, encrypted TCP connections over the LAN. See the [architecture](docs/architecture.md) for details.
 
-From the repository root, build Windows with the .NET 8 SDK:
+GitHub Actions is the primary build and automated-test environment. After source
+is mirrored from AtomGit, it builds Windows x64 and an Apple Silicon Mac preview.
+See [online builds and downloads](docs/continuous-integration.md). Local compilation
+is optional; from the repository root, build Windows with the .NET 8 SDK:
 
 ```powershell
 dotnet build apps/windows/LocalRemoteDesktop.csproj -c Release
@@ -99,6 +102,7 @@ Main is **v0.3.0-alpha.2**, with a [Windows sharing preview](docs/windows-sharin
 - [Architecture](docs/architecture.md) · [Protocol](docs/protocol.md) · [Performance](docs/performance.md)
 - [Cross-platform interface conventions](docs/interface.md) · [Project layout](docs/naming.md)
 - [Development handbook](docs/development-handbook.md)
+- [Online builds and downloads](docs/continuous-integration.md)
 - [Validation status](docs/validation.md) · [Release process](docs/releasing.md)
 
 ## License

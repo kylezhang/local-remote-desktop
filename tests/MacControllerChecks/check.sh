@@ -10,7 +10,11 @@ trap 'rm -rf -- "$stage"' EXIT
 "$compiler" -parse-as-library "$root/apps/macos/Sources/LocalRemoteDesktop/DeviceName.swift" "$root/apps/macos/Sources/LocalRemoteDesktop/ControllerCore.swift" "$root/apps/macos/Sources/LocalRemoteDesktop/ControllerMemory.swift" "$root/apps/macos/Sources/LocalRemoteDesktop/TextClipboardSync.swift" "$root/apps/macos/Sources/LocalRemoteDesktop/ControllerTextClipboard.swift" "$root/apps/macos/Sources/LocalRemoteDesktop/FileModels.swift" "$root/apps/macos/Sources/LocalRemoteDesktop/ControllerFiles.swift" "$root/tests/MacControllerChecks/ModelMocks.swift" "$stage/ControllerModel.swift" "$root/tests/MacControllerChecks/ModelCheck.swift" -o "$stage/model"
 "$stage/model"
 if [[ "$(uname -s)" == Darwin ]]; then
-    xcrun swift build --package-path "$root/apps/macos" --scratch-path "$stage/native-build" -c release
+    if [[ "${LOCALREMOTE_SKIP_NATIVE_BUILD:-0}" != 1 ]]; then
+    if [[ "${LOCALREMOTE_SKIP_NATIVE_BUILD:-0}" != 1 ]]; then
+            xcrun swift build --package-path "$root/apps/macos" --scratch-path "$stage/native-build" -c release
+    fi
+    fi
 else
     echo 'SKIP native AppKit/SwiftUI/VideoToolbox; Foundation controller checks only.'
 fi

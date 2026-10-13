@@ -36,7 +36,7 @@ def check_source_archive(content, commit, license_text):
             raise ValueError('Source and binary license mismatch')
 
 
-def check_files(files, version):
+def check_files(files, version, *, preview=False):
     required = {
         'Contents/Info.plist', 'Contents/MacOS/LocalRemoteDesktop',
         'Contents/Resources/LocalRemoteDesktop.icns', 'Contents/Resources/LocalRemoteDesktop.png',
@@ -57,7 +57,7 @@ def check_files(files, version):
             or any(not isinstance(k, str) or not isinstance(v, str) for k, v in catalog.items())):
         raise ValueError('Invalid shared language catalog')
     if (info.get('CFBundleIdentifier') != 'com.remotemaclan.host'
-            or info.get('CFBundleShortVersionString') != version
+            or info.get('CFBundleShortVersionString') != (version.split('-')[0] if preview else version)
             or info.get('LocalRemoteDesktopReleaseVersion', info.get('CFBundleShortVersionString')) != version
             or info.get('CFBundleExecutable') != 'LocalRemoteDesktop'
             or info.get('CFBundleIconFile') != 'LocalRemoteDesktop.icns'
@@ -81,12 +81,15 @@ def check_files(files, version):
         raise ValueError('Invalid PNG icon')
     if len(icns) < 8 or icns[:4] != b'icns' or struct.unpack('>I', icns[4:8])[0] != len(icns):
         raise ValueError('Invalid ICNS container')
-    if files['Contents/Resources/signing-mode.txt'].strip() != b'certificate':
+    if preview:
+        if files['Contents/Resources/signing-mode.txt'].strip() != b'ad-hoc':
+            raise ValueError('Preview requires explicit ad-hoc signing mode')
+    elif files['Contents/Resources/signing-mode.txt'].strip() != b'certificate':
         raise ValueError('Development signing mode is not distributable')
     return info
 
 
-def check_app(app, version):
+def check_app(app, version, *, preview=False):
     app = Path(app)
     if app.is_symlink() or not app.is_dir():
         raise ValueError('Expected an application directory, not a symlink')
@@ -98,7 +101,7 @@ def check_app(app, version):
             files[path.relative_to(app).as_posix()] = path.read_bytes()
         elif not path.is_dir():
             raise ValueError('Unsupported filesystem entry')
-    return check_files(files, version)
+    return check_files(files, version, preview=preview)
 
 
 def check_archive(archive, version, commit):

@@ -19,7 +19,12 @@ static class Program {
     static async Task Main() {
         if(Environment.GetEnvironmentVariable("LOCALREMOTE_LAN_TRANSPORT_CHECK")=="1") { await LANTransport(); return; }
         await Framing(); Input(); PointerGeometryChecks.Run(); Credentials(); await Authentication(); await Lifecycle(); await FailureCleanup();
-        if(OperatingSystem.IsWindows()) { foreach(int quality in new[]{0,1,2}) await Capture(false,quality); if(Environment.GetEnvironmentVariable("LOCALREMOTE_REAL_CAPTURE_CHECK")=="1") await Capture(true,0); }
+        if(OperatingSystem.IsWindows()) {
+            bool software=Environment.GetEnvironmentVariable("LOCALREMOTE_CI_CHECKS")=="1";
+            foreach(int quality in new[]{0,1,2}) await Capture(false,quality,software);
+            if(software) Console.WriteLine("NOT RUN hardware encoder/real desktop/physical input acceptance: hosted CI uses generated video and software encoding");
+            else if(Environment.GetEnvironmentVariable("LOCALREMOTE_REAL_CAPTURE_CHECK")=="1") await Capture(true,0);
+        }
         Console.WriteLine("PASS Windows sharing backend checks; no system input or clipboard injection");
     }
     static async Task LANTransport() {
@@ -168,9 +173,9 @@ static class Program {
         Require(WindowsHost.IsLan(IPAddress.Parse("192.168.1.2")) && !WindowsHost.IsLan(IPAddress.Parse("8.8.8.8")) && !WindowsHost.IsLan(IPAddress.IPv6Loopback),"LAN filter wrong");
         Console.WriteLine("PASS opt-in listener, unauthorized capture denial, explicit handshake, one controller, disconnect/reconnect and held-key release");
     }
-    static async Task Capture(bool real,int quality) {
+    static async Task Capture(bool real,int quality,bool software=false) {
         var area=real?CaptureArea.Primary():new CaptureArea(0,0,1920,1080); var profile=VideoProfile.For(area,quality);
-        var capture=new FfmpegDesktopCapture(area,software:false,synthetic:!real);
+        var capture=new FfmpegDesktopCapture(area,software:software,synthetic:!real);
         using var decoder=new FfmpegDecoder(profile.Width,profile.Height); int frames=0,units=0;
         var ready=new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         decoder.Frame+=_=> { if(Interlocked.Increment(ref frames)>=8) ready.TrySetResult(); };
@@ -188,7 +193,7 @@ static class Program {
         finally { deadline.Cancel(); client.Dispose(); try { await run; } catch(Exception e) when(e is OperationCanceledException or ObjectDisposedException or System.IO.IOException) {} await host.DisposeAsync(); }
         Require(frames>=8 && units>=8,"Capture/decode insufficient frames");
         try { using var p=Process.GetProcessById(capture.ProcessId); Require(p.HasExited,"Owned encoder still alive"); } catch(ArgumentException) {}
-        Console.WriteLine($"PASS {(real?"real current Windows primary desktop (memory only)":"generated video")} → MF hardware H264/AUD → encrypted TCP → actual decoder: {profile.Width}x{profile.Height}@{profile.Fps}, {frames} frames / {units} units, process cleanup (short check, not sustained FPS)");
+        Console.WriteLine($"PASS {(real?"real current Windows primary desktop (memory only)":"generated video")} → {capture.Encoder} H264/AUD → encrypted TCP → actual decoder: {profile.Width}x{profile.Height}@{profile.Fps}, {frames} frames / {units} units, process cleanup (short check, not sustained FPS)");
     }
     static async Task FailureCleanup() {
         var salt=RandomNumberGenerator.GetBytes(16); var key=PairingPassword.Derive("Office-LAN#42",salt);

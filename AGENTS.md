@@ -21,6 +21,11 @@ new platform. Keep its English/Chinese agreements aligned with implementation.
   acceptance needs an agreed test period and a dedicated target.
 - Record native builds, fixture checks and real two-device acceptance separately.
   Do not treat generated code, mocks or screenshots as runtime acceptance.
+- GitHub Actions is the primary native build and automated-test environment;
+  local compilation is optional. Submit source to AtomGit and let its existing
+  mirror trigger GitHub CI. Use the successful run's exact commit/artifacts for
+  deployment and release candidates; do not manage mirroring or equate CI with
+  physical desktop, permission or hardware-performance acceptance.
 - Keep English primary and Chinese documentation aligned. Retain the approved
   brand. Avoid incidental identity, Keychain or permission changes during UI work.
 - Keep secrets, personal device data, local test logs and build outputs out of Git.

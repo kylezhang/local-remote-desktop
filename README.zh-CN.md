@@ -73,7 +73,9 @@ bash apps/macos/install-app.sh
 
 macOS 使用 **Swift**，Windows 使用 **C# / .NET 8 / WPF**。Mac 通过 ScreenCaptureKit 采集画面、VideoToolbox 编码，Windows 控制端目前通过 FFmpeg 解码。设备通过局域网内经过认证和加密的 TCP 连接通信，详见 [架构](docs/zh-CN/architecture.md)。
 
-准备 .NET 8 SDK，在仓库根目录构建 Windows：
+GitHub Actions 是主要编译和自动测试环境，源码从 AtomGit 同步后自动构建 Windows x64
+和 Apple Silicon Mac 预览包。参见[在线构建与下载](docs/zh-CN/continuous-integration.md)。
+本地编译可选；准备 .NET 8 SDK，在仓库根目录构建 Windows：
 
 ```powershell
 dotnet build apps/windows/LocalRemoteDesktop.csproj -c Release
@@ -99,6 +101,7 @@ bash apps/macos/build-app.sh
 - [架构](docs/zh-CN/architecture.md) · [协议](docs/zh-CN/protocol.md) · [性能](docs/zh-CN/performance.md)
 - [多端界面规范](docs/zh-CN/interface.md) · [工程结构](docs/zh-CN/naming.md)
 - [开发约定与经验](docs/zh-CN/development-handbook.md)
+- [在线构建与下载](docs/zh-CN/continuous-integration.md)
 - [验证状态](docs/zh-CN/validation.md) · [发版流程](docs/zh-CN/releasing.md)
 
 ## 许可

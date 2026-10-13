@@ -65,6 +65,25 @@ def bundle(app):
 
 
 class PackageChecks(unittest.TestCase):
+    def test_explicit_preview_is_not_a_release(self):
+        app = self.fixture()/'Local Remote Desktop.app'
+        bundle(app)
+        info = plistlib.loads((app/'Contents/Info.plist').read_bytes())
+        info['LocalRemoteDesktopReleaseVersion'] = '0.1.1-alpha.1'
+        (app/'Contents/Info.plist').write_bytes(plistlib.dumps(info))
+        (app/'Contents/Resources/signing-mode.txt').write_text('ad-hoc\n')
+        checker.check_app(app, '0.1.1-alpha.1', preview=True)
+        for version in ('0.1.1', '0.1.1-alpha.1'):
+            with self.assertRaises(ValueError): checker.check_app(app, version)
+        preview_spec = importlib.util.spec_from_file_location('preview_check', root/'scripts/check-macos-preview.py')
+        preview = importlib.util.module_from_spec(preview_spec)
+        preview_spec.loader.exec_module(preview)
+        preview.validate(app, '0.1.1-alpha.1', commit)
+        with self.assertRaises(ValueError): preview.validate(app, '0.1.1-alpha.1', 'b'*40)
+        with self.assertRaises(ValueError): preview.validate(app, '0.1.1', commit)
+        (app/'Contents/Resources/signing-mode.txt').write_text('certificate\n')
+        with self.assertRaises(ValueError): preview.validate(app, '0.1.1-alpha.1', commit)
+
     def fixture(self):
         temporary = tempfile.TemporaryDirectory(prefix='mac-package-', dir=work)
         self.addCleanup(temporary.cleanup)
