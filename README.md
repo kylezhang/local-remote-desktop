@@ -89,7 +89,7 @@ Build the Mac application on macOS:
 bash apps/macos/build-app.sh
 ```
 
-Main is **v0.3.0-alpha.2**, with a [Windows sharing preview](docs/windows-sharing.md) and [Mac controller preview](docs/mac-controller.md). Native Windows/Mac builds, background checks and unshown bilingual layouts passed in [GitHub Actions](tests/results/github-actions-2026-10-13.md), producing a Windows package and an ad-hoc Mac preview. Installed interaction, physical pointer acceptance and stable signed-update verification remain open; development changes do not replace existing release downloads. Check [validation status](docs/validation.md) and [Contributing](CONTRIBUTING.md) before preparing a release.
+Main is **v0.3.0-alpha.3**, with a [Windows sharing preview](docs/windows-sharing.md), [Mac controller preview](docs/mac-controller.md) and a new [system display-selection flow](docs/mac-screen-access.md). The preceding alpha.2 passed native Windows/Mac builds, background checks and unshown bilingual layouts in [GitHub Actions](tests/results/github-actions-2026-10-13.md); the owner also reported successful Mac → Windows control. The alpha.3 screen-selection/upgrade flow requires new CI and installed acceptance. Mac packages are ad-hoc signed and unnotarized; development changes do not replace existing release downloads. Check [validation status](docs/validation.md) and [Contributing](CONTRIBUTING.md) before preparing a release.
 
 ## Documentation
 

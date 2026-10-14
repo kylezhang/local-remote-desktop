@@ -94,6 +94,39 @@ func require(_ value: @autoclosure () -> Bool, _ message: String) {
         print("PASS busy dismissal guard and stop/quit during persistence never restarts sharing")
         require(HostDiscovery.starts == 3 && HostDiscovery.stops >= 2, "discovery not tied to sharing/password lifecycle")
         print("PASS discovery starts with successful sharing, stops on password replacement and stop")
+        let permissionModel = HostModel(namePreferences: preferences)
+        let reads = Pairing.readAttempts, instances = Host.instances.count
+        ScreenSharingAccess.reject = true
+        permissionModel.start(requestPermission: true); await until { !permissionModel.starting }
+        require(!permissionModel.active && Pairing.readAttempts == reads && Host.instances.count == instances,
+                "failed screen selection read credentials or opened listener")
+        require(permissionModel.screenCheck.contains("-3801"), "screen failure lost its actual domain/code")
+        ScreenSharingAccess.reject = false; ScreenSharingAccess.pause = true
+        permissionModel.start(requestPermission: true); await until { ScreenSharingAccess.pending != nil }
+        permissionModel.start(requestPermission: true)
+        permissionModel.stop(); await until { !permissionModel.starting }
+        require(!permissionModel.active && Pairing.readAttempts == reads && permissionModel.status == "已停止",
+                "canceled/duplicate screen selection restarted sharing or overwrote Stop")
+        ScreenSharingAccess.pause = false
+        permissionModel.start(requestPermission: true); await until { !permissionModel.starting }
+        require(permissionModel.active && Pairing.readAttempts == reads+1, "selection retry did not start paired sharing")
+        let firstSelectedHost = Host.instances.last!
+        permissionModel.stop()
+        let selections = ScreenSharingAccess.attempts
+        permissionModel.start(requestPermission: true); await until { !permissionModel.starting }
+        require(permissionModel.active && ScreenSharingAccess.attempts == selections && Pairing.readAttempts == reads+1,
+                "same-run restart repeated screen selection/credential reads")
+        firstSelectedHost.screenAccessEnded()
+        for _ in 0..<100 { await Task.yield() }
+        require(permissionModel.active, "stale screen-access callback stopped replacement host")
+        Host.instances.last!.screenAccessEnded()
+        await until { !permissionModel.active }
+        require(permissionModel.status == "屏幕共享已结束，请重新选择屏幕。", "revoked screen access retained active listener")
+        permissionModel.start(requestPermission: true); await until { !permissionModel.starting }
+        require(permissionModel.active && ScreenSharingAccess.attempts == selections+1 && Pairing.readAttempts == reads+1,
+                "revocation did not select fresh screen or reread cached credentials")
+        permissionModel.stop()
+        print("PASS permission denial/cancel/duplicate selection/retry and same-run cached restart; no real picker or TCC calls")
         print("SKIP native SwiftUI/Apple SDK/Keychain: production model compiled with explicit service doubles.")
     }
 }

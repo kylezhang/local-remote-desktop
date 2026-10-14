@@ -13,8 +13,12 @@ final class Host {
     private let passwordSalt: Data?
     private let status: (String) -> Void
     private var deviceName: String
-    init(key: Data, deviceName: String = DeviceName.current(), passwordSalt: Data? = nil, clipboardAllowed: Bool = false, filesAllowed: Bool = false, fileStatus: @escaping (String) -> Void = { _ in }, status: @escaping (String) -> Void) {
+    private let screenSource: ScreenCaptureSource?
+    private let screenAccessEnded: () -> Void
+    init(key: Data, deviceName: String = DeviceName.current(), screenSource: ScreenCaptureSource? = nil, screenAccessEnded: @escaping () -> Void = {}, passwordSalt: Data? = nil, clipboardAllowed: Bool = false, filesAllowed: Bool = false, fileStatus: @escaping (String) -> Void = { _ in }, status: @escaping (String) -> Void) {
         self.deviceName = DeviceName.valid(deviceName) ?? DeviceName.system
+        self.screenSource = screenSource
+        self.screenAccessEnded = screenAccessEnded
         self.key = key; self.passwordSalt = passwordSalt; self.clipboardAllowed = clipboardAllowed; self.filesAllowed = filesAllowed; self.fileStatus = fileStatus; self.status = status
     }
     func setDeviceName(_ value: String) { lock.lock(); deviceName = DeviceName.valid(value) ?? DeviceName.system; lock.unlock() }
@@ -67,7 +71,10 @@ final class Host {
             let hello = try wire.receive()
             guard hello["op"] as? String == "handshake", hello["version"] as? Int == 1 else { throw WireError.invalid }
             let quality = hello["quality"] as? Int ?? 1; guard (0...2).contains(quality) else { throw WireError.invalid }
-            let c = Capture(wire: wire, failure: { wire.close() }); capture = c
+            let c = Capture(wire: wire, source: screenSource, failure: { [weak self] error in
+                wire.close()
+                if (error as NSError).domain == "com.apple.ScreenCaptureKit.SCStreamErrorDomain" { self?.screenAccessEnded() }
+            }); capture = c
             var startupError: Error?
             wait { do { try await c.start(quality: quality) } catch { startupError = error } }
             if let startupError { throw startupError }
@@ -103,7 +110,11 @@ final class Host {
                 if message["op"] as? String == "file_sync" { try files?.configure(message); continue }
                 input.handle(message)
             }
-        } catch { status("连接结束：\(error)") }
+        } catch {
+            if (error as NSError).domain == "com.apple.ScreenCaptureKit.SCStreamErrorDomain" { screenAccessEnded() }
+            if let captureError = error as? CaptureError, case .noDisplay = captureError { screenAccessEnded() }
+            status("连接结束：\(error)")
+        }
     }
     private func wait(_ action: @escaping () async -> Void) { let done = DispatchSemaphore(value: 0); Task { await action(); done.signal() }; done.wait() }
     func stop() {

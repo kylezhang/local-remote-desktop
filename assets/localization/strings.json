@@ -345,5 +345,12 @@
   "硬件编码不可用时再开启；需停止接受连接后切换，CPU 占用较高。": "Use only if hardware encoding is unavailable. Stop accepting connections before changing this option; CPU usage is higher.",
   "画面采集失败，请检查 FFmpeg，或停止接受连接后在故障排查中启用软件编码。": "Screen capture failed. Check FFmpeg, or stop accepting connections and enable software encoding under Troubleshooting.",
   "共享已启动，等待设备连接 · TCP 47980": "Accepting connections; waiting for a device · TCP 47980",
-  "连接后显示目标设备名称和系统。": "The target device name and operating system appear after connecting."
+  "连接后显示目标设备名称和系统。": "The target device name and operating system appear after connecting.",
+  "请在系统选择器中选择这台 Mac 的主屏幕。": "Choose this Mac’s main display in the system sharing picker.",
+  "未选择屏幕，尚未接受连接。": "No display selected; not accepting connections.",
+  "请选择主显示器；macOS 14 至 15.1 需使用单显示器。": "Select the main display. macOS 14–15.1 requires a single-display setup.",
+  "等待屏幕选择": "Waiting for display selection",
+  "屏幕选择已授权": "Display selection authorized",
+  "屏幕选择失败：{0} / {1}：{2}。可重试屏幕选择；本次没有读取钥匙串。": "Display selection failed: {0} / {1}: {2}. Try selecting the display again; Keychain was not accessed.",
+  "屏幕共享已结束，请重新选择屏幕。": "Screen sharing ended. Select the display again."
 }

@@ -2,6 +2,25 @@
 
 [简体中文](zh-CN/macos-signing.md) · [Mac guide](macos.md)
 
+## Maintained distribution policy — 2026-10-14
+
+The owner does not plan to purchase Apple Developer membership. The maintained
+route is ad-hoc signed, unnotarized online packages. Feature stability depends on
+functional/native acceptance, not payment for a certificate. Once acceptance is
+complete, an unnotarized package can be a normal release with honest first-open
+and update disclosures. The Developer ID workflow below is optional, not a gate
+for this route. Package seals, provenance, GPL source and real acceptance remain
+mandatory. No trust-store changes or weak code requirements are introduced.
+See [screen access and installation](mac-screen-access.md).
+
+`scripts/package-macos-preview.sh` is the current online development packager.
+It preserves the original signature, validates source/resources and provides ZIP
+and DMG. A future explicit release-candidate mode will retain ad-hoc/notarized
+metadata separately from stable/prerelease version status. Never claim notarization
+or quietly substitute a development signature in the optional Developer ID flow.
+
+The following Developer ID discussion describes the optional paid route.
+
 Status: v0.3.0 development (2026-10-11). Update guards and startup tests are implemented;
 there is no independently validated, signed Mac release package yet.
 

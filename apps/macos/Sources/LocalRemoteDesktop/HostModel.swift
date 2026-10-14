@@ -41,6 +41,7 @@ final class HostModel: ObservableObject {
     private var host: Host?
     private let discovery = HostDiscovery()
     private let preparation = SharingPreparation<PairingCredential>()
+    private let screenAccess = ScreenSharingAccess()
     private var pairingKey: PairingCredential? { preparation.cachedKey }
     private var startup: Task<Void, Never>?
     private var pairingOperation: Task<Void, Never>?
@@ -167,12 +168,12 @@ final class HostModel: ObservableObject {
           }
           var checkingScreen = true
           do {
+            var selectedScreen: ScreenCaptureSource?
             let key = try await self.preparation.prepare(checkScreen: {
-                self.status = "正在通过 ScreenCaptureKit 检查屏幕访问…"
-                self.screenCheck = "ScreenCaptureKit 请求中"
-                let content = try await SCShareableContent.excludingDesktopWindows(false, onScreenWindowsOnly: true)
-                guard !content.displays.isEmpty else { throw CaptureError.noDisplay }
-                self.screenCheck = "ScreenCaptureKit 成功：\(content.displays.count) 个显示器"
+                self.status = "请在系统选择器中选择这台 Mac 的主屏幕。"
+                self.screenCheck = "等待屏幕选择"
+                selectedScreen = try await self.screenAccess.select(interactive: requestPermission)
+                self.screenCheck = "屏幕选择已授权"
             }, readKey: {
                 checkingScreen = false
                 self.status = "正在读取配对密码…"
@@ -183,7 +184,13 @@ final class HostModel: ObservableObject {
             self.displayPairingKey(key)
             let trusted = AXIsProcessTrusted()
             let generation = UUID(); self.hostGeneration = generation
-            let h = Host(key: key.key, deviceName: self.deviceName, passwordSalt: key.salt, clipboardAllowed: self.allowClipboard, filesAllowed: self.allowFiles,
+            let h = Host(key: key.key, deviceName: self.deviceName, screenSource: selectedScreen, screenAccessEnded: { [weak self] in
+                DispatchQueue.main.async {
+                    guard let self, self.hostGeneration == generation else { return }
+                    self.screenAccess.invalidate(); self.stop()
+                    self.status = "屏幕共享已结束，请重新选择屏幕。"
+                }
+            }, passwordSalt: key.salt, clipboardAllowed: self.allowClipboard, filesAllowed: self.allowFiles,
                 fileStatus: { [weak self] text in DispatchQueue.main.async {
                     guard let self, self.hostGeneration == generation else { return }
                     self.fileStatus = text
@@ -193,12 +200,16 @@ final class HostModel: ObservableObject {
                 } }
             try h.start(); self.host = h; self.active = true; self.discovery.start(name: self.deviceName)
             self.status = trusted ? "共享已启动，等待设备连接 · TCP 47980" : "共享已启动（只能查看）· 辅助功能权限未被认可"
-          } catch is CancellationError { }
+          } catch is CancellationError { if !Task.isCancelled && !self.active { self.status = "未选择屏幕，尚未接受连接。" } }
           catch {
             let e = error as NSError
             if checkingScreen {
                 self.screenCheck = "失败：\(e.domain) / \(e.code)"
-                self.status = "屏幕访问失败：\(e.domain) / \(e.code)：\(e.localizedDescription)\n本次没有读取钥匙串。授权后退出重开，不要再次安装或重置。"
+                if error as? ScreenSharingError == .chooseMainDisplay {
+                    self.status = "请选择主显示器；macOS 14 至 15.1 需使用单显示器。"
+                } else {
+                    self.status = "屏幕选择失败：\(e.domain) / \(e.code)：\(e.localizedDescription)。可重试屏幕选择；本次没有读取钥匙串。"
+                }
             } else if self.pairingKey == nil { self.reportKeychainError(error) }
             else { self.status = "共享启动失败：\(e.domain) / \(e.code)：\(e.localizedDescription)" }
           }
@@ -206,6 +217,7 @@ final class HostModel: ObservableObject {
     }
     func stop() {
         startup?.cancel(); pairingOperation?.cancel(); passwordOperation?.cancel()
+        screenAccess.cancelPending()
         discovery.stop(); hostGeneration = nil; host?.stop(); host = nil; active = false
         revealSecret = false; status = "已停止"; fileStatus = "文件同步：等待连接"
     }
@@ -221,6 +233,7 @@ final class HostModel: ObservableObject {
         AppIconLoaded: \(AppBrand.icon != nil)
         BuildSigningMode: \(Pairing.buildSigningMode)
         LegacyScreenPreflight: \(CGPreflightScreenCaptureAccess())
+        ScreenAuthorization: \(screenAccess.mode)
         ScreenCaptureKit: \(screenCheck)
         Accessibility: \(AXIsProcessTrusted())
         Listening: \(active)

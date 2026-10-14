@@ -26,7 +26,7 @@ Preview scope: tested Windows package plus **Mac source only**. See
 
 The locally verified beta.2 checkpoint added discovery and remembered languages;
 see the [language checks](../tests/results/localization-2026-10-10.txt).
-Main now targets **v0.3.0-alpha.2 development**, Mac numeric version 0.3.0/build 23.
+Main now targets **v0.3.0-alpha.3 development**, Mac numeric version 0.3.0/build 28.
 It includes the Windows sharing role and a [Mac controller source preview](mac-controller.md).
 Portable Swift controller/model/session and independent encrypted-peer checks pass;
 native Apple SDK compilation and VideoToolbox fixture decoding now pass. Installed
@@ -41,7 +41,7 @@ No new alpha release/tag or Mac binary is claimed. The native gates below remain
 - [ ] Windows → Mac keyboard/mouse, text/files, consent/revoke, reconnect and sleep/wake regression.
 - [ ] Longer complete-session resource/latency checks; current decoder samples are not a soak.
 - [ ] Discovery and English/Chinese UI, or an explicit revision of stable feature scope.
-- [ ] For a Mac binary: actual Developer ID signing, accepted notarization/stapling and extracted-package checks.
+- [ ] For a Mac binary: verified extracted ZIP/DMG, explicit ad-hoc/unnotarized disclosure and native install/update acceptance; Developer ID/notarization is optional.
 - [ ] Final stable versions, packages, checksums, release notes and immutable tag.
 
 Native Mac build/fixture checks have now run through SSH in an isolated checkout.

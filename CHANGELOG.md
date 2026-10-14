@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.3.0-alpha.3 — in development
+
+- Use the macOS 14+ system display picker for deliberate accepting, pass its
+  authorized filter directly to capture, and reuse it within the application run.
+- Preserve denial/cancel ordering: no credential read or listener before selection.
+- Provide a Mac DMG with an Applications link for a canonical installation path.
+- Maintain a no-paid-membership distribution policy; signature/notarization status
+  is separate from functional stability. Native permission acceptance is pending.
+
 [简体中文](CHANGELOG.zh-CN.md)
 
 ## Unreleased

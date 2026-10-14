@@ -26,6 +26,10 @@ new platform. Keep its English/Chinese agreements aligned with implementation.
   mirror trigger GitHub CI. Use the successful run's exact commit/artifacts for
   deployment and release candidates; do not manage mirroring or equate CI with
   physical desktop, permission or hardware-performance acceptance.
+- The maintainer does not plan to purchase Apple Developer membership. Maintain
+  an explicit ad-hoc/unnotarized distribution path; never make paid signing a
+  prerequisite for fixing permissions or deciding feature stability. Keep native
+  acceptance, package integrity and honest installation disclosures mandatory.
 - Keep English primary and Chinese documentation aligned. Retain the approved
   brand. Avoid incidental identity, Keychain or permission changes during UI work.
 - Keep secrets, personal device data, local test logs and build outputs out of Git.

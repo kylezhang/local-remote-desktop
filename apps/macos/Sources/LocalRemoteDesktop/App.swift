@@ -333,7 +333,7 @@ struct DesktopSettings: View {
                             .font(.caption).foregroundStyle(.secondary)
                     case "about":
                         Text("Local Remote Desktop").font(.title2)
-                        Text("Local Remote Desktop 0.3.0-alpha.2").font(.caption).foregroundStyle(.secondary)
+                        Text("Local Remote Desktop 0.3.0-alpha.3").font(.caption).foregroundStyle(.secondary)
                         Text("\(UiText.text("构建")) \(Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "unknown") · \(EntryBuild.revision)").font(.caption).foregroundStyle(.secondary)
                         Text("\(UiText.text("源码提交")): \(EntryBuild.source)").font(.caption).foregroundStyle(.secondary).textSelection(.enabled)
                         Text(UiText.text("许可")).font(.headline)

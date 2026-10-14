@@ -3,7 +3,7 @@
     <OutputType>WinExe</OutputType><TargetFramework>net8.0-windows</TargetFramework>
     <UseWPF>true</UseWPF><Nullable>enable</Nullable><ImplicitUsings>enable</ImplicitUsings>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks><PlatformTarget>x64</PlatformTarget>
-    <Version>0.3.0-alpha.2</Version>
+    <Version>0.3.0-alpha.3</Version>
     <Product>Local Remote Desktop</Product>
     <AssemblyName>LocalRemoteDesktop</AssemblyName>
     <RootNamespace>LocalRemoteDesktop</RootNamespace>

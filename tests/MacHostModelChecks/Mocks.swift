@@ -24,6 +24,25 @@ final class NSPasteboard {
     @discardableResult func setString(_ value: String, forType: PasteboardType) -> Bool { text = value; return true }
 }
 enum CaptureError: Error { case noDisplay }
+enum ScreenSharingError: Error, Equatable { case chooseMainDisplay, selectionUnavailable }
+struct ScreenCaptureSource {}
+final class ScreenSharingAccess {
+    static var attempts = 0, reject = false, pause = false
+    static var pending: CheckedContinuation<ScreenCaptureSource, Error>?
+    var cached: ScreenCaptureSource?
+    let mode = "recording system picker"
+    func select(interactive: Bool) async throws -> ScreenCaptureSource {
+        if let cached { return cached }
+        Self.attempts += 1
+        if Self.reject { throw NSError(domain:"com.apple.ScreenCaptureKit.SCStreamErrorDomain", code:-3801) }
+        let selected: ScreenCaptureSource
+        if Self.pause { selected = try await withCheckedThrowingContinuation { Self.pending = $0 } }
+        else { selected = ScreenCaptureSource() }
+        try Task.checkCancellation(); cached = selected; return selected
+    }
+    func cancelPending() { Self.pending?.resume(throwing:CancellationError()); Self.pending = nil }
+    func invalidate() { cached = nil; cancelPending() }
+}
 struct SCShareableContent {
     let displays = [1]
     static func excludingDesktopWindows(_ exclude: Bool, onScreenWindowsOnly: Bool) async throws -> Self { Self() }
@@ -64,9 +83,11 @@ final class Host {
     let passwordSalt: Data?
     let status: (String) -> Void, fileStatus: (String) -> Void
     private(set) var stopped = false
-    init(key: Data, deviceName: String = DeviceName.current(), passwordSalt: Data?, clipboardAllowed: Bool, filesAllowed: Bool,
+    let screenAccessEnded: () -> Void
+    init(key: Data, deviceName: String = DeviceName.current(), screenSource: ScreenCaptureSource? = nil, screenAccessEnded: @escaping () -> Void = {}, passwordSalt: Data?, clipboardAllowed: Bool, filesAllowed: Bool,
          fileStatus: @escaping (String) -> Void, status: @escaping (String) -> Void) {
         self.key = key; self.passwordSalt = passwordSalt; self.status = status; self.fileStatus = fileStatus
+        self.screenAccessEnded = screenAccessEnded
         Self.instances.append(self)
     }
     func start() throws {}

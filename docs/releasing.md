@@ -4,12 +4,12 @@
 
 1. Decide scope and version. Product versions begin at 0.1.0; subsequent changes use semantic major/minor/patch intent. Keep Windows csproj, window title, Mac plist/UI and changelog aligned. Mac CFBundleVersion is a monotonically increasing build number even though the public version resets once from development 0.2.x.
 2. Update English and Chinese documentation. Retain compatibility identities unless a tested migration is intentional. Inspect tracked files, `.gitignore`, diff/whitespace and secret indicators; do not commit dist/bin/obj/cache, logs or certificates.
-3. Build Release on Windows, run protocol/client and affected script tests, and record actual results in validation. Native Mac compilation and UI/signing testing requires a Mac; explicitly state when absent.
+3. Use GitHub Actions as the primary Windows/macOS native build and automated-test environment; local compilation is optional. Record the exact successful run/source commit and distinguish CI fixtures, user feedback and real two-device acceptance. Never open test windows or inject input during the owner's work.
 4. Package committed, clean source with `scripts/package-windows.ps1`. Include the project's GPL-3.0-or-later LICENSE, NOTICE.md, SOURCE.txt and source.zip, along with .NET runtime licenses/notices and the launch guide. source.zip contains the exact source commit, build scripts and documentation; recipients must not need access to the private repository to obtain corresponding source. FFmpeg is external. Generate SHA-256 checksums. Verify the ZIP contains the tested client DLL, icon, Desktop runtime and matching source. Do not publish unverified Mac binaries.
-5. Commit source/documents and push main to AtomGit. Use an annotated `vX.Y.Z` tag pointing at the exact release commit. Create the AtomGit Release, upload ZIP/checksum assets, then verify tag commit, release body and downloadable assets. Tags and release artifacts are immutable: fix mistakes in a new patch release rather than retargeting a tag.
+5. Push source to AtomGit and let its existing mirror trigger GitHub CI; do not change mirroring or push separately to GitHub. Use an annotated `vX.Y.Z` tag at the tested commit. Prepare draft GitHub and AtomGit Releases with the same cloud-built bytes, version-only title, bilingual notes, source and checksums. Verify both tags and downloaded assets before publishing. Retry only missing matching assets after partial upload failures. Tags and published artifacts are immutable; fixes require a new version.
 6. The agreed local Windows executable paths remain deployment targets. Deploy the verified package when idle; while a client is in use, defer until it exits. Do not close/reopen it or spawn another instance during the owner’s work. Keep only one product launcher, retain saved connections and ensure any deferred job uses the newest verified candidate. Build output stays out of Git.
 
-For a clearly labeled beta, a tested Windows ZIP plus Mac source may be published before native Mac acceptance. Set prerelease=true, disclose unverified Mac SDK/UI/Keychain and two-device behavior prominently, and attach no Mac binary. This exception does not authorize a stable release or satisfy Mac binary signing/notarization gates. Candidate scope must be explicit; a beta does not imply every roadmap feature is complete.
+For a clearly labeled beta, a tested Windows ZIP plus Mac source may be published before native Mac acceptance. Set prerelease=true, disclose unverified Mac SDK/UI/Keychain and two-device behavior prominently, and attach no Mac binary. This exception does not authorize a stable release or satisfy native Mac binary acceptance. Candidate scope must be explicit; a beta does not imply every roadmap feature is complete.
 
 The release notes must distinguish implemented features, automated test coverage, user-reported real-device behavior and unverified platforms. A 0.x release can be published as a normal release while explicitly documenting its early-product limits. Do not change repository privacy or select an open-source license implicitly.
 
@@ -23,10 +23,20 @@ also made the API's `prerelease` field false; its version and notes still explic
 identify it as a preview. This designation does not clear native acceptance gates.
 Existing tags and download assets were unchanged. See the
 [AtomGit update API](https://docs.atomgit.com/docs/apis/patch-api-v-5-repos-owner-repo-releases-tag/).
-Maintainers supply the Developer ID signing/notarization environment; end users
-should not need signing credentials. Shared Swift tests alone do not satisfy that gate.
+The maintainer does not plan to purchase Apple Developer membership. An explicitly
+ad-hoc signed, unnotarized package is a supported distribution path. Paid signing
+does not determine feature stability or alpha/beta/stable status; native acceptance
+does. Disclose first-open approval and possible Accessibility/Keychain reapproval
+after ad-hoc updates. Do not disable Gatekeeper or promise unchanged permissions.
+Shared Swift tests alone do not establish native permission acceptance.
 
-For Mac candidates, after committing aligned versions, use `scripts/package-macos.sh`
+Use `scripts/package-macos-preview.sh` for the current ad-hoc CI ZIP/DMG candidate.
+Install via the DMG's Applications shortcut before first launch. On macOS 14+,
+explicitly select the main display in the system picker; Accessibility remains
+separate. See [screen access](mac-screen-access.md). CI artifacts are temporary
+downloads; durable releases use the same verified bytes on both repositories.
+
+For the optional Developer ID distribution path, after committing aligned versions, use `scripts/package-macos.sh`
 with a Developer ID fingerprint and an existing Keychain notarytool profile as
 described in [maintainer packaging](macos-signing.md#maintainer-packaging).
 It checks the committed source, builds/signs/notarizes, validates the final extracted

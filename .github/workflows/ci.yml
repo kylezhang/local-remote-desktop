@@ -106,6 +106,7 @@ jobs:
           name: macos-arm64-preview-${{ github.sha }}
           path: |
             ${{ runner.temp }}/macos-artifacts/*.zip
+            ${{ runner.temp }}/macos-artifacts/*.dmg
             ${{ runner.temp }}/macos-artifacts/SHA256SUMS.txt
             ${{ runner.temp }}/macos-artifacts/ci.json
           if-no-files-found: error

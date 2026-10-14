@@ -42,7 +42,9 @@ Local Remote Desktop $version — Apple Silicon development preview
 
 Quit an older copy, then copy the complete Local Remote Desktop.app to /Applications.
 Open the app; choose Initiate connection or Accept connections.
-Allow Screen Recording and Accessibility when macOS asks for desktop sharing.
+On macOS 14+, click Start accepting connections and select the main display in
+the system picker. macOS 13 requires Screen Recording approval. Accessibility
+is separate and required for keyboard/mouse control on every supported version.
 macOS may block this downloaded ad-hoc preview. Review the app in Privacy & Security;
 if macOS still rejects it, use a local source build rather than disabling Gatekeeper.
 Changed ad-hoc code can require renewed permissions/Keychain approval.
@@ -51,7 +53,8 @@ real remote-control, permission, clipboard or sustained-performance acceptance.
 Normal logged-in sessions only; no FileVault preboot or login-screen guarantee.
 
 退出旧应用，将完整 Local Remote Desktop.app 复制到 /Applications 后打开。
-选择“发起连接”或“接受连接”，共享时按系统提示授予屏幕录制和辅助功能权限。
+选择“发起连接”或“接受连接”。macOS 14 及以上开始接受连接后，在系统选择器中选择主屏幕；
+macOS 13 需屏幕录制授权。所有版本的键鼠控制均另需辅助功能权限。
 这是临时签名的开发预览包，未公证；系统可能阻止打开，更新后也可能需要重新授权。
 请在“隐私与安全性”查看系统提示；不能打开时可从源码构建，不要关闭 Gatekeeper。
 后台 CI 检查不等于真实远控、权限、剪贴板和长时间性能验收。
@@ -85,6 +88,17 @@ pathlib.Path(sys.argv[1]).write_text(json.dumps({
 },indent=2)+'\n',encoding='utf-8')
 PY
 chmod 644 "$archive" "$output/SHA256SUMS.txt" "$output/ci.json"
+# A native drag-to-Applications entry avoids running the downloaded app from an
+# App Translocation path. No installer script, TCC reset or automatic launch.
+mkdir "$stage/disk-image"
+ditto "$payload" "$stage/disk-image"
+ln -s /Applications "$stage/disk-image/Applications"
+image="$output/$name.dmg"
+[[ ! -e "$image" ]] || fail 'Disk image already exists; refusing overwrite.'
+hdiutil create -volname 'Local Remote Desktop' -srcfolder "$stage/disk-image" -format UDZO "$image"
+hdiutil verify "$image"
+(cd "$output" && shasum -a 256 "$name.zip" "$name.dmg" > SHA256SUMS.txt)
+chmod 644 "$image" "$output/SHA256SUMS.txt"
 if [[ -n "${GITHUB_STEP_SUMMARY:-}" ]]; then
     printf 'macOS arm64: native build, fixtures, layout and extracted preview signature checks passed. Source: %s. Ad-hoc / not notarized; physical acceptance not run.\n' "$commit" >> "$GITHUB_STEP_SUMMARY"
 fi
