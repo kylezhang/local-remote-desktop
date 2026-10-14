@@ -21,7 +21,8 @@ pre-release; `scripts/ci/publish-preview.sh` verifies the exact run's assets,
 creates an annotated tag and a draft, downloads/verifies it, then publishes.
 The job runs only on this repository's main branch, never pull requests, and
 uses the Actions token without a maintainer PAT. It does not publish stable versions
-or change AtomGit mirroring. AtomGit receives those same bytes through its MCP.
+or change source mirroring. AtomGit receives those same bytes through the
+Actions API synchronization step; MCP remains available for inspection/recovery.
 
 A Mac binary requires the [signing and distribution acceptance](macos-signing.md).
 
@@ -40,6 +41,14 @@ publish and enforces the same discipline: the token comes only from the
 same-name checksum conflict halts the sync instead of overwriting; and
 `release_status` is patched and read back only after every attachment matches
 the verified GitHub bytes.
+
+The API does not document an AtomGit draft parameter. Stage its release entry,
+verify all existing assets before any upload, then select the requested status
+after complete read-back verification. GitHub API digests cover all six assets;
+the archive checksum inventory must be complete and unique, and provenance must
+match the immutable tag. `atomgitStatus` in the release request (or
+`--atomgit-status`) controls homepage selection separately from stability.
+Alpha.3 selects `latest` without changing the GitHub prerelease or release notes.
 The maintainer does not plan to purchase Apple Developer membership. An explicitly
 ad-hoc signed, unnotarized package is a supported distribution path. Paid signing
 does not determine feature stability or alpha/beta/stable status; native acceptance

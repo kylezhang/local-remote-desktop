@@ -84,8 +84,14 @@ An approved `.github/release-request.json` lets the publish job create the GitHu
 pre-release; `scripts/sync-atomgit-release.py` then mirrors the exact verified
 bytes to AtomGit. The mirror only adds missing attachments, stops on any
 checksum conflict because published artifacts are immutable, and sets
-`release_status` (`pre` for previews) only after every attachment passes
-read-back verification. It skips unless the `ATOMGIT_RELEASE_TOKEN` secret
+`release_status` only after every attachment passes read-back verification.
+All six files must match GitHub API digests, the checksum list must cover every
+archive, and `release.json` must match the published version, tag commit and hashes.
+Every existing AtomGit file is checked before any missing file is uploaded.
+The request's `atomgitStatus` selects `pre/latest` independently of GitHub's
+prerelease flag; alpha.3 uses `latest` for the homepage. AtomGit may then report
+`prerelease=false`; the alpha title/notes and GitHub pre-release remain unchanged.
+This does not establish stable or native acceptance. The sync skips unless the `ATOMGIT_RELEASE_TOKEN` secret
 exists. Tags alone still generate candidates, not automatic Releases.
 Preserve existing tags/releases. The signed Mac release script still requires
 Developer ID, notarization and stable versions; it never silently falls back to

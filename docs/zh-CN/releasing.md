@@ -28,7 +28,12 @@ CI 同步步骤 `scripts/sync-atomgit-release.py` 在 GitHub 发布后自动执�
 `.github/release-request.json` 记录这次特定预发布；`scripts/ci/publish-preview.sh` 核对当前运行的
 精确附件，创建注释 tag 和草稿，下载核验后发布。仅本仓库 main 分支运行，PR 不可发布，
 使用 Actions 自带令牌，不需要维护者 PAT。不发布正式版、不改 AtomGit 镜像流程；
-AtomGit 通过 MCP 接收同一套字节。
+AtomGit 通过 Actions 的 API 同步步骤接收同一套字节；MCP 保留为查看与恢复手段。
+
+AtomGit 官方 API 未文档化草稿参数。先建立版本入口，在任何上传前核对全部已有附件，
+六个附件均匹配 GitHub API 摘要、归档校验清单完整且不重复、来源符合不可变 tag，
+全部回读通过后才设置状态。请求中的 `atomgitStatus`（或 `--atomgit-status`）将主页选择与
+稳定性分开；alpha.3 选择 `latest`，不改变 GitHub 预发布标记或版本说明。
 
 Mac 二进制另须通过[签名与分发验收](macos-signing.md)。维护者目前不购买 Apple 开发者会员，明确标注的临时签名、未公证包是支持的分发方式。功能与原生验收决定版本稳定性，不能由是否付费签名决定。须披露首次打开确认，以及临时签名更新后可能需要重新认可辅助功能/钥匙串；不关闭 Gatekeeper、不承诺权限无感保留。共享 Swift 逻辑测试不能代替原生权限验收。
 

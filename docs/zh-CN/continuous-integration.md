@@ -62,7 +62,11 @@ Windows 可在当前客户端退出后使用验证过的 Actions 包，不覆盖
 经 `.github/release-request.json` 批准后，发布任务创建 GitHub 预发布，随后
 `scripts/sync-atomgit-release.py` 将校验一致的同批字节同步到 AtomGit：只补传缺失附件，
 任何校验值冲突立即停止（发行产物不可变），全部附件回读校验通过后才设置
-`release_status`（预览版为 `pre`）；未配置 `ATOMGIT_RELEASE_TOKEN` secret 时该步骤跳过。
+`release_status`。六个附件均须匹配 GitHub API 摘要，校验清单须完整覆盖各个归档，
+`release.json` 的版本、源码提交及哈希须与已发布 tag 一致。先验证全部已有附件，再补传缺失项。
+请求文件里的 `atomgitStatus` 独立选择 `pre/latest`；alpha.3 使用 `latest` 更新主页入口，
+与 GitHub 预发布状态分开。AtomGit 可能随之返回 `prerelease=false`，版本名/说明仍为 alpha，
+GitHub 仍为预发布，不代表稳定或实机验收通过。未配置 `ATOMGIT_RELEASE_TOKEN` secret 时跳过。
 仅有标签仍只生成候选包，不自动创建 Release，既有标签与发行包保持不变。
 正式 Mac 打包仍严格要求 Developer ID、公证和稳定版本，不退回临时签名；
 后续签名发版自动化使用受保护的凭据，并在验收通过后发布。

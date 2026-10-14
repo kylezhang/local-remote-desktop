@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.3.0-alpha.3 — in development
+## 0.3.0-alpha.3 — 2026-10-14 (pre-release)
 
 - Use the macOS 14+ system display picker for deliberate accepting, pass its
   authorized filter directly to capture, and reuse it within the application run.
@@ -12,6 +12,10 @@
 [简体中文](CHANGELOG.zh-CN.md)
 
 ## Unreleased
+
+- Harden release synchronization: verify every API digest, complete archive
+  inventory and source manifest; check all existing files before any upload.
+- Select the AtomGit homepage latest independently of GitHub pre-release status.
 
 - CI now mirrors the published GitHub preview release to AtomGit: only missing
   attachments are uploaded, checksum conflicts halt the sync, and

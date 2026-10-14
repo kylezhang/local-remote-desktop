@@ -39,9 +39,10 @@ def fixture_assets():
         f'LocalRemoteDesktop-{TAG}-macos-arm64-preview.zip': b'macos zip fixture bytes',
         f'LocalRemoteDesktop-{TAG}-macos-arm64-preview.dmg': b'dmg fixture bytes',
         f'LocalRemoteDesktop-{TAG}-source.zip': b'source fixture bytes',
-        'release.json': json.dumps({'version': TAG[1:], 'commit': COMMIT}).encode(),
     }
-    listed = sorted(name for name in assets if name != 'release.json')
+    listed = sorted(assets)
+    assets['release.json'] = json.dumps({'version': TAG[1:], 'commit': COMMIT,
+                                        'sha256': {name: sha256(assets[name]) for name in listed}}).encode()
     assets['SHA256SUMS.txt'] = ''.join(f'{sha256(assets[name])}  {name}\n' for name in listed).encode()
     return assets
 
@@ -187,30 +188,32 @@ class Checks(unittest.TestCase):
         self.gh_state = SimpleNamespace(assets=self.assets, served={}, commit=COMMIT, release=None)
         self.gh = _Server(GitHubHandler, self.gh_state)
         threading.Thread(target=self.gh.serve_forever, daemon=True).start()
-        self.addCleanup(self.gh.shutdown)
         self.addCleanup(self.gh.server_close)
+        self.addCleanup(self.gh.shutdown)
         self.gh_base = f'http://127.0.0.1:{self.gh.server_address[1]}'
         self.gh_state.release = {
             'tag_name': TAG, 'name': TAG, 'draft': False, 'prerelease': True, 'target_commitish': COMMIT,
             'body': f'Preview notes\n\nSource commit: `{COMMIT}`\n',
-            'assets': [{'name': name, 'browser_download_url': f'{self.gh_base}/gh-assets/{quote(name)}'}
+            'assets': [{'name': name, 'digest': 'sha256:' + sha256(self.assets[name]),
+                        'browser_download_url': f'{self.gh_base}/gh-assets/{quote(name)}'}
                        for name in sorted(self.assets)],
         }
         self.ag_state = SimpleNamespace(owner='zkxw2008', repo='local-remote-desktop', token=TOKEN,
                                         releases={}, blobs={}, calls=[], corrupt_uploads=False)
         self.ag = _Server(AtomGitHandler, self.ag_state)
         threading.Thread(target=self.ag.serve_forever, daemon=True).start()
-        self.addCleanup(self.ag.shutdown)
         self.addCleanup(self.ag.server_close)
+        self.addCleanup(self.ag.shutdown)
         self.ag_base = f'http://127.0.0.1:{self.ag.server_address[1]}'
         self.work = Path(tempfile.mkdtemp())
         self.addCleanup(shutil.rmtree, self.work, True)
 
-    def run_sync(self, prerelease=True):
+    def run_sync(self, prerelease=True, atomgit_status=None):
         return syncmod.sync(TAG, COMMIT, prerelease,
                             github_base=self.gh_base, github_repo=GITHUB_REPO, github_token=None,
                             atomgit_base=self.ag_base, atomgit_owner=self.ag_state.owner,
-                            atomgit_repo=self.ag_state.repo, atomgit_token=TOKEN, workdir=self.work)
+                            atomgit_repo=self.ag_state.repo, atomgit_token=TOKEN, workdir=self.work,
+                            atomgit_status=atomgit_status)
 
     def seed_atomgit(self, attachments, status='none'):
         self.ag_state.releases[TAG] = {
@@ -369,6 +372,78 @@ class Checks(unittest.TestCase):
             self.assertEqual(syncmod.main(self.main_argv()), 0)
         self.assertIn('skipping', out.getvalue())
         self.assertEqual(self.ag_state.calls, [])
+
+    def refresh_api_digest(self, name):
+        for asset in self.gh_state.release['assets']:
+            if asset['name'] == name:
+                asset['digest'] = 'sha256:' + sha256(self.assets[name])
+
+    def test_empty_missing_duplicate_checksum_entries_refused(self):
+        original = self.assets['SHA256SUMS.txt']
+        lines = original.decode().splitlines(keepends=True)
+        for invalid in (b'', ''.join(lines[1:]).encode(), original + lines[0].encode()):
+            self.assets['SHA256SUMS.txt'] = invalid
+            self.refresh_api_digest('SHA256SUMS.txt')
+            with self.assertRaises(ValueError):
+                self.run_sync()
+            self.assertEqual(self.ag_state.calls, [])
+
+    def test_wrong_metadata_version_commit_or_archive_hash_refused(self):
+        original = json.loads(self.assets['release.json'])
+        for field, value in (('version', '0.0.0'), ('commit', OTHER_COMMIT), ('sha256', {})):
+            metadata = {**original, field: value}
+            self.assets['release.json'] = json.dumps(metadata).encode()
+            self.refresh_api_digest('release.json')
+            with self.assertRaises(ValueError):
+                self.run_sync()
+            self.assertEqual(self.ag_state.calls, [])
+
+    def test_metadata_transport_corruption_fails_api_digest(self):
+        for name in ('release.json', 'SHA256SUMS.txt'):
+            self.gh_state.served = {name: b'corrupted metadata'}
+            with self.assertRaises(ValueError):
+                self.run_sync()
+            self.assertEqual(self.ag_state.calls, [])
+
+    def test_missing_or_duplicate_github_asset_refused(self):
+        assets = list(self.gh_state.release['assets'])
+        for invalid in (assets[1:], assets + [assets[0]]):
+            self.gh_state.release['assets'] = invalid
+            with self.assertRaises(ValueError):
+                self.run_sync()
+            self.assertEqual(self.ag_state.calls, [])
+
+    def test_missing_early_file_late_conflict_halts_before_upload(self):
+        assets = dict(self.assets)
+        missing = next(name for name in sorted(assets) if name.endswith('.dmg'))
+        del assets[missing]
+        assets['release.json'] = b'conflicting published metadata'
+        self.seed_atomgit(assets)
+        with self.assertRaises(ValueError):
+            self.run_sync()
+        self.assertNotIn('PUT', self.methods())
+        self.assertNotIn('UPLOAD-URL', self.methods())
+        self.assertNotIn('PATCH', self.methods())
+
+    def test_alpha_can_be_homepage_latest_without_becoming_stable(self):
+        report = self.run_sync(atomgit_status='latest')
+        self.assertEqual(report['release_status'], 'latest')
+        self.assertTrue(self.gh_state.release['prerelease'])
+        self.assertEqual(self.ag_state.releases[TAG]['name'], TAG)
+
+    def test_main_uses_version_matched_homepage_policy(self):
+        (self.work / '.github').mkdir()
+        (self.work / '.github/release-request.json').write_text(json.dumps({
+            'version': TAG[1:], 'atomgitStatus': 'latest'}))
+        env = {'GITHUB_ACTIONS': 'true', 'GITHUB_REPOSITORY': GITHUB_REPO,
+               'GITHUB_REF': 'refs/heads/main', 'ATOMGIT_RELEASE_TOKEN': TOKEN}
+        argv = ['--work-dir', str(self.work), '--github-base', self.gh_base,
+                '--github-repo', GITHUB_REPO, '--atomgit-base', self.ag_base]
+        with mock.patch.dict(os.environ, env, clear=True), \
+                mock.patch.object(syncmod, 'ROOT', self.work), \
+                mock.patch.object(syncmod, 'derive_preview_tag', return_value=TAG):
+            self.assertEqual(syncmod.main(argv), 0)
+        self.assertEqual(self.ag_state.releases[TAG]['release_status'], 'latest')
 
     def test_main_skips_foreign_repository(self):
         env = {'GITHUB_ACTIONS': 'true', 'GITHUB_REPOSITORY': 'someone/fork',

@@ -86,30 +86,58 @@ def fetch_tag_commit(base, repo, tag, token):
 
 
 def sync(tag, commit, prerelease, *, github_base, github_repo, github_token,
-         atomgit_base, atomgit_owner, atomgit_repo, atomgit_token, workdir):
+         atomgit_base, atomgit_owner, atomgit_repo, atomgit_token, workdir, atomgit_status=None):
     staged = Path(workdir) / 'github'
     staged.mkdir(parents=True, exist_ok=True)
     release = fetch_github_release(github_base, github_repo, tag, github_token)
+    if release.get('tag_name') != tag:
+        raise ValueError('GitHub release tag differs from the requested tag')
     if release.get('draft'):
         raise ValueError('GitHub release is still a draft; refusing to sync')
     if bool(release.get('prerelease')) != prerelease:
         raise ValueError('GitHub prerelease flag disagrees with the requested release_status')
     if fetch_tag_commit(github_base, github_repo, tag, github_token) != commit:
         raise ValueError(f'GitHub tag {tag} does not point at commit {commit}')
-    assets = {asset['name']: asset for asset in release.get('assets', [])}
-    if 'SHA256SUMS.txt' not in assets:
-        raise ValueError('GitHub release lacks SHA256SUMS.txt; cannot verify')
+    archive_names = {f'LocalRemoteDesktop-{tag}-{suffix}' for suffix in (
+        'windows-x64.zip', 'macos-arm64-preview.zip', 'macos-arm64-preview.dmg', 'source.zip')}
+    required = archive_names | {'SHA256SUMS.txt', 'release.json'}
+    assets = {}
+    for asset in release.get('assets', []):
+        name = asset.get('name', '')
+        if name not in required or name in assets:
+            raise ValueError('Unexpected or duplicate GitHub attachment')
+        if not re.fullmatch(r'sha256:[a-f0-9]{64}', asset.get('digest', '')):
+            raise ValueError(f'GitHub API digest missing or invalid for {name}')
+        assets[name] = asset
+    if set(assets) != required:
+        raise ValueError('GitHub release lacks required package, source or verification attachments')
     digests = {}
     for name, asset in sorted(assets.items()):
         status, data = http(asset['browser_download_url'])
         if status != 200:
             raise ConnectionError(f'download of GitHub asset {name} returned HTTP {status}')
+        if sha256(data) != asset['digest'][7:]:
+            raise ValueError(f'GitHub API digest mismatch for {name}')
+        if (staged / name).is_symlink():
+            raise ValueError('Staged release file must not be a symlink')
         (staged / name).write_bytes(data)
         digests[name] = sha256(data)
+    listed = {}
     for line in (staged / 'SHA256SUMS.txt').read_text(encoding='utf-8-sig').splitlines():
         match = re.fullmatch(r'([a-f0-9]{64})  ([A-Za-z0-9._-]+)', line)
-        if not match or digests.get(match[2]) != match[1]:
+        if not match or match[2] in listed or digests.get(match[2]) != match[1]:
             raise ValueError(f'GitHub assets fail SHA256SUMS.txt at line: {line!r}')
+        listed[match[2]] = match[1]
+    if set(listed) != archive_names:
+        raise ValueError('SHA256SUMS.txt must cover every package and source archive exactly once')
+    provenance = json.loads((staged / 'release.json').read_text(encoding='utf-8'))
+    if provenance.get('version') != tag.removeprefix('v') or provenance.get('commit') != commit:
+        raise ValueError('release.json version/source differs from the published tag')
+    if provenance.get('sha256') != listed:
+        raise ValueError('release.json archive hashes differ from verified assets')
+    desired = atomgit_status or ('pre' if prerelease else 'latest')
+    if desired not in ('pre', 'latest'):
+        raise ValueError('Unsupported AtomGit release_status')
     report = {'tag': tag, 'commit': commit, 'uploaded': [], 'already_synced': [], 'release_status': None}
     status, body = atomgit_api(atomgit_base, atomgit_owner, atomgit_repo, release_path(tag),
                                atomgit_token, expect=(200, 404))
@@ -121,10 +149,15 @@ def sync(tag, commit, prerelease, *, github_base, github_repo, github_token,
                                             'target_commitish': commit})
     remote = json.loads(body)
     mirrored = remote.get('target_commitish') or ''
-    if re.fullmatch(r'[0-9a-f]{40}', mirrored) and mirrored != commit:
+    if mirrored != commit:
         raise ValueError(f'AtomGit release {tag} points at commit {mirrored}, expected {commit}')
-    inventory = {asset['name'] for asset in remote.get('assets', [])}
+    attached = [asset['name'] for asset in remote.get('assets', []) if asset.get('type') == 'attach']
+    if len(set(attached)) != len(attached) or set(attached) - required:
+        raise ValueError('Unexpected or duplicate AtomGit attachment')
+    inventory = set(attached)
     download_path = f'{release_path(tag)}/attach_files'
+    # Preflight ALL existing files before any upload. A later alphabetical
+    # conflict must not follow an earlier PUT of a missing attachment.
     for name in sorted(digests):
         if name in inventory:
             status, data = atomgit_api(atomgit_base, atomgit_owner, atomgit_repo,
@@ -134,6 +167,8 @@ def sync(tag, commit, prerelease, *, github_base, github_repo, github_token,
                 raise ValueError(f'AtomGit attachment {name} differs from the verified GitHub asset; '
                                  'published artifacts are immutable, so the sync stops here')
             report['already_synced'].append(name)
+    for name in sorted(digests):
+        if name in inventory:
             continue
         status, body = atomgit_api(atomgit_base, atomgit_owner, atomgit_repo,
                                    f'{release_path(tag)}/upload_url', atomgit_token,
@@ -154,7 +189,6 @@ def sync(tag, commit, prerelease, *, github_base, github_repo, github_token,
             raise ValueError(f'uploaded AtomGit attachment {name} failed read-back verification; '
                              'leaving it in place for maintainer review')
         report['uploaded'].append(name)
-    desired = 'pre' if prerelease else 'latest'
     _, body = atomgit_api(atomgit_base, atomgit_owner, atomgit_repo, release_path(tag), atomgit_token)
     remote = json.loads(body)
     if remote.get('release_status') != desired:
@@ -190,7 +224,9 @@ def main(argv=None):
     parser.add_argument('--tag')
     parser.add_argument('--commit')
     parser.add_argument('--stable', action='store_true',
-                        help='mark release_status=latest instead of pre; requires --tag')
+                        help='expect a stable GitHub release; requires --tag')
+    parser.add_argument('--atomgit-status', choices=('pre', 'latest'),
+                        help='AtomGit homepage selection, independent of GitHub stability')
     parser.add_argument('--github-base', default=os.environ.get('GITHUB_API_BASE', 'https://api.github.com'))
     parser.add_argument('--github-repo', default=os.environ.get('GITHUB_REPOSITORY', 'kylezhang/local-remote-desktop'))
     parser.add_argument('--atomgit-base', default=os.environ.get('ATOMGIT_API_BASE', 'https://atomgit.com'))
@@ -213,11 +249,16 @@ def main(argv=None):
         parser.error('--stable requires an explicit --tag')
     github_token = os.environ.get('GH_TOKEN') or os.environ.get('GITHUB_TOKEN') or None
     tag, commit = args.tag, args.commit
+    atomgit_status = args.atomgit_status
     if not tag:
         tag = derive_preview_tag()
         if not tag:
             print('No approved preview release request matches the client version; skipping AtomGit sync.')
             return 0
+        if atomgit_status is None:
+            request = json.loads((ROOT / '.github' / 'release-request.json').read_text(encoding='utf-8'))
+            if request.get('version') == tag.removeprefix('v'):
+                atomgit_status = request.get('atomgitStatus')
     if not commit:
         try:
             commit = fetch_tag_commit(args.github_base, args.github_repo, tag, github_token)
@@ -235,7 +276,7 @@ def main(argv=None):
                       github_base=args.github_base, github_repo=args.github_repo, github_token=github_token,
                       atomgit_base=args.atomgit_base, atomgit_owner=args.atomgit_owner,
                       atomgit_repo=args.atomgit_repo, atomgit_token=atomgit_token,
-                      workdir=Path(args.work_dir))
+                      workdir=Path(args.work_dir), atomgit_status=atomgit_status)
     except (LookupError, ValueError, RuntimeError, ConnectionError) as error:
         print(f'AtomGit sync stopped: {error}', file=sys.stderr)
         return 1
