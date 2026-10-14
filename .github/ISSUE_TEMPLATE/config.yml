@@ -1,0 +1,5 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Installation and usage / 安装与使用
+    url: https://github.com/kylezhang/local-remote-desktop#installation
+    about: Read the supported platforms and download instructions / 查看支持平台及下载说明

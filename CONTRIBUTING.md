@@ -3,6 +3,15 @@
 Start with the [development handbook](docs/development-handbook.md) / [开发约定与经验](docs/zh-CN/development-handbook.md).
 It records product decisions, shared UI flows, update/permission lessons and validation rules for every platform.
 
+For installation/control problems or feature ideas, use the [GitHub feedback forms](https://github.com/kylezhang/local-remote-desktop/issues/new/choose).
+Include the released app version, both operating systems, connection direction and
+reproducible steps. Remove passwords, tokens, private addresses and personal content
+from diagnostics/screenshots. English and Chinese feedback are welcome.
+Public outreach preparation is tracked in the [launch plan](docs/launch-plan.md).
+
+中文：安装/远控问题和功能建议可使用上述 GitHub 表单，注明发行版本、两端系统、连接方向与复现步骤，
+去掉密码、令牌、私人地址及个人内容。中英文均可；对外物料见[推广计划](docs/zh-CN/launch-plan.md)。
+
 Use small, focused commits with Conventional Commit-style subjects: `feat:`, `fix:`, `docs:`, `test:`, `chore:`. Describe user-visible behavior and validation; do not claim platform testing that was not performed. Keep README/roadmap statements aligned with implemented support. English is the primary documentation; update corresponding Chinese pages when changing behavior.
 
 Do not commit build output, runtime binaries, release archives, credentials, pairing keys, logs, private certificates or user connection data. Check both `.gitignore` and already-tracked files: ignore rules do not untrack existing files. Avoid broad patterns that hide required icons, test fixtures or source assets. `.gitattributes` keeps shell scripts and source files on LF across platforms.

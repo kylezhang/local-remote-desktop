@@ -1,0 +1,57 @@
+name: Bug report / 问题反馈
+description: Report an installation, connection or desktop-control problem / 反馈安装、连接或远控问题
+title: "[Bug] "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for trying Local Remote Desktop. Please use a released package and describe a reproducible problem.
+        感谢试用，请注明发行版本及可复现步骤。
+        Do not include pairing passwords, tokens, private IP addresses, clipboard contents or captured work.
+        不要包含配对密码、令牌、私人 IP、剪贴板内容或工作画面。
+  - type: input
+    id: version
+    attributes:
+      label: App version / 应用版本
+      placeholder: v0.3.0-alpha.3; include both versions if different / 两端不同请分别注明
+    validations:
+      required: true
+  - type: dropdown
+    id: direction
+    attributes:
+      label: Connection direction / 连接方向
+      options:
+        - Windows → macOS
+        - macOS → Windows
+        - Installation or startup / 安装或启动
+        - Other / 其他
+    validations:
+      required: true
+  - type: input
+    id: systems
+    attributes:
+      label: OS versions / 两端系统版本
+      placeholder: Windows 11 x64; macOS version and Apple Silicon model
+    validations:
+      required: true
+  - type: dropdown
+    id: network
+    attributes:
+      label: Connection path / 连接方式
+      options:
+        - Same LAN / 同一局域网
+        - Existing VPN / 已有 VPN
+        - Not applicable / 不适用
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps, expected and actual behavior / 步骤、预期与实际结果
+      description: Include whether discovery or manual Target IP was used. For pointer issues include display scale and fullscreen/windowed mode. / 注明发现或手填 IP，鼠标问题附显示缩放及全屏/窗口模式。
+    validations:
+      required: true
+  - type: textarea
+    id: diagnostics
+    attributes:
+      label: Sanitized error or diagnostics / 去敏错误或诊断
+      description: Optional. Remove secrets, addresses, names, paths and user content before posting. / 可选，提交前删除密钥、地址、姓名、路径及个人内容。
+      render: text

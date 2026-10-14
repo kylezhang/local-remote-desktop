@@ -1,0 +1,18 @@
+name: Feature request / 功能建议
+description: Describe the workflow you want to improve / 描述希望改善的实际使用流程
+title: "[Feature] "
+body:
+  - type: textarea
+    id: need
+    attributes:
+      label: The problem / 实际需求
+      description: Which devices and task are involved? Do not include private data. / 涉及哪些设备和任务？不要包含私人信息。
+    validations:
+      required: true
+  - type: textarea
+    id: outcome
+    attributes:
+      label: Desired experience / 期望体验
+      description: Describe the outcome, not just a technical implementation. / 描述希望达到的效果。
+    validations:
+      required: true
