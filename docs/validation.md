@@ -1,5 +1,15 @@
 # Validation
 
+## Published alpha and automated synchronization — 2026-10-14
+
+v0.3.0-alpha.3 now provides Windows and Mac downloads on both repositories.
+Native builds/package checks and the hardened automatic synchronization passed;
+the final job verified six existing attachments and selected AtomGit homepage
+latest without replacing files. See the [release evidence](../tests/results/automated-release-2026-10-14.md)
+for exact commits, runs and hashes. Interactive acceptance was deferred by the
+maintainer; screen-picker/TCC/Keychain updates, real clipboard and sustained
+hardware performance remain pending. The alpha designation is retained.
+
 ## GitHub Actions native builds — 2026-10-13
 
 The [first online build](../tests/results/github-actions-2026-10-13.md) passed

@@ -2,6 +2,16 @@
 
 [简体中文](zh-CN/next-release.md) · [Roadmap](roadmap.md)
 
+## Current download — 2026-10-14
+
+**v0.3.0-alpha.3** is published on [AtomGit](https://atomgit.com/zkxw2008/local-remote-desktop/releases/tag/v0.3.0-alpha.3)
+and [GitHub](https://github.com/kylezhang/local-remote-desktop/releases/tag/v0.3.0-alpha.3),
+including Windows ZIP, Mac ZIP/DMG, corresponding source and checksums. Native
+CI and automatic synchronization passed; AtomGit homepage latest now selects
+this alpha. See [evidence](../tests/results/automated-release-2026-10-14.md).
+This is not a stable v0.3.0; physical acceptance remains deferred. Earlier
+checkpoints below retain their historical scope.
+
 2026-10-10: **v0.2.0-beta.1 preview published** on [AtomGit](https://atomgit.com/zkxw2008/local-remote-desktop/releases). Windows and Mac display the beta
 identifier; Mac numeric bundle version is 0.2.0, internal build 19. The existing
 v0.1.0 tag/assets stay unchanged. Earlier v0.1.1/v0.1.2 patch plans are consolidated
@@ -32,7 +42,7 @@ Portable Swift controller/model/session and independent encrypted-peer checks pa
 native Apple SDK compilation and VideoToolbox fixture decoding now pass. Installed
 interface/input and real Mac → Windows acceptance remain pending. See the
 [current delivery plan](v0.3.0-plan.md).
-No new alpha release/tag or Mac binary is claimed. The native gates below remain.
+The alpha tag and Mac/Windows binaries are now published; the stable gates below remain.
 
 - [x] Native Apple SDK production build and VideoToolbox color-frame decoding.
 - [ ] Real installed Mac interface/password editor and native input acceptance.

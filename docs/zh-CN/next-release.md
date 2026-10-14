@@ -2,6 +2,14 @@
 
 [English](../next-release.md) · [路线图](roadmap.md)
 
+## 当前下载 — 2026-10-14
+
+**v0.3.0-alpha.3** 已发布到 [AtomGit](https://atomgit.com/zkxw2008/local-remote-desktop/releases/tag/v0.3.0-alpha.3)
+和 [GitHub](https://github.com/kylezhang/local-remote-desktop/releases/tag/v0.3.0-alpha.3)，
+附 Windows ZIP、Mac ZIP/DMG、对应源码与校验文件。原生 CI 和自动同步通过，
+AtomGit 主页最新入口已选中该 alpha，见[证据](../../tests/results/automated-release-2026-10-14.md)。
+这不是正式 v0.3.0；实机验收仍暂缓，下方保留此前检查点的历史范围。
+
 2026-10-10：**v0.2.0-beta.1 测试版已发布**到 [AtomGit](https://atomgit.com/zkxw2008/local-remote-desktop/releases)。两端显示测试版标识；Mac 数字版本 0.2.0、内部构建 19。
 v0.1.0 tag 和附件保持不变。本次增加密码/剪贴板功能，因此原 v0.1.1/v0.1.2 补丁计划并入次版本测试版。
 
@@ -26,7 +34,7 @@ v0.1.0 tag 和附件保持不变。本次增加密码/剪贴板功能，因此�
 主分支推进到 **v0.3.0-alpha.3 开发版**，Mac 数字版本 0.3.0/内部构建 28，
 包含 Windows 共享角色与 [Mac 控制端源码预览](mac-controller.md)。
 便携 Swift 控制端规则、状态、会话及独立加密端检查通过；Apple SDK 原生构建与 VideoToolbox 样例解码现已通过；安装后界面/输入及真实 Mac → Windows 验收仍待完成。见[当前交付计划](v0.3.0-plan.md)。
-尚未创建新 alpha release/tag 或 Mac 二进制包；下列原生验收门槛仍有效。
+alpha tag 和两端二进制现已发布；下列正式版原生验收门槛仍有效。
 
 - [x] Apple SDK 正式构建及 VideoToolbox 色块解码。
 - [ ] 安装后的真实 Mac 界面/密码编辑及原生输入验收。

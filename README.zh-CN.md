@@ -16,22 +16,22 @@
 
 Local Remote Desktop 让你通过局域网查看并操作另一台电脑当前的桌面。设备直接连接，无需账号或云中转。回到被控电脑时，可以继续同一个工作现场。
 
-当前连接方向为 **Windows → Mac**。长期目标是各平台安装同一个产品的对应版本，既能连接其他设备，也能允许桌面被控制。后续计划支持 Windows ↔ Mac、手机控制端、Linux 和 HarmonyOS。
+当前 alpha 版提供 **Windows ↔ Mac** 桌面角色：每个平台使用一个应用，既可连接另一台设备，也可接受连接。手机控制端、Linux 和 HarmonyOS 仍在规划中，尚未提供。
 
 ## 功能
 
-- **操作当前桌面**：查看 Mac 画面，使用 Windows 的键盘和鼠标。
+- **操作当前桌面**：从另一台电脑连接 Windows 或 Mac，使用键盘和鼠标控制目标桌面。
 - **局域网配对连接**：连接经过认证与加密，配对信息安全保存在各自设备上。
 - **记住连接**：保留目标地址和密码，方便下次连接。
 - **桌面控制**：全屏、自动重连，以及连接中也可调整的三档画质。
 - **方便配对**：支持自动生成或手填密码；原有密钥保留，直到主动修改。
 - **文字与文件剪贴板**：在已配对设备间复制粘贴纯文本和普通文件，传输时无需重复配对。
 
-短密码和剪贴板共享已包含在测试版中；v0.1.0 使用原有密钥，不含剪贴板共享。局域网设备选择和中英文切换已加入当前开发版。具体行为和范围见 [使用指南](docs/zh-CN/usage.md)。
+alpha 版还包含附近设备选择和中英文界面。两端角色均已实现，但完整的双机权限、剪贴板和升级验收仍待完成。具体行为和范围见 [使用指南](docs/zh-CN/usage.md)。
 
 ## 安装
 
-最新正式版为 **v0.1.0**，已发布测试版为 **v0.2.0-beta.1**。Windows 安装包可从 [Releases](https://atomgit.com/zkxw2008/local-remote-desktop/releases) 下载；Mac 当前需要从源码构建。
+最新下载为 **v0.3.0-alpha.3（预发布）**，可从 [AtomGit](https://atomgit.com/zkxw2008/local-remote-desktop/releases/tag/v0.3.0-alpha.3) 或 [GitHub](https://github.com/kylezhang/local-remote-desktop/releases/tag/v0.3.0-alpha.3) 获取。两站提供相同的 Windows 和 Apple Silicon Mac 包、对应源码及 SHA-256 校验文件。历史版本保留，v0.1.0 是此前的正式版基线。
 
 ### Windows
 
@@ -39,35 +39,31 @@ Local Remote Desktop 让你通过局域网查看并操作另一台电脑当前�
 
 1. 下载并解压 Windows ZIP。
 2. 安装支持 H.264 解码的 [FFmpeg](https://ffmpeg.org/download.html)，让 `ffmpeg.exe` 可通过 PATH 找到，或放在应用旁边。已有能正常使用的安装可继续沿用。
-3. 测试版运行 `LocalRemote.exe`，v0.1.0 运行 `RemoteMacLAN.exe`；当前源码构建使用 `LocalRemoteDesktop.exe`。
+3. 运行 `LocalRemoteDesktop.exe`。
 
 保留解压后的完整目录。发布包包含 .NET Desktop Runtime，无需另行安装。
 
 ### macOS
 
-要求 **macOS 13+、Apple Silicon** 和 **Xcode Command Line Tools**。需要时先执行 `xcode-select --install`，再运行：
+要求 **macOS 13+、Apple Silicon**；使用下载包无需本地编译器或开发者会员。
 
-```sh
-git clone https://atomgit.com/zkxw2008/local-remote-desktop.git
-cd local-remote-desktop
-bash apps/macos/install-app.sh
-```
+1. 下载并打开 Mac DMG；替换前退出正在运行的旧程序。
+2. 将 **Local Remote Desktop.app** 拖到 **Applications**，再打开安装后的应用。
+3. macOS 14 及以上接受连接时，在系统选择器中选择主屏幕；macOS 13 需屏幕录制授权。键鼠控制还需单独的辅助功能授权。
 
-安装脚本会构建当前主分支，并打开 `/Applications/Local Remote Desktop.app`。以正常用户执行，不使用 `sudo`。
-
-在系统设置 → 隐私与安全性中允许**屏幕录制**和**辅助功能**，授权后退出并重新打开应用。正常安装核验签名兼容后保留授权；不兼容时在替换前停止。需要清理授权时显式选择修复模式；升级、签名和保留权限的安装方式见 [Mac 指南](docs/zh-CN/macos.md)。
+Mac 包为**临时签名、未公证**，可能需系统首次打开确认，更新后也可能重新认可辅助功能/钥匙串。不要关闭 Gatekeeper，也不要为了重开应用而反复安装。新的屏幕选择与升级行为尚未完成实机验收，安装和排障见 [Mac 指南](docs/zh-CN/macos.md)。
 
 ## 使用
 
-1. 在 Mac 打开应用，开始共享，并复制配对密码。
-2. 在 Windows 的**目标 IP**中填写 Mac 的局域网地址，输入相同密码后连接。开发版也可以选择附近的 Mac。
-3. 点击远程画面后使用键盘和鼠标。用完断开，Mac 会话继续保留。
+1. 在要被控制的电脑上选择**接受连接**，开启共享并取得配对密码。
+2. 在另一台电脑上选择**发起连接**，选择附近设备或填写**目标 IP**，使用该密码连接。
+3. 点击远程画面后使用键盘和鼠标。用完断开，目标电脑的工作会话继续保留。
 
-两台设备需在同一网络中互通，并允许 TCP **47980** 到达 Mac。配对密码只交给可信设备。
+两台设备需在私有网络中直连可达，允许 TCP **47980** 到达目标电脑（文件传输另需 **47981**）。配对密码只交给可信设备。
 
-**F11** 切换全屏，**Ctrl+Alt+Esc** 释放远程输入。启用 Windows 快捷键时，Ctrl+C/V 对应 Mac 的 Command+C/V。支持剪贴板共享的已配对连接默认开启同步，可在“设置 → 剪贴板”中调整。支持的文件复制粘贴格式见 [文件指南](docs/zh-CN/files.md)。
+Windows 上 **F11** 切换全屏，**Ctrl+Alt+Esc** 释放远程输入。启用 Windows 快捷键时，Ctrl+C/V 对应 Mac 的 Command+C/V。支持剪贴板共享的已配对连接默认开启同步，可在“设置 → 剪贴板”中调整。支持的文件复制粘贴格式见 [文件指南](docs/zh-CN/files.md)。
 
-当前支持单控制端、单显示器。Mac 需要保持唤醒并登录；不支持登录界面控制或 FileVault 预启动解锁，锁屏控制不保证。
+当前支持单控制端和主显示器。目标电脑需保持唤醒并登录；不支持登录界面控制、安全桌面绕过或 FileVault 预启动解锁，锁屏控制不保证。
 
 ## 开发
 
@@ -88,7 +84,7 @@ dotnet run --project apps/windows/LocalRemoteDesktop.csproj -c Release
 bash apps/macos/build-app.sh
 ```
 
-主分支为 **v0.3.0-alpha.3**，包含 [Windows 共享预览](docs/zh-CN/windows-sharing.md)、[Mac 控制端预览](docs/zh-CN/mac-controller.md)及新的[系统屏幕选择流程](docs/zh-CN/mac-screen-access.md)。前一版 alpha.2 的两端原生编译、后台检查及不显示窗口的中英文布局已通过 [GitHub Actions](tests/results/github-actions-2026-10-13.md)；用户也反馈 Mac → Windows 控制成功。alpha.3 的屏幕选择与升级流程仍需新一轮 CI 和安装后验收。Mac 包采用临时签名、未公证；开发分支不替换已有发布包。准备发版前请查看 [验证状态](docs/zh-CN/validation.md)与 [参与维护](CONTRIBUTING.md)。
+两端原生编译、后台检查、不显示窗口的中英文布局及自动发版同步已通过 GitHub Actions。[发版记录](tests/results/automated-release-2026-10-14.md)分别记载 CI 证据、此前用户反馈的桌面控制及尚未完成的实机验收。主分支更新不覆盖已有发行包；准备发版前请查看 [验证状态](docs/zh-CN/validation.md)与 [参与维护](CONTRIBUTING.md)。
 
 ## 文档
 
