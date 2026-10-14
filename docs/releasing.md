@@ -13,6 +13,16 @@ For a clearly labeled beta, a tested Windows ZIP plus Mac source may be publishe
 
 The release notes must distinguish implemented features, automated test coverage, user-reported real-device behavior and unverified platforms. A 0.x release can be published as a normal release while explicitly documenting its early-product limits. Do not change repository privacy or select an open-source license implicitly.
 
+On 2026-10-14 the maintainer explicitly deferred interactive tests and authorized
+the complete compilation/publication flow. This permits the alpha.3 Mac binary
+after successful native CI/package checks, with pending physical acceptance
+prominently disclosed. `.github/release-request.json` identifies that specific
+pre-release; `scripts/ci/publish-preview.sh` verifies the exact run's assets,
+creates an annotated tag and a draft, downloads/verifies it, then publishes.
+The job runs only on this repository's main branch, never pull requests, and
+uses the Actions token without a maintainer PAT. It does not publish stable versions
+or change AtomGit mirroring. AtomGit receives those same bytes through its MCP.
+
 A Mac binary requires the [signing and distribution acceptance](macos-signing.md).
 
 AtomGit distinguishes the last-updated release from its homepage **latest**

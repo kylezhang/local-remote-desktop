@@ -98,9 +98,10 @@ Repository: https://atomgit.com/zkxw2008/local-remote-desktop
 License: GPL-3.0-or-later; see LICENSE. Corresponding source: source.zip and SOURCE.txt.
 Source commit: $commit
 Runtime: .NET $coreVersion / Desktop $desktopVersion; SDK $sdkVersion.
-Beta scope: Windows build/automated tests are verified; Mac source is provided.
-Current Apple SDK build, native UI/Keychain/TCC and real two-device acceptance are pending.
-No Mac binary is included. No FileVault unlock or guaranteed lock-screen control.
+Pre-release scope: native cloud builds and background checks are distinct from physical acceptance.
+Mac has its own download; its new screen-selection flow, native UI/Keychain/TCC,
+two-device clipboard/files and sustained hardware performance remain to be accepted.
+No FileVault unlock or guaranteed lock-screen control.
 "@ | Set-Content -LiteralPath (Join-Path $package 'START-HERE.txt') -Encoding utf8
 $finalCommit = & git -C $projectRoot rev-parse HEAD
 if ($LASTEXITCODE -ne 0 -or $finalCommit -ne $commit) { throw 'Source commit changed during packaging.' }

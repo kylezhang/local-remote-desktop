@@ -34,6 +34,10 @@ new platform. Keep its English/Chinese agreements aligned with implementation.
   brand. Avoid incidental identity, Keychain or permission changes during UI work.
 - Keep secrets, personal device data, local test logs and build outputs out of Git.
   Follow GPL-3.0-or-later notices and the documented immutable-release process.
+- A maintainer may explicitly defer interactive acceptance and authorize a
+  pre-release with cloud-built Mac binaries. Record that exception in the release
+  request/notes; require successful native CI and disclose outstanding acceptance.
+  It does not authorize claiming a stable or physically verified release.
 - After each owner-facing response, state the next concrete step. Complete independent
   coding/checks before requesting native acceptance; consolidate owner participation.
 - Defer verified Windows deployment while the client is in use. Never close/reopen

@@ -1,0 +1,6 @@
+{
+  "version": "0.3.0-alpha.3",
+  "prerelease": true,
+  "nativeAcceptance": "deferred-by-maintainer",
+  "notes": "docs/release-v0.3.0-alpha.3.md"
+}
