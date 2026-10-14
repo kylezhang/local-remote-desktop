@@ -343,6 +343,24 @@ class Checks(unittest.TestCase):
         self.assertIn('immutable', err.getvalue())
         self.assertNotIn(TOKEN, out.getvalue() + err.getvalue())
 
+    def test_main_ci_mirrors_published_tag_when_checkout_moves_on(self):
+        env = {'GITHUB_ACTIONS': 'true', 'GITHUB_REPOSITORY': GITHUB_REPO,
+               'GITHUB_REF': 'refs/heads/main', 'ATOMGIT_RELEASE_TOKEN': TOKEN,
+               'GITHUB_SHA': OTHER_COMMIT}
+        argv = ['--work-dir', str(self.work),
+                '--github-base', self.gh_base, '--github-repo', GITHUB_REPO,
+                '--atomgit-base', self.ag_base, '--atomgit-owner', self.ag_state.owner,
+                '--atomgit-repo', self.ag_state.repo]
+        out, err = io.StringIO(), io.StringIO()
+        with mock.patch.dict(os.environ, env, clear=True), \
+                mock.patch.object(syncmod, 'derive_preview_tag', return_value=TAG), \
+                contextlib.redirect_stdout(out), contextlib.redirect_stderr(err):
+            self.assertEqual(syncmod.main(argv), 0)
+        self.assertIn('Mirroring the published', out.getvalue())
+        self.assertNotIn(TOKEN, out.getvalue() + err.getvalue())
+        self.assertEqual(self.ag_state.releases[TAG]['release_status'], 'pre')
+        self.assertEqual(sorted(name for (_, name) in self.ag_state.blobs), sorted(self.assets))
+
     def test_main_skips_without_token_in_ci(self):
         env = {'GITHUB_ACTIONS': 'true', 'GITHUB_REPOSITORY': GITHUB_REPO,
                'GITHUB_REF': 'refs/heads/main', 'ATOMGIT_RELEASE_TOKEN': ''}

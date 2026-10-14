@@ -211,17 +211,25 @@ def main(argv=None):
         parser.error('ATOMGIT_RELEASE_TOKEN is required')
     if args.stable and not args.tag:
         parser.error('--stable requires an explicit --tag')
+    github_token = os.environ.get('GH_TOKEN') or os.environ.get('GITHUB_TOKEN') or None
     tag, commit = args.tag, args.commit
     if not tag:
         tag = derive_preview_tag()
         if not tag:
             print('No approved preview release request matches the client version; skipping AtomGit sync.')
             return 0
-        commit = commit or os.environ.get('GITHUB_SHA')
+    if not commit:
+        try:
+            commit = fetch_tag_commit(args.github_base, args.github_repo, tag, github_token)
+        except (LookupError, ValueError, RuntimeError, ConnectionError) as error:
+            print(f'AtomGit sync stopped: {error}', file=sys.stderr)
+            return 1
+        checkout = os.environ.get('GITHUB_SHA', '')
+        if checkout and checkout != commit:
+            print(f'Mirroring the published {tag} at {commit}; this checkout is {checkout}.')
     if not re.fullmatch(r'[0-9a-f]{40}', commit or ''):
-        print('A full 40-character commit SHA is required (--commit or GITHUB_SHA).', file=sys.stderr)
+        print('A full 40-character commit SHA is required (--commit).', file=sys.stderr)
         return 1
-    github_token = os.environ.get('GH_TOKEN') or os.environ.get('GITHUB_TOKEN') or None
     try:
         report = sync(tag, commit, not args.stable,
                       github_base=args.github_base, github_repo=args.github_repo, github_token=github_token,
