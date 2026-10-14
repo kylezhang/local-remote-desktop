@@ -79,7 +79,7 @@ private final class DisplaySharingPicker: NSObject, SCContentSharingPickerObserv
                 self.continuation = continuation
                 let timeout = DispatchWorkItem { [weak self] in self?.finish(.failure(ScreenSharingError.selectionUnavailable)) }
                 self.timeout = timeout; DispatchQueue.main.asyncAfter(deadline: .now()+120, execute: timeout)
-                let configuration = SCContentSharingPickerConfiguration()
+                var configuration = SCContentSharingPickerConfiguration()
                 configuration.allowedPickerModes = [.singleDisplay]
                 configuration.allowsChangingSelectedContent = false
                 picker.defaultConfiguration = configuration

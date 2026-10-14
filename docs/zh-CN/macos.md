@@ -2,7 +2,23 @@
 
 [English](../macos.md)
 
-要求 Apple Silicon、macOS 13+、正常登录的图形用户会话，以及含 Swift 5.9+ 的 Xcode Command Line Tools。以正常用户执行，不使用 sudo：
+要求 Apple Silicon、macOS 13+、正常登录的图形用户会话；当前版本提供中英文界面。
+
+## 下载的应用
+
+打开云端构建的 DMG，将 **Local Remote Desktop.app** 拖到 **Applications**。
+替换前退出旧程序，随后打开应用程序目录里的版本，不从下载目录或源码构建目录启动。
+使用此包不需要本地编译器或 Apple 开发者会员；它采用临时签名、未公证，可能需要系统正常的首次打开确认。
+
+macOS 14 及以上选择 **接受连接 → 开始接受连接**，随后在系统选择器中选择主屏幕。
+这个筛选器直接授权本次采集，该路径不依赖旧的全局屏幕录制开关。
+键鼠控制仍需单独的辅助功能授权。取消选择不读取钥匙串、不开监听；同次运行的重连/画质切换复用选择，
+重开应用需重新选择。参见[屏幕访问](mac-screen-access.md)。macOS 13 保留全局屏幕录制授权。
+临时签名升级仍可能需要重新认可辅助功能/钥匙串，不自动重置或授予这些权限。
+
+## 从源码构建
+
+开发时需要含 Swift 5.9+ 的 Xcode Command Line Tools。以正常登录用户执行，不使用 sudo：
 
 ```sh
 bash apps/macos/install-app.sh
@@ -19,7 +35,7 @@ bash apps/macos/install-app.sh
 
 替换期间，完整旧包暂存在私有安装目录中。移动或验证新包失败、收到中断/终止信号时，脚本尝试恢复旧包；成功验证后清除临时副本。恢复失败会保留备份目录并输出路径。这只保护应用文件，不能回滚已重置权限、恢复原进程或应对硬断电。回退后已卸载的登录代理保持停止。若只是自动启动失败，保留已验证的新应用并说明手动打开方式。
 
-使用“屏幕权限”和“辅助功能权限”按钮打开对应设置；辅助功能按钮还会请求本应用访问权限。允许后退出重开，不要为重开再次 install，重新打开不需要重建或修复权限。点击开始共享；辅助功能 false 表示只能查看。显式点击会检查实际 ScreenCaptureKit，即使旧式屏幕预检查为 false。复制启动诊断可查看错误域及代码；构建成功不代表权限成功。
+辅助功能授权必须关联当前安装的应用，false 表示只能查看；辅助功能按钮会打开设置并请求访问。macOS 13 另需屏幕录制授权，允许后可能需退出重开；macOS 14 及以上使用前述系统屏幕选择器。不要为重开再次 install。复制启动诊断可查看真实错误与授权模式，构建成功不代表 TCC 授权成功。
 
 正常安装默认使用保留权限路径，`--keep-permissions` 是显式别名。停止旧程序、改变权限之前，脚本比较新包与每份已安装应用的 designated requirement，并按相应要求验证双方签名。要求不同、无法读取或验签失败即中止，现有运行程序、应用包及权限均不改动。临时签名更新通常无法通过；这个选项不能解决签名身份不稳定。签名要求相同也不保证 macOS 永久保留所有权限。
 
@@ -29,9 +45,9 @@ bash apps/macos/install-app.sh
 
 应用包同时包含 PNG 和 ICNS，图标声明明确为 `LocalRemoteDesktop.icns`。启动时主动加载 PNG（ICNS 后备），设置运行中的程序坞图标，登录自启动直接运行内部程序也使用这一路径。安装会验证暂存图标并更新应用目录时间戳，不删除全局图标缓存、不重启程序坞。启动诊断加入 `AppIconLoaded`；诊断脚本输出已安装的图标声明和文件校验值。
 
-## 固定签名
+## 可选的证书签名
 
-[Apple TN3127](https://developer.apple.com/documentation/technotes/tn3127-inside-code-signing-requirements) 说明临时签名绑定具体代码版本，路径及 bundle ID 不足以保持更新后的身份稳定。在 Mac 配好含私钥的有效 Apple Development 或 Developer ID Application 签名身份后：
+[Apple TN3127](https://developer.apple.com/documentation/technotes/tn3127-inside-code-signing-requirements) 说明临时签名绑定具体代码版本，路径及 bundle ID 不足以保持更新后的身份稳定。这是具备证书的维护者可选路径，不是使用临时签名下载包的要求。在 Mac 配好含私钥的有效 Apple Development 或 Developer ID Application 签名身份后：
 
 ```sh
 bash apps/macos/configure-signing.sh

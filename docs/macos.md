@@ -2,7 +2,29 @@
 
 [简体中文](zh-CN/macos.md)
 
-Requirements: Apple Silicon, macOS 13+, normal logged-in GUI session, Xcode Command Line Tools with Swift 5.9+. Run scripts as that user, without sudo. Current development builds offer English and Chinese interfaces.
+Requirements: Apple Silicon, macOS 13+, normal logged-in GUI session. Current builds offer English and Chinese interfaces.
+
+## Downloaded application
+
+Open the cloud-built DMG and drag **Local Remote Desktop.app** to **Applications**.
+Quit the older running copy before replacing it; open the installed application,
+rather than a copy in Downloads or a source-build directory. No local compiler or
+Apple Developer membership is needed to use this package. It is ad-hoc signed and
+unnotarized, so macOS may require its normal first-open approval.
+
+On macOS 14+, choose **Accept connections → Start accepting connections**, then
+select the main display in the system picker. That selected filter authorizes the
+capture; no legacy Screen Recording toggle is required for this path. Accessibility
+remains separate and necessary for keyboard/mouse control. Canceling selection
+does not read Keychain or start a listener. Same-run reconnect/quality changes
+reuse the selection; relaunch requires a fresh selection. See [screen access](mac-screen-access.md).
+macOS 13 retains global Screen Recording approval. Changed ad-hoc builds may still
+require Accessibility/Keychain reapproval; this is not automatically reset or granted.
+
+## Build from source
+
+For development, install Xcode Command Line Tools with Swift 5.9+ and run as the
+logged-in user, without sudo:
 
 ```sh
 bash apps/macos/install-app.sh
@@ -19,7 +41,7 @@ This builds first, verifies the staged signature and icon resources, stops exist
 
 During replacement, the complete old bundles are held temporarily inside a private staging directory. If moving or verifying the new bundle fails, or installation receives an interrupt/termination signal, the installer attempts to restore those bundles. It deletes temporary backups after successful verification. If restoration fails, it reports and retains the backup directory for recovery. This protects bundle contents, not already-reset permissions, process state or hard power loss. A loaded login agent remains stopped after rollback. If only launching fails, the verified new app stays installed and the message explains how to open it.
 
-Grant Screen Recording / Screen & System Audio Recording and Accessibility to the installed application. The Screen Permission (屏幕权限) and Accessibility Permission (辅助功能权限) buttons open the corresponding settings; the latter also requests Accessibility access. Quit and reopen after granting; do not run install again simply to reopen, because reopening does not require a rebuild or permission repair. Click Start Sharing (开始共享). Accessibility false means view-only. If legacy screen preflight is false, an explicit sharing click checks the actual ScreenCaptureKit API; startup failures expose domain/code in Copy Startup Diagnostic (复制启动诊断). A successful build does not prove TCC approval.
+Accessibility approval must apply to the installed application; false means view-only. The Accessibility Permission button opens settings and requests access. macOS 13 also needs Screen Recording approval and may need a quit/reopen; on macOS 14+ use the system display picker described above. Do not run install again simply to reopen. Copy Startup Diagnostic exposes actual errors and authorization mode; a successful build does not prove TCC approval.
 
 Normal installation now uses the permission-preserving path; `--keep-permissions` is an explicit alias. Before stopping the existing Host or changing permissions, the installer compares the new designated requirement with each installed copy and verifies both bundles against those requirements. A mismatch, unreadable requirement or failed verification aborts and leaves the running Host, installed bundles and permissions untouched. Changed ad-hoc builds normally fail this check; the option is not a solution to unstable signing. Identical requirements also do not guarantee that macOS retains every permission.
 
@@ -29,11 +51,11 @@ An explicit reset is scoped to `com.remotemaclan.host`; it never resets other ap
 
 The bundle includes both PNG and ICNS resources with an explicit `LocalRemoteDesktop.icns` declaration. At launch, the app loads the packaged PNG (ICNS fallback) and assigns it to [NSApplication.applicationIconImage](https://developer.apple.com/documentation/appkit/nsapplication/applicationiconimage), including when a LaunchAgent starts the executable directly. The installer verifies staged icon files and updates the bundle timestamp without deleting global icon caches or restarting the Dock. Startup diagnostics include `AppIconLoaded`; the diagnosis script reports the installed icon declaration and resource checksums.
 
-## Stable signing
+## Optional certificate signing
 
 [Apple TN3127](https://developer.apple.com/documentation/technotes/tn3127-inside-code-signing-requirements) explains that ad-hoc designated requirements identify a particular code version. Keeping the path and bundle ID alone does not stabilize identity across code updates.
 
-Configure an existing valid Apple Development or Developer ID Application signing identity with its private key on the Mac, then run:
+This optional path is for maintainers who already have an identity; it is not required for the maintained ad-hoc download. Configure an existing valid Apple Development or Developer ID Application signing identity with its private key on the Mac, then run:
 
 ```sh
 bash apps/macos/configure-signing.sh
