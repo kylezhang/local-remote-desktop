@@ -2,6 +2,8 @@
 
 [简体中文](zh-CN/next-release.md) · [Roadmap](roadmap.md)
 
+Remaining priorities and alpha/beta/stable gates are maintained in the [ordered delivery plan](v0.3.0-plan.md).
+
 ## Current download — 2026-10-14
 
 **v0.3.0-alpha.3** is published on [AtomGit](https://atomgit.com/zkxw2008/local-remote-desktop/releases/tag/v0.3.0-alpha.3)

@@ -1,97 +1,82 @@
 # Roadmap
 
-The product is **Local Remote Desktop** and the repository is `local-remote-desktop`.
-See the [completed naming migration](product-name.md).
-
 [简体中文](zh-CN/roadmap.md) · [README](../README.md)
 
-Local Remote Desktop aims to provide one familiar LAN remote-control application per platform. Each desktop installation will eventually initiate or accept control, with explicit authorization. Discovery never implies trust.
+Local Remote Desktop aims to provide one native, familiar application per
+platform. Desktop apps initiate or accept authorized control of the current
+session. Discovery helps find a target; it does not establish trust.
 
-v0.1.0 remains the stable baseline. The current preview is v0.2.0-beta.1: a tested Windows package and Mac source, with native Mac acceptance still pending. It consolidates the earlier patch plans with new clipboard/password capabilities. A preview is not completion of the v0.2.0 feature set or a stable-release date promise.
+## Current milestone
 
-Track preview packaging and stable-release gates and remaining validation in the [release checklist](next-release.md).
+The latest download is **v0.3.0-alpha.3**, with Windows/Mac packages, source and
+checksums. Native CI and automatic publication passed; complete installed
+two-device acceptance remains pending. See
+[release evidence](../tests/results/automated-release-2026-10-14.md).
 
-The v0.2.0 optional text and regular-file clipboard prototypes are implemented on main with
-portable/Windows encrypted-peer tests. Native Mac acceptance remains pending;
-this does not change the published release or declare the v0.2.0 feature set complete.
+v0.1.0 is the historical stable baseline. v0.2.0-beta.1 delivered passwords and
+clipboard improvements as a preview; that daily-use scope is carried into v0.3.0.
+A separate stable v0.2.0 is not the next target. Earlier v0.1.1/v0.1.2 plans are
+consolidated, not counted as completed releases.
 
 ## Version plan
 
-Cross-platform interaction follows the [interface conventions](interface.md):
-shared vocabulary/flows, with native controls and platform-specific shortcuts.
+| Version | Focus | Scope and gate |
+|---|---|---|
+| v0.1.0 — released | First usable path | Paired/encrypted Windows → Mac current-session control; earlier checks/user reports form the baseline. |
+| v0.2.0-beta.1 — historical preview | Daily use | Passwords, text/regular-file clipboard and UI/input improvements; Windows package and Mac source. |
+| v0.3.0-alpha.3 — published preview | Desktop roles/cloud delivery | Windows ↔ Mac, task-first UI, discovery/localization and Mac screen selection; native CI packages passed, physical acceptance pending. |
+| v0.3.0-alpha.4 — if needed | Focused corrections | Fixes after alpha.3, new native CI and clear outstanding acceptance; no replacement of alpha.3. |
+| v0.3.0-beta.1 — next candidate | Complete desktop flow | Clear P0 input/permission/update issues; basic installed workflow passes both ways; disclose remaining P1 cases. |
+| v0.3.0 | Accepted desktop milestone | Both directions pass input, pairing, permissions, clipboard/files, quality/recovery, lifecycle and resource checks on final packages. |
+| v0.3.x | Compatible corrections | Focused fixes in the accepted desktop scope, with immutable patch releases. |
+| v1.0.0 | Stable desktop experience | Supported-system matrix, reliable installation/update, onboarding and sustained-use regressions; ad-hoc Mac distribution remains supported. |
+| v1.1.0 | Android controller | Touch/text and small-screen control of Windows/Mac; real phone-to-desktop acceptance. |
+| v1.2.0 | iOS/iPadOS controller | Native phone/tablet interaction; SDK/distribution feasibility and real-device acceptance first. |
+| v1.3.0 | Linux desktop | Both roles; defined desktop sessions, capture/input permissions, packages and real interoperability. |
+| v1.4.0 | HarmonyOS controller | Native phone/tablet control of supported desktops; SDK, permissions, distribution and real-device acceptance. |
 
-| Version | Focus | Planned scope | Release gate |
-|---|---|---|---|
-| v0.1.0 — released | First usable product | Windows → Apple Silicon Mac, paired/encrypted current-session control, remembered connection, full screen, reconnect, quality selection and diagnostics | Published baseline; see validation notes below |
-| v0.1.1 plan — consolidated into beta | Installation and update reliability | Confirmed blueberry identity, icon packaging, clear permission actions, clean replacement/preserve-permissions options; improve signing and Keychain update behavior | Native Mac build and install/update tests; Windows package validated; signing/authorization behavior documented |
-| v0.1.2 plan — consolidated into beta | Input and responsiveness | Keyboard layouts and numeric keypad, focus/modifier release, disconnect cleanup, sleep/wake recovery; measure and reduce input/video delay | Repeatable real two-device tests, no stuck modifiers, measured latency baseline and verified recovery |
-| v0.2.0-beta.1 — preview | Current implementation checkpoint | Windows package; Mac source; short/manual passwords, text/file clipboard, input and UI improvements | Windows final-package regression/checksums pass; limitations explicit; no unverified Mac binary |
-| v0.2.0 | Easier daily use | LAN device discovery, explicit pairing/revocation, optional bounded text and regular-file clipboard sharing, English UI with Chinese localization | Discovery cannot bypass pairing; clipboard defaults on for paired sessions, remembers revocation and has size limits; both languages tested |
-| v0.3.0 | Desktop control in both directions | Windows capture/input host, Mac viewer/controller, one app per desktop with Connect and Allow connections modes | Windows ↔ Mac verified on real hardware; authorization, disconnect release and session continuity pass |
-| v1.0.0 | Stable desktop release | Consolidate desktop features, reliable installers and upgrade paths, onboarding, supported-system matrix and regression coverage | Both desktop directions meet documented release criteria; native builds and signed distribution validated |
-| v1.1.0 | Mobile controller | Android controller first: connect to Windows/Mac, touch, text entry and small-screen navigation | Real phone-to-desktop tests and explicit authorization; mobile receiving control is outside this scope |
-| v1.2.0 | Broader mobile access | iOS/iPadOS controller, subject to platform validation; tablet interaction refinements | Feasibility and distribution requirements verified before committing the release scope |
-| v1.3.0 | Linux desktop | Linux controller and host, interoperating with Windows/Mac; define supported desktop sessions and packaging | Capture/input permissions and both control directions verified on supported real Linux systems |
-| v1.4.0 | HarmonyOS controller | Native phone/tablet controller for supported Windows/Mac/Linux hosts; adapt touch, text entry and pairing | Native SDK, permissions, distribution and real-device interoperability verified; receiving control is outside this scope |
+Milestones are not calendar commitments; future platforms are not current
+support. Mobile screen sharing/authorized receiving input need separate studies;
+controller-first does not permanently exclude them. See [mobile sharing](mobile-sharing.md).
+Folders, virtual-file clipboard, multiple displays and audio have no assigned versions.
 
-Linux and HarmonyOS are versioned targets, not current support claims. HarmonyOS desktop control requires a separate feasibility assessment; the v1.4.0 target covers phone/tablet controllers only. Regular-file clipboard sharing belongs to v0.2.0; folder/virtual-file support, multiple displays and audio are not assigned versions yet.
+## Desktop priorities
 
-Mobile screen sharing and authorized receiving-control feasibility are additional
-capability studies, with no release number assigned. Controller-first milestones
-do not permanently exclude mobile sharing; see [mobile sharing](mobile-sharing.md).
+The [delivery plan](v0.3.0-plan.md) owns the ordered work list;
+the [desktop checklist](desktop-acceptance.md) owns per-direction acceptance.
 
-## Verification and prerequisites
+1. **P0:** correct input/release and predictable Mac access, credentials and actual ad-hoc updates.
+2. **P1:** two-way text/files, cancel/revoke, pairing/discovery, quality/recovery and measured sustained resource behavior.
+3. **P2:** final package integrity and bilingual supported-system/install/use guidance alongside fixes.
 
-### v0.3.0 implementation sequence
+Both roles are implemented; acceptance is the current gap. Retain Windows → Mac
+regressions while refining Mac → Windows. Keep native Swift/C# and the existing
+authenticated LAN protocol; no broad rewrite. File services follow the accepting
+session, not a fixed OS. Do not silently create reciprocal control.
 
-Bidirectional desktop control is the next major capability after the v0.2.0 daily-use
-checkpoint. It adds the missing Windows sharing role and Mac controlling role.
-It does not require replacing the native applications or changing the LAN transport.
+Interactive tests are paused. Continue background review, isolated checks and
+GitHub Actions without opening apps or changing personal permissions. Consolidate
+future owner participation into an agreed period.
 
-1. Separate connection/session lifetime from the Windows window incrementally;
-   keep the existing Windows → Mac regression passing after each extraction.
-   Host/controller are per-session roles, not different products. Each platform
-   keeps one application with “Connect” and “Allow connections” actions.
-2. **v0.3.0-alpha.1:** Windows capture/H.264 sender and authorized input receiver.
-   First verify the actual Windows pipeline using a loopback test controller,
-   with bounded queues, stop/restart and permission failure checks.
-3. **v0.3.0-alpha.2:** Mac H.264 viewer, normalized pointer and keyboard sender.
-   Verify capture-to-display and ordinary keyboard/mouse control on real Mac/Windows.
-   Define input capability negotiation and target-aware shortcut mapping before
-   sending input; existing Windows virtual keys and Mac modifier semantics are
-   not a complete platform-neutral input contract.
-4. **v0.3.0-beta.1:** unify connection/sharing UI, discovery and clipboard consent
-   in both roles; test session revocation, reconnection, quality changes and resource
-   cleanup in both directions. File listeners follow the sharing role, rather than
-   permanently following the Mac platform.
-5. **v0.3.0:** release only after both desktop directions pass native acceptance
-   and the existing Windows → Mac behavior remains usable.
+## Distribution and release rules
 
-Reuse the authenticated record format, H.264 wire representation, file-transfer
-rules and compatibility fixtures. Swift and C# still need their own platform
-implementations; reuse of a specification is not reuse of a single binary module.
-Discovery cannot authorize control, and enabling one sharing direction must not
-automatically open a reverse control session. Simultaneous reciprocal control is
-not an initial acceptance target. Alpha.1 Windows sharing is implemented on main;
-see the [preview scope and checks](windows-sharing.md). Alpha.2 adds the
-[Mac controller source preview](mac-controller.md) and automated transport/state
-checks; native Mac/Windows acceptance and later role interoperability remain pending. No stable v0.3.0 readiness claim follows.
+- English primary, Chinese aligned; follow [interface conventions](interface.md):
+  **Start a connection / Accept connections**, native typography and shortcuts.
+- Paid Apple Developer membership is not a prerequisite. Ad-hoc/unnotarized
+  packages need honest first-open/update disclosures and installed acceptance;
+  Developer ID/notarization is optional.
+- Preserve compatibility identity/pairing and avoid incidental permission resets.
+  System-required authorization remains possible.
+- During v0.x use minor versions for capabilities and patches for compatible fixes.
+  From v1.0 use patches for defects, minors for compatible features and majors for
+  incompatible changes; document/test migrations.
+- Align versions, changelog, notes, tags and filenames. Mac internal build numbers
+  may advance independently. Never retarget tags or replace published assets.
+- Submit source to AtomGit; its existing mirror triggers GitHub Actions. Verify
+  cloud artifacts before automatic release sync. Homepage latest is not stability
+  certification. See [release process](releasing.md).
 
-The v0.1.0 Windows build and simulated-peer tests were validated; the user reported the Windows-to-Mac workflow usable. This does not substitute for an independently reproduced native Mac test matrix. See [build and test status](validation.md).
-
-Stable v0.2.0 must distinguish stable signed distribution from ad-hoc development builds. Stable signing needs an appropriate signing identity, and broader macOS distribution may need notarization. Changes to privacy permissions and Keychain behavior must be tested with the actual installed signature. The installer can reset only this app's decisions; it cannot automatically grant permissions or promise removal of visible Settings rows.
-
-A goal for routine signed updates is to avoid unnecessary permission resets or repeated Keychain prompts. First-run authorization and macOS-required reauthorization remain possible. Hardware decode/render changes are justified by v0.1.2 measurements rather than bundled into a rewrite.
-
-## Version and release rules
-
-- Patch releases (v0.1.1, v0.1.2) improve the existing Windows → Mac workflow without adding a platform or knowingly breaking protocol/storage compatibility.
-- During v0.x, new capability groups use a minor version (v0.2.0, v0.3.0); any incompatible change must be called out and tested with a migration path.
-- From v1.0 onward: patches fix defects, minor versions add compatible features, and major versions carry incompatible changes.
-- Keep app versions, changelogs, AtomGit tags, release notes and artifact names aligned. Mac internal bundle build numbers may advance independently.
-- Never move an existing release tag or overwrite published artifacts. Label planned work and unreleased main changes accurately.
-- If a release gate fails, retain the target version and fix or explicitly revise its scope; do not claim completion. See the [release process](releasing.md).
-
-## Boundaries
-
-LAN-first: no accounts, public traversal/relay or central cloud service. Share the current logged-in desktop, not a separate remote session. Do not promise FileVault preboot bypass or universal lock/login-screen control. Mobile support initially means controlling an authorized desktop; it does not imply unattended control of the phone itself. Security and reliability take priority over platform count.
+Direct private routes include existing VPNs; discovery may require local multicast,
+so manual IP is valid. No accounts, public traversal, cloud relay, new login
+sessions, FileVault preboot or universal lock/login/secure-desktop control.
+Reliability of the supported desktop flow comes before platform count.

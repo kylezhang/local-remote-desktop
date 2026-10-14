@@ -1,68 +1,82 @@
 # Desktop acceptance — v0.3.0
 
-[简体中文](zh-CN/desktop-acceptance.md) · [Delivery plan](v0.3.0-plan.md)
+[简体中文](zh-CN/desktop-acceptance.md) · [Ordered plan](v0.3.0-plan.md)
 
-Prepared on 2026-10-11. This checklist consolidates real Windows ↔ Mac acceptance;
-it is not a list of results already achieved. Automated checks use isolated peers
-and recording services. Run native interaction only in an agreed test period,
-with a dedicated target and non-sensitive fixture content.
+Updated **2026-10-14**. This is a remaining physical-test procedure, not achieved
+results. Interactive tests are **paused**; prepare fixtures/evidence without
+operating either working computer.
 
-## Prepare once
+## Evidence and preparation
 
-The maintainer builds the exact committed Windows package and current Mac source
-with the Apple SDK, records commit/OS/build/signature, and fixes build failures
-before asking for interaction testing. Native Mac SDK, isolated app bundle and
-unshown layout checks passed on 2026-10-13 after authorized SSH resumed.
-The [2026-10-13 progress record](../tests/results/desktop-acceptance-2026-10-13.md)
-separates passed background LAN interoperability from partial native interaction.
-Pointer/wheel acceptance failed; its DPI correction has background coverage but
-has not been physically retested. Effective Mac permissions and the complete
-two-device workflow remain open. Foreground testing stops when the owner resumes work.
+Alpha.3 native CI, isolated fixtures, unshown layouts, packages and automatic
+release synchronization passed: [release record](../tests/results/automated-release-2026-10-14.md).
+Earlier owner reports cover both directions, not every alpha.3 feature.
+The [previous controlled pass](../tests/results/desktop-acceptance-2026-10-13.md)
+failed pointer/wheel acceptance; DPI correction needs physical retesting.
+The system picker/installed upgrade flow is still unverified.
 
-Use a reachable private route (LAN or an existing VPN). Start sharing on the target;
-TCP 47980 carries desktop/control and TCP 47981 carries regular files. Discovery
-may not cross a VPN; manual Target IP is a valid acceptance path. Use an isolated
-pairing password and disposable text/files, never publish real credentials, IPs,
-clipboard contents or captured work in results.
+Before involving the owner, select an exact successful CI candidate, record
+source/version/Mac build/OS/SDK/signature, and fix build/fixture failures.
+Local compilation is optional. Prepare dedicated input and disposable text/files.
+Do not use personal clipboards or publish credentials, addresses or captured work.
+Agree duration/devices and stop when the owner resumes work; schedule sustained
+performance separately.
 
-## One daily-workflow pass in each direction
+Use a reachable LAN/existing VPN. Target TCP 47980 carries desktop/control,
+47981 files. Discovery may not cross VPN; manual IP is a valid acceptance path.
 
-| Check | Required outcome |
+## P0: input and Mac access first
+
+Input cases run in **Windows → Mac and Mac → Windows** on the same candidate.
+
+| ID | Required outcome |
 |---|---|
-| First and returning connection | Correct target name/system come from its app; wrong password stays editable; remember is opt-in and returning connection needs no repeated entry. |
-| Entry UI | 600 × 680 default frame, constrained to the work area; task-first homepage; one Add device entry; activating a device opens its connection dialog and refresh never opens one. Empty/discovered/recent states are distinct. Accept information/password are stacked vertically, with the primary action at the bottom; settings fit content. Test English/Chinese and minimum width. |
-| Current session | Real target screen updates; pointer alignment/click/drag/scroll, letters, digits and numeric keypad reach the intended app. Disconnect preserves the target's work. |
-| Shortcuts and escape | Copy/paste matches the target OS; leaving focus or disconnect releases held keys/buttons. Local escape/full screen do not trap input. Submitted-event counters alone are insufficient. |
-| Text clipboard | After enabling, copy fresh Unicode text both ways and paste; received content does not echo or replace a newer local copy. |
-| Regular-file clipboard | Copy fresh Unicode-named, empty and multi-file fixtures both ways; wait for ready status then paste, compare bytes/SHA-256. Folders/virtual files/raw image formats are not acceptance claims. |
-| Transfer cancel/revoke | Cancel or disable midway; partial batch is removed, late callbacks cannot publish, desktop control continues. Re-enable requires a fresh copy. |
-| Quality and reconnect | Change each quality while connected; only the latest choice wins. Brief network loss recovers; Disconnect cancels a pending retry. Changed password/invalid authentication stops retries with an editable draft. |
-| Role lifecycle | Stop sharing releases input/listeners/transfer; restart accepts a fresh paired session. Navigating pages does not start a competing app or silently authorize a reverse role. |
-| Wake and duration | In a normal logged-in session, wake/reconnect behaves predictably. Run a longer complete session, record CPU/memory/frame rate/latency and compare before/after disconnect; no growing queues or orphan workers. |
+| I1 | Real current screen; correct pointer at actual DPI/scale, resize and fullscreen. Click/drag/wheel hit the dedicated app, not the taskbar. |
+| I2 | Letters, top-row digits, keypad and target-native copy/paste work in the configured mapping. OS-reserved combinations remain documented limits. |
+| I3 | Focus loss, local escape, disconnect and Stop release held keys/buttons. Submitted counters do not prove application acceptance. |
+| M1 | macOS 14+ main-display picker succeeds; cancel/deny/retry has a useful next action, with no listener or repeated Keychain access before selection. macOS 13 uses global Screen Recording. |
+| M2 | Accessibility is independent; denial does not claim control is available. After normal OS approval, real input reaches the dedicated app. |
+| M3 | Pairing read/save/deny/retry/relaunch preserves credentials/drafts without unrequested rotation or prompt loops. |
+| M4 | Two actual successive ad-hoc package upgrades record prompts/recovery and retain pairing/accepting function. Incompatible local-script signing stops before replacement; downloaded-package upgrades are tested separately. |
 
-## Mac installation and distribution pass
+Picker permission is capture-only. Relaunch requires a fresh selection; same-run
+reconnect/quality reuse the source. Follow [screen access](mac-screen-access.md),
+including macOS 14–15.1 single-display restrictions. One cloud SDK/OS does not
+establish all supported-system behavior.
 
-1. Test first approval, denied/retried Screen Recording and Accessibility, and
-   explicit Keychain access. Permission denial must expose a useful next action,
-   without automatically reinstalling, replacing passwords or repeating prompts.
-2. Test two successive updates using the actual maintained signing identity.
-   Default installation preserves decisions after compatibility checks. Incompatible
-   signing aborts before stopping/replacing the old app. Explicit permission repair
-   resets only this app's selected decisions and requires OS reapproval.
-3. Confirm pairing persistence, effective permissions, bundle/icons, login agent,
-   clean replacement and failure recovery. A mocked installer is not TCC acceptance.
-   Ad-hoc updates cannot establish a stable product upgrade path.
-4. For a distributed Mac binary, verify Developer ID/notarization/stapling and the
-   extracted final package; attach exact source, notices, provenance and checksums.
+## P1: daily workflow, each direction
 
-FileVault preboot, system login/secure desktop bypass and universal lock-screen
-control remain outside the promise. Separate these limits from a normal logged-in
-session acceptance failure.
+| ID | Required outcome |
+|---|---|
+| D1 | Real peer name/OS; first/remembered pairing, editable wrong-password draft, opt-in remember. Discovery/refresh never authorize or connect automatically. |
+| U1 | Approved task-first entry, approximately 600 × 680 default clamped to work area; one Add device, clear empty/nearby/recent states, vertical Accept content and bottom Start/Stop. Both languages, focus, minimum width and routine fit; retain user resizing. |
+| C1 | Fresh Unicode text pastes both ways; no echo or replacement of a newer local copy. |
+| F1 | Fresh Unicode-named, empty and multiple files paste both ways after ready status; exact bytes/SHA-256. Folders/virtual files/raw image formats are outside current support. |
+| F2 | Cancel/disable cleans partial batches and stale callbacks; desktop control continues; re-enable needs fresh copy. |
+| R1 | All connected qualities work, rapid changes settle on latest. Transient reconnect succeeds; Disconnect cancels retry; changed credentials/invalid authentication stop retry with editable draft. |
+| L1 | Stop clears input/listeners/transfers; Start accepts fresh session. Navigation preserves role/drafts without another app or reciprocal control. Disconnect leaves target work intact. |
+| L2 | Normal logged-in wake/reconnect; installed icons, optional login agent, replacement and documented failure recovery work. |
+| R2 | Repeatable real frame-rate/input-delay baseline at three qualities; agreed sustained session (initial target at least 30 minutes), CPU/memory and reconnect/transfer observations; no accumulating workers/queues or continued work after disconnect. |
 
-## Record and release
+State hardware/direction/quality/method. Synthetic decode throughput is not LAN
+input delay. The first sustained pass is a baseline, not hours-long leak-free proof.
 
-Record each row as Pass / Fail / Not run, direction, source commit, OS/build and
-sanitized evidence. Distinguish user observations, platform builds, native fixtures
-and two-device application acceptance. Fix failures and retest affected cases.
-Only then align final version/package metadata and create the immutable AtomGit
-tag/release. Source checks cannot clear native or signing gates.
+## P2: delivery and recording
+
+Verify exact downloaded ZIP/DMG, source/provenance, GPL/notices, versions and all
+checksums. Test the installed app, not an older source copy or Downloads.
+Ad-hoc/unnotarized Mac distribution is supported; disclose first-open and possible
+Accessibility/Keychain reapproval. Developer ID/notarization is optional.
+Do not disable Gatekeeper, auto-grant access or use repeat reinstall/reset as recovery.
+
+Record each ID **Pass / Fail / Not run**, direction, exact package/source,
+OS/build, sanitized evidence and retest. Failed paths stay open until retested.
+
+- Beta recommendation: P0 and basic installed workflow pass both ways; list remaining P1.
+- Stable v0.3.0: full required matrix and final packages pass.
+- Alpha.3's deferred-test exception does not automatically apply to another preview.
+- Homepage latest and CI success do not clear physical gates.
+
+FileVault/pre-login/secure-desktop bypass and universal lock-screen control remain
+outside the promise. Updating this checklist does not resume real input/clipboard/
+permission tests.

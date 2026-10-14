@@ -2,6 +2,8 @@
 
 [English](../next-release.md) · [路线图](roadmap.md)
 
+剩余优先级及 alpha/beta/正式版门槛统一维护于[有序交付计划](v0.3.0-plan.md)。
+
 ## 当前下载 — 2026-10-14
 
 **v0.3.0-alpha.3** 已发布到 [AtomGit](https://atomgit.com/zkxw2008/local-remote-desktop/releases/tag/v0.3.0-alpha.3)
