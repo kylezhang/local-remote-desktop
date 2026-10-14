@@ -75,7 +75,7 @@ export NOTARY_PROFILE='<existing notarytool Keychain profile name>'
 bash scripts/package-macos.sh 0.3.0
 ```
 
-The example version is the planned release, not the current app version. The committed app remains 0.3.0-alpha.2, so requesting a stable 0.3.0
+The example version is the planned release, not the current app version. The committed app remains 0.3.0-alpha.3, so requesting a stable 0.3.0
 package correctly fails until release preparation. A clean source tree and matching versions are required.
 
 The pipeline compiles the full Host and runs startup checks, creates a fresh

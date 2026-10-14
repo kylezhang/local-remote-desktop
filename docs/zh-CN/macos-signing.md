@@ -55,7 +55,7 @@ export NOTARY_PROFILE='<已有 notarytool 钥匙串配置名称>'
 bash scripts/package-macos.sh 0.3.0
 ```
 
-示例 0.3.0 是计划正式版，当前源码仍为 0.3.0-alpha.2，因此准备完成前请求正式包会被正确拒绝。
+示例 0.3.0 是计划正式版，当前源码仍为 0.3.0-alpha.3，因此准备完成前请求正式包会被正确拒绝。
 源码必须提交且目录干净，两端版本一致。
 
 流程先完整编译 Host 并执行启动检查，构建全新应用包，用 Hardened Runtime 和安全时间戳签名，

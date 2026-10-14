@@ -43,4 +43,4 @@ v0.1.0 tag 和附件保持不变。本次增加密码/剪贴板功能，因此�
 
 ## 当前 v0.3.0 验收
 
-上方 Apple SDK/VideoToolbox 通过项属于较早源码检查点；新版界面、剪贴板/文件与恢复代码须重新原生构建。已停止 Mac SSH 检查，当前原生/安装验收待完成。使用[集中清单](desktop-acceptance.md)，不宣称新的正式版已完成。
+上方 Apple SDK/VideoToolbox 通过项属于较早源码检查点。随后 alpha.2 已通过[云端原生编译和后台检查](../../tests/results/github-actions-2026-10-13.md)，用户反馈 Mac → Windows 控制成功。Mac 只读诊断确认下载包接受连接时，全局屏幕授权仍匹配旧代码身份。alpha.3 加入[系统屏幕选择](mac-screen-access.md)和 DMG 安装，原生选择器/升级验收仍待完成。用户工作时不通过 SSH 发起前台测试。使用[集中清单](desktop-acceptance.md)，不宣称新的正式版已完成。

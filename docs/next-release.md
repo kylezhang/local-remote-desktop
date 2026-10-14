@@ -51,4 +51,4 @@ is an implementation checkpoint, not evidence that these native gates passed.
 
 ## Current v0.3.0 acceptance
 
-The earlier Apple SDK/VideoToolbox result above covers its earlier source checkpoint. Updated UI, clipboard/files and recovery code require a new native build. Direct Mac SSH checks are stopped; current native/installed acceptance is pending. Use [the consolidated checklist](desktop-acceptance.md); no new stable release is declared.
+The earlier Apple SDK/VideoToolbox result above covers its earlier source checkpoint. Alpha.2 subsequently passed [cloud native builds and fixtures](../tests/results/github-actions-2026-10-13.md); the owner reported successful Mac → Windows control. Read-only Mac diagnosis confirmed stale global ScreenCapture code requirements in the downloaded app's accepting role. Alpha.3 adds [system display selection](mac-screen-access.md) and DMG installation; its native picker/upgrade acceptance remains pending. No foreground SSH tests are authorized during the owner's work. Use [the consolidated checklist](desktop-acceptance.md); no new stable release is declared.
