@@ -6,6 +6,10 @@ AtomGit 的“最后更新发行版”和主页“最新发行版”是两个选
 版本号和说明仍明确标记测试版，不代表原生验收门槛已通过。已有 tag 和下载附件不变。
 参见[官方更新接口](https://docs.atomgit.com/docs/apis/patch-api-v-5-repos-owner-repo-releases-tag/)。
 
+CI 同步步骤 `scripts/sync-atomgit-release.py` 在 GitHub 发布后自动执行同样的纪律：
+令牌仅来自 `ATOMGIT_RELEASE_TOKEN` secret；只补传缺失附件；同名附件校验值冲突时停止
+而不是覆盖；全部附件与校验过的 GitHub 字节一致后，才 PATCH `release_status` 并回读确认。
+
 [English](../releasing.md)
 
 1. 确定范围与版本，从 v0.1.0 开始，后续按大/小/修订版本语义维护；两端版本、窗口与更新日志一致，Mac 内部 build number 递增。

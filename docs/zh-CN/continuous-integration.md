@@ -59,6 +59,10 @@ Windows 可在当前客户端退出后使用验证过的 Actions 包，不覆盖
 `LOCALREMOTE_SKIP_NATIVE_BUILD=1` 只省去 Swift 样例之间重复的完整编译，Mac 打包步骤仍编译整个应用。
 这两个开关均不表示原生实机验收通过。
 
-当前标签只生成候选包，不自动创建 GitHub/AtomGit Release，既有标签与发行包保持不变。
+经 `.github/release-request.json` 批准后，发布任务创建 GitHub 预发布，随后
+`scripts/sync-atomgit-release.py` 将校验一致的同批字节同步到 AtomGit：只补传缺失附件，
+任何校验值冲突立即停止（发行产物不可变），全部附件回读校验通过后才设置
+`release_status`（预览版为 `pre`）；未配置 `ATOMGIT_RELEASE_TOKEN` secret 时该步骤跳过。
+仅有标签仍只生成候选包，不自动创建 Release，既有标签与发行包保持不变。
 正式 Mac 打包仍严格要求 Developer ID、公证和稳定版本，不退回临时签名；
 后续签名发版自动化使用受保护的凭据，并在验收通过后发布。

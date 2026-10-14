@@ -7,6 +7,7 @@ mkdir -p "$work"
 python3 tests/ReleaseChecks/check.py
 python3 tests/LocalizationChecks/coverage.py
 python3 tests/CloudReleaseChecks/check.py
+python3 tests/AtomGitSyncChecks/check.py
 while IFS= read -r script; do bash -n "$script"; done < <(git ls-files '*.sh')
 python3 tests/InstallerChecks/check.py --bash /bin/bash --work-dir "$work/installer"
 python3 tests/InstallerChecks/signing.py --bash /bin/bash --work-dir "$work/signing"

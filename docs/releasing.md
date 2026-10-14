@@ -33,6 +33,13 @@ also made the API's `prerelease` field false; its version and notes still explic
 identify it as a preview. This designation does not clear native acceptance gates.
 Existing tags and download assets were unchanged. See the
 [AtomGit update API](https://docs.atomgit.com/docs/apis/patch-api-v-5-repos-owner-repo-releases-tag/).
+
+The CI mirror step `scripts/sync-atomgit-release.py` runs right after the GitHub
+publish and enforces the same discipline: the token comes only from the
+`ATOMGIT_RELEASE_TOKEN` secret; only missing attachments are uploaded; a
+same-name checksum conflict halts the sync instead of overwriting; and
+`release_status` is patched and read back only after every attachment matches
+the verified GitHub bytes.
 The maintainer does not plan to purchase Apple Developer membership. An explicitly
 ad-hoc signed, unnotarized package is a supported distribution path. Paid signing
 does not determine feature stability or alpha/beta/stable status; native acceptance

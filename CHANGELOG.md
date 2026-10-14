@@ -13,6 +13,10 @@
 
 ## Unreleased
 
+- CI now mirrors the published GitHub preview release to AtomGit: only missing
+  attachments are uploaded, checksum conflicts halt the sync, and
+  `release_status` is set only after full read-back verification.
+
 - Mac builds discard stale native caches after a checkout moves or is renamed,
   preventing absolute module-cache path errors while retaining incremental builds.
 
