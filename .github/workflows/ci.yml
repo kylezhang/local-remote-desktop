@@ -13,7 +13,9 @@ permissions:
 
 concurrency:
   group: desktop-ci-${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: ${{ !startsWith(github.ref, 'refs/tags/') }}
+  # Never interrupt a main run halfway through immutable cross-site publication.
+  # PR runs can be superseded; main/tag runs finish and newer main work queues.
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 env:
   DOTNET_VERSION: '8.0.425'
@@ -123,6 +125,9 @@ jobs:
 
   preview-release:
     name: Publish requested preview
+    concurrency:
+      group: desktop-preview-publication
+      cancel-in-progress: false
     needs: [checks, windows, macos]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main' && github.repository == 'kylezhang/local-remote-desktop'
     runs-on: ubuntu-24.04
