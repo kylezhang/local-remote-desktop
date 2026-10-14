@@ -113,6 +113,7 @@ def sync(tag, commit, prerelease, *, github_base, github_repo, github_token,
         raise ValueError('GitHub release lacks required package, source or verification attachments')
     digests = {}
     for name, asset in sorted(assets.items()):
+        print(f'Verifying GitHub attachment: {name}', flush=True)
         status, data = http(asset['browser_download_url'])
         if status != 200:
             raise ConnectionError(f'download of GitHub asset {name} returned HTTP {status}')
@@ -122,6 +123,7 @@ def sync(tag, commit, prerelease, *, github_base, github_repo, github_token,
             raise ValueError('Staged release file must not be a symlink')
         (staged / name).write_bytes(data)
         digests[name] = sha256(data)
+        print(f'Verified GitHub attachment: {name}', flush=True)
     listed = {}
     for line in (staged / 'SHA256SUMS.txt').read_text(encoding='utf-8-sig').splitlines():
         match = re.fullmatch(r'([a-f0-9]{64})  ([A-Za-z0-9._-]+)', line)
@@ -160,6 +162,7 @@ def sync(tag, commit, prerelease, *, github_base, github_repo, github_token,
     # conflict must not follow an earlier PUT of a missing attachment.
     for name in sorted(digests):
         if name in inventory:
+            print(f'Checking existing AtomGit attachment: {name}', flush=True)
             status, data = atomgit_api(atomgit_base, atomgit_owner, atomgit_repo,
                                        f'{download_path}/{urllib.parse.quote(name, safe="")}/download',
                                        atomgit_token)
@@ -167,9 +170,11 @@ def sync(tag, commit, prerelease, *, github_base, github_repo, github_token,
                 raise ValueError(f'AtomGit attachment {name} differs from the verified GitHub asset; '
                                  'published artifacts are immutable, so the sync stops here')
             report['already_synced'].append(name)
+            print(f'Verified existing AtomGit attachment: {name}', flush=True)
     for name in sorted(digests):
         if name in inventory:
             continue
+        print(f'Uploading missing AtomGit attachment: {name}', flush=True)
         status, body = atomgit_api(atomgit_base, atomgit_owner, atomgit_repo,
                                    f'{release_path(tag)}/upload_url', atomgit_token,
                                    query={'file_name': name})
@@ -189,6 +194,7 @@ def sync(tag, commit, prerelease, *, github_base, github_repo, github_token,
             raise ValueError(f'uploaded AtomGit attachment {name} failed read-back verification; '
                              'leaving it in place for maintainer review')
         report['uploaded'].append(name)
+        print(f'Verified uploaded AtomGit attachment: {name}', flush=True)
     _, body = atomgit_api(atomgit_base, atomgit_owner, atomgit_repo, release_path(tag), atomgit_token)
     remote = json.loads(body)
     if remote.get('release_status') != desired:
