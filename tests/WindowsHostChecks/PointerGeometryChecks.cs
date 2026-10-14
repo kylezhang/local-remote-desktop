@@ -35,6 +35,11 @@ static class PointerGeometryChecks {
         var mixed=DisplayGeometry.FromDisplays([(new(0,0,3840,2160),true),(new(3840,-223,1440,2560),false)]);
         Require(mixed.Virtual==new CaptureArea(0,-223,5280,2560),"Mixed-scale/portrait union wrong");
         Require(VideoProfile.For(mixed.Primary,0).Width==1280 && VideoProfile.For(mixed.Primary,2).Width==1920,"Capture quality sizing wrong");
+        int fallbacks=0;
+        Require(DisplayGeometry.Resolve(()=>mixed,()=> {fallbacks++;return default;})==mixed && fallbacks==0,"Valid display modes unnecessarily used fallback");
+        foreach(var error in new Exception[]{new InvalidOperationException("Missing DEVMODE fields"),new ArgumentException("No primary mode")})
+            Require(DisplayGeometry.Resolve(()=>throw error,()=> {fallbacks++;return mixed;})==mixed,"Remote/virtual mode failure did not fall back");
+        Require(fallbacks==2,"Fallback query duplicated");
         Console.WriteLine("PASS primary/left/above/mixed-scale portrait layouts: move/click/wheel map to capture pixels");
         if(!OperatingSystem.IsWindows()) return;
         DisplayGeometry physical;
@@ -48,6 +53,7 @@ static class PointerGeometryChecks {
             Require(original!=0,"Cannot enter test DPI context");
             try {
                 Require(DisplayGeometry.Read()==physical,"Geometry varies with UI/worker DPI awareness");
+                Require(DisplayGeometry.ReadMonitors()==physical,"Monitor fallback changed physical capture/input bounds");
                 var before=GetThreadDpiAwarenessContext(); int calls=0;
                 var adapter=new SendInputAdapter(_=> {
                     calls++; Require(GetAwarenessFromDpiAwarenessContext(GetThreadDpiAwarenessContext())==2,"Native call uses logical DPI context");

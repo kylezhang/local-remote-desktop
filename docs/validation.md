@@ -1,5 +1,13 @@
 # Validation
 
+## Input access and accepting-start correction — 2026-10-14
+
+Alpha.4 physical input/startup failures were reported. Main now separates Mac
+event-posting permission from AX and adds Windows physical-monitor fallback and
+specific startup diagnostics. Local Windows and portable Swift checks passed;
+actual failure causes/installed repair acceptance remain open. See
+[the scoped record](../tests/results/input-access-startup-2026-10-14.md).
+
 ## Focus release queue correction — 2026-10-14
 
 Both controller queues now retain clipboard/file controls when releasing pending

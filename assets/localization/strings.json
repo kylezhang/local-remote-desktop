@@ -352,5 +352,17 @@
   "等待屏幕选择": "Waiting for display selection",
   "屏幕选择已授权": "Display selection authorized",
   "屏幕选择失败：{0} / {1}：{2}。可重试屏幕选择；本次没有读取钥匙串。": "Display selection failed: {0} / {1}: {2}. Try selecting the display again; Keychain was not accessed.",
-  "屏幕共享已结束，请重新选择屏幕。": "Screen sharing ended. Select the display again."
+  "屏幕共享已结束，请重新选择屏幕。": "Screen sharing ended. Select the display again.",
+  "TCP 47980 已被占用，请停止另一份共享程序后重试。": "TCP 47980 is in use. Stop the other sharing instance and retry.",
+  "系统拒绝监听 TCP 47980，请检查系统端口保留或安全软件。": "Windows denied TCP 47980 listening. Check reserved ports or security software.",
+  "无法监听 TCP 47980，请查看下方错误详情。": "Cannot listen on TCP 47980. See the error details below.",
+  "无法读取当前显示器，请确认 Windows 已登录且显示器可用。": "Cannot read the current display. Make sure Windows is logged in and a display is available.",
+  "系统组件启动失败，请查看下方错误详情。": "A system component failed to start. See the error details below.",
+  "无法开始接受连接，请查看下方错误详情。": "Cannot start accepting connections. See the error details below.",
+  "复制共享诊断": "Copy sharing diagnostics",
+  "请允许当前应用；若系统没有列出它，可定位应用后手动添加。": "Allow the current app. If it is not listed, locate it and add it manually.",
+  "定位当前应用": "Locate current app",
+  "自检未执行：系统尚未允许本应用发送键盘和鼠标事件。": "Self-test not run: the system has not allowed this app to send keyboard and mouse events.",
+  "正在共享当前桌面 · 键盘和鼠标尚未允许，只能查看": "Sharing the current desktop; keyboard and mouse access is not allowed; view only",
+  "共享已启动（只能查看）· 系统尚未允许键盘和鼠标控制": "Accepting connections (view only); the system has not allowed keyboard and mouse control"
 }

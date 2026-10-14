@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.3.0-alpha.5 — 2026-10-14 (pre-release)
+
+- Check Mac CGEvent posting permission separately from AX; request it only on a
+  deliberate action and refresh after returning from Settings. Reveal the installed
+  app for manual addition when macOS omits its row.
+- Report optional inputEnabled/eventPosting capability fields; Windows prefers the
+  operation-specific permission with legacy AX fallback.
+- Add physical-DPI monitor enumeration when Windows display-mode data is incomplete.
+- Replace the misleading Windows FFmpeg/port catch-all with specific port/display/
+  system errors and sanitized copyable diagnostics; failed startup remains retryable.
+- Background regressions pass. The owner's alpha.4 physical input/startup failures
+  are not yet independently reproduced or certified resolved.
+
 ## 0.3.0-alpha.4 — 2026-10-14 (pre-release)
 
 - Fix both controllers dropping queued clipboard consent, text and file controls

@@ -49,12 +49,15 @@ final class HostModel: ObservableObject {
     private var hostGeneration: UUID?
     private let inputSelfTest = InputSelfTest()
     @Published var inputTestResult = ""
+    @Published var inputAccess = MacInputAccess.snapshot()
+    func refreshInputAccess() { inputAccess = MacInputAccess.snapshot() }
     func testInput() { inputSelfTest.run { [weak self] result in self?.inputTestResult = result } }
     func openAccessibilitySettings() {
-        let options = [kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String: true] as CFDictionary
-        _ = AXIsProcessTrustedWithOptions(options)
+        MacInputAccess.request()
+        refreshInputAccess()
         NSWorkspace.shared.open(URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility")!)
     }
+    func revealInstalledApplication() { NSWorkspace.shared.activateFileViewerSelecting([Bundle.main.bundleURL]) }
     init(namePreferences: UserDefaults = .standard) {
         self.namePreferences = namePreferences; deviceName = DeviceName.current(namePreferences)
         UiText.language = languageCode
@@ -182,7 +185,8 @@ final class HostModel: ObservableObject {
             // prepare can reuse an already cached key without invoking readKey.
             checkingScreen = false
             self.displayPairingKey(key)
-            let trusted = AXIsProcessTrusted()
+            self.refreshInputAccess()
+            let trusted = self.inputAccess.canControl
             let generation = UUID(); self.hostGeneration = generation
             let h = Host(key: key.key, deviceName: self.deviceName, screenSource: selectedScreen, screenAccessEnded: { [weak self] in
                 DispatchQueue.main.async {
@@ -199,7 +203,7 @@ final class HostModel: ObservableObject {
                     self.status = text
                 } }
             try h.start(); self.host = h; self.active = true; self.discovery.start(name: self.deviceName)
-            self.status = trusted ? "共享已启动，等待设备连接 · TCP 47980" : "共享已启动（只能查看）· 辅助功能权限未被认可"
+            self.status = trusted ? "共享已启动，等待设备连接 · TCP 47980" : "共享已启动（只能查看）· 系统尚未允许键盘和鼠标控制"
           } catch is CancellationError { if !Task.isCancelled && !self.active { self.status = "未选择屏幕，尚未接受连接。" } }
           catch {
             let e = error as NSError
@@ -236,6 +240,7 @@ final class HostModel: ObservableObject {
         ScreenAuthorization: \(screenAccess.mode)
         ScreenCaptureKit: \(screenCheck)
         Accessibility: \(AXIsProcessTrusted())
+        EventPosting: \(MacInputAccess.snapshot().eventPosting)
         Listening: \(active)
         Discovery: \(discovery.state)
         Starting: \(starting)

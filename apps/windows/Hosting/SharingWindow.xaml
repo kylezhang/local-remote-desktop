@@ -63,6 +63,8 @@
    <TextBlock x:Name="SharingFileStatus" TextWrapping="Wrap" VerticalAlignment="Center"/>
   </DockPanel></Border>
   <Expander x:Name="SharingTroubleshooting" Header="{local:Translate Key='故障排查'}" Margin="0,18,0,0"><StackPanel>
+  <TextBlock x:Name="SharingError" Visibility="Collapsed" FontFamily="Consolas" FontSize="12" TextWrapping="Wrap" Margin="0,8,0,8"/>
+  <Button Content="{local:Translate Key='复制共享诊断'}" Click="CopySharingDiagnosticsClick" HorizontalAlignment="Left" Margin="0,8,0,0"/>
   <CheckBox x:Name="Software" Content="{local:Translate Key='使用软件编码'}" ToolTip="{local:Translate Key='默认使用 Media Foundation 硬件 H.264；硬件不支持时停止接受连接后选择此项。'}" Margin="0,18,0,10"/>
   <TextBlock Text="{local:Translate Key='硬件编码不可用时再开启；需停止接受连接后切换，CPU 占用较高。'}" FontSize="12" Foreground="#697183" TextWrapping="Wrap"/>
   </StackPanel></Expander>

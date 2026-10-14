@@ -8,11 +8,11 @@
 <key>CFBundleName</key><string>Local Remote Desktop</string>
 <key>CFBundleDisplayName</key><string>Local Remote Desktop</string>
 <key>CFBundleIconFile</key><string>LocalRemoteDesktop.icns</string>
-<key>CFBundleVersion</key><string>29</string>
+<key>CFBundleVersion</key><string>30</string>
 <key>CFBundleInfoDictionaryVersion</key><string>6.0</string>
 <key>NSPrincipalClass</key><string>NSApplication</string>
 <key>CFBundleShortVersionString</key><string>0.3.0</string>
-<key>LocalRemoteDesktopReleaseVersion</key><string>0.3.0-alpha.4</string>
+<key>LocalRemoteDesktopReleaseVersion</key><string>0.3.0-alpha.5</string>
 <key>CFBundlePackageType</key><string>APPL</string>
 <key>LSMinimumSystemVersion</key><string>13.0</string>
 <key>NSHighResolutionCapable</key><true/>

@@ -333,7 +333,7 @@ struct DesktopSettings: View {
                             .font(.caption).foregroundStyle(.secondary)
                     case "about":
                         Text("Local Remote Desktop").font(.title2)
-                        Text("Local Remote Desktop 0.3.0-alpha.4").font(.caption).foregroundStyle(.secondary)
+                        Text("Local Remote Desktop 0.3.0-alpha.5").font(.caption).foregroundStyle(.secondary)
                         Text("\(UiText.text("构建")) \(Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "unknown") · \(EntryBuild.revision)").font(.caption).foregroundStyle(.secondary)
                         Text("\(UiText.text("源码提交")): \(EntryBuild.source)").font(.caption).foregroundStyle(.secondary).textSelection(.enabled)
                         Text(UiText.text("许可")).font(.headline)
@@ -398,8 +398,11 @@ struct HostView: View {
                         Text(UiText.text(sharingTitle)).font(.headline)
                         Text(UiText.text(model.status)).font(.callout).foregroundStyle(.secondary)
                             .fixedSize(horizontal: false, vertical: true).textSelection(.enabled)
-                        if model.active && !AXIsProcessTrusted() {
+                        if !model.inputAccess.canControl {
                             Button(UiText.text("允许键盘和鼠标控制")) { model.openAccessibilitySettings() }
+                            Text(UiText.text("请允许当前应用；若系统没有列出它，可定位应用后手动添加。"))
+                                .font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+                            Button(UiText.text("定位当前应用")) { model.revealInstalledApplication() }
                         }
                     }.frame(maxWidth: .infinity, alignment: .leading)
                     VStack(alignment: .leading, spacing: 10) {
@@ -470,6 +473,8 @@ struct HostView: View {
                 }.padding(.top, 12)
             }
         }.frame(maxWidth: 520, alignment: .leading).padding(24).frame(maxWidth: .infinity,alignment: .leading).tint(blueberry)
+        .onAppear { model.refreshInputAccess() }
+        .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in model.refreshInputAccess() }
         .sheet(isPresented: $model.editingName, onDismiss: { model.cancelNameEditor() }) {
             DeviceNameEditorView(model: model).tint(blueberry)
         }

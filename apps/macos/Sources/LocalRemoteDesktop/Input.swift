@@ -33,7 +33,7 @@ final class InputInjector {
         guard let op = m["op"] as? String,
               ["mouse_move","mouse_button","scroll","key_event","release_all"].contains(op) else { return }
         received += 1
-        guard AXIsProcessTrusted() else { blocked += 1; lastError = "accessibility_denied"; return }
+        guard MacInputAccess.canPost else { blocked += 1; lastError = "event_posting_denied"; return }
         if let x = m["x"] as? Double, let y = m["y"] as? Double, x.isFinite, y.isFinite {
             point = CGPoint(x: Self.bounds.minX + min(max(x,0),1)*max(0,Self.bounds.width-1), y: Self.bounds.minY + min(max(y,0),1)*max(0,Self.bounds.height-1))
         }

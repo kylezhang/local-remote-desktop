@@ -32,6 +32,13 @@ Accessibility is separate and still required for keyboard/mouse control. Allow
 the installed application, not a similarly named older source-build copy. The
 system picker grants capture of the selected display, not remote input permission.
 
+Current development checks CGPreflightPostEventAccess for the actual CGEvent
+posting operation, reports AX separately and refreshes when returning from Settings.
+The deliberate control-permission action uses CGRequestPostEventAccess. If the
+current installed copy is missing from the list, Locate current app reveals it
+for manual addition. These changes do not prove the reported alpha.4 input failure
+fixed on hardware; see [the check scope](../tests/results/input-access-startup-2026-10-14.md).
+
 ## Install the downloaded build
 
 Prefer the DMG: open it and drag **Local Remote Desktop.app** to **Applications**.

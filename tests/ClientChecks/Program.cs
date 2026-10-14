@@ -388,6 +388,7 @@ sealed class MockHost:IDisposable {
     static byte[] H(byte[] key,string label,byte[] transcript)=>HMACSHA256.HashData(key,Join(Encoding.ASCII.GetBytes(label),transcript));
     static byte[] Nonce(ulong value) { var n=new byte[12]; BinaryPrimitives.WriteUInt64BigEndian(n.AsSpan(4),value); return n; }
     public Task Permission(bool trusted)=>Json(new {op="heartbeat",accessibility=trusted,inputReceived=Inputs.Count,inputPosted=Inputs.Count,inputBlocked=0,inputRejected=0,inputError=""});
+    public Task EventPostingPermission(bool ax,bool posting)=>Json(new {op="heartbeat",accessibility=ax,eventPosting=posting,inputEnabled=posting});
     public Task Video()=>Send(2,video);
     public Task Capabilities(bool clipboard)=>Json(new {op="capabilities",accessibility=true,clipboardText=clipboard,fileClipboard=true,filePort=FilePort,fileSession=FileSession});
     public Task FileOffer(string offer,FileItem[] items)=>Json(new {op="file_offer",offer,items,requestId=FileRequestId});

@@ -9,12 +9,16 @@ protocol ObservableObject {}
 typealias CFDictionary = [String: Any]
 struct AXPrompt { func takeUnretainedValue() -> String { "prompt" } }
 let kAXTrustedCheckOptionPrompt = AXPrompt()
-func AXIsProcessTrusted() -> Bool { true }
+enum InputAccessFixture { static var ax = true, posting = true; static var requests = 0 }
+func AXIsProcessTrusted() -> Bool { InputAccessFixture.ax }
+func CGPreflightPostEventAccess() -> Bool { InputAccessFixture.posting }
+func CGRequestPostEventAccess() -> Bool { InputAccessFixture.requests += 1; return InputAccessFixture.posting }
 func AXIsProcessTrustedWithOptions(_ options: CFDictionary) -> Bool { true }
 func CGPreflightScreenCaptureAccess() -> Bool { true }
 final class NSWorkspace {
     static let shared = NSWorkspace()
     func open(_ url: URL) {}
+    func activateFileViewerSelecting(_ urls: [URL]) {}
 }
 final class NSPasteboard {
     enum PasteboardType { case string }

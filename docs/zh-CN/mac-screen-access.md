@@ -34,3 +34,10 @@ CI 编译原生选择器和完整应用；实际系统选择、画面、输入�
 依据 [Apple 系统选择器权限说明](https://developer.apple.com/videos/play/wwdc2023/10053/)、
 [ScreenCaptureKit 接入](https://developer.apple.com/videos/play/wwdc2023/10136/)
 和[临时签名身份说明](https://developer.apple.com/documentation/technotes/tn3127-inside-code-signing-requirements)。
+
+## 开发中的键鼠权限区分
+
+当前开发版用 CGPreflightPostEventAccess 检查 CGEvent 发送操作，AX 单独记录，
+从系统设置返回时刷新；主动允许控制时用 CGRequestPostEventAccess。
+若系统未列出当前安装副本，可“定位当前应用”后手动添加。
+这不代表 alpha.4 输入故障已实机解决，见[验证范围](../../tests/results/input-access-startup-2026-10-14.md)。

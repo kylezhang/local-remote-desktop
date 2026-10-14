@@ -531,8 +531,8 @@ public partial class MainWindow : Window
                                 stats.Restart(); Interlocked.Exchange(ref frames,0); Interlocked.Exchange(ref bytes,0);
                             });
                         } else if(root.GetProperty("op").GetString()=="metrics") Interlocked.Exchange(ref encodeMs,root.GetProperty("encodeMs").GetDouble());
-                        if(root.TryGetProperty("accessibility",out var permission)) inputAllowed=permission.GetBoolean();
-                        if(targetPlatform=="windows" && root.TryGetProperty("inputEnabled",out var enabled)) inputAllowed=enabled.GetBoolean();
+                        if(root.TryGetProperty("inputEnabled",out var enabled)) inputAllowed=enabled.GetBoolean();
+                        else if(root.TryGetProperty("accessibility",out var permission)) inputAllowed=permission.GetBoolean();
                         if(root.TryGetProperty("inputReceived",out var received)) { Interlocked.Exchange(ref hostReceived,received.GetInt64()); hostReportsInput=true; }
                         if(root.TryGetProperty("inputPosted",out var posted)) Interlocked.Exchange(ref hostPosted,posted.GetInt64());
                         if(root.TryGetProperty("inputBlocked",out var blocked)) Interlocked.Exchange(ref hostBlocked,blocked.GetInt64());

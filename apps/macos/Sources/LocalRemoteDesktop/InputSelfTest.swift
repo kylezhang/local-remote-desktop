@@ -14,7 +14,7 @@ final class InputSelfTest: NSObject, NSWindowDelegate {
     private let input = InputInjector(targetPID: getpid())
     func run(completion: @escaping (String) -> Void) {
         guard window == nil else { return }
-        guard AXIsProcessTrusted() else { completion("自检未执行：系统尚未认可本应用的辅助功能权限。"); return }
+        guard MacInputAccess.snapshot().canControl else { completion("自检未执行：系统尚未允许本应用发送键盘和鼠标事件。"); return }
         finish = completion
         let w = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 460, height: 150), styleMask: [.titled, .closable], backing: .buffered, defer: false)
         w.title = UiText.text("LocalRemoteDesktop · 本机键盘自检"); w.isReleasedWhenClosed = false; w.delegate = self

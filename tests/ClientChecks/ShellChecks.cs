@@ -11,6 +11,7 @@ static partial class Program {
     // Never Show/Activate a Window, capture a physical screen, access user
     // credentials/clipboard or inject OS input. Rendering stays in memory.
     static async Task CheckShell() {
+        await CheckSharingFailures();
         await CheckReverseClipboard();
         await CheckReverseFiles();
         await CheckRecovery();

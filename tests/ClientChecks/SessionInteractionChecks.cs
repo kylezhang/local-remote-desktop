@@ -33,6 +33,16 @@ static partial class Program {
                 typeof(MainWindow).GetField("manualConnecting",flags)!.SetValue(window,true);
                 runner=(Task)typeof(MainWindow).GetMethod("StartConnectionAsync",flags)!.Invoke(window,null)!;
                 await Until(Picture,"Unshown synthetic stream produced no displayed pixels",15000);
+                bool Allowed()=>(bool)typeof(MainWindow).GetField("inputAllowed",flags)!.GetValue(window)!;
+                await peer.EventPostingPermission(true,false);
+                await Until(()=>!Allowed(),"AX approval masked denied event posting");
+                await peer.EventPostingPermission(false,true);
+                await Until(Allowed,"Event posting approval was overridden by AX state");
+                await peer.Permission(false);
+                await Until(()=>!Allowed(),"Legacy Mac permission fallback was lost");
+                await peer.Permission(true);
+                await Until(Allowed,"Legacy Mac approval did not recover");
+                Console.WriteLine("PASS encrypted Mac event-posting capability takes precedence over AX, with legacy permission fallback; no OS input");
                 var first=Find<Image>("Desktop").Source;
                 Find<ComboBox>("Quality").SelectedIndex=1;
                 await Until(()=>peer.Qualities.Count==2 && !ReferenceEquals(first,Find<Image>("Desktop").Source) && Picture(),"Quality switch did not replace decoder/picture",15000);

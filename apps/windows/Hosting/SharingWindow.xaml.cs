@@ -60,10 +60,16 @@ public partial class SharingWindow:Window {
         try {
             if(host!=null) await Stop();
             else { starting=Start(credential); await starting; }
-        } catch { status="无法开始接受连接，请检查 FFmpeg 和 TCP 47980 端口。"; }
+        } catch(Exception error) {
+            status=SharingFailure.Message(error);
+            SharingError.Text=SharingFailure.Details(error);
+            SharingError.Visibility=Visibility.Visible;
+            SharingTroubleshooting.IsExpanded=true;
+        }
         finally { starting=null; actionBusy=false; Translate(); }
     }
     async Task Start(HostCredential value) {
+        SharingError.Text=""; SharingError.Visibility=Visibility.Collapsed;
         status="正在启动共享…"; Translate(); sharingChanged(true);
         byte[]? key=null;
         try {
@@ -76,6 +82,10 @@ public partial class SharingWindow:Window {
             try { next.Start(); Software.IsEnabled=false; advertisement.Publish(deviceName.Current,next.Port); }
             catch { host=null; await next.DisposeAsync(); throw; }
         } finally { if(key!=null) CryptographicOperations.ZeroMemory(key); if(host==null) sharingChanged(false); }
+    }
+    void CopySharingDiagnosticsClick(object sender,RoutedEventArgs e) {
+        try { Clipboard.SetText($"Local Remote Desktop sharing diagnostics\n{BuildInfo.Display}\nSharing: {Sharing}\nStatus: {UiText.Text(status)}\n{SharingError.Text}"); }
+        catch {status="剪贴板忙，请重试。"; Translate();}
     }
     internal Task Stop() {
         var old=host; host=null;

@@ -78,9 +78,10 @@ final class Host {
             var startupError: Error?
             wait { do { try await c.start(quality: quality) } catch { startupError = error } }
             if let startupError { throw startupError }
-            var trusted = AXIsProcessTrusted()
+            var access = MacInputAccess.snapshot()
+            var trusted = access.canControl
             clipboard = MacClipboard(wire: wire, allowed: { [weak self] in self?.allowsClipboard() ?? false })
-            var capabilities: [String: Any] = ["op":"capabilities","deviceName":displayName(),"platform":"macos","inputModel":"win-vk-mac-v1","accessibility":trusted,"clipboardText":true,"fileClipboard":false]
+            var capabilities: [String: Any] = ["op":"capabilities","deviceName":displayName(),"platform":"macos","inputModel":"win-vk-mac-v1","accessibility":access.accessibility,"eventPosting":access.eventPosting,"inputEnabled":trusted,"clipboardText":true,"fileClipboard":false]
             do {
                 let fileSession = try MacFiles(key: key, passwordSalt: passwordSalt, control: wire, allowed: { [weak self] in self?.allowsFiles() ?? false }, status: fileStatus); files = fileSession
                 lock.lock(); let active = running; if active { currentFiles = fileSession }; lock.unlock()
@@ -88,19 +89,21 @@ final class Host {
                 capabilities["fileClipboard"] = true; capabilities["filePort"] = 47981; capabilities["fileSession"] = fileSession.session
             } catch { fileStatus("文件通道不可用，请检查 47981 端口；桌面共享可继续") }
             try wire.json(capabilities)
-            status(trusted ? "正在共享当前桌面 · 可控制" : "正在共享当前桌面 · 辅助功能未授权，只能查看")
+            status(trusted ? "正在共享当前桌面 · 可控制" : "正在共享当前桌面 · 键盘和鼠标尚未允许，只能查看")
             var lastHeartbeat = Date()
             while true {
                 let message = try wire.receive()
                 if message["op"] as? String == "heartbeat" {
                     lastHeartbeat = Date()
-                    let currentTrust = AXIsProcessTrusted()
+                    access = MacInputAccess.snapshot()
+                    let currentTrust = access.canControl
                     var reply = input.diagnostics
-                    reply["op"] = "heartbeat"; reply["deviceName"] = displayName(); reply["accessibility"] = currentTrust
+                    reply["op"] = "heartbeat"; reply["deviceName"] = displayName(); reply["accessibility"] = access.accessibility
+                    reply["eventPosting"] = access.eventPosting; reply["inputEnabled"] = currentTrust
                     try wire.json(reply)
                     if currentTrust != trusted {
                         trusted = currentTrust
-                        status(trusted ? "正在共享当前桌面 · 可控制" : "正在共享当前桌面 · 辅助功能未授权，只能查看")
+                        status(trusted ? "正在共享当前桌面 · 可控制" : "正在共享当前桌面 · 键盘和鼠标尚未允许，只能查看")
                     }
                 }
                 if Date().timeIntervalSince(lastHeartbeat) > 15 { throw WireError.closed }

@@ -127,6 +127,23 @@ func require(_ value: @autoclosure () -> Bool, _ message: String) {
                 "revocation did not select fresh screen or reread cached credentials")
         permissionModel.stop()
         print("PASS permission denial/cancel/duplicate selection/retry and same-run cached restart; no real picker or TCC calls")
+        let attempts = Pairing.readAttempts, changes = Pairing.saveAttempts
+        for ax in [false,true] { for posting in [false,true] {
+            InputAccessFixture.ax = ax; InputAccessFixture.posting = posting
+            permissionModel.refreshInputAccess()
+            require(permissionModel.inputAccess.accessibility == ax &&
+                permissionModel.inputAccess.canControl == posting, "AX state was substituted for CGEvent posting permission")
+        } }
+        require(InputAccessFixture.requests == 0, "Passive permission refresh requested authorization")
+        InputAccessFixture.posting = false
+        permissionModel.openAccessibilitySettings()
+        require(InputAccessFixture.requests == 1, "Deliberate control action did not request posting access exactly once")
+        InputAccessFixture.posting = true
+        permissionModel.openAccessibilitySettings(); permissionModel.refreshInputAccess()
+        require(InputAccessFixture.requests == 1 && permissionModel.inputAccess.canControl, "Approved control repeated the system prompt")
+        require(Pairing.readAttempts == attempts && Pairing.saveAttempts == changes && !permissionModel.active,
+                "Permission refresh touched credentials or started sharing")
+        print("PASS separate AX/CGEvent permission states, passive refresh, deliberate one-request flow and no credential/listener side effects")
         print("SKIP native SwiftUI/Apple SDK/Keychain: production model compiled with explicit service doubles.")
     }
 }

@@ -28,7 +28,12 @@ internal readonly record struct DisplayGeometry(CaptureArea Primary,CaptureArea 
     [DllImport("user32.dll",CharSet=CharSet.Unicode)]
     static extern bool EnumDisplaySettingsEx(string device,int index,ref DisplayMode mode,uint flags);
 
-    internal static DisplayGeometry Read() {
+    internal static DisplayGeometry Read()=>Resolve(ReadModes,ReadMonitors);
+    internal static DisplayGeometry Resolve(Func<DisplayGeometry> modes,Func<DisplayGeometry> monitors) {
+        try {return modes();}
+        catch(Exception error) when(error is InvalidOperationException or ArgumentException) {return monitors();}
+    }
+    static DisplayGeometry ReadModes() {
         var displays=new List<(CaptureArea Area,bool Primary)>();
         for(uint i=0;i<64;i++) {
             var device=new DisplayDevice {Size=Marshal.SizeOf<DisplayDevice>()};
@@ -43,6 +48,31 @@ internal readonly record struct DisplayGeometry(CaptureArea Primary,CaptureArea 
                 throw new InvalidOperationException("Physical display geometry unavailable");
             displays.Add((new(mode.X,mode.Y,(int)mode.Width,(int)mode.Height),(device.Flags&4)!=0));
         }
+        return FromDisplays(displays);
+    }
+    [StructLayout(LayoutKind.Sequential)] struct Rect {internal int Left,Top,Right,Bottom;}
+    [StructLayout(LayoutKind.Sequential)] struct MonitorInfo {
+        internal uint Size;internal Rect Monitor,Work;internal uint Flags;
+    }
+    [UnmanagedFunctionPointer(CallingConvention.Winapi)] delegate bool MonitorCallback(nint monitor,nint dc,nint rect,nint data);
+    [DllImport("user32.dll")] static extern bool EnumDisplayMonitors(nint dc,nint clip,MonitorCallback callback,nint data);
+    [DllImport("user32.dll",CharSet=CharSet.Unicode)] static extern bool GetMonitorInfo(nint monitor,ref MonitorInfo info);
+    internal static DisplayGeometry ReadMonitors() {
+        // Remote/virtual drivers can omit DEVMODE fields. Monitor rectangles are
+        // an alternative, but only under physical DPI awareness; never use WPF
+        // logical bounds as absolute-input or capture coordinates.
+        using var dpi=new PhysicalDpiScope();
+        var displays=new List<(CaptureArea Area,bool Primary)>();
+        bool valid=true;
+        MonitorCallback callback=(monitor,_,_,_)=> {
+            var info=new MonitorInfo {Size=(uint)Marshal.SizeOf<MonitorInfo>()};
+            if(!GetMonitorInfo(monitor,ref info)) {valid=false;return false;}
+            long width=(long)info.Monitor.Right-info.Monitor.Left,height=(long)info.Monitor.Bottom-info.Monitor.Top;
+            if(width<2 || height<2 || width>int.MaxValue || height>int.MaxValue) {valid=false;return false;}
+            displays.Add((new(info.Monitor.Left,info.Monitor.Top,(int)width,(int)height),(info.Flags&1)!=0));
+            return true;
+        };
+        if(!EnumDisplayMonitors(0,0,callback,0) || !valid) throw new InvalidOperationException("Physical display geometry unavailable");
         return FromDisplays(displays);
     }
     internal static DisplayGeometry FromDisplays(IEnumerable<(CaptureArea Area,bool Primary)> values) {
