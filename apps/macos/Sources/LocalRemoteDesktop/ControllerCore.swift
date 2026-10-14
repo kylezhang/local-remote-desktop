@@ -102,10 +102,22 @@ final class ControllerOutbox {
     @discardableResult func put(_ value: [String: Any]) throws -> Bool {
         lock.lock(); defer { lock.unlock() }
         if stopped { return false }
-        if value["op"] as? String == "release_all" { queue.removeAll() }
+        let release = value["op"] as? String == "release_all"
+        // Clipboard consent and file offers share this writer. A focus change
+        // must release input without silently discarding those controls.
+        if release {
+            queue.removeAll { message in
+                switch message["op"] as? String {
+                case "mouse_move", "mouse_button", "scroll", "key_event", "release_all": return true
+                default: return false
+                }
+            }
+        }
         if value["op"] as? String == "mouse_move", queue.last?["op"] as? String == "mouse_move" { queue[queue.count-1] = value; return false }
         guard queue.count < 256 else { throw ControllerError.overloaded }
-        let wasEmpty = queue.isEmpty; queue.append(value); return wasEmpty
+        let wasEmpty = queue.isEmpty
+        if release { queue.insert(value, at: 0) } else { queue.append(value) }
+        return wasEmpty
     }
     func take() -> [String: Any]? { lock.lock(); defer { lock.unlock() }; return queue.isEmpty ? nil : queue.removeFirst() }
     func stop() { lock.lock(); stopped = true; queue.removeAll(); lock.unlock() }

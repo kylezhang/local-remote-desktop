@@ -1,5 +1,13 @@
 # Validation
 
+## Focus release queue correction — 2026-10-14
+
+Both controller queues now retain clipboard/file controls when releasing pending
+input. Original sources failed the new regression; fixed C# and Swift pass.
+Windows protocol/unshown-client checks and portable Swift core/model checks passed,
+without real input or clipboard access. See [scope](../tests/results/input-release-2026-10-14.md).
+Updated native Mac CI and physical acceptance are not claimed by these local checks.
+
 ## Published alpha and automated synchronization — 2026-10-14
 
 v0.3.0-alpha.3 now provides Windows and Mac downloads on both repositories.

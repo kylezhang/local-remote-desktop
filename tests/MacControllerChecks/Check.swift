@@ -42,6 +42,32 @@ import Foundation
         for _ in 0..<256 { try box.put(["op":"key_event"]) }; rejects { try box.put(["op":"key_event"]) }
         precondition(box.count == 256); box.stop(); try box.put(["op":"key_event"]); precondition(box.count == 0)
         print("PASS bounded outbox, movement coalescing, edge order, release purge and stop")
+        let mixed = ControllerOutbox()
+        for value: [String: Any] in [
+            ["op":"key_event","vk":162,"down":true],
+            ["op":"clipboard_sync","enabled":false,"requestId":7],
+            ["op":"mouse_button","button":0,"down":true],
+            ["op":"file_sync","enabled":false,"requestId":8],
+            ["op":"mouse_move","x":0.2,"y":0.3],
+            ["op":"file_offer","requestId":9],
+            ["op":"scroll","delta":120],
+            ["op":"clipboard_text","text":"fixture"]
+        ] { try mixed.put(value) }
+        for _ in 0..<20 { try mixed.put(["op":"release_all"]) }
+        try mixed.put(["op":"key_event","vk":65,"down":true])
+        var retained = [[String: Any]]()
+        while let value = mixed.take() { retained.append(value) }
+        precondition(retained.compactMap { $0["op"] as? String } ==
+            ["release_all","clipboard_sync","file_sync","file_offer","clipboard_text","key_event"],
+            "Focus release lost transfer control, kept stale input or changed order")
+        precondition(retained[1]["requestId"] as? Int == 7 && retained[1]["enabled"] as? Bool == false &&
+            retained[3]["requestId"] as? Int == 9 && retained[4]["text"] as? String == "fixture")
+        let controls = ControllerOutbox()
+        for id in 0..<256 { try controls.put(["op":"file_sync","enabled":false,"requestId":id]) }
+        rejects { try controls.put(["op":"release_all"]) }
+        precondition(controls.count == 256)
+        for id in 0..<256 { precondition(controls.take()?["requestId"] as? Int == id) }
+        print("PASS focus release preserves clipboard/file consent and payload order; repeated release stays bounded; control-only overflow reported")
         let unit = try H264AccessUnit(Data([0,0,0,1,0x67,0x42,0xaa,0,0,1,0x68,0xbb,0,0,0,1,9,0xf0,0,0,1,0x65,0xcc,0xdd,0,0]))
         precondition(unit.sps == Data([0x67,0x42,0xaa]) && unit.pps == Data([0x68,0xbb]) && unit.idr && unit.picture)
         precondition(unit.avcc == Data([0,0,0,3,0x65,0xcc,0xdd]))

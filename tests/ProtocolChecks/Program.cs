@@ -107,6 +107,7 @@ Assert(queue.TryWrite(new {op="release_all"}),"release must bypass overload"); q
 await foreach(var item in queue.ReadAllAsync(CancellationToken.None)) Assert(System.Text.Json.JsonSerializer.SerializeToElement(item).GetProperty("op").GetString()=="release_all","stale key survived release");
 Assert(!queue.TryWrite(new {op="mouse_move",x=0,y=0}),"closed queue accepts input");
 Console.WriteLine("PASS 10,000 mouse moves, ordered click/drag/key, overload and release safety");
+await ReleaseQueueChecks.Run();
 Assert(RemoteCoordinates.Map(100,50,200,100,1920,1080) is {x:0.5,y:0.5},"center coordinate");
 Assert(RemoteCoordinates.Map(100,0,200,200,1920,1080)==null,"letterbox click should be ignored");
 Assert(RemoteCoordinates.Map(-10,300,200,200,1920,1080,true) is {x:0,y:1},"drag should clamp beyond viewport");

@@ -13,6 +13,11 @@
 
 ## Unreleased
 
+- Focus loss and shortcut/fullscreen release now purge only queued input on both
+  controllers, retaining ordered clipboard consent, text and file controls.
+  Cleanup has priority; control-only overload fails explicitly rather than
+  dropping transfer or revocation messages.
+
 - Harden release synchronization: verify every API digest, complete archive
   inventory and source manifest; check all existing files before any upload.
 - Select the AtomGit homepage latest independently of GitHub pre-release status.
