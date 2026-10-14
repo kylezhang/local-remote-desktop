@@ -13,7 +13,7 @@ body:
     id: version
     attributes:
       label: App version / 应用版本
-      placeholder: v0.3.0-alpha.3; include both versions if different / 两端不同请分别注明
+      placeholder: v0.3.0-alpha.4; include both versions if different / 两端不同请分别注明
     validations:
       required: true
   - type: dropdown

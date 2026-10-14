@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.3.0-alpha.4 — 2026-10-14 (pre-release)
+
+- Fix both controllers dropping queued clipboard consent, text and file controls
+  when focus/fullscreen/shortcut changes release remote input. Only stale input
+  is purged; cleanup takes priority and non-input payload order is preserved.
+- Bound repeated releases and report control-only queue overload explicitly
+  instead of silently losing transfer/revocation messages.
+- Add regressions reproducing the original C# and Swift failures, and keep
+  Windows input/coordinates/shortcut and unshown client recovery coverage.
+- Include updated bilingual version plans, launch preparation and feedback forms.
+- Publish through native Windows/Mac CI and verified GitHub → AtomGit asset sync;
+  real two-device permission/update/input acceptance remains deferred.
+
 ## 0.3.0-alpha.3 — 2026-10-14 (pre-release)
 
 - Use the macOS 14+ system display picker for deliberate accepting, pass its
@@ -12,11 +25,6 @@
 [简体中文](CHANGELOG.zh-CN.md)
 
 ## Unreleased
-
-- Focus loss and shortcut/fullscreen release now purge only queued input on both
-  controllers, retaining ordered clipboard consent, text and file controls.
-  Cleanup has priority; control-only overload fails explicitly rather than
-  dropping transfer or revocation messages.
 
 - Harden release synchronization: verify every API digest, complete archive
   inventory and source manifest; check all existing files before any upload.
