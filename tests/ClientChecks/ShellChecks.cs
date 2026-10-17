@@ -110,6 +110,7 @@ static partial class Program {
                 Assert(!Visible("ManualDialog") && Find<TextBox>("Address").ActualWidth==0,"Permanent connection form remains visible");
                 Assert(Descendants<ScrollViewer>(Find<ListBox>("DeviceList")).All(scroll=>scroll.ScrollableHeight<=0.5),"Routine device list needs scrolling at startup");
                 var targetButton=Descendants<Button>(Find<ListBox>("DeviceList")).First(button=>button.DataContext is LanDevice);
+                Assert(targetButton.ActualHeight>=179 && targetButton.ActualHeight<240,"A short device card stretches to fill the viewport");
                 targetButton.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
                 Assert(Visible("ManualDialog") && !Find<Grid>("HomeShell").IsEnabled,"Manual dialog did not isolate navigation");
                 Assert(Find<TextBlock>("ManualDeviceName").Text=="Fixture Mac" && Find<TextBlock>("ManualDeviceSystem").Text=="macOS","Known target metadata missing from manual dialog");
@@ -135,18 +136,17 @@ static partial class Program {
                 Assert(!Visible("ManualDialog") && Find<TextBox>("Address").Text=="192.168.1.24","Cancel changed the target");
                 Nav("NavSettings");
                 Assert(Visible("SettingsPage") && !Visible("ConnectPage"),"Settings did not replace connection page");
-                var tabs=Find<TabControl>("SettingsTabs");
-                Assert(tabs.Items.Count==4,"Settings category count incorrect");
-                for(int tab=0;tab<4;tab++) {
-                    tabs.SelectedIndex=tab; Snapshot("settings-"+lang+"-"+tab,1100);
-                    Snapshot("settings-"+lang+"-"+tab+"-584",584);
-                    foreach(int dpi in new[]{120,144}) Snapshot("settings-"+lang+"-"+tab+"-dpi"+dpi,820,dpi);
-                    Snapshot("settings-default-"+lang+"-"+tab,584,96,640);
-                    Assert(Descendants<ScrollViewer>(tabs).All(scroll=>scroll.ScrollableHeight<=0.5 && scroll.ScrollableWidth<=0.5),"Routine settings create an unnecessary scrollbar");
-                    var surface=(Border)tabs.Template.FindName("SettingsSurface",tabs);
-                    Assert(surface.ActualHeight<420,"Settings surface stretches into an empty panel");
-                    if(tab==0) Assert(surface.ActualHeight<180,"Single language setting occupies a full-height panel");
-                }
+                var settings=Find<ScrollViewer>("SettingsScroll");
+                Assert(Find<StackPanel>("SettingsSections").Children.Count==4,"Grouped settings sections are missing");
+                Snapshot("settings-default-"+lang,584,96,640);
+                Assert(settings.ScrollableHeight<=0.5 && settings.ScrollableWidth<=0.5,
+                    $"Routine grouped settings overflow: {settings.ExtentHeight}/{settings.ViewportHeight}");
+                foreach(var name in new[]{"GeneralPreferences","ConnectionPreferences","ClipboardPreferences","AboutPreferences"})
+                    Assert(Find<Border>(name).ActualHeight>20 && Find<Border>(name).ActualHeight<230,"Preference section is hidden or stretched");
+                foreach(int dpi in new[]{120,144}) Snapshot("settings-"+lang+"-dpi"+dpi,584,dpi,640);
+                Snapshot("settings-small-"+lang,504,96,440);
+                Assert(settings.ScrollableWidth<=0.5,"Grouped settings have horizontal overflow in a small window");
+                Snapshot("settings-default-"+lang,584,96,640);
                 Find<ComboBox>("DefaultQuality").SelectedIndex=0;
                 Find<CheckBox>("DefaultShortcuts").IsChecked=true; Find<CheckBox>("DefaultReconnect").IsChecked=true;
                 window.BeginConnectionOptions();
@@ -179,7 +179,7 @@ static partial class Program {
                 Field("connected",false);Invoke("ResetClipboard");
                 window.BeginConnectionOptions();
                 Assert(Find<ComboBox>("Quality").SelectedIndex==2 && !Find<MenuItem>("WindowsShortcuts").IsChecked && !Find<MenuItem>("Reconnect").IsChecked,"New logical connection did not adopt defaults");
-                Console.WriteLine("PASS four settings categories, next-connection defaults, temporary session choices and global clipboard/file consent ceiling");
+                Console.WriteLine("PASS four compact settings groups, next-connection defaults, temporary session choices and global clipboard/file consent ceiling");
                 Nav("NavShare");
                 Assert(Visible("SharingPage") && window.SharingController!=null && loads==1,"Sharing view duplicated credential reads");
                 var sharing=window.SharingController!;
@@ -217,7 +217,8 @@ static partial class Program {
                 var start=(Button)sharing.FindName("SharingStart");
                 var sharePage=Find<ContentControl>("SharingPage");
                 var passwordPosition=passwordSurface.TranslatePoint(new Point(0,0),deviceSurface);
-                Assert(passwordPosition.Y>20 && Math.Abs(passwordPosition.X-20)<1,"Password no longer follows the device information");
+                Assert(passwordPosition.Y>20 && passwordPosition.X>=0 && passwordPosition.X+passwordSurface.ActualWidth<=deviceSurface.ActualWidth+1,
+                    "Password no longer follows the device information inside its content surface");
                 var passwordBottom=passwordSurface.TranslatePoint(new Point(0,passwordSurface.ActualHeight),sharePage);
                 var startPosition=start.TranslatePoint(new Point(0,0),sharePage);
                 Assert(startPosition.Y>passwordBottom.Y && start.ActualWidth>=390,"Sharing action does not follow IP/password at the page bottom");
@@ -303,7 +304,7 @@ static partial class Program {
             Console.WriteLine("PASS unshown sharing edits: unsaved name/password block Start; failed-save draft and active sharing preserved; Stop remains available during edits; successful password change waits for explicit Start");
             window.Close(); await Until(()=>!page.Sharing && window.SharingController==null,"Owner shutdown left listener alive");
             Assert(advertisement.Stops>0,"Owner shutdown did not withdraw discovery");
-            Console.WriteLine("PASS unshown native WPF shell: English/Chinese, 584/624/820/1100/1440px layouts, 600x680 startup + role chooser, draft/active-listener retention, single-column device action/dialog and vertically stacked sharing, device selection, single-window sharing, hidden password, edit cancellation, session navigation, exclusive role and listener cleanup");
+            Console.WriteLine("PASS unshown native WPF shell: English/Chinese, 584/624/820/1100/1440px layouts, 600x680 startup + role chooser, draft/active-listener retention, device gallery/action sheet and vertically stacked sharing, device selection, single-window sharing, hidden password, edit cancellation, session navigation, exclusive role and listener cleanup");
         } finally { if(window.SharingController is {} sharing) await sharing.Shutdown(); window.Close(); Directory.Delete(nameRoot,true); }
     }
 }

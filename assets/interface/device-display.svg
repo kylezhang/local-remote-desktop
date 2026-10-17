@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="180" height="120" viewBox="0 0 180 120">
+<defs><linearGradient id="blue" x1=".1" y1="0" x2=".9" y2="1"><stop stop-color="#dce7ff"/><stop offset=".5" stop-color="#96a9ed"/><stop offset="1" stop-color="#5b6bd0"/></linearGradient><linearGradient id="case" x2=".25" y2="1"><stop stop-color="#fff"/><stop offset="1" stop-color="#e4eaf4"/></linearGradient><linearGradient id="reflection" x2="1" y2="1"><stop stop-color="#fff" stop-opacity=".5"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient><filter id="depth" x="-30%" y="-30%" width="160%" height="180%"><feDropShadow dx="0" dy="3" stdDeviation="3" flood-color="#263e68" flood-opacity=".1"/></filter></defs>
+<ellipse cx="90" cy="111" rx="56" ry="2.5" fill="#d5ddeb" opacity=".5"/>
+<rect x="23" y="12" width="134" height="86" rx="8" fill="url(#case)" stroke="#aebed5" filter="url(#depth)"/>
+<rect x="24.3" y="13.3" width="131.4" height="83.4" rx="6.7" fill="none" stroke="#fff"/>
+<rect x="29" y="18" width="122" height="72" rx="4" fill="url(#blue)"/>
+<path d="M30 78C67 60 61 28 102 41S135 63 151 48V90H29Z" fill="#f1f4ff" opacity=".35"/>
+<path d="M30 88C73 87 78 60 113 68S139 74 151 69V90H30Z" fill="#acbaf5" opacity=".5"/>
+<rect x="29" y="18" width="122" height="72" rx="4" fill="url(#reflection)"/>
+<path d="M79 98V109H101V98M68 110H112" fill="url(#case)" stroke="#afbdd3" stroke-linejoin="round" stroke-linecap="round"/>
+</svg>

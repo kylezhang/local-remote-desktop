@@ -16,5 +16,6 @@
     <Resource Include="../../assets/brand/LocalRemoteDesktop.ico" Link="LocalRemoteDesktop.ico" />
     <Resource Include="../../assets/brand/icon.png" Link="LocalRemoteDesktop.png" />
     <Resource Include="../../assets/interface/connection-stage.png" Link="ConnectionStage.png"/>
+    <Resource Include="../../assets/interface/device-display.png" Link="DeviceDisplay.png"/>
   </ItemGroup>
 </Project>

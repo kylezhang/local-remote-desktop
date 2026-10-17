@@ -96,4 +96,34 @@
  </DataTrigger>
  <Trigger Property="IsEnabled" Value="False"><Setter Property="Opacity" Value="0.45"/></Trigger>
  </ControlTemplate.Triggers></ControlTemplate></Setter.Value></Setter></Style>
+ <Style x:Key="PreferenceHeading" TargetType="TextBlock"><Setter Property="FontSize" Value="12"/><Setter Property="Foreground" Value="#617088"/></Style>
+ <Style x:Key="PreferenceHelp" TargetType="TextBlock"><Setter Property="FontSize" Value="11"/><Setter Property="Foreground" Value="#617088"/><Setter Property="TextWrapping" Value="Wrap"/><Setter Property="Margin" Value="0,5,0,0"/></Style>
+ <Style x:Key="PreferenceSection" TargetType="Border"><Setter Property="BorderBrush" Value="#E6EBF3"/><Setter Property="BorderThickness" Value="0,0,0,1"/><Setter Property="Padding" Value="0,0,0,10"/><Setter Property="Margin" Value="0,0,0,10"/></Style>
+ <Style x:Key="QuietAction" TargetType="Button" BasedOn="{StaticResource {x:Type Button}}"><Setter Property="Foreground" Value="#495FD6"/><Setter Property="Background" Value="Transparent"/><Setter Property="BorderThickness" Value="0"/><Setter Property="FontSize" Value="12"/><Setter Property="Padding" Value="5,4"/></Style>
+ <Style x:Key="PreferenceSwitch" TargetType="CheckBox">
+ <Setter Property="FontSize" Value="13"/><Setter Property="MinHeight" Value="28"/><Setter Property="VerticalContentAlignment" Value="Center"/>
+ <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="CheckBox"><Grid>
+ <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="38"/></Grid.ColumnDefinitions>
+ <ContentPresenter VerticalAlignment="Center" RecognizesAccessKey="True"/>
+ <Border x:Name="SwitchTrack" Grid.Column="1" Width="34" Height="20" CornerRadius="10" Background="#CED7E4" BorderBrush="#BECADA" BorderThickness="1" VerticalAlignment="Center">
+ <Border x:Name="SwitchThumb" Width="14" Height="14" HorizontalAlignment="Left" Margin="2,0,0,0" Background="White" CornerRadius="7"/>
+ </Border>
+ <Border x:Name="SwitchFocus" Grid.Column="1" BorderBrush="#5265EC" BorderThickness="2" CornerRadius="12" Visibility="Collapsed" Margin="-1,1,-1,1"/>
+ </Grid><ControlTemplate.Triggers>
+ <Trigger Property="IsChecked" Value="True"><Setter TargetName="SwitchTrack" Property="Background" Value="#5265EC"/><Setter TargetName="SwitchTrack" Property="BorderBrush" Value="#5265EC"/><Setter TargetName="SwitchThumb" Property="HorizontalAlignment" Value="Right"/><Setter TargetName="SwitchThumb" Property="Margin" Value="0,0,2,0"/></Trigger>
+ <Trigger Property="IsKeyboardFocused" Value="True"><Setter TargetName="SwitchFocus" Property="Visibility" Value="Visible"/></Trigger>
+ <Trigger Property="IsEnabled" Value="False"><Setter Property="Opacity" Value="0.45"/></Trigger>
+ </ControlTemplate.Triggers></ControlTemplate></Setter.Value></Setter></Style>
+ <Style x:Key="DeviceTile" TargetType="Button">
+ <Setter Property="Foreground" Value="#202D46"/><Setter Property="Padding" Value="15"/><Setter Property="HorizontalContentAlignment" Value="Stretch"/><Setter Property="MinHeight" Value="179"/>
+ <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="Button">
+ <Border x:Name="DeviceCard" BorderBrush="#DFE6F1" BorderThickness="1" CornerRadius="16" Padding="{TemplateBinding Padding}">
+ <Border.Background><LinearGradientBrush StartPoint="0,0" EndPoint="1,1"><GradientStop Color="White"/><GradientStop Offset="1" Color="#F5F7FC"/></LinearGradientBrush></Border.Background>
+ <ContentPresenter/>
+ </Border><ControlTemplate.Triggers>
+ <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="DeviceCard" Property="BorderBrush" Value="#A4B4E7"/><Setter TargetName="DeviceCard" Property="Background" Value="#F5F7FF"/></Trigger>
+ <Trigger Property="IsPressed" Value="True"><Setter TargetName="DeviceCard" Property="Background" Value="#EBEFFF"/></Trigger>
+ <Trigger Property="IsKeyboardFocused" Value="True"><Setter TargetName="DeviceCard" Property="BorderBrush" Value="#5265EC"/><Setter TargetName="DeviceCard" Property="BorderThickness" Value="2"/></Trigger>
+ <DataTrigger Binding="{Binding Online}" Value="False"><Setter Property="Opacity" Value="0.65"/></DataTrigger>
+ </ControlTemplate.Triggers></ControlTemplate></Setter.Value></Setter></Style>
  </ResourceDictionary>

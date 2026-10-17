@@ -8,7 +8,7 @@ records determine what is implemented; this handbook is not a support claim.
 
 ## Product commitments
 
-- One native app per platform. **Connect** and **Share this device** are roles of
+- One native app per platform. **Start a connection** and **Accept connections** are roles of
   that app, not separate products. Share the current logged-in desktop and retain
   its work when the remote connection ends.
 - Solve the personal office workflow first: simple connection, familiar input,
@@ -25,9 +25,14 @@ records determine what is implemented; this handbook is not a support claim.
 
 ## Interaction and UI agreements
 
-- Use **Target IP**, **Local name**, **Pairing password**, **Connect**, **Share this
-  device**, **Start sharing** and **Stop sharing** consistently. Adapt grammar and
+- Use **Target IP**, **Local name**, **Pairing password**, **Connect**, **Accept
+  connections**, **Start accepting connections** and **Stop accepting connections** consistently. Adapt grammar and
   native shortcuts; avoid inventing another flow for each platform.
+- The screen-desk task pages use content-sized generic device cards, one Add target
+  action and four continuous preference groups. Card artwork is not an actual
+  screen thumbnail. Keep pairing/footer actions outside long-field scrolling,
+  and never read credentials just to decorate a gallery. Home/task-page source
+  migration does not establish installed visual or physical-input acceptance.
 - Default local name comes from the OS and is editable on Share. The shared app
   announces its name/platform through discovery and authenticated capabilities.
   An unknown manually entered IP displays no invented name or operating system.

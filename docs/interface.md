@@ -91,6 +91,14 @@ menu. Equivalent actions may have different native presentations.
 
 ## Design review
 
+The 2026-10-17 screen-desk task-page batch replaces sparse preference tabs with
+four continuous compact groups. Connection remains one gallery and one Add target
+action; pairing appears only on activation. Use generic device artwork, never
+pre-authorization screen thumbnails. Accept keeps a centered local identity and
+vertical credentials before fixed Start/Stop. These source changes retain the
+existing permission/editor/default/consent boundaries. See the
+[native implementation checklist](screen-desk-implementation.md) for batch gates.
+
 [Revision 2](design.md) reorganizes settings and sharpens page/state/visual rules.
 It is approved for incremental native implementation. The settings structure
 is General / Connection / Clipboard / About, with

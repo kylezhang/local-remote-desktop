@@ -7,6 +7,9 @@ direction. **Home implemented; both native CI jobs passed for source c23195b.**
 The preview and its browser measurements are design evidence, not installed-app
 acceptance. Earlier native progress entries remain historical.
 
+The second batch now implements task pages in source; its native CI/render gate
+is pending. Session navigation and toolbar migration remain batch 3.
+
 ## Outcome and scope
 
 One native app per desktop, with Start a connection / Accept connections as equal
@@ -98,7 +101,9 @@ fix is a focused change with independent regression evidence.
 - [x] Record shared hierarchy, platform adaptation and the implementation order.
 - [x] Implement shared Home composition and package its original artwork on both desktops.
 - [x] Complete batch 1 native CI build/layout/package gates for source c23195b.
-- [ ] Implement task/session batches 2–3.
+- [x] Implement batch 2 device/pairing/Accept/grouped-settings sources.
+- [ ] Complete batch 2 native CI and Mac render review.
+- [ ] Implement session batch 3.
 - [ ] Extend existing ClientChecks (Shell/Pairing/Sharing/Recovery/SessionInteraction/
   Typography) and MacLayoutChecks for the changed behavior and layout. Use
   recording services, isolated stores and generated frames; retain the existing

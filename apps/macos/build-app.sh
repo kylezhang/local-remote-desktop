@@ -93,6 +93,7 @@ cp ../../assets/brand/LocalRemoteDesktop.icns "$app/Contents/Resources/LocalRemo
 cp ../../assets/brand/icon.png "$app/Contents/Resources/LocalRemoteDesktop.png"
 cp ../../assets/localization/strings.json "$app/Contents/Resources/strings.json"
 cp ../../assets/interface/connection-stage.png "$app/Contents/Resources/connection-stage.png"
+cp ../../assets/interface/device-display.png "$app/Contents/Resources/device-display.png"
 # Source identity is signed with the bundle; downloaded source without Git is explicit.
 source_revision=unknown
 source_root="$(cd ../.. && pwd -P)"

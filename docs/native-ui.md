@@ -11,6 +11,21 @@ Planning is complete; this pass changed no native source, package or installed
 app. The entries below describe their dated revisions, not the current release
 or proof that the new design has shipped.
 
+### Second native batch: task pages
+
+Device lists now use generic-art galleries, pairing is an on-demand task panel/
+native sheet, Accept centers the local identity above IP/password with fixed
+Start/Stop, and preferences use four compact continuous groups. The actual
+connection/editor/consent lifecycle bindings are retained. Mac makes view-only
+input capability explicit; no permission is granted or reset by the design.
+Revision is `screen-desk-2026-10-17-tasks`, Mac build 32.
+
+Windows build, complete unshown regression and selected native renders passed.
+Native macOS/final-source CI and Mac render review are pending. See
+[task-page evidence](../tests/results/screen-desk-tasks-2026-10-17.md). Session
+navigation and toolbar migration remain the next batch; installed apps and
+published packages are unchanged.
+
 ### First native batch: Home sources
 
 Both desktop sources now use one original shared screen composition above joined,

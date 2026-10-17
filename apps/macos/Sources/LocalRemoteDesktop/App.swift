@@ -19,6 +19,10 @@ enum AppBrand {
         guard let url = Bundle.main.url(forResource: "connection-stage", withExtension: "png") else { return nil }
         return NSImage(contentsOf: url)
     }()
+    static let deviceDisplay: NSImage? = {
+        guard let url = Bundle.main.url(forResource: "device-display", withExtension: "png") else { return nil }
+        return NSImage(contentsOf: url)
+    }()
     static func applyDockIcon() {
         if let icon { NSApplication.shared.applicationIconImage = icon }
     }
@@ -83,7 +87,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool { false }
 }
 enum EntryBuild {
-    static let revision = "screen-desk-2026-10-17-home"
+    static let revision = "screen-desk-2026-10-17-tasks"
     static var source: String {
         guard let url = Bundle.main.url(forResource: "source-revision", withExtension: "txt"),
             let text = try? String(contentsOf: url, encoding: .utf8) else { return "unknown" }
@@ -223,60 +227,68 @@ struct DesktopShell: View {
         }.buttonStyle(EntryTileStyle()).accessibilityLabel(UiText.text(title))
     }
 }
+struct DevicePicture: View {
+    var width: CGFloat = 110, height: CGFloat = 74
+    var body: some View {
+        Group {
+            if let image = AppBrand.deviceDisplay { Image(nsImage: image).resizable().scaledToFit() }
+            else { Image(systemName: "display").resizable().scaledToFit().foregroundStyle(.secondary) }
+        }.frame(width: width,height: height).accessibilityHidden(true)
+    }
+}
+struct DeviceTileStyle: ButtonStyle {
+    @ViewState private var hovering = false
+    @Environment(\.isFocused) private var focused
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label.padding(15).frame(maxWidth: .infinity,minHeight: 179,alignment: .topLeading)
+            .background(configuration.isPressed ? Color.accentColor.opacity(0.12) : hovering ? Color.accentColor.opacity(0.05) : ScreenDeskTheme.surface)
+            .clipShape(RoundedRectangle(cornerRadius: 16))
+            .overlay(RoundedRectangle(cornerRadius: 16).stroke(focused ? Color.accentColor : hovering ? Color.accentColor.opacity(0.5) : ScreenDeskTheme.rule,lineWidth: focused ? 2 : 1))
+            .contentShape(RoundedRectangle(cornerRadius: 16)).onHover { hovering = $0 }
+    }
+}
 struct ConnectionPage: View {
     @ObservedObject var model: ControllerModel
     @ObservedObject var host: HostModel
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 24) {
+            VStack(alignment: .leading, spacing: 0) {
+                Text(UiText.text("发起连接")).font(.system(size: 26,weight: .medium))
+                Text(UiText.text("选择你要连接并操作的设备。")).font(.system(size: 12)).foregroundStyle(.secondary).padding(.top,8).padding(.bottom,24)
                 HStack {
-                    Text(UiText.text("发起连接")).font(.system(size: 24, weight: .medium))
+                    Text(UiText.text("附近设备")).font(.system(size: 12)).foregroundStyle(.secondary)
                     Spacer()
-                    Button(UiText.text("添加目标")) { model.openManual() }.disabled(model.credentialBusy)
+                    Button { model.refreshDevices() } label: { Image(systemName: "arrow.clockwise") }
+                        .help(UiText.text("刷新设备")).accessibilityLabel(UiText.text("刷新设备")).disabled(model.searching)
+                    Button { model.openManual() } label: { Label(UiText.text("添加目标"),systemImage: "plus") }.disabled(model.credentialBusy)
+                }.controlSize(.small).padding(.bottom,16)
+                if model.devices.isEmpty {
+                    VStack(spacing: 12) {
+                        DevicePicture()
+                        Text(UiText.text(model.searching ? "正在搜索局域网设备…" : "暂无设备记录")).font(.system(size: 14,weight: .medium))
+                        Text(UiText.text("让目标设备开始接受连接后刷新，也可以添加目标IP。"))
+                            .font(.system(size: 12)).foregroundStyle(.secondary).multilineTextAlignment(.center)
+                            .fixedSize(horizontal: false,vertical: true)
+                    }.padding(28).frame(maxWidth: .infinity,minHeight: 215)
+                        .background(ScreenDeskTheme.surface).cornerRadius(16)
+                } else {
+                    if model.searching { Text(UiText.text("正在搜索局域网设备…")).font(.caption).foregroundStyle(.secondary).padding(.bottom,12) }
+                    LazyVGrid(columns: [GridItem(.flexible(),spacing: 12),GridItem(.flexible())],spacing: 12) {
+                        ForEach(model.devices) { device in
+                            Button { model.select(device); model.openManual() } label: {
+                                VStack(alignment: .leading,spacing: 5) {
+                                    HStack { DevicePicture(width: 110,height: 70); Spacer(minLength: 0); Image(systemName: "chevron.right").font(.caption).foregroundStyle(.secondary) }
+                                        .padding(.bottom,5)
+                                    Text(device.name).font(.system(size: 14,weight: .medium)).lineLimit(2)
+                                    Text(device.systemLabel).font(.system(size: 12)).foregroundStyle(.secondary)
+                                    Text(UiText.text(device.online ? "本次已发现" : "最近连接 · 本次未发现")).font(.system(size: 11)).foregroundStyle(.secondary)
+                                }.frame(maxWidth: .infinity,alignment: .leading).opacity(device.online ? 1 : 0.65)
+                            }.buttonStyle(DeviceTileStyle()).disabled(model.credentialBusy)
+                                .accessibilityLabel(device.name + ", " + device.systemLabel + ", " + UiText.text(device.online ? "本次已发现" : "最近连接 · 本次未发现"))
+                        }
+                    }
                 }
-                Text(UiText.text("选择你要连接并操作的设备。")).foregroundStyle(.secondary)
-                VStack(alignment: .leading, spacing: 12) {
-                    HStack {
-                        Text(UiText.text("附近设备")).font(.headline)
-                        Spacer()
-                        Button(UiText.text("刷新设备")) { model.refreshDevices() }.disabled(model.searching)
-                    }
-                    if model.searching {
-                        Text(UiText.text("正在搜索局域网设备…")).font(.caption).foregroundStyle(.secondary)
-                    } else if model.devices.isEmpty {
-                        Text(UiText.text("未发现设备；请确认目标设备已开始接受连接。"))
-                            .foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
-                    }
-                    if model.devices.isEmpty {
-                        VStack(spacing: 12) {
-                            Image(systemName: "list.bullet.rectangle").font(.system(size: 30)).foregroundStyle(.secondary)
-                            Text(UiText.text(model.searching ? "正在搜索局域网设备…" : "暂无设备记录")).fontWeight(.semibold)
-                            Text(UiText.text("让目标设备开始接受连接后刷新，也可以添加目标IP。"))
-                                .font(.callout).foregroundStyle(.secondary).multilineTextAlignment(.center)
-                                .fixedSize(horizontal: false, vertical: true)
-                        }.padding(28).frame(maxWidth: .infinity, minHeight: 182)
-                            .background(Color.secondary.opacity(0.06)).cornerRadius(10)
-                    }
-                    ForEach(model.devices) { device in
-                        Button { model.select(device); model.openManual() } label: {
-                            HStack(spacing: 12) {
-                                Image(systemName: "desktopcomputer").font(.title2).foregroundStyle(.secondary)
-                                VStack(alignment: .leading, spacing: 6) {
-                                    Text(device.name).fontWeight(.semibold).lineLimit(2)
-                                    Text(device.systemLabel).font(.caption).foregroundStyle(.secondary)
-                                    Text(UiText.text(device.online ? "本次已发现" : "最近连接 · 本次未发现"))
-                                        .font(.caption).foregroundStyle(.secondary)
-                                }
-                                Spacer(minLength: 0)
-                                Image(systemName: "chevron.right").foregroundStyle(.secondary)
-                            }.padding(12).frame(maxWidth: .infinity, alignment: .leading)
-                                .background(model.address == device.address ? Color.accentColor.opacity(0.10) : Color.clear)
-                                .cornerRadius(9)
-                        }.buttonStyle(.plain).disabled(model.credentialBusy)
-                    }
-                }.frame(maxWidth: .infinity, alignment: .leading)
-
-            }.padding(28).frame(maxWidth: .infinity, alignment: .leading)
+            }.padding(.horizontal,32).padding(.top,18).padding(.bottom,24).frame(maxWidth: .infinity,alignment: .leading)
         }.onAppear { model.refreshDevices() }.onDisappear { model.pauseDiscovery() }
     }
 }
@@ -284,110 +296,114 @@ struct ManualConnectionView: View {
     @ObservedObject var model: ControllerModel
     @ObservedObject var host: HostModel
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            Text(UiText.text("连接设备")).font(.title2).fontWeight(.semibold)
-            if let device = model.manualDevice {
-                Text(device.name).fontWeight(.semibold)
-                Text(device.systemLabel).font(.caption).foregroundStyle(.secondary)
-            } else {
-                Text(UiText.text("连接后显示目标设备名称和系统。"))
-                    .font(.caption).foregroundStyle(.secondary)
+        VStack(alignment: .leading,spacing: 0) {
+            Text(UiText.text("连接设备")).font(.system(size: 24,weight: .medium)).padding(.horizontal,24).padding(.top,24).padding(.bottom,14)
+            ScrollView {
+                VStack(alignment: .leading,spacing: 10) {
+                    if let device = model.manualDevice {
+                        HStack(spacing: 14) {
+                            DevicePicture(width: 64,height: 44)
+                            VStack(alignment: .leading,spacing: 4) {
+                                Text(device.name).fontWeight(.medium).fixedSize(horizontal: false,vertical: true)
+                                Text(device.systemLabel).font(.caption).foregroundStyle(.secondary)
+                            }
+                        }.padding(.bottom,8)
+                    } else {
+                        Text(UiText.text("连接后显示目标设备名称和系统。")).font(.caption).foregroundStyle(.secondary).padding(.bottom,4)
+                    }
+                    Text(UiText.text("目标IP")).font(.caption)
+                    TextField("192.168.1.10",text: $model.manualAddress).textFieldStyle(.roundedBorder).disabled(model.busy || model.credentialBusy)
+                    Text(UiText.text("配对密码")).font(.caption)
+                    SecureField(UiText.text(model.manualDevice?.remembered == true ? "已记住密码" : "配对密码"),text: $model.manualPassword)
+                        .textFieldStyle(.roundedBorder).disabled(model.busy || model.credentialBusy)
+                    Toggle(UiText.text("记住密码"),isOn: $model.manualRemember).disabled(model.busy || model.credentialBusy)
+                    Picker(UiText.text("画质"),selection: $model.nextQuality) {
+                        Text(UiText.text("流畅")).tag(0); Text(UiText.text("标准")).tag(1); Text(UiText.text("高清")).tag(2)
+                    }.disabled(model.busy || model.credentialBusy)
+                    if model.manualDevice?.remembered == true {
+                        Button(UiText.text("忘记密码")) { model.forgetManualPassword() }.disabled(model.busy || model.credentialBusy)
+                    }
+                    if host.active || host.starting {
+                        Toggle(UiText.text("停止接受连接并连接"),isOn: $model.stopSharingToConnect).disabled(model.busy)
+                        Text(UiText.text("这将停止本机接受连接并断开当前控制者。")).font(.caption).foregroundStyle(.secondary)
+                    }
+                    if model.busy || !model.pairingNotice.isEmpty {
+                        Text(UiText.text(model.pairingNotice.isEmpty ? model.status : model.pairingNotice))
+                            .font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false,vertical: true)
+                    }
+                }.padding(.horizontal,24).padding(.bottom,12).frame(maxWidth: .infinity,alignment: .leading)
             }
-            Text(UiText.text("目标IP")).font(.caption)
-            TextField("192.168.1.10", text: $model.manualAddress).textFieldStyle(.roundedBorder)
-                .disabled(model.busy || model.credentialBusy)
-            Text(UiText.text("配对密码")).font(.caption)
-            SecureField(UiText.text(model.manualDevice?.remembered == true ? "已记住密码" : "配对密码"), text: $model.manualPassword)
-                .textFieldStyle(.roundedBorder).disabled(model.busy || model.credentialBusy)
-            Toggle(UiText.text("记住密码"), isOn: $model.manualRemember).disabled(model.busy || model.credentialBusy)
-            Picker(UiText.text("画质"), selection: $model.nextQuality) {
-                Text(UiText.text("流畅")).tag(0); Text(UiText.text("标准")).tag(1); Text(UiText.text("高清")).tag(2)
-            }.disabled(model.busy || model.credentialBusy)
-            if model.manualDevice?.remembered == true {
-                Button(UiText.text("忘记密码")) { model.forgetManualPassword() }.disabled(model.busy || model.credentialBusy)
-            }
-            if host.active || host.starting {
-                Toggle(UiText.text("停止接受连接并连接"), isOn: $model.stopSharingToConnect).disabled(model.busy)
-                Text(UiText.text("这将停止本机接受连接并断开当前控制者。"))
-                    .font(.caption).foregroundStyle(.secondary)
-            }
-            if model.busy || !model.pairingNotice.isEmpty {
-                Text(UiText.text(model.pairingNotice.isEmpty ? model.status : model.pairingNotice))
-                    .font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
-            }
+            Divider()
             HStack {
                 Spacer()
                 Button(UiText.text("取消")) { model.cancelManual() }.keyboardShortcut(.cancelAction)
                 Button(UiText.text(model.busy ? "正在连接…" : "连接")) { model.connectManual() }
                     .buttonStyle(.borderedProminent).keyboardShortcut(.defaultAction)
                     .disabled(model.busy || model.credentialBusy || ((host.active || host.starting) && !model.stopSharingToConnect))
-            }
-        }.padding(28).frame(width: 420).interactiveDismissDisabled(model.busy || model.credentialBusy)
+            }.padding(.horizontal,24).padding(.vertical,18)
+        }.frame(width: 476).frame(maxHeight: 600).interactiveDismissDisabled(model.busy || model.credentialBusy)
+    }
+}
+struct PreferenceSection<Content: View>: View {
+    let title: String
+    var last = false
+    @ViewBuilder var content: () -> Content
+    var body: some View {
+        VStack(alignment: .leading,spacing: 8) {
+            Text(UiText.text(title)).font(.system(size: 12,weight: .medium)).foregroundStyle(.secondary)
+            content().font(.system(size: 13)).controlSize(.small)
+            if !last { Divider().padding(.top,2) }
+        }.padding(.bottom,last ? 0 : 10)
     }
 }
 struct DesktopSettings: View {
     @ObservedObject var host: HostModel
     @ObservedObject var controller: ControllerModel
-    @ViewState private var category = "general"
     var body: some View {
-        VStack(alignment: .leading, spacing: 24) {
-            Text(UiText.text("设置")).font(.system(size: 24, weight: .medium))
-            Picker(UiText.text("设置"), selection: $category) {
-                Text(UiText.text("通用")).tag("general")
-                Text(UiText.text("连接设置")).tag("connection")
-                Text(UiText.text("剪贴板")).tag("clipboard")
-                Text(UiText.text("关于")).tag("about")
-            }.labelsHidden().pickerStyle(.segmented).frame(maxWidth: 580)
+        VStack(alignment: .leading,spacing: 20) {
+            Text(UiText.text("设置")).font(.system(size: 26,weight: .medium))
             ScrollView {
-                VStack(alignment: .leading, spacing: 20) {
-                    switch category {
-                    case "connection":
-                        Text(UiText.text("默认连接选项")).font(.headline)
-                        Text(UiText.text("用于下一次连接；当前会话在画面工具栏中调整。"))
-                            .font(.caption).foregroundStyle(.secondary)
-                        Picker(UiText.text("画质"), selection: $controller.defaultQuality) {
-                            Text(UiText.text("流畅")).tag(0); Text(UiText.text("标准")).tag(1); Text(UiText.text("高清")).tag(2)
-                        }
-                        Toggle(UiText.text("自动重连"), isOn: $controller.defaultAutoReconnect)
-                        Toggle(UiText.text("Mac 快捷键"), isOn: $controller.defaultShortcuts)
-                        Text(UiText.text("Mac 本机快捷键映射到目标 Windows 对应按键。"))
-                            .font(.caption).foregroundStyle(.secondary)
-                    case "clipboard":
-                        Text(UiText.text("允许已配对设备共享剪贴板")).font(.headline)
-                        Text(UiText.text("关闭后立即停止对应同步；会话选项只能进一步限制共享。"))
-                            .font(.caption).foregroundStyle(.secondary)
-                        Toggle(UiText.text("同步文字"), isOn: $host.allowClipboard)
-                        Toggle(UiText.text("同步文件"), isOn: $host.allowFiles)
-                        Button(UiText.text("打开接收目录")) { host.openReceivedFiles() }
-                        Text(UiText.text("文字与文件可在两个桌面角色中同步；关闭后不再传输。"))
-                            .font(.caption).foregroundStyle(.secondary)
-                    case "about":
-                        Text("Local Remote Desktop").font(.title2)
-                        Text("Local Remote Desktop 0.3.0-alpha.5").font(.caption).foregroundStyle(.secondary)
-                        Text("\(UiText.text("构建")) \(Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "unknown") · \(EntryBuild.revision)").font(.caption).foregroundStyle(.secondary)
-                        Text("\(UiText.text("源码提交")): \(EntryBuild.source)").font(.caption).foregroundStyle(.secondary).textSelection(.enabled)
-                        Text(UiText.text("许可")).font(.headline)
-                        Text("GPL-3.0-or-later").textSelection(.enabled)
-                        DisclosureGroup(UiText.text("故障排查")) {
-                            VStack(alignment: .leading, spacing: 14) {
-                                Button(UiText.text("复制启动诊断")) { host.copyDiagnostics() }
-                                if !host.inputTestResult.isEmpty { Text(UiText.text(host.inputTestResult)).font(.caption) }
-                            }.padding(.top, 12)
-                        }
-                    default:
+                VStack(alignment: .leading,spacing: 0) {
+                    PreferenceSection(title: "通用") {
                         HStack {
-                            Text(UiText.text("语言")).fontWeight(.semibold)
-                            Spacer()
-                            Picker(UiText.text("语言"), selection: $host.languageCode) {
+                            Text(UiText.text("语言")); Spacer()
+                            Picker(UiText.text("语言"),selection: $host.languageCode) {
                                 Text("English").tag("en"); Text("简体中文").tag("zh-Hans")
-                            }.labelsHidden().pickerStyle(.segmented).frame(width: 230)
+                            }.labelsHidden().frame(width: 170)
                         }
                     }
-                }.padding(20).frame(maxWidth: .infinity, alignment: .leading)
-                    .background(Color.secondary.opacity(0.06)).cornerRadius(10)
-                    .frame(maxWidth: 640, alignment: .leading).frame(maxWidth: .infinity, alignment: .leading)
+                    PreferenceSection(title: "连接设置") {
+                        Picker(UiText.text("画质"),selection: $controller.defaultQuality) {
+                            Text(UiText.text("流畅")).tag(0); Text(UiText.text("标准")).tag(1); Text(UiText.text("高清")).tag(2)
+                        }
+                        Toggle(UiText.text("自动重连"),isOn: $controller.defaultAutoReconnect).toggleStyle(.switch)
+                        Toggle(UiText.text("Mac 快捷键"),isOn: $controller.defaultShortcuts).toggleStyle(.switch)
+                            .help(UiText.text("Mac 本机快捷键映射到目标 Windows 对应按键。"))
+                        Text(UiText.text("用于下一次连接；当前会话在画面工具栏中调整。")).font(.system(size: 11)).foregroundStyle(.secondary)
+                            .fixedSize(horizontal: false,vertical: true)
+                    }
+                    PreferenceSection(title: "剪贴板") {
+                        Toggle(UiText.text("同步文字"),isOn: $host.allowClipboard).toggleStyle(.switch)
+                        Toggle(UiText.text("同步文件"),isOn: $host.allowFiles).toggleStyle(.switch)
+                        Button(UiText.text("打开接收目录")) { host.openReceivedFiles() }
+                        Text(UiText.text("关闭后立即停止对应同步；会话选项只能进一步限制共享。")).font(.system(size: 11)).foregroundStyle(.secondary)
+                            .fixedSize(horizontal: false,vertical: true)
+                    }
+                    PreferenceSection(title: "关于",last: true) {
+                        Text("Local Remote Desktop 0.3.0-alpha.5")
+                        Text("GPL-3.0-or-later").font(.system(size: 11)).foregroundStyle(.secondary)
+                        DisclosureGroup(UiText.text("故障排查")) {
+                            VStack(alignment: .leading,spacing: 10) {
+                                Text("\(UiText.text("构建")) \(Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "unknown") · \(EntryBuild.revision)").font(.caption).foregroundStyle(.secondary)
+                                Text("\(UiText.text("源码提交")): \(EntryBuild.source)").font(.caption).foregroundStyle(.secondary).textSelection(.enabled)
+                                Button(UiText.text("复制启动诊断")) { host.copyDiagnostics() }
+                                if !host.inputTestResult.isEmpty { Text(UiText.text(host.inputTestResult)).font(.caption) }
+                            }.padding(.top,10)
+                        }
+                    }
+                }.frame(maxWidth: .infinity,alignment: .leading)
             }
-        }.padding(28).frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        }.padding(.horizontal,32).padding(.top,18).padding(.bottom,24).frame(maxWidth: .infinity,maxHeight: .infinity,alignment: .topLeading)
     }
 }
 struct SharingActionView: View {
@@ -396,8 +412,8 @@ struct SharingActionView: View {
         Button {
             if model.active { model.stop() } else { model.start(requestPermission: true) }
         } label: {
-            Text(UiText.text(model.starting ? "正在启动…" : model.active ? "停止接受连接" : "开始接受连接"))
-                .frame(maxWidth: .infinity)
+            Text(UiText.text(model.starting ? "正在启动…" : model.active ? "停止接受连接" : model.inputAccess.canControl ? "开始接受连接" : "开始接受连接（仅查看）"))
+                .frame(maxWidth: .infinity,minHeight: 24)
         }.buttonStyle(.borderedProminent).controlSize(.large)
             .disabled(!model.sharingActionAvailable)
     }
@@ -419,90 +435,82 @@ struct HostView: View {
         return model.revealSecret ? PairingEditor.displayed(model.secret) : "••••••••"
     }
     var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            Text(UiText.text("接受连接")).font(.system(size: 24, weight: .medium))
-            Text(UiText.text("让另一台设备连接并操作你的当前屏幕。")).foregroundStyle(.secondary)
-            VStack(alignment: .leading, spacing: 14) {
-                VStack(alignment: .leading, spacing: 10) {
-                    VStack(alignment: .leading, spacing: 6) {
-                        Text(UiText.text(sharingTitle)).font(.headline)
-                        Text(UiText.text(model.status)).font(.callout).foregroundStyle(.secondary)
-                            .fixedSize(horizontal: false, vertical: true).textSelection(.enabled)
-                        if !model.inputAccess.canControl {
-                            Button(UiText.text("允许键盘和鼠标控制")) { model.openAccessibilitySettings() }
-                            Text(UiText.text("请允许当前应用；若系统没有列出它，可定位应用后手动添加。"))
-                                .font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
-                            Button(UiText.text("定位当前应用")) { model.revealInstalledApplication() }
-                        }
-                    }.frame(maxWidth: .infinity, alignment: .leading)
-                    VStack(alignment: .leading, spacing: 10) {
-                        HStack {
-                            Text(UiText.text("本机名称")).foregroundStyle(.secondary)
-                            Spacer()
-                            Button(UiText.text("修改名称")) { model.openNameEditor() }
-                                .disabled(model.credentialBusy || model.editingPassword || model.controlling)
-                        }
-                        Text(model.deviceName).textSelection(.enabled).fixedSize(horizontal: false, vertical: true)
-                    }
-                }.frame(maxWidth: .infinity, alignment: .leading)
-                VStack(alignment: .leading,spacing: 8) {
-                    Text(UiText.text("本机 IP")).font(.caption).foregroundStyle(.secondary)
-                    ForEach(LocalInterfaces.addresses,id: \.self) { address in
-                        HStack { Text(address).font(.system(.body,design: .monospaced)).textSelection(.enabled)
-                            Spacer()
-                            Button(UiText.text("复制")) { NSPasteboard.general.clearContents(); NSPasteboard.general.setString(address,forType: .string) }
-                                .accessibilityLabel(UiText.text("复制") + " " + address)
-                        }
-                    }
+        VStack(alignment: .leading,spacing: 12) {
+            Text(UiText.text("接受连接")).font(.system(size: 26,weight: .medium))
+            Text(UiText.text("让另一台设备连接并操作你的当前屏幕。")).font(.system(size: 12)).foregroundStyle(.secondary)
+            Text(UiText.text(sharingTitle)).font(.system(size: 11)).padding(.horizontal,12).padding(.vertical,5)
+                .background(model.active ? Color.green.opacity(0.06) : Color.clear)
+                .clipShape(Capsule()).overlay(Capsule().stroke(ScreenDeskTheme.rule,lineWidth: 1))
+                .frame(maxWidth: .infinity)
+            if model.status != "点击开始接受连接。会先检查屏幕权限，再读取配对密码。" && model.status != "准备启动" {
+                Text(UiText.text(model.status)).font(.caption).foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false,vertical: true).textSelection(.enabled)
+            }
+            VStack(spacing: 3) {
+                DevicePicture(width: 112,height: 64)
+                Text(UiText.text("本机名称")).font(.system(size: 11)).foregroundStyle(.secondary)
+                HStack(spacing: 6) {
+                    Text(model.deviceName).font(.system(size: 19,weight: .medium)).textSelection(.enabled).fixedSize(horizontal: false,vertical: true)
+                    Button(UiText.text("修改名称")) { model.openNameEditor() }
+                        .font(.system(size: 11)).controlSize(.small)
+                        .disabled(model.credentialBusy || model.editingPassword || model.controlling)
+                }.frame(maxWidth: .infinity)
+            }.frame(maxWidth: .infinity)
+            VStack(alignment: .leading,spacing: 10) {
+                Text(UiText.text("本机 IP")).font(.system(size: 11)).foregroundStyle(.secondary)
+                ForEach(LocalInterfaces.addresses,id: \.self) { address in
+                    HStack {
+                        Text(address).font(.system(size: 15,design: .monospaced)).textSelection(.enabled)
+                        Spacer()
+                        Button(UiText.text("复制")) { NSPasteboard.general.clearContents(); NSPasteboard.general.setString(address,forType: .string) }
+                            .accessibilityLabel(UiText.text("复制") + " " + address)
+                    }.controlSize(.small)
                 }
                 Divider()
-                VStack(alignment: .leading, spacing: 10) {
-                    Text(UiText.text("连接本设备时，使用下方密码。"))
-                        .font(.callout).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
-                    VStack(alignment: .leading, spacing: 10) {
-                        HStack {
-                            Text(UiText.text(model.legacyCredential ? "当前密码（旧版密钥）" : "当前密码")).font(.headline)
-                            Spacer()
-                            Button(UiText.text("修改密码…")) { model.openPasswordEditor() }.disabled(model.credentialBusy)
-                        }
-                        HStack(alignment: .top, spacing: 10) {
-                            Text(model.secret.isEmpty ? UiText.text(passwordText) : passwordText).font(.system(.body, design: .monospaced))
-                                .fixedSize(horizontal: false, vertical: true).textSelection(.enabled)
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                                .accessibilityLabel(UiText.text(model.revealSecret ? "当前配对密码" : "密码已隐藏"))
-                            Button(UiText.text(model.readingPassword ? "读取中…" : model.revealSecret ? "隐藏" : "查看")) {
-                                model.togglePasswordVisibility()
-                            }.disabled(model.credentialBusy)
-                            Button(UiText.text("复制")) { model.copyPassword() }.disabled(model.secret.isEmpty || model.credentialBusy)
-                        }
-                        if model.legacyCredential {
-                            Text(UiText.text("旧版密钥仍然有效；点击“修改密码”可设置短密码。"))
-                                .font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
-                        }
-                        if !model.pairingMessage.isEmpty {
-                            Text(UiText.text(model.pairingMessage)).font(.caption).fixedSize(horizontal: false, vertical: true)
-                        }
-                    }
-                }.frame(maxWidth: .infinity, alignment: .leading)
-            }.padding(18).background(Color.secondary.opacity(0.06)).cornerRadius(10)
+                Text(UiText.text("连接本设备时，使用下方密码。")).font(.system(size: 11)).foregroundStyle(.secondary)
+                HStack {
+                    Text(UiText.text(model.legacyCredential ? "当前密码（旧版密钥）" : "当前密码")).font(.system(size: 12,weight: .medium))
+                    Spacer()
+                    Button(UiText.text("修改密码…")) { model.openPasswordEditor() }.disabled(model.credentialBusy)
+                }.controlSize(.small)
+                HStack(alignment: .center,spacing: 10) {
+                    Text(model.secret.isEmpty ? UiText.text(passwordText) : passwordText).font(.system(size: model.legacyCredential ? 13 : 20,design: .monospaced))
+                        .fixedSize(horizontal: false,vertical: true).textSelection(.enabled)
+                        .frame(maxWidth: .infinity,alignment: .leading)
+                        .accessibilityLabel(UiText.text(model.revealSecret ? "当前配对密码" : "密码已隐藏"))
+                    Button(UiText.text(model.readingPassword ? "读取中…" : model.revealSecret ? "隐藏" : "查看")) { model.togglePasswordVisibility() }
+                        .disabled(model.credentialBusy)
+                    Button(UiText.text("复制")) { model.copyPassword() }.disabled(model.secret.isEmpty || model.credentialBusy)
+                }.controlSize(.small)
+                if model.legacyCredential {
+                    Text(UiText.text("旧版密钥仍然有效；点击“修改密码”可设置短密码。")).font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false,vertical: true)
+                }
+                if !model.pairingMessage.isEmpty { Text(UiText.text(model.pairingMessage)).font(.caption).fixedSize(horizontal: false,vertical: true) }
+            }.padding(.horizontal,16).padding(.vertical,12)
+                .overlay(RoundedRectangle(cornerRadius: 15).stroke(ScreenDeskTheme.rule,lineWidth: 1))
+            if !model.inputAccess.canControl {
+                HStack {
+                    Text(UiText.text("辅助功能权限")).font(.system(size: 12))
+                    Spacer()
+                    Button(UiText.text("允许键盘和鼠标控制")) { model.openAccessibilitySettings() }
+                }.controlSize(.small)
+                Text(UiText.text("未允许，连接后仅可查看屏幕。")).font(.system(size: 11)).foregroundStyle(.secondary)
+                Button(UiText.text("定位当前应用")) { model.revealInstalledApplication() }.controlSize(.small)
+            }
             if hasFileNotice {
                 HStack {
-                    Text(UiText.text(model.fileStatus)).font(.caption).frame(maxWidth: .infinity, alignment: .leading)
+                    Text(UiText.text(model.fileStatus)).font(.caption).frame(maxWidth: .infinity,alignment: .leading)
                     if fileTransferring { Button(UiText.text("取消传输")) { model.cancelFiles() } }
                 }
             }
-            if !model.inputTestResult.isEmpty {
-                Text(UiText.text(model.inputTestResult)).font(.caption).fixedSize(horizontal: false, vertical: true).textSelection(.enabled)
-            }
+            if !model.inputTestResult.isEmpty { Text(UiText.text(model.inputTestResult)).font(.caption).fixedSize(horizontal: false,vertical: true).textSelection(.enabled) }
             DisclosureGroup(UiText.text("权限")) {
                 HStack {
-                    Button(UiText.text("屏幕录制权限")) {
-                        NSWorkspace.shared.open(URL(string:"x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture")!)
-                    }
+                    Button(UiText.text("屏幕录制权限")) { NSWorkspace.shared.open(URL(string:"x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture")!) }
                     Button(UiText.text("辅助功能权限")) { model.openAccessibilitySettings() }
-                }.padding(.top, 12)
-            }
-        }.frame(maxWidth: 520, alignment: .leading).padding(24).frame(maxWidth: .infinity,alignment: .leading).tint(blueberry)
+                }.controlSize(.small).padding(.top,10)
+            }.font(.system(size: 12))
+        }.padding(.horizontal,32).padding(.top,18).padding(.bottom,16).frame(maxWidth: .infinity,alignment: .leading).tint(blueberry)
         .onAppear { model.refreshInputAccess() }
         .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in model.refreshInputAccess() }
         .sheet(isPresented: $model.editingName, onDismiss: { model.cancelNameEditor() }) {

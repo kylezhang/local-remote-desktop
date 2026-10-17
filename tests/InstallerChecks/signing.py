@@ -37,6 +37,7 @@ for mode, script_name, success in [
         (root/'icon.png').write_text('mock PNG icon')
         (root/'strings.json').write_text('{}')
         (root/'connection-stage.png').write_bytes(b'fixture art')
+        (root/'device-display.png').write_bytes(b'fixture art')
         if mode == 'stable-missing': (root/'.require-stable-signature').touch()
         if mode == 'invalid-saved': (root/'.signing-identity').write_text('INVALID')
         if mode == 'legacy-pinned':

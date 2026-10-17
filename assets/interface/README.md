@@ -13,4 +13,9 @@ shows connection initiation. No actual desktop data or OS logos are included.
 
 The earlier 960 × 744 role illustrations and their
 [SVG sources](../../design/entry-review/README.md) remain historical references.
-Build 31+ Mac bundles and the new Windows Home package only the shared stage.
+Build 31 introduced the shared stage in place of the old per-role artwork.
+
+Task pages additionally use `device-display.svg` and its 540 × 360 transparent
+PNG export. This original generic display is not a peer screen thumbnail.
+Build 32+ bundles include it for the device gallery and local-device identity;
+older package resource inventories remain valid for their original build numbers.

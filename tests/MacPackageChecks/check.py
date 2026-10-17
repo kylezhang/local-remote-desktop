@@ -58,13 +58,21 @@ def bundle(app):
         (app/'Contents/Resources'/target).write_bytes((root/'assets/brand'/source).read_bytes())
     (app/'Contents/Resources/signing-mode.txt').write_text('certificate\n')
     (app/'Contents/Resources/strings.json').write_bytes((root/'assets/localization/strings.json').read_bytes())
-    for name in ('connection-stage.png',):
+    for name in ('connection-stage.png','device-display.png'):
         (app/'Contents/Resources'/name).write_bytes((root/'assets/interface'/name).read_bytes())
     (app/'Contents/Resources/source-revision.txt').write_text(commit+'\n')
     (app/'Contents/_CodeSignature/CodeResources').write_text('mock signature, not cryptographic verification')
 
 
 class PackageChecks(unittest.TestCase):
+    def test_build_31_requires_only_its_original_shared_stage(self):
+        app = self.fixture()/'Local Remote Desktop.app'
+        bundle(app)
+        info = plistlib.loads((app/'Contents/Info.plist').read_bytes())
+        info['CFBundleVersion'] = '31'
+        (app/'Contents/Info.plist').write_bytes(plistlib.dumps(info))
+        (app/'Contents/Resources/device-display.png').unlink()
+        checker.check_app(app, '0.1.1')
     def test_previous_home_resources_remain_valid_for_older_builds(self):
         app = self.fixture()/'Local Remote Desktop.app'
         bundle(app)
@@ -72,6 +80,7 @@ class PackageChecks(unittest.TestCase):
         info['CFBundleVersion'] = '30'
         (app/'Contents/Info.plist').write_bytes(plistlib.dumps(info))
         (app/'Contents/Resources/connection-stage.png').unlink()
+        (app/'Contents/Resources/device-display.png').unlink()
         for name in ('initiate-connection.png','accept-connection.png'):
             (app/'Contents/Resources'/name).write_bytes((root/'assets/interface'/name).read_bytes())
         checker.check_app(app, '0.1.1')
@@ -101,7 +110,7 @@ class PackageChecks(unittest.TestCase):
         return Path(temporary.name).resolve()
 
     def test_bundle_validation(self):
-        for change in ('none', 'missing-icon', 'missing-language', 'bad-language', 'wrong-version', 'prerelease-as-stable', 'wrong-cpu', 'adhoc', 'extra-key', 'bad-icns', 'missing-entry', 'dirty-source'):
+        for change in ('none', 'missing-icon', 'missing-language', 'bad-language', 'wrong-version', 'prerelease-as-stable', 'wrong-cpu', 'adhoc', 'extra-key', 'bad-icns', 'missing-entry', 'missing-device', 'bad-device', 'dirty-source'):
             with self.subTest(change=change):
                 app = self.fixture()/'Local Remote Desktop.app'
                 bundle(app)
@@ -121,6 +130,8 @@ class PackageChecks(unittest.TestCase):
                 if change == 'extra-key': (app/'Contents/Resources/secret.key').write_text('fixture')
                 if change == 'bad-icns': (app/'Contents/Resources/LocalRemoteDesktop.icns').write_bytes(b'icns0000')
                 if change == 'missing-entry': (app/'Contents/Resources/connection-stage.png').unlink()
+                if change == 'missing-device': (app/'Contents/Resources/device-display.png').unlink()
+                if change == 'bad-device': (app/'Contents/Resources/device-display.png').write_bytes((root/'assets/interface/connection-stage.png').read_bytes())
                 if change == 'dirty-source': (app/'Contents/Resources/source-revision.txt').write_text(commit+' (modified)')
                 if change == 'none': checker.check_app(app, '0.1.1')
                 else:

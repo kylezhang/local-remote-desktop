@@ -11,14 +11,14 @@ own views into bitmaps; it does not capture the user's screen.
 
 Production SwiftUI/AppKit views and models are compiled with recording controller
 services. The disposable App.swift copy excludes the application entry point,
-uses a documentation IP in the displayed address list and seeds the selected
-settings category. No production action is clicked. Host sharing, connections,
+uses documentation IPs in the displayed address list and fictional gallery peers.
+Settings are now four continuous groups. No production action is clicked. Host sharing, connections,
 Keychain access and pasteboard operations are not started; unexpected controller
 credential/clipboard/file access fails the check. Preferences use an isolated
 suite and a volatile language override.
 
-Checks cover English/Chinese Home, empty device list, Accept, all four settings
-categories and ordinary target/password dialogs. Default shell content measures
+Checks cover English/Chinese Home, empty device list, a three-device gallery,
+Accept, grouped settings and ordinary target/password dialogs. Default shell content measures
 600 × 658 logical units, inside the 600 × 680 native frame. Inspected NSScrollView
 containers must fit their content; saved renders need visual review too. Dialog
 renders use bounded fixture sizes, not actual sheet sizing/interaction acceptance.
@@ -29,5 +29,6 @@ installed update behavior, real peer discovery or remote input acceptance.
 Never add window activation or real input to make this routine check pass.
 
 中文：只渲染测试自身不显示的原生界面，使用虚构 IP、隔离偏好和记录服务。
-覆盖中英文常规页面与弹窗；未激活窗口按钮可能呈灰色，不代表实际激活后的主题。
+覆盖中英文首页、空列表、三设备展陈、接受连接、连续设置分组及弹窗；
+未激活窗口按钮可能呈灰色，不代表实际激活后的主题。
 不能代替安装、授权、焦点、真实发现与双机操作验收。

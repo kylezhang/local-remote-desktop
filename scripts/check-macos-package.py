@@ -50,6 +50,8 @@ def check_files(files, version, *, preview=False):
     entry_files = {'Contents/Resources/source-revision.txt'} | (
         {'Contents/Resources/connection-stage.png'} if screen_desk else
         {'Contents/Resources/initiate-connection.png', 'Contents/Resources/accept-connection.png'})
+    if int(info.get('CFBundleVersion', '0')) >= 32:
+        entry_files.add('Contents/Resources/device-display.png')
     # Stapler may add a ticket at Contents/CodeResources. No arbitrary resources
     # or credentials from a previous local build are permitted in the bundle.
     if set(files) - required - entry_files - {'Contents/CodeResources'}:
@@ -73,7 +75,7 @@ def check_files(files, version, *, preview=False):
             raise ValueError('Release source identity is unknown or modified')
         for path in sorted(entry_files - {'Contents/Resources/source-revision.txt'}):
             data = files[path]
-            expected_size = (1500,798) if screen_desk else (960,744)
+            expected_size = (540,360) if path.endswith('/device-display.png') else (1500,798) if screen_desk else (960,744)
             if not data.startswith(b'\x89PNG\r\n\x1a\n') or len(data) < 24 or struct.unpack('>II',data[16:24]) != expected_size:
                 raise ValueError('Invalid entry illustration')
     executable = files['Contents/MacOS/LocalRemoteDesktop']

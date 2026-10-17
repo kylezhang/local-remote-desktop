@@ -364,5 +364,7 @@
   "定位当前应用": "Locate current app",
   "自检未执行：系统尚未允许本应用发送键盘和鼠标事件。": "Self-test not run: the system has not allowed this app to send keyboard and mouse events.",
   "正在共享当前桌面 · 键盘和鼠标尚未允许，只能查看": "Sharing the current desktop; keyboard and mouse access is not allowed; view only",
-  "共享已启动（只能查看）· 系统尚未允许键盘和鼠标控制": "Accepting connections (view only); the system has not allowed keyboard and mouse control"
+  "共享已启动（只能查看）· 系统尚未允许键盘和鼠标控制": "Accepting connections (view only); the system has not allowed keyboard and mouse control",
+  "未允许，连接后仅可查看屏幕。": "Control is not allowed. Connections can only view the screen.",
+  "开始接受连接（仅查看）": "Start accepting connections (view only)"
 }

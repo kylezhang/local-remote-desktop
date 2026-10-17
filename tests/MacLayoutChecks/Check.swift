@@ -9,8 +9,9 @@ final class LayoutCredentials: ControllerCredentials {
     func forget(address: String) async throws { fatalError("Unexpected credential delete") }
 }
 final class LayoutBrowser: ControllerBrowsing {
+    var entries = [NearbyDevice]()
     var changed: (([NearbyDevice], Bool) -> Void)?
-    func start() { changed?([], false) }
+    func start() { changed?(entries, false) }
     func stop() {}
 }
 struct LayoutBoard: ControllerFileClipboard {
@@ -26,7 +27,6 @@ struct LayoutTransport: ControllerFileTransport {
 }
 
 @main struct MacLayoutCheck {
-    static var category = "general"
     @MainActor static func render<V: View>(_ view: V, name: String, size: NSSize, output: URL) throws {
         let window = NSWindow(contentRect: NSRect(origin: .zero, size: size), styleMask: [.borderless], backing: .buffered, defer: false)
         window.isReleasedWhenClosed = false
@@ -81,6 +81,7 @@ struct LayoutTransport: ControllerFileTransport {
         precondition(AppBrand.connectionStage?.isValid == true, "Shared screen composition not bundled")
         let art = AppBrand.connectionStage!.representations.first!
         precondition(art.pixelsWide == 1500 && art.pixelsHigh == 798, "Screen composition has insufficient packaged resolution")
+        precondition(AppBrand.deviceDisplay?.isValid == true, "Device artwork not bundled")
         let size = NSSize(width: 600, height: 658) // 680 frame less native title bar.
         for language in ["en", "zh-Hans"] {
             UserDefaults.standard.setVolatileDomain(["language": language], forName: UserDefaults.argumentDomain)
@@ -89,8 +90,9 @@ struct LayoutTransport: ControllerFileTransport {
             host.status = "点击开始接受连接。会先检查屏幕权限，再读取配对密码。"
             let text = TextClipboardSync(revision: { fatalError("Unexpected pasteboard access") },
                 read: { fatalError("Unexpected pasteboard read") }, write: { _ in fatalError("Unexpected pasteboard write") })
+            let browser = LayoutBrowser()
             let controller = ControllerModel(host: host, preferences: prefs, credentials: LayoutCredentials(),
-                browser: LayoutBrowser(), textSync: text, fileBoard: LayoutBoard(), fileTransport: LayoutTransport())
+                browser: browser, textSync: text, fileBoard: LayoutBoard(), fileTransport: LayoutTransport())
             UiText.language = language
             for page in ["home", "connect", "share"] {
                 let navigation = DesktopNavigation(); navigation.page = page
@@ -98,18 +100,26 @@ struct LayoutTransport: ControllerFileTransport {
                     name: language + "-" + page, size: size, output: output)
                 precondition(!host.active && !host.starting && !controller.busy, "Rendering started a role")
             }
-            for next in ["general", "connection", "clipboard", "about"] {
-                category = next
+            do {
                 let navigation = DesktopNavigation(); navigation.page = "settings"
                 try render(DesktopShell(host: host, controller: controller, navigation: navigation, fullScreen: {}),
-                    name: language + "-settings-" + next, size: size, output: output)
+                    name: language + "-settings", size: size, output: output)
             }
+            browser.entries = [
+                NearbyDevice(name: "Studio PC", address: "192.0.2.20"),
+                NearbyDevice(name: "A longer device name for layout review", address: "192.0.2.21"),
+                NearbyDevice(name: "Unavailable PC", address: "192.0.2.22", online: false)
+            ]
+            browser.start()
+            let gallery = DesktopNavigation(); gallery.page = "connect"
+            try render(DesktopShell(host: host, controller: controller, navigation: gallery, fullScreen: {}),
+                name: language + "-devices", size: size, output: output)
             try render(ManualConnectionView(model: controller, host: host), name: language + "-target",
                 size: NSSize(width: 476, height: 500), output: output)
             try render(PasswordEditorView(model: host), name: language + "-password",
                 size: NSSize(width: 468, height: 380), output: output)
             precondition(host.secret.isEmpty && host.keychainCheck == "尚未读取", "Rendering read a host credential")
         }
-        print("PASS native unshown EN/ZH entry/list/accept/four settings/target/password renders; no role or credential access")
+        print("PASS native unshown EN/ZH entry/empty/gallery/accept/grouped settings/target/password renders; no role or credential access")
     }
 }
