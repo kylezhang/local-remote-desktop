@@ -3,7 +3,7 @@
 [简体中文](zh-CN/screen-desk-implementation.md) · [Native progress](native-ui.md) · [Design preview](../design/detail-review/desk.html?lang=en)
 
 2026-10-17. This is the implementation checklist for the reviewed screen-desk
-direction. **Home implemented in both source trees; native CI verification pending.**
+direction. **Home implemented; both native CI jobs passed for source c23195b.**
 The preview and its browser measurements are design evidence, not installed-app
 acceptance. Earlier native progress entries remain historical.
 
@@ -97,7 +97,8 @@ fix is a focused change with independent regression evidence.
 - [x] Inspect current native UI entry points and identify lifecycle differences.
 - [x] Record shared hierarchy, platform adaptation and the implementation order.
 - [x] Implement shared Home composition and package its original artwork on both desktops.
-- [ ] Complete the batch 1 native CI gate, then implement task/session batches 2–3.
+- [x] Complete batch 1 native CI build/layout/package gates for source c23195b.
+- [ ] Implement task/session batches 2–3.
 - [ ] Extend existing ClientChecks (Shell/Pairing/Sharing/Recovery/SessionInteraction/
   Typography) and MacLayoutChecks for the changed behavior and layout. Use
   recording services, isolated stores and generated frames; retain the existing
@@ -116,6 +117,7 @@ fix is a focused change with independent regression evidence.
 The planning pass changed no native code. The subsequent Home batch changes
 presentation/resources and the interface revision (Mac internal build 31), while
 retaining public version, bundle identity, credentials and role lifecycles.
-Windows local compilation and native glyph checks passed; full regression and
-macOS CI results are recorded separately before calling batch 1 verified.
+Windows local compilation, native glyph checks and full background regression
+passed. Both native CI jobs passed; the cloud Mac Home render was inspected.
+See [the evidence record](../tests/results/screen-desk-home-2026-10-17.md).
 No installed app, permission or release is changed by this source update.

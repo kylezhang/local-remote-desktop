@@ -20,9 +20,11 @@ The shared stage is exported at 1500 × 798; old per-role images are no longer
 bundled in the new apps. Interface revision is `screen-desk-2026-10-17-home`,
 Mac internal build 31; public version is unchanged.
 
-Windows compiled locally with zero warnings; native glyph checks passed. Final
-background regression and cloud native results must be recorded before calling
-this batch verified. No installed client was opened, replaced or deployed; no
+Windows compiled locally with zero warnings; native glyph and full background
+regression checks passed. Source c23195b passed both native CI jobs, including Mac
+SDK compilation, unshown layout and package checks; the cloud Mac Home image was
+also inspected. See [evidence](../tests/results/screen-desk-home-2026-10-17.md).
+No installed client was opened, replaced or deployed; no
 permission or Keychain state was modified. The design preview remains the reference
 for later task/session batches, not proof that those pages have been migrated.
 

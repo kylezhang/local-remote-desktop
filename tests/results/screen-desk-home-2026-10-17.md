@@ -49,9 +49,24 @@ Swift syntax was instead checked by the actual Swift frontend in Linux.
 
 ## Cloud and installed boundaries
 
-Native Windows/macOS CI for the final source commit is pending at this record's
-creation. The Mac SDK build, native Home render and signed-bundle resource check
-must pass before calling this batch verified.
+Source commit **c23195b251e54d10f86566eb03d6f63bce83125c** passed the source/package,
+Windows x64 and macOS Apple Silicon jobs in
+[Desktop CI 39009527157](https://github.com/kylezhang/local-remote-desktop/actions/runs/39009527157).
+Both exact-source development package artifacts were uploaded.
+
+Mac native checks rendered 18 EN/ZH cases, including the new Home, without
+overflow in inspected default-size scroll containers. The complete app compiled
+with the Apple SDK; build 31's ad-hoc package resource/identity/source checks passed.
+Cloud Home PNGs were retrieved, and the Chinese image was visually reviewed
+against the Windows production-view render. These are inactive unshown content
+renders, not installed-app screenshots or active-focus/permission acceptance.
+The build retains existing capture Sendable and legacy Keychain deprecation
+warnings; they are not new Home compilation failures.
+
+The workflow's subsequent publication job preserves the already-published
+alpha.5 and may resume synchronizing its old assets. Its outcome is separate
+from the successful native jobs above. This source did not request a new version,
+retarget a tag or replace existing release assets.
 
 No real screen capture, OS input, personal clipboard, Keychain/TCC modification,
 SSH connection, application installation, deferred deployment, tag or release was
@@ -60,5 +75,6 @@ items; these appearance changes do not prove a fix.
 
 中文：两端首页源码已更新，Windows 编译、完整后台回归及中文/英文原生内容渲染已检查。
 Swift 仅完成真实编译器的语法分析；模拟签名、缓存和打包检查通过。
-Apple SDK 构建及 Mac 原生渲染以最终提交对应的 CI 结果为准。
+源码 c23195b 的云端源码/打包、Windows、Mac 三项检查均通过，
+Apple SDK 完整编译、18 个后台布局场景及开发包身份/资源检查通过，中文 Mac 首页图片已审查。
 没有弹前台窗口、操作真实桌面或个人剪贴板、改权限、升级安装或发版。
