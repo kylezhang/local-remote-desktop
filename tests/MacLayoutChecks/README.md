@@ -18,7 +18,9 @@ credential/clipboard/file access fails the check. Preferences use an isolated
 suite and a volatile language override.
 
 Checks cover English/Chinese Home, empty device list, a three-device gallery,
-Accept, grouped settings and ordinary target/password dialogs. Default shell content measures
+Accept, grouped settings, ordinary/known-target pairing, long pairing errors and
+password dialogs. Long-error fields may scroll; their saved renders must be
+reviewed for the fixed footer rather than claiming no overflow. Default shell content measures
 600 × 658 logical units, inside the 600 × 680 native frame. Inspected NSScrollView
 containers must fit their content; saved renders need visual review too. Dialog
 renders use bounded fixture sizes, not actual sheet sizing/interaction acceptance.

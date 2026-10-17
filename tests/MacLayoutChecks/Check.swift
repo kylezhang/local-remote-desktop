@@ -27,7 +27,7 @@ struct LayoutTransport: ControllerFileTransport {
 }
 
 @main struct MacLayoutCheck {
-    @MainActor static func render<V: View>(_ view: V, name: String, size: NSSize, output: URL) throws {
+    @MainActor static func render<V: View>(_ view: V, name: String, size: NSSize, output: URL, allowVerticalScroll: Bool = false) throws {
         let window = NSWindow(contentRect: NSRect(origin: .zero, size: size), styleMask: [.borderless], backing: .buffered, defer: false)
         window.isReleasedWhenClosed = false
         window.appearance = NSAppearance(named: .aqua)
@@ -66,7 +66,7 @@ struct LayoutTransport: ControllerFileTransport {
         print("RENDER \(name): \(bitmap.pixelsWide)x\(bitmap.pixelsHigh), native scroll containers=\(scrolls.count), overflowing=\(overflow)")
         // SwiftUI can use non-NSScrollView containers; only inspected containers
         // are measured. Saved native renders need visual review as well.
-        precondition(overflow == 0, "Routine content exceeds its native viewport")
+        precondition(overflow == 0 || allowVerticalScroll, "Routine content exceeds its native viewport")
         window.contentView = nil
     }
     @MainActor static func main() throws {
@@ -116,6 +116,13 @@ struct LayoutTransport: ControllerFileTransport {
                 name: language + "-devices", size: size, output: output)
             try render(ManualConnectionView(model: controller, host: host), name: language + "-target",
                 size: NSSize(width: 476, height: 500), output: output)
+            controller.manualAddress = "192.0.2.21"
+            try render(ManualConnectionView(model: controller, host: host), name: language + "-target-known",
+                size: NSSize(width: 476, height: 500), output: output)
+            controller.pairingNotice = Array(repeating: "Fixture connection error with retained fields.", count: 25).joined(separator: "\n")
+            try render(ManualConnectionView(model: controller, host: host), name: language + "-target-long-error",
+                size: NSSize(width: 476, height: 420), output: output, allowVerticalScroll: true)
+            controller.pairingNotice = ""
             try render(PasswordEditorView(model: host), name: language + "-password",
                 size: NSSize(width: 468, height: 380), output: output)
             precondition(host.secret.isEmpty && host.keychainCheck == "尚未读取", "Rendering read a host credential")
