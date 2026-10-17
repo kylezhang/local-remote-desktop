@@ -29,7 +29,7 @@ done
 xcrun swiftc -parse-as-library -O -target "$(uname -m)-apple-macosx13.0" \
     "${sources[@]}" "$stage/App.swift" "$root/tests/MacLayoutChecks/Check.swift" -o "$app/Contents/MacOS/LayoutChecks"
 cp "$root/assets/localization/strings.json" "$app/Contents/Resources/"
-cp "$root/assets/interface/"{initiate-connection,accept-connection}.png "$app/Contents/Resources/"
+cp "$root/assets/interface/connection-stage.png" "$app/Contents/Resources/"
 output="${LOCALREMOTE_LAYOUT_OUTPUT:-$stage/renders}"
 # Execute directly: never `open`, orderFront, activate, capture a desktop or post input.
 "$app/Contents/MacOS/LayoutChecks" "$output"

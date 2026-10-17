@@ -7,3 +7,6 @@ for(const name of ['initiate-connection','accept-connection']) {
  const output=fileURLToPath(new URL(`../assets/interface/${name}.png`,import.meta.url));
  await sharp(source,{density:288}).resize(960,744).png().toFile(output);
 }
+// Shared screen-desk composition: 3x pixels for a maximum 500-point display.
+await sharp(fileURLToPath(new URL('../assets/interface/connection-stage.svg',import.meta.url)),{density:288})
+ .resize(1500,798).png().toFile(fileURLToPath(new URL('../assets/interface/connection-stage.png',import.meta.url)));

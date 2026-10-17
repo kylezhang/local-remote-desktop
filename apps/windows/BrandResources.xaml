@@ -60,21 +60,40 @@
  <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="RadioButton"><Border x:Name="Shortcut" Background="White" CornerRadius="7" BorderThickness="1" BorderBrush="#E8EBF3" Padding="{TemplateBinding Padding}"><ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/></Border><ControlTemplate.Triggers>
  <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="Shortcut" Property="Background" Value="#F6F7FB"/></Trigger><Trigger Property="IsKeyboardFocused" Value="True"><Setter TargetName="Shortcut" Property="BorderBrush" Value="#5265EC"/></Trigger>
  </ControlTemplate.Triggers></ControlTemplate></Setter.Value></Setter></Style>
+ <SolidColorBrush x:Key="EntryInk" Color="#202D46"/>
+ <SolidColorBrush x:Key="EntryAccent" Color="#5265EC"/>
+ <SolidColorBrush x:Key="EntryRule" Color="#DFE5EF"/>
+ <SolidColorBrush x:Key="EntrySurface" Color="#FAFBFE"/>
+ <Style x:Key="EntryHeading" TargetType="TextBlock">
+ <Setter Property="Foreground" Value="{DynamicResource EntryInk}"/>
+ <Style.Triggers><DataTrigger Binding="{Binding Source={x:Static SystemParameters.HighContrast}}" Value="True">
+ <Setter Property="Foreground" Value="{DynamicResource {x:Static SystemColors.WindowTextBrushKey}}"/>
+ </DataTrigger></Style.Triggers></Style>
+ <Style x:Key="EntryArrow" TargetType="Path">
+ <Setter Property="Stroke" Value="{DynamicResource EntryAccent}"/>
+ <Style.Triggers><DataTrigger Binding="{Binding Source={x:Static SystemParameters.HighContrast}}" Value="True">
+ <Setter Property="Stroke" Value="{DynamicResource {x:Static SystemColors.WindowTextBrushKey}}"/>
+ </DataTrigger></Style.Triggers></Style>
  <Style x:Key="EntryRole" TargetType="RadioButton">
- <Setter Property="Foreground" Value="#293247"/>
- <Setter Property="Cursor" Value="Hand"/><Setter Property="MinHeight" Value="252"/><Setter Property="Padding" Value="12,20,12,22"/>
+ <Setter Property="Foreground" Value="{DynamicResource EntryInk}"/>
+ <Setter Property="Cursor" Value="Hand"/><Setter Property="MinHeight" Value="76"/><Setter Property="Padding" Value="10,15"/>
+ <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
  <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="RadioButton">
  <Grid>
- <!-- Shadow has no text descendants: effects rasterize their subtree and blur glyphs. -->
- <Border x:Name="TileShadow" CornerRadius="20" Background="#F8F9FC" IsHitTestVisible="False">
- <Border.Effect><DropShadowEffect Color="#344264" BlurRadius="14" ShadowDepth="3" Opacity="0.035"/></Border.Effect>
- </Border>
- <Border x:Name="Tile" CornerRadius="20" BorderBrush="#E7EBF4" BorderThickness="1" Background="#F8F9FC" Padding="{TemplateBinding Padding}">
+ <Border x:Name="Tile" CornerRadius="15,0,0,15" Background="{DynamicResource EntrySurface}" Padding="{TemplateBinding Padding}">
  <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
- </Border></Grid><ControlTemplate.Triggers>
- <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="Tile" Property="Background" Value="White"/><Setter TargetName="Tile" Property="BorderBrush" Value="#BDC9EF"/></Trigger>
- <Trigger Property="IsPressed" Value="True"><Setter TargetName="Tile" Property="Background" Value="#F1F4FD"/></Trigger>
- <Trigger Property="IsKeyboardFocused" Value="True"><Setter TargetName="Tile" Property="BorderBrush" Value="#5265EC"/></Trigger>
+ </Border>
+ <Border x:Name="FocusRing" CornerRadius="12" Margin="3" BorderBrush="{DynamicResource EntryAccent}" BorderThickness="2" Visibility="Collapsed" IsHitTestVisible="False"/>
+ </Grid><ControlTemplate.Triggers>
+ <Trigger Property="Tag" Value="share"><Setter TargetName="Tile" Property="CornerRadius" Value="0,15,15,0"/></Trigger>
+ <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="Tile" Property="Background" Value="#EEF2FF"/></Trigger>
+ <Trigger Property="IsPressed" Value="True"><Setter TargetName="Tile" Property="Background" Value="#E9EDFF"/></Trigger>
+ <Trigger Property="IsKeyboardFocused" Value="True"><Setter TargetName="FocusRing" Property="Visibility" Value="Visible"/></Trigger>
+ <DataTrigger Binding="{Binding Source={x:Static SystemParameters.HighContrast}}" Value="True">
+ <Setter TargetName="Tile" Property="Background" Value="{DynamicResource {x:Static SystemColors.WindowBrushKey}}"/>
+ <Setter TargetName="FocusRing" Property="BorderBrush" Value="{DynamicResource {x:Static SystemColors.WindowTextBrushKey}}"/>
+ <Setter Property="Foreground" Value="{DynamicResource {x:Static SystemColors.WindowTextBrushKey}}"/>
+ </DataTrigger>
  <Trigger Property="IsEnabled" Value="False"><Setter Property="Opacity" Value="0.45"/></Trigger>
  </ControlTemplate.Triggers></ControlTemplate></Setter.Value></Setter></Style>
  </ResourceDictionary>

@@ -8,6 +8,7 @@ import re
 import struct
 import subprocess
 import xml.etree.ElementTree as ET
+from urllib.parse import unquote, urlsplit
 
 root = Path(__file__).resolve().parents[2]
 license_text = (root/'LICENSE').read_text(encoding='utf-8')
@@ -46,7 +47,9 @@ for path in root.rglob('*.md'):
     text = path.read_text(encoding='utf-8')
     for target in re.findall(r'\[[^\]]*\]\(([^)]+)\)',text):
         if target.startswith(('https://','http://','#','mailto:')): continue
-        destination = (path.parent/target.split('#')[0]).resolve()
+        local = urlsplit(target)
+        assert not local.scheme and not local.netloc, (path,target)
+        destination = (path.parent/unquote(local.path)).resolve()
         assert destination.is_relative_to(root) and destination.exists(), (path,target)
 print('PASS documentation local links')
 

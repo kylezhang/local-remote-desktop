@@ -15,12 +15,9 @@ enum AppBrand {
         }
         return nil
     }()
-    static let entryArt: [String: NSImage] = {
-        var images: [String: NSImage] = [:]
-        for name in ["initiate-connection", "accept-connection"] {
-            if let url = Bundle.main.url(forResource: name, withExtension: "png"), let image = NSImage(contentsOf: url) { images[name] = image }
-        }
-        return images
+    static let connectionStage: NSImage? = {
+        guard let url = Bundle.main.url(forResource: "connection-stage", withExtension: "png") else { return nil }
+        return NSImage(contentsOf: url)
     }()
     static func applyDockIcon() {
         if let icon { NSApplication.shared.applicationIconImage = icon }
@@ -86,7 +83,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool { false }
 }
 enum EntryBuild {
-    static let revision = "entry-2026-10-12-r3"
+    static let revision = "screen-desk-2026-10-17-home"
     static var source: String {
         guard let url = Bundle.main.url(forResource: "source-revision", withExtension: "txt"),
             let text = try? String(contentsOf: url, encoding: .utf8) else { return "unknown" }
@@ -118,15 +115,42 @@ enum LocalInterfaces {
         return sorted.filter { seen.insert($0).inserted }
     }
 }
+enum ScreenDeskTheme {
+    static let ink = Color(red: 32.0/255,green: 45.0/255,blue: 70.0/255)
+    static let accent = Color(red: 82.0/255,green: 101.0/255,blue: 236.0/255)
+    static let rule = Color(red: 223.0/255,green: 229.0/255,blue: 239.0/255)
+    static let surface = Color(red: 250.0/255,green: 251.0/255,blue: 254.0/255)
+}
 struct EntryTileStyle: ButtonStyle {
     @ViewState private var hovering = false
+    @Environment(\.isEnabled) private var enabled
+    @Environment(\.isFocused) private var focused
+    @Environment(\.colorSchemeContrast) private var contrast
     func makeBody(configuration: Configuration) -> some View {
-        configuration.label.frame(maxWidth: .infinity, minHeight: 252)
-            .background(configuration.isPressed ? Color(red: 0.945,green: 0.957,blue: 0.992) : hovering ? .white : Color(red: 0.973,green: 0.976,blue: 0.988))
-            .clipShape(RoundedRectangle(cornerRadius: 20))
-            .overlay(RoundedRectangle(cornerRadius: 20).stroke(hovering ? Color.accentColor.opacity(0.32) : Color(red: 0.906,green: 0.922,blue: 0.957),lineWidth: 1))
-            .shadow(color: Color.black.opacity(0.025),radius: 7,x: 0,y: 3)
+        configuration.label.frame(maxWidth: .infinity, minHeight: 76)
+            .contentShape(Rectangle())
+            .background(configuration.isPressed ? Color(red: 0.914,green: 0.929,blue: 1) :
+                hovering ? Color(red: 0.933,green: 0.949,blue: 1) : ScreenDeskTheme.surface)
+            .overlay(RoundedRectangle(cornerRadius: 12)
+                .stroke(contrast == .increased ? Color.primary : Color.accentColor,lineWidth: focused ? 2 : 0).padding(3))
+            .opacity(enabled ? 1 : 0.45)
             .onHover { hovering = $0 }
+    }
+}
+struct EntryHomeView<Actions: View>: View {
+    @Environment(\.colorSchemeContrast) private var contrast
+    @ViewBuilder var actions: () -> Actions
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            Text(UiText.text("你想如何使用？")).font(.system(size: 27,weight: .medium))
+                .foregroundStyle(contrast == .increased ? Color.primary : ScreenDeskTheme.ink)
+                .padding(.bottom,6)
+            if let image = AppBrand.connectionStage {
+                Image(nsImage: image).resizable().scaledToFit().frame(maxWidth: .infinity).frame(height: 260)
+                    .accessibilityHidden(true)
+            }
+            actions().padding(.top,28)
+        }
     }
 }
 struct DesktopShell: View {
@@ -134,7 +158,8 @@ struct DesktopShell: View {
     @ObservedObject var controller: ControllerModel
     @ObservedObject var navigation: DesktopNavigation
     var fullScreen: () -> Void
-    private let accent = Color(red: 82.0/255,green: 101.0/255,blue: 236.0/255)
+    @Environment(\.colorSchemeContrast) private var contrast
+    private let accent = ScreenDeskTheme.accent
     var body: some View {
         Group {
             if controller.busy { ControllerView(model: controller, host: host, fullScreen: fullScreen) }
@@ -152,16 +177,22 @@ struct DesktopShell: View {
                         switch navigation.page {
                         case "home":
                             GeometryReader { viewport in ScrollView {
-                                VStack(alignment: .leading,spacing: 30) {
-                                    Text(UiText.text("你想如何使用？")).font(.system(size: 26,weight: .medium))
-                                    HStack(spacing: 18) {
-                                        entry("发起连接",art: "initiate-connection",page: "connect")
-                                        entry("接受连接",art: "accept-connection",page: "share")
+                                VStack(alignment: .leading,spacing: 0) {
+                                    EntryHomeView {
+                                        HStack(spacing: 0) {
+                                            entry("发起连接",outgoing: true,page: "connect")
+                                            Rectangle().fill(contrast == .increased ? Color.primary : ScreenDeskTheme.rule).frame(width: 1)
+                                            entry("接受连接",outgoing: false,page: "share")
+                                        }.fixedSize(horizontal: false,vertical: true)
+                                            .background(ScreenDeskTheme.surface)
+                                            .clipShape(RoundedRectangle(cornerRadius: 16))
+                                            .overlay(RoundedRectangle(cornerRadius: 16).stroke(contrast == .increased ? Color.primary : ScreenDeskTheme.rule,lineWidth: 1))
                                     }
                                     if host.active || host.starting {
                                         Button(UiText.text("正在接受连接 · 查看或停止")) { navigation.page = "share" }
+                                            .padding(.top,22)
                                     }
-                                }.padding(.horizontal,28).padding(.top,34).padding(.bottom,24)
+                                }.padding(.horizontal,32).padding(.top,18).padding(.bottom,45)
                                     .frame(maxWidth: .infinity,minHeight: viewport.size.height,alignment: .center)
                             }}
                         case "share":
@@ -182,14 +213,13 @@ struct DesktopShell: View {
         .onChange(of: host.active) { active in if active && navigation.page == "home" { navigation.page = "share" } }
         .onChange(of: controller.busy) { busy in if busy { navigation.page = "connect" } }
     }
-    private func entry(_ title: String, art: String, page: String) -> some View {
+    private func entry(_ title: String, outgoing: Bool, page: String) -> some View {
         Button { navigation.page = page } label: {
-            VStack(spacing: 17) {
-                if let image = AppBrand.entryArt[art] {
-                    Image(nsImage: image).resizable().scaledToFit().frame(width: 188,height: 146).accessibilityHidden(true)
-                }
-                Text(UiText.text(title)).font(.system(size: 20,weight: .medium)).multilineTextAlignment(.center)
-            }.padding(.horizontal,12)
+            VStack(spacing: 7) {
+                Image(systemName: outgoing ? "arrow.up.right" : "arrow.down.left")
+                    .font(.system(size: 18,weight: .regular)).foregroundStyle(contrast == .increased ? Color.primary : accent).accessibilityHidden(true)
+                Text(UiText.text(title)).font(.system(size: 17,weight: .medium)).multilineTextAlignment(.center)
+            }.foregroundStyle(contrast == .increased ? Color.primary : ScreenDeskTheme.ink).padding(.horizontal,10).padding(.vertical,15)
         }.buttonStyle(EntryTileStyle()).accessibilityLabel(UiText.text(title))
     }
 }

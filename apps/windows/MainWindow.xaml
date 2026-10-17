@@ -10,17 +10,20 @@
  <TextBlock x:Name="LocalDeviceName" Visibility="Collapsed"/>
  </Grid>
  <Grid Grid.Row="1" Background="White">
- <ScrollViewer x:Name="EntryPage" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
- <StackPanel Margin="28,34,28,24" VerticalAlignment="Center">
- <TextBlock x:Name="EntryPrompt" Text="{local:Translate Key='你想如何使用？'}" FontSize="26" FontWeight="Normal" TextWrapping="Wrap" Margin="0,0,0,30"/>
- <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="18"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+ <ScrollViewer x:Name="EntryPage" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Background="{DynamicResource {x:Static SystemColors.WindowBrushKey}}">
+ <StackPanel Margin="32,18,32,45" VerticalAlignment="Center">
+ <TextBlock x:Name="EntryPrompt" Text="{local:Translate Key='你想如何使用？'}" Style="{StaticResource EntryHeading}" FontSize="27" FontWeight="Normal" TextWrapping="Wrap" Margin="0,0,0,6"/>
+ <Image x:Name="ConnectionStage" Source="ConnectionStage.png" Height="260" Stretch="Uniform" Margin="0,0,0,28" Focusable="False" IsHitTestVisible="False" RenderOptions.BitmapScalingMode="HighQuality"/>
+ <Border BorderBrush="{DynamicResource EntryRule}" BorderThickness="1" CornerRadius="16" Background="{DynamicResource EntrySurface}">
+ <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="1"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
  <RadioButton x:Name="NavConnect" Tag="connect" GroupName="navigation" Style="{StaticResource EntryRole}" Checked="NavigateClick" AutomationProperties.Name="{local:Translate Key='发起连接'}">
- <StackPanel><Image x:Name="InitiateIllustration" Source="EntryInitiate.png" Width="188" Height="146" Margin="0,0,0,17"/><TextBlock x:Name="InitiateLabel" Text="{local:Translate Key='发起连接'}" FontSize="20" FontWeight="Normal" TextAlignment="Center" TextWrapping="Wrap"/></StackPanel>
+ <StackPanel><Path Data="M6,18 L18,6 M7,6 L18,6 L18,17" Style="{StaticResource EntryArrow}" StrokeThickness="1.6" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round" Width="18" Height="18" Stretch="Uniform" HorizontalAlignment="Center" Margin="0,0,0,7" IsHitTestVisible="False"/><TextBlock x:Name="InitiateLabel" Text="{local:Translate Key='发起连接'}" FontSize="17" FontWeight="Normal" TextAlignment="Center" TextWrapping="Wrap"/></StackPanel>
  </RadioButton>
+ <Border Grid.Column="1" Background="{DynamicResource EntryRule}"/>
  <RadioButton Grid.Column="2" x:Name="NavShare" Tag="share" GroupName="navigation" Style="{StaticResource EntryRole}" Checked="NavigateClick" AutomationProperties.Name="{local:Translate Key='接受连接'}">
- <StackPanel><Image x:Name="AcceptIllustration" Source="EntryAccept.png" Width="188" Height="146" Margin="0,0,0,17"/><TextBlock x:Name="AcceptLabel" Text="{local:Translate Key='接受连接'}" FontSize="20" FontWeight="Normal" TextAlignment="Center" TextWrapping="Wrap"/></StackPanel>
+ <StackPanel><Path Data="M18,6 L6,18 M6,7 L6,18 L17,18" Style="{StaticResource EntryArrow}" StrokeThickness="1.6" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round" Width="18" Height="18" Stretch="Uniform" HorizontalAlignment="Center" Margin="0,0,0,7" IsHitTestVisible="False"/><TextBlock x:Name="AcceptLabel" Text="{local:Translate Key='接受连接'}" FontSize="17" FontWeight="Normal" TextAlignment="Center" TextWrapping="Wrap"/></StackPanel>
  </RadioButton>
- </Grid>
+ </Grid></Border>
  <Button x:Name="ActiveSharingShortcut" Content="{local:Translate Key='正在接受连接 · 查看或停止'}" Tag="share" Click="NavigateClick" HorizontalAlignment="Left" Margin="0,22,0,0" Visibility="Collapsed"/>
  </StackPanel></ScrollViewer>
  <Grid x:Name="ConnectPage" Margin="28,20,28,24" Visibility="Collapsed"><Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>

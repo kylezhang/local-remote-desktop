@@ -45,12 +45,15 @@ def check_files(files, version, *, preview=False):
     }
     if not required.issubset(files):
         raise ValueError('Missing required application files')
-    entry_files = {'Contents/Resources/initiate-connection.png', 'Contents/Resources/accept-connection.png', 'Contents/Resources/source-revision.txt'}
+    info = plistlib.loads(files['Contents/Info.plist'])
+    screen_desk = int(info.get('CFBundleVersion', '0')) >= 31
+    entry_files = {'Contents/Resources/source-revision.txt'} | (
+        {'Contents/Resources/connection-stage.png'} if screen_desk else
+        {'Contents/Resources/initiate-connection.png', 'Contents/Resources/accept-connection.png'})
     # Stapler may add a ticket at Contents/CodeResources. No arbitrary resources
     # or credentials from a previous local build are permitted in the bundle.
     if set(files) - required - entry_files - {'Contents/CodeResources'}:
         raise ValueError('Unexpected application files')
-    info = plistlib.loads(files['Contents/Info.plist'])
     catalog = json.loads(files['Contents/Resources/strings.json'])
     if (not isinstance(catalog, dict) or catalog.get('开始共享') not in {'Start sharing', 'Start accepting connections'}
             or catalog.get('目标IP') != 'Target IP'
@@ -70,7 +73,8 @@ def check_files(files, version, *, preview=False):
             raise ValueError('Release source identity is unknown or modified')
         for path in sorted(entry_files - {'Contents/Resources/source-revision.txt'}):
             data = files[path]
-            if not data.startswith(b'\x89PNG\r\n\x1a\n') or len(data) < 24 or struct.unpack('>II',data[16:24]) != (960,744):
+            expected_size = (1500,798) if screen_desk else (960,744)
+            if not data.startswith(b'\x89PNG\r\n\x1a\n') or len(data) < 24 or struct.unpack('>II',data[16:24]) != expected_size:
                 raise ValueError('Invalid entry illustration')
     executable = files['Contents/MacOS/LocalRemoteDesktop']
     if len(executable) < 32 or struct.unpack('<II', executable[:8]) != (0xFEEDFACF, 0x0100000C):

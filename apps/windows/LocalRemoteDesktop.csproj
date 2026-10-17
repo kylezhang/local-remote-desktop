@@ -15,7 +15,6 @@
     <EmbeddedResource Include="../../assets/localization/strings.json" LogicalName="LocalRemoteDesktop.strings.json"/>
     <Resource Include="../../assets/brand/LocalRemoteDesktop.ico" Link="LocalRemoteDesktop.ico" />
     <Resource Include="../../assets/brand/icon.png" Link="LocalRemoteDesktop.png" />
-    <Resource Include="../../assets/interface/initiate-connection.png" Link="EntryInitiate.png"/>
-    <Resource Include="../../assets/interface/accept-connection.png" Link="EntryAccept.png"/>
+    <Resource Include="../../assets/interface/connection-stage.png" Link="ConnectionStage.png"/>
   </ItemGroup>
 </Project>

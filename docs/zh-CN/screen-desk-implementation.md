@@ -3,7 +3,7 @@
 [English](../screen-desk-implementation.md) · [原生进度](native-ui.md) · [设计预览](../../design/detail-review/desk.html?lang=zh)
 
 2026-10-17。将已评审的屏幕连接台方向对应到两端代码。
-**清单已整理，尚未开始原生实现。** 网页截图与测量是设计证据，不是客户端实机验收。
+**两端首页源码已实现，原生 CI 验证待完成。** 网页截图与测量是设计证据，不是客户端实机验收。
 原生进度中的较早条目作为历史记录保留。
 
 ## 目标与范围
@@ -77,7 +77,8 @@ Windows 文件位于 apps/windows，Mac 文件位于 apps/macos/Sources/LocalRem
 
 - [x] 对照原生代码，识别导航和生命周期差异。
 - [x] 明确公共层级、原生适配与批次。
-- [ ] 完成前三批原生实现。
+- [x] 完成两端公共首页构图与原创插画打包。
+- [ ] 通过第一批原生 CI 门槛，再完成第二、三批任务页面与会话。
 - [ ] 按变更扩展现有 ClientChecks 的 Shell/Pairing/Sharing/Recovery/SessionInteraction/Typography
   与 MacLayoutChecks；使用记录服务、隔离存储、生成画面，保留协议与输入回归。
   设置改为分组后同步更新测试假设。
@@ -88,5 +89,7 @@ Windows 文件位于 apps/windows，Mac 文件位于 apps/macos/Sources/LocalRem
 - [ ] 候选包准备好后选择下一个未使用的 alpha 版本，清单更新本身不改版本号。
   beta/正式版沿用交付门槛，UI 更新或 CI 通过不能清除未解决的 P0。
 
-本轮没有原生构建、权限修改、安装、部署或发布。下一个实现单元是第一批。
-
+此前规划阶段未修改原生代码。随后首页批次调整了界面、资源和界面修订号，
+Mac 内部构建号为 31；公开版本、bundle 标识、凭据和角色生命周期保留。
+Windows 本地编译和字体检查已通过；完整回归和 macOS CI 结果独立记录，通过后才算第一批验证完成。
+本次源码更新没有更换已安装应用、修改权限或发版。

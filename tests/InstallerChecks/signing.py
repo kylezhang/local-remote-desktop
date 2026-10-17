@@ -36,8 +36,7 @@ for mode, script_name, success in [
         (root/'LocalRemoteDesktop.icns').write_text('mock icon')
         (root/'icon.png').write_text('mock PNG icon')
         (root/'strings.json').write_text('{}')
-        (root/'initiate-connection.png').write_bytes(b'fixture art')
-        (root/'accept-connection.png').write_bytes(b'fixture art')
+        (root/'connection-stage.png').write_bytes(b'fixture art')
         if mode == 'stable-missing': (root/'.require-stable-signature').touch()
         if mode == 'invalid-saved': (root/'.signing-identity').write_text('INVALID')
         if mode == 'legacy-pinned':

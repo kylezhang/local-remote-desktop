@@ -11,6 +11,21 @@ Planning is complete; this pass changed no native source, package or installed
 app. The entries below describe their dated revisions, not the current release
 or proof that the new design has shipped.
 
+### First native batch: Home sources
+
+Both desktop sources now use one original shared screen composition above joined,
+equal Start a connection / Accept connections actions. Existing role navigation,
+sharing-return route, settings, input/transport and credential lifetimes are retained.
+The shared stage is exported at 1500 × 798; old per-role images are no longer
+bundled in the new apps. Interface revision is `screen-desk-2026-10-17-home`,
+Mac internal build 31; public version is unchanged.
+
+Windows compiled locally with zero warnings; native glyph checks passed. Final
+background regression and cloud native results must be recorded before calling
+this batch verified. No installed client was opened, replaced or deployed; no
+permission or Keychain state was modified. The design preview remains the reference
+for later task/session batches, not proof that those pages have been migrated.
+
 ## Current implementation — 2026-10-12
 
 The owner approved the [task-first design](entry-design.md). Both desktop sources

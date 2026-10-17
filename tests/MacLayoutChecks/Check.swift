@@ -78,7 +78,9 @@ struct LayoutTransport: ControllerFileTransport {
         defer { prefs.removePersistentDomain(forName: suite) }
         let arguments = UserDefaults.standard.volatileDomain(forName: UserDefaults.argumentDomain)
         defer { UserDefaults.standard.setVolatileDomain(arguments, forName: UserDefaults.argumentDomain) }
-        precondition(AppBrand.entryArt.count == 2, "Approved entry art not bundled")
+        precondition(AppBrand.connectionStage?.isValid == true, "Shared screen composition not bundled")
+        let art = AppBrand.connectionStage!.representations.first!
+        precondition(art.pixelsWide == 1500 && art.pixelsHigh == 798, "Screen composition has insufficient packaged resolution")
         let size = NSSize(width: 600, height: 658) // 680 frame less native title bar.
         for language in ["en", "zh-Hans"] {
             UserDefaults.standard.setVolatileDomain(["language": language], forName: UserDefaults.argumentDomain)

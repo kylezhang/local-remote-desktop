@@ -14,7 +14,7 @@ static partial class Program {
                 content.Measure(new Size(544,528));content.Arrange(new Rect(0,0,544,528));content.UpdateLayout();
                 foreach(var name in new[]{"EntryPrompt","InitiateLabel","AcceptLabel"}) {
                     var label=(TextBlock)window.FindName(name);
-                    Assert(label.Foreground is SolidColorBrush ink && ink.Color==Color.FromRgb(41,50,71),"Native role theme replaced the approved text color with system black");
+                    Assert(label.Foreground is SolidColorBrush ink && ink.Color==Color.FromRgb(32,45,70),"Native role theme replaced the approved text color with system black");
                     var drawing=new DrawingVisual();
                     using(var context=drawing.RenderOpen()) context.DrawText(new FormattedText(label.Text,
                         CultureInfo.GetCultureInfo("en-US"),FlowDirection.LeftToRight,

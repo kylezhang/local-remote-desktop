@@ -3,7 +3,7 @@
 [简体中文](zh-CN/screen-desk-implementation.md) · [Native progress](native-ui.md) · [Design preview](../design/detail-review/desk.html?lang=en)
 
 2026-10-17. This is the implementation checklist for the reviewed screen-desk
-direction. **Planning complete; native implementation has not started.**
+direction. **Home implemented in both source trees; native CI verification pending.**
 The preview and its browser measurements are design evidence, not installed-app
 acceptance. Earlier native progress entries remain historical.
 
@@ -96,7 +96,8 @@ fix is a focused change with independent regression evidence.
 
 - [x] Inspect current native UI entry points and identify lifecycle differences.
 - [x] Record shared hierarchy, platform adaptation and the implementation order.
-- [ ] Implement batches 1–3 with focused native changes.
+- [x] Implement shared Home composition and package its original artwork on both desktops.
+- [ ] Complete the batch 1 native CI gate, then implement task/session batches 2–3.
 - [ ] Extend existing ClientChecks (Shell/Pairing/Sharing/Recovery/SessionInteraction/
   Typography) and MacLayoutChecks for the changed behavior and layout. Use
   recording services, isolated stores and generated frames; retain the existing
@@ -112,6 +113,9 @@ fix is a focused change with independent regression evidence.
   Do not bump the version for this plan. Beta/stable gates remain in the delivery
   plan; a visual refresh or CI success cannot clear unresolved P0 failures.
 
-No native build, permission change, installation, deployment or publication was
-performed for this planning pass. The next implementation unit is batch 1.
-
+The planning pass changed no native code. The subsequent Home batch changes
+presentation/resources and the interface revision (Mac internal build 31), while
+retaining public version, bundle identity, credentials and role lifecycles.
+Windows local compilation and native glyph checks passed; full regression and
+macOS CI results are recorded separately before calling batch 1 verified.
+No installed app, permission or release is changed by this source update.

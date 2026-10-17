@@ -51,13 +51,24 @@ static partial class Program {
             Assert(!window.IsVisible && !window.IsActive,"Background check opened/activated a window");
             var root=Environment.GetEnvironmentVariable("LOCALREMOTE_UI_SNAPSHOTS");
             if(root==null)return;
-            var image=new RenderTargetBitmap((int)Math.Ceiling(width*dpi/96d),(int)Math.Ceiling(height*dpi/96d),dpi,dpi,PixelFormats.Pbgra32);image.Render(content);
+            var image=new RenderTargetBitmap((int)Math.Ceiling(width*dpi/96d),(int)Math.Ceiling(height*dpi/96d),dpi,dpi,PixelFormats.Pbgra32);
+            image.Render(content);
             var pixels=new byte[image.PixelWidth*image.PixelHeight*4];image.CopyPixels(pixels,image.PixelWidth*4,0);
             if(!pixels.Any(value=>value!=0)) {
                 if(!warnedUnavailableRender) {Console.WriteLine("SKIP visual screenshot acceptance: hidden WPF rendering returned an empty bitmap; layout measurements still checked, no window will be shown.");warnedUnavailableRender=true;}
                 return;
             }
-            Directory.CreateDirectory(root);var png=new PngBitmapEncoder();png.Frames.Add(BitmapFrame.Create(image));
+            // Composite already-rendered pixels onto the native window color.
+            // A VisualBrush of the live content can trigger a new Measure and
+            // invalidate the layout assertions that follow this optional capture.
+            var drawing=new DrawingVisual();
+            using(var context=drawing.RenderOpen()) {
+                var bounds=new Rect(0,0,width,height);
+                context.DrawRectangle(Brushes.White,null,bounds);
+                context.DrawImage(image,bounds);
+            }
+            var opaque=new RenderTargetBitmap(image.PixelWidth,image.PixelHeight,dpi,dpi,PixelFormats.Pbgra32);opaque.Render(drawing);
+            Directory.CreateDirectory(root);var png=new PngBitmapEncoder();png.Frames.Add(BitmapFrame.Create(opaque));
             using var file=File.Create(Path.Combine(root,name+".png"));png.Save(file);
         }
         try {
@@ -68,10 +79,15 @@ static partial class Program {
                 Assert(loads==(lang=="en"?0:1),"Role chooser accessed the sharing credential");
                 Snapshot("entry-default-"+lang,584,96,640);
                 Assert(Find<ScrollViewer>("EntryPage").ScrollableHeight<=0.5,"Default homepage unnecessarily scrolls");
-                foreach(var art in new[]{"InitiateIllustration","AcceptIllustration"})
-                    Assert(Find<Image>(art).Source is BitmapSource bitmap && bitmap.PixelWidth==960,"Native role illustration is missing");
+                Assert(Find<Image>("ConnectionStage").Source is BitmapSource {PixelWidth:1500,PixelHeight:798},"Shared screen composition is missing from the package");
+                Assert(window.FindName("InitiateIllustration")==null && window.FindName("AcceptIllustration")==null,"Home duplicates its screen composition in each role");
                 var left=Find<RadioButton>("NavConnect");var right=Find<RadioButton>("NavShare");
-                Assert(Math.Abs(left.ActualWidth-right.ActualWidth)<1 && left.ActualHeight>=252,"Role choices lost equal prominence");
+                // Odd device-pixel widths can give one of two equal star columns
+                // one extra pixel under UseLayoutRounding.
+                Assert(Math.Abs(left.ActualWidth-right.ActualWidth)<=1 && left.ActualHeight>=76 && left.ActualHeight<110,
+                    $"Joined role choices lost compact equal prominence: {left.ActualWidth}x{left.ActualHeight}, {right.ActualWidth}x{right.ActualHeight}");
+                Assert(Find<Image>("ConnectionStage").TranslatePoint(new Point(0,260),Find<ScrollViewer>("EntryPage")).Y
+                    <= left.TranslatePoint(new Point(0,0),Find<ScrollViewer>("EntryPage")).Y,"Shared art overlaps the role choices");
                 Assert(!Visible("HomeBack") && Visible("NavSettings"),"Role chooser navigation is not compact");
                 Nav("NavConnect");
                 Assert(Visible("HomeShell") && Visible("ConnectPage") && !Visible("SessionPage"),"Initial role layout incorrect");
