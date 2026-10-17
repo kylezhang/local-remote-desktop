@@ -1,0 +1,35 @@
+.desk .guidance-symbol{width:54px;height:54px;display:flex;align-items:center;justify-content:center;border:1px solid #dce3f6;border-radius:15px;background:linear-gradient(#f7f9ff,#ecf0ff);color:#5265ec;margin:3px 0 19px}
+.desk .guidance-symbol .icon{width:27px;height:27px;stroke-width:1.3}
+.desk .guide-copy{font-size:14px;line-height:1.85;color:var(--ink);margin:0 0 13px}
+.desk .guide-actions{display:flex;align-items:center;flex-wrap:wrap;gap:12px;margin:21px 0 8px}
+.desk .guide-actions .primary{font-size:13px;padding:9px 13px}
+.desk .failure-panel{display:flex;align-items:flex-start;gap:11px;border:1px solid #eadce0;background:linear-gradient(#fffafb,#fff);border-radius:12px;padding:13px 14px;margin-top:15px}
+.desk .failure-symbol{color:#ad3544;padding-top:2px}.desk .failure-symbol .icon{width:18px;height:18px}
+.desk .failure-panel>div{min-width:0;flex:1}.desk .failure-panel strong{font-size:12px;line-height:1.7;font-weight:500;color:#893a49}
+.desk .failure-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:6px}.desk .failure-actions .small{font-size:11px;padding-left:0}
+.desk .failure-detail{font-size:11px;color:var(--muted);line-height:1.7;border-top:1px solid #efE4e8;margin-top:9px;padding-top:7px}.desk .failure-detail p{margin:0 0 6px}.desk .failure-detail code{font:10px/1.7 "Cascadia Code",Consolas,monospace;overflow-wrap:anywhere}
+.desk.listener-failed .identity img{display:none}.desk.listener-failed .identity{margin-top:12px;margin-bottom:15px}.desk.listener-failed .failure-panel{margin-top:12px}
+.desk .screen.session{padding:14px 16px 18px}
+.desk .remote-session{display:flex;flex-direction:column;flex:1;min-height:0;gap:10px}
+.desk .controlbar{display:flex;align-items:center;gap:9px;border:1px solid #e1e7f1;background:linear-gradient(#fff,#f7f9fd);border-radius:12px;padding:9px 8px;flex:none;box-shadow:0 2px 5px #34466a03}
+.desk .tool-icon{display:inline-flex;align-items:center;justify-content:center;padding:7px;width:32px;height:32px;flex:none;border:1px solid transparent;background:transparent;color:#697991;border-radius:8px}.desk .tool-icon:hover:not(:disabled){color:#495fd6;background:#edf1fc;border-color:#dbe2f5}
+.desk .tool-icon .icon{width:17px;height:17px;stroke-width:1.5}
+.desk .session-peer{flex:1;min-width:0}.desk .session-peer strong{font-size:12px;font-weight:500;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.desk .session-peer>span{font-size:10px;display:flex;gap:5px;align-items:center;color:#28745e;margin-top:2px}
+.desk .session-actions{display:flex;align-items:center;gap:3px;flex:none}
+.desk .disconnect{font-size:12px;padding:6px 11px;border-color:#ebdce2;border-radius:8px;color:#a84a5a;background:#fff}
+.desk .view-banner{display:flex;align-items:center;gap:7px;padding:9px 11px;border-radius:9px;background:#fcf7ed;border:1px solid #eee3cc;color:#80632c;font-size:11px;flex:none}.desk .view-banner .icon{width:16px;height:16px}.desk .view-banner span{flex:1}.desk .view-banner .small{font-size:11px;white-space:nowrap}
+.desk .desktop-canvas{flex:1;min-height:140px;overflow:hidden;position:relative;border-radius:13px;border:1px solid #cdd8ec;background:radial-gradient(ellipse at 10% 10%,#dce8fb,transparent 65%),linear-gradient(150deg,#bccaf3,#dce4fc 52%,#a9bedb);display:flex;align-items:center;justify-content:center;padding:33px 25px 24px}
+.desk .desktop-placeholder{width:100%;max-width:340px;text-align:center;padding:30px 18px;color:#455c85}
+.desk .desktop-placeholder-symbol{display:inline-flex;align-items:center;justify-content:center;width:68px;height:60px;border:1px solid #ffffffc9;border-radius:17px;background:#ffffff66;box-shadow:0 4px 14px #4c66900b}
+.desk .desktop-placeholder-symbol .icon{width:34px;height:34px;stroke-width:1.2}
+.desk .desktop-placeholder h3{font-size:16px;font-weight:500;line-height:1.5;margin:22px 0 8px}
+.desk .desktop-placeholder p{font-size:12px;line-height:1.8;margin:0;color:#617797}
+.desk .session-disclosure{margin:0;font-size:10px;text-align:center;color:#6d7e94;flex:none}
+.desk .reconnect-panel{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:25px;background:#f7f9fdeb;backdrop-filter:blur(4px)}
+.desk .reconnect-symbol{display:flex;align-items:center;justify-content:center;width:48px;height:48px;border:1px solid #dce3f6;background:#fff;border-radius:14px;color:#6479d1;margin-bottom:16px}.desk .reconnect-symbol .icon{width:22px;height:22px;animation:connection-wait 1600ms linear infinite}
+.desk .reconnect-panel h3{font-size:17px;font-weight:500;margin:0 0 9px}.desk .reconnect-panel p{font-size:12px;line-height:1.7;max-width:310px;color:var(--muted);margin:0 0 22px}.desk .reconnect-panel>div{display:flex;gap:12px;align-items:center}.desk .reconnect-panel .primary{font-size:12px;padding:9px 13px}
+.desk .file-notice{display:flex;align-items:center;gap:10px;padding:11px 12px;border:1px solid #dce5f1;border-radius:11px;background:#fff;box-shadow:0 3px 8px #334b7805;flex:none}.desk .file-symbol{display:inline-flex;align-items:center;justify-content:center;width:34px;height:38px;border-radius:8px;background:#eff3fd;color:#6479cf;flex:none}.desk .file-symbol .icon{width:19px;height:19px}.desk .file-notice>div{flex:1;min-width:0}.desk .file-notice strong{font-size:11px;font-weight:500;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.desk .file-notice span:not(.file-symbol){font-size:10px;color:var(--muted);display:block;margin-top:3px}.desk .file-notice progress{width:100%;height:4px;display:block;margin-top:7px;accent-color:#6376e4}.desk .file-notice .small{font-size:11px;padding:4px}.desk .file-notice.complete .file-symbol{color:#28745e;background:#edf7f1}
+.desk.session-expanded{width:960px;height:760px;max-height:calc(100vh - 80px);min-height:400px}
+.desk .sheet .setting-row>div{flex:1}.desk .sheet .setting-row label{font-size:13px}.desk .sheet .setting-row select{max-width:170px}
+.desk.small-frame .screen.session{padding:12px}.desk.small-frame .controlbar{gap:4px;padding:7px 5px}.desk.small-frame .tool-icon{width:28px;height:28px;padding:5px}.desk.small-frame .disconnect{font-size:11px;padding:6px 8px}.desk.small-frame .desktop-canvas{padding:30px 14px 15px}.desk.small-frame .view-banner{gap:5px;padding:7px;font-size:10px;align-items:flex-start}.desk.small-frame .view-banner .small{font-size:10px;padding:2px}
+@media(prefers-reduced-motion:reduce){.desk .reconnect-symbol .icon{animation:none}}

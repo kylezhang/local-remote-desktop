@@ -2,6 +2,15 @@
 
 [简体中文](zh-CN/native-ui.md) · [Approved design](design.md) · [Delivery plan](v0.3.0-plan.md)
 
+## Screen-desk implementation mapping — 2026-10-17
+
+The [native implementation checklist](screen-desk-implementation.md) maps the
+reviewed screen-desk preview to both source trees, including the session/Home
+navigation gap, shared resources, platform-specific controls and staged checks.
+Planning is complete; this pass changed no native source, package or installed
+app. The entries below describe their dated revisions, not the current release
+or proof that the new design has shipped.
+
 ## Current implementation — 2026-10-12
 
 The owner approved the [task-first design](entry-design.md). Both desktop sources

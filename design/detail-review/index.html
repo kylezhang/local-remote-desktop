@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self'; style-src 'self'; script-src 'self'; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
+  <title>Local Remote Desktop · Interaction study</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="prototype.js" defer></script>
+</head>
+<body>
+  <main class="review">
+    <header class="review-header">
+      <div><h1>Local Remote Desktop</h1><p id="review-title"></p></div>
+      <div class="review-options">
+        <label><span id="language-label"></span><select id="language"><option value="en">English</option><option value="zh">简体中文</option></select></label>
+        <label><span id="platform-label"></span><select id="platform"><option value="windows">Windows</option><option value="mac">macOS</option></select></label>
+        <label><span id="size-label"></span><select id="size"><option value="regular">600 × 680</option><option value="small">420 × 568</option></select></label>
+      </div>
+    </header>
+    <nav id="review-pages" aria-label="Preview pages"></nav>
+    <div class="stage">
+      <section id="app" class="app" aria-label="Local Remote Desktop design preview">
+        <div id="chrome" class="chrome"></div>
+        <div id="screen" class="screen"></div>
+        <div id="overlay" class="overlay" hidden></div>
+        <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+      </section>
+    </div>
+    <div class="scenario-bar"><label><span id="scenario-label"></span><select id="scenario"></select></label><p id="sample-hint"></p></div>
+    <footer><p id="disclosure"></p><a id="design-link" href="README.md"></a> <span>·</span> <a id="previous-link" href="../entry-review/index.html"></a></footer>
+  </main>
+</body>
+</html>

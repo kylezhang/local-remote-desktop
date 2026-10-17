@@ -14,8 +14,13 @@ new platform. Keep its English/Chinese agreements aligned with implementation.
   Discovery is not authorization; clipboard/files belong to paired session roles.
 - Make routine use simple: remembered secure pairing, clear sharing/stop actions,
   compact session controls, native shortcuts and predictable updates.
-- The current approved UI is in `design/entry-review/` (2026-10-12).
-  Keep its role-first hierarchy across native apps; archive older proposals. Future platform mockups are not support claims.
+- The latest accepted design direction is the screen-desk composition in
+  `design/detail-review/desk.html` (2026-10-16), with further surface refinement
+  under review. Native apps retain the `design/entry-review/` baseline until the
+  next implementation step is approved. Keep the role-first hierarchy; future
+  platform mockups are not support claims. Read the screen-desk notes before UI work.
+  Use `docs/screen-desk-implementation.md` for the native mapping and batch gates;
+  its checklist is a plan, not evidence that the new interface has shipped.
 - Prefer background/headless checks. Do not open foreground test windows, take
   keyboard focus or inject real OS input during the user's work. Native input
   acceptance needs an agreed test period and a dedicated target.

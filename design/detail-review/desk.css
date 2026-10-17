@@ -1,0 +1,69 @@
+/* Screen desk proposal: a full alternative, not the approved native UI. */
+.app.desk{--ink:#202d46;--muted:#617088;--line:#dfe5ef;background:linear-gradient(155deg,#fff 55%,#fafbff);box-shadow:0 28px 70px #26355212,0 4px 12px #26355206;border-color:#d9e1ed}
+.desk .chrome{background:#fff;border-bottom:0}
+.desk .screen{padding:18px 32px 25px}
+.desk h2{font-size:26px;font-weight:500;letter-spacing:-.45px;color:var(--ink)}
+.desk .description{font-size:12px;line-height:1.75;margin:8px 0 24px;color:var(--muted)}
+.desk .topbar{margin-bottom:24px}
+.desk .quiet{border-radius:18px}
+.desk .home-body{justify-content:center;padding-bottom:28px}
+.desk .home h2{font-size:27px;font-weight:500;margin-bottom:5px}
+.desk .connection-stage{height:260px;width:100%;display:block;object-fit:contain;margin:1px 0 28px}
+.desk .choices{gap:0;border:1px solid #d6deec;border-radius:16px;box-shadow:0 4px 10px #34426805,inset 0 1px 0 #fff;overflow:hidden;background:#fff}
+.desk .role{min-height:76px;border:0;border-radius:0;background:linear-gradient(#fff,#fafbfe);padding:15px 10px;box-shadow:inset 0 1px 0 #fff;gap:7px}
+.desk .role:first-child{border-right:1px solid #dce3f0}
+.desk .role strong{font-size:17px;font-weight:500;letter-spacing:.25px;color:var(--ink)}
+.desk .role .icon{width:18px;height:18px;color:#5265ec;transition:transform 180ms}
+.desk .role:hover:not(:disabled),.desk .role:focus-visible{background:linear-gradient(#f8faff,#eef2ff);box-shadow:inset 0 -2px #6579e9;border-color:#dce3f0}
+.desk .role:hover .icon{transform:translateX(3px)}
+.desk .role:active:not(:disabled){background:#e9edff}
+.desk .section-bar{margin-bottom:16px}.desk .section-bar h3{font-weight:500;color:#66748b;font-size:12px}
+.desk .gallery{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:2px 1px 8px}
+.desk .device{border:1px solid #dfe6f1;border-radius:16px;background:linear-gradient(140deg,#fff,#f5f7fc);box-shadow:inset 0 1px 0 #fff,0 2px 5px #324b7703;display:flex;align-items:flex-start;flex-direction:column;gap:9px;padding:15px;position:relative;min-height:179px;overflow:hidden;transition:background 180ms,border-color 180ms,box-shadow 180ms}
+.desk .device.featured{grid-column:1/-1;min-height:182px;flex-direction:row;align-items:center;background:radial-gradient(ellipse at 22% 10%,#fff 0%,#f0f4ff 65%,#eaf0fd);gap:23px;padding:23px;border-color:#d7e0f3}
+.desk .device:hover:not(:disabled),.desk .device:focus-visible{border-color:#a4b4e7;box-shadow:inset 0 1px 0 #fff,0 5px 16px #5265ec0c}
+.desk .device .device-picture{height:75px;width:116px;display:block;object-fit:contain;transition:transform 180ms ease}
+.desk .device.featured .device-picture{width:184px;height:128px}
+.desk .device:hover:not(:disabled) .device-picture{transform:translateY(-3px)}
+.desk .device .device-title{flex:none}.desk .device .device-title strong{font-size:14px;font-weight:500;color:var(--ink)}.desk .device.featured .device-title strong{font-size:19px}.desk .device-title small{font-size:12px;margin-top:6px;color:var(--muted)}
+.desk .device .availability{font-size:11px;position:absolute;top:14px;right:14px}
+.desk .device.featured .availability{position:static;margin-top:14px;font-size:11px}
+.desk .card-open{position:absolute;right:19px;bottom:19px;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:#fff9;border:1px solid #d5dff4;color:#637ad3;transition:background 150ms,color 150ms,transform 150ms}.desk .card-open .icon{width:14px;height:14px}.desk .device:hover .card-open,.desk .device:focus-visible .card-open{background:#5265ec;border-color:#5265ec;color:white;transform:translateX(2px)}
+.desk .device.offline{background:#f8f9fc;border-style:dashed;box-shadow:none}.desk .device.offline .device-picture{filter:grayscale(1);opacity:.5}
+.desk .sharing-status{justify-content:center;border:1px solid #e2e7f0;border-radius:20px;padding:5px 12px;width:max-content;max-width:100%;margin:0 auto 7px;font-size:11px;line-height:1.6}
+.desk .sharing-status.active{border-color:#cee5da;background:#f1f8f5;box-shadow:inset 0 1px 0 #fff}
+.desk .accept .topbar{margin-bottom:16px}.desk .accept .description{margin-bottom:16px}
+.desk .identity{text-align:center;margin:0 0 14px;position:relative}
+.desk .identity img{width:112px;height:64px;display:block;margin:0 auto 2px}
+.desk .identity strong{font-size:19px;font-weight:500}.desk .identity .quiet{padding:4px 7px;font-size:11px;margin-left:4px}
+.desk .identity .field-label{font-size:10px;margin-bottom:3px}
+.desk .connection-details{border:1px solid #dce4ef;border-radius:15px;background:#ffffffd9;overflow:hidden;box-shadow:0 2px 6px #324b7704}
+.desk .address-row{border-top:0;border-bottom:1px solid #e9edf4;padding:12px 17px}
+.desk .address{font-size:15px;color:#394561}.desk .field-label{font-size:11px;color:#6a778c}
+.desk .password-block{padding:10px 17px}.desk .password-heading strong{font-size:12px;font-weight:500}.desk .password-row{gap:7px;margin:8px 0 5px}
+.desk .password{font-size:22px;letter-spacing:4px;color:#48567a}.desk .password-hint{font-size:11px;margin:5px 0;color:#718098}
+.desk .small{border-color:transparent;background:transparent;color:#495fd6;padding:4px 6px;font-size:12px}
+.desk .small:hover:not(:disabled){border-color:transparent;background:#edf0fd}
+.desk .permissions{border-top:0;padding-top:6px;margin-top:0}.desk .permissions h3{display:none}.desk .permission-row{padding:3px 0;font-size:11px}.desk .permission-row .allowed{font-size:10px}.desk .permissions .help{font-size:11px;margin:4px 0}
+.desk .action-footer{padding-top:16px;border-top:0;background:transparent}.desk .action-footer .primary,.desk .action-footer .stop{min-height:45px;border-radius:12px;font-size:14px;font-weight:500}
+.desk .primary{background:linear-gradient(#6173ee,#5265e6);border-color:#5265df;box-shadow:inset 0 1px 0 #ffffff38,0 2px 5px #5265ec1a}.desk .primary:hover:not(:disabled){background:linear-gradient(#5769e5,#4658d5);border-color:#4658d5}
+.desk .add{border-color:#d8e0f2;background:linear-gradient(#fff,#f8faff);box-shadow:inset 0 1px 0 #fff;color:#495fd6}
+.desk .dialog input,.desk .sheet input[type=text],.desk .sheet input[type=password],.desk .sheet select{border-color:#cdd7e6;border-radius:10px;background:linear-gradient(#fafbfe,#fff);box-shadow:inset 0 1px 2px #253b6003}
+.desk .primary[aria-busy=true]::before{content:"";display:inline-block;width:12px;height:12px;margin-right:8px;vertical-align:-2px;border:1.5px solid #ffffff66;border-top-color:#fff;border-radius:50%;animation:connection-wait 650ms linear infinite}
+.desk .sheet{align-self:flex-end;width:100%;max-width:100%;border-bottom-left-radius:0;border-bottom-right-radius:0;border-bottom:0;box-shadow:0 -14px 50px #18223c15;animation:desk-sheet 230ms cubic-bezier(.2,.7,.2,1)}
+.desk .overlay{align-items:flex-end;padding:20px 14px 0;background:#27334e22}
+.desk .sheet-header{padding:23px 25px 14px}.desk .sheet-body{padding:0 25px 13px}.desk .sheet-footer{padding:15px 25px 24px}
+.desk .sheet-body .check{display:inline-flex}.desk .sheet-body [data-action=forget]{float:right;margin-top:8px;font-size:12px}
+.desk .sheet .peer-summary{padding:5px 0 12px}.desk .sheet .device-art{border:0;background:#f2f4ff;color:#5265ec}
+.desk .preference-section{padding:0 0 14px;margin-bottom:14px;border-bottom:1px solid #e6ebf3}.desk .preference-section:last-child{border-bottom:0;margin-bottom:0;padding-bottom:0}
+.desk .preference-section h3{font-size:12px;font-weight:500;color:#63718a;margin:0 0 2px}.desk .preference-section .setting-row{padding:10px 0;border-bottom:0}.desk .preference-section .setting-row label{font-size:13px}.desk .preference-section .help{font-size:11px;margin:2px 0 0}
+.desk .preference-section .setting-row input[type=checkbox]{appearance:none;position:relative;width:34px;height:20px;padding:0;border-radius:20px;border:1px solid #becada;background:linear-gradient(#cdd6e3,#dfe6ef);box-shadow:inset 0 1px 2px #263f6812;cursor:pointer;flex:none;transition:background 150ms}
+.desk .preference-section .setting-row input[type=checkbox]::after{content:"";position:absolute;width:14px;height:14px;left:2px;top:2px;border-radius:50%;background:linear-gradient(#fff,#f2f5fb);border:1px solid #fff;box-shadow:0 1px 3px #263f6830;transition:transform 150ms}
+.desk .preference-section .setting-row input[type=checkbox]:checked{background:linear-gradient(#6b7ced,#5265df);border-color:#5265df}.desk .preference-section .setting-row input[type=checkbox]:checked::after{transform:translateX(14px)}
+.desk .session-toolbar{border-bottom:0;background:#f5f7fc;border-radius:12px;padding:9px 10px}.desk .session-toolbar select{border-color:transparent;background:transparent}.desk .mock-desktop{border-radius:14px}
+.desk .transfer{padding:13px;border:1px solid #e4e9f2;border-radius:11px;margin-top:14px}.desk .session-caption{font-size:11px}
+.desk.small-frame .screen{padding:14px 20px 20px}.desk.small-frame .connection-stage{height:206px;margin-bottom:20px}.desk.small-frame .home h2{font-size:24px}.desk.small-frame .role{min-height:68px}.desk.small-frame .role strong{font-size:16px}.desk.small-frame .role .icon{width:16px;height:16px}.desk.small-frame .device.featured{gap:12px;padding:16px;min-height:162px}.desk.small-frame .device.featured .device-picture{width:132px;height:104px}.desk.small-frame .device.featured .device-title strong{font-size:16px}.desk.small-frame .device{padding:13px;min-height:173px}.desk.small-frame .device .availability{top:12px;right:10px}.desk.small-frame .device .device-title strong{font-size:13px}.desk.small-frame .identity img{height:82px;width:135px}.desk.small-frame .identity{margin-bottom:16px}
+@keyframes desk-sheet{from{opacity:0;transform:translateY(28px)}to{opacity:1;transform:none}}
+@keyframes connection-wait{to{transform:rotate(360deg)}}
+@media(max-width:520px){.desk .screen{padding:15px 22px 22px}.desk .connection-stage{height:218px;margin-bottom:20px}.desk .device.featured{padding:17px;gap:13px}.desk .device.featured .device-picture{width:138px;height:103px}.desk .device.featured .device-title strong{font-size:16px}.desk .role{min-height:72px}.desk .role strong{font-size:16px}}
+@media(prefers-reduced-motion:reduce){.desk .role:hover .icon,.desk .device:hover .device-picture,.desk .device:hover .card-open,.desk .device:focus-visible .card-open{transform:none}.desk .sheet{animation:none}.desk .preference-section input::after{transition:none}}
