@@ -21,12 +21,21 @@ PLIST
 # details may appear in the synthetic native renders.
 sed -e '/^@main$/d' -e 's/ForEach(LocalInterfaces.addresses,id:/ForEach(["192.0.2.10"],id:/' \
     "$root/apps/macos/Sources/LocalRemoteDesktop/App.swift" > "$stage/App.swift"
+# Seed the long-error layout only in this disposable source copy. A same-file
+# extension can access the private setter without exposing it in the app.
+cp "$root/apps/macos/Sources/LocalRemoteDesktop/ControllerView.swift" "$stage/ControllerView.swift"
+cat >> "$stage/ControllerView.swift" <<'SWIFT'
+
+extension ControllerModel {
+    func setLayoutFixtureNotice(_ value: String) { pairingNotice = value }
+}
+SWIFT
 sources=()
 for source in "$root"/apps/macos/Sources/LocalRemoteDesktop/*.swift; do
-    [[ "$source" == */App.swift ]] || sources+=("$source")
+    [[ "$source" == */App.swift || "$source" == */ControllerView.swift ]] || sources+=("$source")
 done
 xcrun swiftc -parse-as-library -O -target "$(uname -m)-apple-macosx13.0" \
-    "${sources[@]}" "$stage/App.swift" "$root/tests/MacLayoutChecks/Check.swift" -o "$app/Contents/MacOS/LayoutChecks"
+    "${sources[@]}" "$stage/App.swift" "$stage/ControllerView.swift" "$root/tests/MacLayoutChecks/Check.swift" -o "$app/Contents/MacOS/LayoutChecks"
 cp "$root/assets/localization/strings.json" "$app/Contents/Resources/"
 cp "$root/assets/interface/connection-stage.png" "$app/Contents/Resources/"
 cp "$root/assets/interface/device-display.png" "$app/Contents/Resources/"

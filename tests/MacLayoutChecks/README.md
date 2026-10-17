@@ -17,6 +17,10 @@ Keychain access and pasteboard operations are not started; unexpected controller
 credential/clipboard/file access fails the check. Preferences use an isolated
 suite and a volatile language override.
 
+A disposable ControllerView.swift copy appends a same-file extension to seed
+the long pairing-error fixture. The production private setter is unchanged;
+the extension is not compiled into the app or package.
+
 Checks cover English/Chinese Home, empty device list, a three-device gallery,
 Accept, grouped settings, ordinary/known-target pairing, long pairing errors and
 password dialogs. Long-error fields may scroll; their saved renders must be

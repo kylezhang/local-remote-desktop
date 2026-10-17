@@ -119,10 +119,10 @@ struct LayoutTransport: ControllerFileTransport {
             controller.manualAddress = "192.0.2.21"
             try render(ManualConnectionView(model: controller, host: host), name: language + "-target-known",
                 size: NSSize(width: 476, height: 500), output: output)
-            controller.pairingNotice = Array(repeating: "Fixture connection error with retained fields.", count: 25).joined(separator: "\n")
+            controller.setLayoutFixtureNotice(Array(repeating: "Fixture connection error with retained fields.", count: 25).joined(separator: "\n"))
             try render(ManualConnectionView(model: controller, host: host), name: language + "-target-long-error",
                 size: NSSize(width: 476, height: 420), output: output, allowVerticalScroll: true)
-            controller.pairingNotice = ""
+            controller.setLayoutFixtureNotice("")
             try render(PasswordEditorView(model: host), name: language + "-password",
                 size: NSSize(width: 468, height: 380), output: output)
             precondition(host.secret.isEmpty && host.keychainCheck == "尚未读取", "Rendering read a host credential")
