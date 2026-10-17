@@ -494,8 +494,6 @@ struct HostView: View {
                     Spacer()
                     Button(UiText.text("允许键盘和鼠标控制")) { model.openAccessibilitySettings() }
                 }.controlSize(.small)
-                Text(UiText.text("未允许，连接后仅可查看屏幕。")).font(.system(size: 11)).foregroundStyle(.secondary)
-                Button(UiText.text("定位当前应用")) { model.revealInstalledApplication() }.controlSize(.small)
             }
             if hasFileNotice {
                 HStack {
@@ -505,6 +503,10 @@ struct HostView: View {
             }
             if !model.inputTestResult.isEmpty { Text(UiText.text(model.inputTestResult)).font(.caption).fixedSize(horizontal: false,vertical: true).textSelection(.enabled) }
             DisclosureGroup(UiText.text("权限")) {
+                if !model.inputAccess.canControl {
+                    Text(UiText.text("未允许，连接后仅可查看屏幕。")).font(.system(size: 11)).foregroundStyle(.secondary)
+                    Button(UiText.text("定位当前应用")) { model.revealInstalledApplication() }.controlSize(.small)
+                }
                 HStack {
                     Button(UiText.text("屏幕录制权限")) { NSWorkspace.shared.open(URL(string:"x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture")!) }
                     Button(UiText.text("辅助功能权限")) { model.openAccessibilitySettings() }
