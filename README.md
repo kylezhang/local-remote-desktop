@@ -31,7 +31,9 @@ The alpha also includes nearby-device selection and English/Chinese interfaces. 
 
 ## Installation
 
-The latest download is **v0.3.0-alpha.3 (pre-release)**, available on [AtomGit](https://atomgit.com/zkxw2008/local-remote-desktop/releases/tag/v0.3.0-alpha.3) and [GitHub](https://github.com/kylezhang/local-remote-desktop/releases/tag/v0.3.0-alpha.3). Both sites provide the same Windows and Apple Silicon Mac packages, corresponding source and SHA-256 checksums. Earlier releases remain available; v0.1.0 is the previous stable baseline.
+The latest published preview is **v0.3.0-alpha.5**. Download the complete Windows and Apple Silicon Mac packages, corresponding source and SHA-256 checksums from [GitHub](https://github.com/kylezhang/local-remote-desktop/releases/tag/v0.3.0-alpha.5). The [AtomGit release](https://atomgit.com/zkxw2008/local-remote-desktop/releases/tag/v0.3.0-alpha.5) currently has an incomplete attachment mirror; use GitHub for the complete set. Earlier releases remain available; v0.1.0 is the historical stable baseline.
+
+The screen-desk interface refresh on the main branch is still in development and is not included in alpha.5. See the [roadmap](docs/roadmap.md) for the next candidate and its validation gates.
 
 ### Windows
 

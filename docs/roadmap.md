@@ -8,10 +8,12 @@ session. Discovery helps find a target; it does not establish trust.
 
 ## Current milestone
 
-The latest download is **v0.3.0-alpha.3**, with Windows/Mac packages, source and
-checksums. Native CI and automatic publication passed; complete installed
-two-device acceptance remains pending. See
-[release evidence](../tests/results/automated-release-2026-10-14.md).
+The latest published preview is **v0.3.0-alpha.5**, from source **fb1e8d1**.
+Its native jobs passed; GitHub has the complete packages/source/checksum set,
+while the AtomGit attachment mirror remains incomplete at the 2026-10-18 check.
+See [release notes](release-v0.3.0-alpha.5.md) and the
+[delivery plan](v0.3.0-plan.md). The screen-desk refresh is newer main-branch work,
+not included in that download. Complete installed two-device acceptance is pending.
 
 v0.1.0 is the historical stable baseline. v0.2.0-beta.1 delivered passwords and
 clipboard improvements as a preview; that daily-use scope is carried into v0.3.0.
@@ -25,7 +27,9 @@ consolidated, not counted as completed releases.
 | v0.1.0 — released | First usable path | Paired/encrypted Windows → Mac current-session control; earlier checks/user reports form the baseline. |
 | v0.2.0-beta.1 — historical preview | Daily use | Passwords, text/regular-file clipboard and UI/input improvements; Windows package and Mac source. |
 | v0.3.0-alpha.3 — published preview | Desktop roles/cloud delivery | Windows ↔ Mac, task-first UI, discovery/localization and Mac screen selection; native CI packages passed, physical acceptance pending. |
-| v0.3.0-alpha.4 — if needed | Focused corrections | Fixes after alpha.3, new native CI and clear outstanding acceptance; no replacement of alpha.3. |
+| v0.3.0-alpha.4 — historical preview | Focused corrections | Followed alpha.3; reported input/accepting failures led to the alpha.5 correction preview. |
+| v0.3.0-alpha.5 — latest published preview | Permission/startup corrections | Event-posting permission, display-query fallback and specific diagnostics; native CI passed, physical failures not certified resolved. AtomGit asset parity is pending. |
+| v0.3.0-alpha.6 — planned candidate | Screen-desk interface and sessions | Shared Home/task/session design, navigation without disconnect and temporary consent; final-source native CI/render/package gates precede a consolidated acceptance candidate. Not published. |
 | v0.3.0-beta.1 — next candidate | Complete desktop flow | Clear P0 input/permission/update issues; basic installed workflow passes both ways; disclose remaining P1 cases. |
 | v0.3.0 | Accepted desktop milestone | Both directions pass input, pairing, permissions, clipboard/files, quality/recovery, lifecycle and resource checks on final packages. |
 | v0.3.x | Compatible corrections | Focused fixes in the accepted desktop scope, with immutable patch releases. |

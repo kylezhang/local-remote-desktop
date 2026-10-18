@@ -31,7 +31,9 @@ alpha 版还包含附近设备选择和中英文界面。两端角色均已实�
 
 ## 安装
 
-最新下载为 **v0.3.0-alpha.3（预发布）**，可从 [AtomGit](https://atomgit.com/zkxw2008/local-remote-desktop/releases/tag/v0.3.0-alpha.3) 或 [GitHub](https://github.com/kylezhang/local-remote-desktop/releases/tag/v0.3.0-alpha.3) 获取。两站提供相同的 Windows 和 Apple Silicon Mac 包、对应源码及 SHA-256 校验文件。历史版本保留，v0.1.0 是此前的正式版基线。
+最新已发布预览版为 **v0.3.0-alpha.5**。请从 [GitHub](https://github.com/kylezhang/local-remote-desktop/releases/tag/v0.3.0-alpha.5) 获取完整的 Windows 和 Apple Silicon Mac 包、对应源码及 SHA-256 校验文件。[AtomGit 发行页](https://atomgit.com/zkxw2008/local-remote-desktop/releases/tag/v0.3.0-alpha.5) 当前的附件镜像尚未齐全，完整下载请使用 GitHub。历史版本保留，v0.1.0 是历史正式版基线。
+
+主分支的屏幕连接台界面更新仍在开发中，尚未包含在 alpha.5 下载包里。下一候选版本及验证门槛见[路线图](docs/zh-CN/roadmap.md)。
 
 ### Windows
 
