@@ -6,7 +6,8 @@
 **两端首页已实现，源码 c23195b 的两端原生 CI 均通过。** 网页截图与测量是设计证据，不是客户端实机验收。
 原生进度中的较早条目作为历史记录保留。
 
-第二批任务页面源码已更新，原生 CI 与 Mac 图片门槛待完成；会话导航和工具栏属于第三批。
+第二批任务页面源码 20f4ecd 的两端原生 CI 均通过，Mac 中英文任务页图片已复核。
+见[任务页验证记录](../../tests/results/screen-desk-tasks-2026-10-17.md)。会话导航和工具栏属于第三批。
 
 ## 目标与范围
 
@@ -82,7 +83,7 @@ Windows 文件位于 apps/windows，Mac 文件位于 apps/macos/Sources/LocalRem
 - [x] 完成两端公共首页构图与原创插画打包。
 - [x] 源码 c23195b 通过第一批原生 CI 构建、布局和打包门槛。
 - [x] 完成第二批设备/配对/接受连接/连续设置分组源码。
-- [ ] 通过第二批原生 CI 与 Mac 图片复核。
+- [x] 通过第二批原生 CI 与 Mac 图片复核，源码 20f4ecd。
 - [ ] 完成第三批会话界面。
 - [ ] 按变更扩展现有 ClientChecks 的 Shell/Pairing/Sharing/Recovery/SessionInteraction/Typography
   与 MacLayoutChecks；使用记录服务、隔离存储、生成画面，保留协议与输入回归。

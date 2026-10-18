@@ -21,10 +21,14 @@ input capability explicit; no permission is granted or reset by the design.
 Revision is `screen-desk-2026-10-17-tasks`, Mac build 32.
 
 Windows build, complete unshown regression and selected native renders passed.
-Native macOS/final-source CI and Mac render review are pending. See
-[task-page evidence](../tests/results/screen-desk-tasks-2026-10-17.md). Session
-navigation and toolbar migration remain the next batch; installed apps and
-published packages are unchanged.
+Source 20f4ecd passed source/package, Windows x64 and macOS Apple Silicon CI.
+The 18 Mac English/Chinese renders passed layout checks; gallery, Accept,
+grouped settings, known-peer pairing and long-error footers were visually reviewed.
+See [task-page evidence](../tests/results/screen-desk-tasks-2026-10-17.md).
+The later publication job failed uploading an existing alpha.5 Windows attachment
+to AtomGit; it is separate from native verification. No new release was made.
+Session navigation and toolbar migration remain the next batch; installed apps
+are unchanged.
 
 ### First native batch: Home sources
 

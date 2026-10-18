@@ -7,8 +7,10 @@ direction. **Home implemented; both native CI jobs passed for source c23195b.**
 The preview and its browser measurements are design evidence, not installed-app
 acceptance. Earlier native progress entries remain historical.
 
-The second batch now implements task pages in source; its native CI/render gate
-is pending. Session navigation and toolbar migration remain batch 3.
+The second batch passed both native CI jobs for source 20f4ecd; the Mac
+English/Chinese task-page renders have been reviewed. See the
+[task-page evidence](../tests/results/screen-desk-tasks-2026-10-17.md).
+Session navigation and toolbar migration remain batch 3.
 
 ## Outcome and scope
 
@@ -102,7 +104,7 @@ fix is a focused change with independent regression evidence.
 - [x] Implement shared Home composition and package its original artwork on both desktops.
 - [x] Complete batch 1 native CI build/layout/package gates for source c23195b.
 - [x] Implement batch 2 device/pairing/Accept/grouped-settings sources.
-- [ ] Complete batch 2 native CI and Mac render review.
+- [x] Complete batch 2 native CI and Mac render review for source 20f4ecd.
 - [ ] Implement session batch 3.
 - [ ] Extend existing ClientChecks (Shell/Pairing/Sharing/Recovery/SessionInteraction/
   Typography) and MacLayoutChecks for the changed behavior and layout. Use
