@@ -31,6 +31,15 @@ version is unchanged. Local verification and exact-source cloud gates are record
 in [session evidence](../tests/results/screen-desk-session-2026-10-18.md).
 No installed app is replaced or activated.
 
+Source 62a1d5b passed source/package, Windows x64 and macOS Apple Silicon jobs in
+[run 39087609228](https://github.com/kylezhang/local-remote-desktop/actions/runs/39087609228).
+All 24 Mac bilingual layout cases passed; the six new reconnect/view-only/settings
+session images were inspected, including 520 × 450 content. Downloaded CI package
+hashes, source snapshots, build/resources and runtime identity were verified.
+An isolated internal candidate is ready; physical acceptance remains paused.
+The later old-release attachment job timed out independently; see the evidence
+record for its repair status, rather than treating that timeout as a native failure.
+
 ### Second native batch: task pages
 
 Device lists now use generic-art galleries, pairing is an on-demand task panel/

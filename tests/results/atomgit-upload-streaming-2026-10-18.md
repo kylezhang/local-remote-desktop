@@ -44,8 +44,32 @@ No live upload was invoked by these tests. AtomGit alpha.5's missing attachments
 remain an open delivery item until cloud execution and read-back verification
 succeed. This script does not publish the development UI under an old version.
 
+## Subsequent live outcome
+
+Run 39087609228 passed its native jobs but its first streaming publication attempt
+still exhausted the 45-minute job limit on the original Windows ZIP. Bounded-block
+writes therefore did not establish a complete live repair.
+
+The three missing original alpha.5 attachments were subsequently restored from
+the local environment using AtomGit-issued storage URLs and the same stream
+helper, after all six official hashes and existing remote attachments were checked.
+The 75,750,677-byte Windows ZIP completed in the bounded local attempt and its
+read-back matched; both original metadata files were also read back exactly.
+See [release recovery evidence](release-status-2026-10-18.md).
+
+The publication job retry completed with success, verifying six existing
+attachments and setting/read-checking latest without another PUT. This proves
+parity, idempotence and status recovery; throughput for a future new large upload
+from GitHub remains an open network/delivery concern. No retry of the native
+client code or physical desktop acceptance is implied.
+
 中文：既有 CI 在上传 alpha.5 Windows ZIP 时反复写入超时，原实现将约 75.8 MB 文件作为
 一个字节体写出。现改为已校验文件的流式固定长度 PUT，保留预签名头；每次重试重新打开
 并从零读取，成功/失败均关闭文件。此修正消除整块写入的已复现风险，不声称已确定真实网络
 超时的唯一原因或已恢复线上上传。26 项模拟检查通过，保留重复同步、冲突保护、
 来源与回读哈希验证。未改镜像、应用版本/签名，未使用真实发布凭据；线上附件齐全仍待验证。
+
+后续实测结果：CI 首次流式上传仍耗尽 45 分钟，不能声称该修改已独立修复线上超时。
+之后从本地通过 AtomGit 颁发的地址补齐原始三个缺失附件，Windows ZIP 与两份元数据
+均回读匹配。重试发行任务成功，独立验证六个已有附件并设置/核对 latest，零 PUT。
+附件一致性、重复同步和状态已恢复，但未来 GitHub 上传新大包的网络性能仍需验证。

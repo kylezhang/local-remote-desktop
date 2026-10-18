@@ -9,8 +9,8 @@ session. Discovery helps find a target; it does not establish trust.
 ## Current milestone
 
 The latest published preview is **v0.3.0-alpha.5**, from source **fb1e8d1**.
-Its native jobs passed; GitHub has the complete packages/source/checksum set,
-while the AtomGit attachment mirror remains incomplete at the 2026-10-18 check.
+Its native jobs passed; the complete package/source/provenance/checksum set is
+byte-identical on GitHub and AtomGit after the 2026-10-18 repair/read-back check.
 See [release notes](release-v0.3.0-alpha.5.md) and the
 [delivery plan](v0.3.0-plan.md). The screen-desk refresh is newer main-branch work,
 not included in that download. Complete installed two-device acceptance is pending.
@@ -28,8 +28,8 @@ consolidated, not counted as completed releases.
 | v0.2.0-beta.1 — historical preview | Daily use | Passwords, text/regular-file clipboard and UI/input improvements; Windows package and Mac source. |
 | v0.3.0-alpha.3 — published preview | Desktop roles/cloud delivery | Windows ↔ Mac, task-first UI, discovery/localization and Mac screen selection; native CI packages passed, physical acceptance pending. |
 | v0.3.0-alpha.4 — historical preview | Focused corrections | Followed alpha.3; reported input/accepting failures led to the alpha.5 correction preview. |
-| v0.3.0-alpha.5 — latest published preview | Permission/startup corrections | Event-posting permission, display-query fallback and specific diagnostics; native CI passed, physical failures not certified resolved. AtomGit asset parity is pending. |
-| v0.3.0-alpha.6 — planned candidate | Screen-desk interface and sessions | Shared Home/task/session design, navigation without disconnect and temporary consent; final-source native CI/render/package gates precede a consolidated acceptance candidate. Not published. |
+| v0.3.0-alpha.5 — latest published preview | Permission/startup corrections | Event-posting permission, display-query fallback and specific diagnostics; native CI and cross-site asset parity passed, physical failures not certified resolved. |
+| v0.3.0-alpha.6 — planned candidate | Screen-desk interface and sessions | Shared Home/task/session design, navigation without disconnect and temporary consent; source 62a1d5b passed native CI/render/package gates and has an internal acceptance candidate. Physical acceptance pending; not published. |
 | v0.3.0-beta.1 — next candidate | Complete desktop flow | Clear P0 input/permission/update issues; basic installed workflow passes both ways; disclose remaining P1 cases. |
 | v0.3.0 | Accepted desktop milestone | Both directions pass input, pairing, permissions, clipboard/files, quality/recovery, lifecycle and resource checks on final packages. |
 | v0.3.x | Compatible corrections | Focused fixes in the accepted desktop scope, with immutable patch releases. |

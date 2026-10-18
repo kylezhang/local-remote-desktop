@@ -8,7 +8,9 @@
 
 第二批任务页面源码 20f4ecd 的两端原生 CI 均通过，Mac 中英文任务页图片已复核。
 见[任务页验证记录](../../tests/results/screen-desk-tasks-2026-10-17.md)。
-第三批会话导航和工具栏源码已实现，最终原生 CI 与会话图片复核待完成。
+第三批源码 62a1d5b 的两端原生 CI 通过，Mac 会话图片已复核，
+已收集该次 CI 的独立内部验收包并核对哈希。见[会话证据](../../tests/results/screen-desk-session-2026-10-18.md)。
+安装后的双机验收仍待完成，没有替换在用客户端。
 
 ## 目标与范围
 
@@ -86,12 +88,12 @@ Windows 文件位于 apps/windows，Mac 文件位于 apps/macos/Sources/LocalRem
 - [x] 完成第二批设备/配对/接受连接/连续设置分组源码。
 - [x] 通过第二批原生 CI 与 Mac 图片复核，源码 20f4ecd。
 - [x] 实现第三批会话源码：独立导航、返回会话、紧凑原生工具栏与真实重连/仅查看/传输提示。
-- [ ] 通过第三批最终源码原生 CI 与会话图片复核。
-- [ ] 按变更扩展现有 ClientChecks 的 Shell/Pairing/Sharing/Recovery/SessionInteraction/Typography
+- [x] 源码 62a1d5b 通过第三批最终原生 CI 与会话图片复核。
+- [x] 按变更扩展现有 ClientChecks 的 Shell/Pairing/Sharing/Recovery/SessionInteraction/Typography
   与 MacLayoutChecks；使用记录服务、隔离存储、生成画面，保留协议与输入回归。
   设置改为分组后同步更新测试假设。
 - [ ] 审查中英文、默认/受支持最小尺寸、长名称/地址/错误及放大文字的原生渲染。
-- [ ] 源码提交 AtomGit，现有镜像触发 GitHub Actions，记录两端成功构建的精确提交、包和报告。
+- [x] 源码提交 AtomGit，现有镜像触发 GitHub Actions，记录两端成功构建的精确提交、包和报告。
 - [ ] 约定时段再集中检查激活状态颜色、焦点、sheet、真实系统授权及双机输入、剪贴板、重连和停止。
   不擅自 SSH、弹前台窗口、读个人剪贴板或注入系统输入。
 - [ ] 候选包准备好后选择下一个未使用的 alpha 版本，清单更新本身不改版本号。

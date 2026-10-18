@@ -10,8 +10,10 @@ acceptance. Earlier native progress entries remain historical.
 The second batch passed both native CI jobs for source 20f4ecd; the Mac
 English/Chinese task-page renders have been reviewed. See the
 [task-page evidence](../tests/results/screen-desk-tasks-2026-10-17.md).
-Batch 3 now has session navigation and toolbar changes in source; its final
-native CI/render gate remains pending.
+Batch 3 passed both native CI jobs for source 62a1d5b. The Mac session renders
+were reviewed and an isolated, checksummed internal candidate was collected from
+that run. See [session evidence](../tests/results/screen-desk-session-2026-10-18.md).
+Installed two-device acceptance remains pending; no running client is replaced.
 
 ## Outcome and scope
 
@@ -108,14 +110,14 @@ fix is a focused change with independent regression evidence.
 - [x] Complete batch 2 native CI and Mac render review for source 20f4ecd.
 - [x] Implement session batch 3 sources: independent navigation, return route,
   compact native toolbar and truthful reconnect/view-only/transfer feedback.
-- [ ] Complete batch 3 final-source native CI and session render review.
-- [ ] Extend existing ClientChecks (Shell/Pairing/Sharing/Recovery/SessionInteraction/
+- [x] Complete batch 3 final-source native CI and session render review for 62a1d5b.
+- [x] Extend existing ClientChecks (Shell/Pairing/Sharing/Recovery/SessionInteraction/
   Typography) and MacLayoutChecks for the changed behavior and layout. Use
   recording services, isolated stores and generated frames; retain the existing
   protocol and input regressions. Update test assumptions for grouped settings.
 - [ ] Review actual native renders in English/Chinese at default and supported
   minimum sizes, plus long names, addresses, errors and scaled text.
-- [ ] Run the existing GitHub Actions native builds/checks through the AtomGit
+- [x] Run the existing GitHub Actions native builds/checks through the AtomGit
   mirror. Record the exact source commit, package identities and reports.
 - [ ] During an agreed session only: verify active native colors/focus/sheets,
   system permission flow and real two-device input, clipboard, reconnect and Stop.
