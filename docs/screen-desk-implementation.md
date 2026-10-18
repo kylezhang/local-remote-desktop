@@ -10,7 +10,8 @@ acceptance. Earlier native progress entries remain historical.
 The second batch passed both native CI jobs for source 20f4ecd; the Mac
 English/Chinese task-page renders have been reviewed. See the
 [task-page evidence](../tests/results/screen-desk-tasks-2026-10-17.md).
-Session navigation and toolbar migration remain batch 3.
+Batch 3 now has session navigation and toolbar changes in source; its final
+native CI/render gate remains pending.
 
 ## Outcome and scope
 
@@ -105,7 +106,9 @@ fix is a focused change with independent regression evidence.
 - [x] Complete batch 1 native CI build/layout/package gates for source c23195b.
 - [x] Implement batch 2 device/pairing/Accept/grouped-settings sources.
 - [x] Complete batch 2 native CI and Mac render review for source 20f4ecd.
-- [ ] Implement session batch 3.
+- [x] Implement session batch 3 sources: independent navigation, return route,
+  compact native toolbar and truthful reconnect/view-only/transfer feedback.
+- [ ] Complete batch 3 final-source native CI and session render review.
 - [ ] Extend existing ClientChecks (Shell/Pairing/Sharing/Recovery/SessionInteraction/
   Typography) and MacLayoutChecks for the changed behavior and layout. Use
   recording services, isolated stores and generated frames; retain the existing

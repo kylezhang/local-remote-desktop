@@ -20,6 +20,31 @@ import Foundation
         first.status(["op":"capabilities","inputEnabled":true,"deviceName":"Office Windows"]); first.status(["op":"video_header","width":1280,"height":720])
         first.status(["op":"connected"]); await until { model.connected && !model.credentialBusy }
         precondition(model.targetName == "Office Windows" && model.targetSystem == "Windows")
+        let navigation = DesktopNavigation()
+        navigation.sessionChanged(model); precondition(navigation.page == "session")
+        let originalCount = ControllerSession.instances.count
+        for _ in 0..<5 {
+            navigation.show("home", controller: model)
+            precondition(navigation.page == "home" && model.busy && !first.stopped && !model.screenVisible)
+            let messages = first.messages.count
+            model.send(["op":"key_event","vk":65,"down":true])
+            model.send(["op":"mouse_button","button":0,"down":true])
+            precondition(first.messages.count == messages && first.messages.last?["op"] as? String == "release_all")
+            navigation.show("share", controller: model); precondition(navigation.page == "home")
+            navigation.show("settings", controller: model)
+            navigation.sessionChanged(model)
+            precondition(navigation.page == "settings" && ControllerSession.instances.count == originalCount)
+            navigation.show("session", controller: model); precondition(model.screenVisible)
+        }
+        precondition(model.connected && !first.stopped)
+        first.messages.removeAll()
+        model.sessionText = false; model.sessionFiles = false
+        precondition(!model.effectiveText && !model.effectiveFiles)
+        host.allowClipboard = false; host.allowFiles = false
+        model.sessionText = true; model.sessionFiles = true
+        precondition(!model.effectiveText && !model.effectiveFiles)
+        host.allowClipboard = true; host.allowFiles = true
+        print("PASS navigation preserves the controller, rejects conflicting roles, releases held input and gates hidden-canvas input; temporary clipboard choices cannot exceed global consent")
         let currentQuality = model.quality
         model.defaultQuality = 2; model.defaultShortcuts = false; model.defaultAutoReconnect = false
         precondition(model.quality == currentQuality && model.shortcuts && model.autoReconnect && !first.stopped)
@@ -30,7 +55,10 @@ import Foundation
         for i in 0..<10_000 { first.frame(CGImage(i)) }
         try await Task.sleep(nanoseconds:60_000_000)
         precondition(model.image?.id == 9999)
-        model.disconnect(); precondition(first.stopped && !model.busy && !host.controlling && model.image == nil)
+        navigation.show("settings", controller: model)
+        model.disconnect(); navigation.sessionChanged(model)
+        precondition(navigation.page == "settings", "Disconnect unexpectedly replaced preferences")
+        precondition(first.stopped && !model.busy && !host.controlling && model.image == nil)
         first.frame(CGImage(1)); first.status(["op":"connected"])
         try await Task.sleep(nanoseconds:30_000_000); precondition(!model.connected && model.image == nil)
         let fresh = ControllerModel(host:host,preferences:preferences)
@@ -170,6 +198,18 @@ import Foundation
         precondition(clipboardSession.messages[before]["op"] as? String == "clipboard_text" && clipboardSession.messages[before+1]["op"] as? String == "key_event")
         clipboardSession.status(["op":"clipboard_text","requestId":request,"encoding":"utf8-base64url","text":TextClipboardSync.encode("target text")!])
         await until { text=="target text" }
+        clipboardModel.sessionText = false
+        precondition(!board.enabled && clipboardSession.messages.last?["enabled"] as? Bool == false)
+        clipboardSession.status(["op":"clipboard_sync","requestId":request,"enabled":true])
+        clipboardSession.status(["op":"clipboard_text","requestId":request,"encoding":"utf8-base64url","text":TextClipboardSync.encode("stale session option")!])
+        try await Task.sleep(nanoseconds:20_000_000)
+        precondition(!board.enabled && text=="target text")
+        host.allowClipboard=false; clipboardModel.sessionText = true
+        precondition(!board.enabled && !clipboardModel.effectiveText)
+        host.allowClipboard=true; clipboardModel.refreshSessionClipboard()
+        let restored=clipboardSession.messages.last!["requestId"] as! Int
+        clipboardSession.status(["op":"clipboard_sync","requestId":restored,"enabled":true])
+        await until { board.enabled }
         host.allowClipboard=false
         clipboardSession.status(["op":"clipboard_text","requestId":request,"encoding":"utf8-base64url","text":TextClipboardSync.encode("blocked")!])
         await until { !board.enabled }; precondition(text=="target text")
@@ -194,6 +234,16 @@ import Foundation
         fileModel.send(["op":"key_event","vk":86,"down":false]);fileModel.release()
         fileBoard.copy(["another recording file"])
         fileModel.send(["op":"key_event","vk":162,"down":true]);fileModel.send(["op":"key_event","vk":86,"down":true])
+        let revoked=fileTransport.job!,oldFinish=fileTransport.complete!
+        fileModel.sessionFiles=false
+        precondition(revoked.canceled && !fileModel.filesBusy && fileSession.messages.last?["enabled"] as? Bool == false)
+        let revokedStatus=fileModel.fileStatus
+        oldFinish(.success(true));precondition(fileModel.fileStatus==revokedStatus,"Canceled file option accepted a stale completion")
+        fileModel.sessionFiles=true
+        let restoredID=fileSession.messages.last!["requestId"] as! Int
+        fileSession.status(["op":"file_sync","requestId":restoredID,"enabled":true])
+        try await Task.sleep(nanoseconds:20_000_000)
+        fileBoard.copy(["last recording file"]);fileModel.send(["op":"key_event","vk":86,"down":true])
         let pending=fileTransport.job!,finish=fileTransport.complete!;fileModel.disconnect()
         precondition(pending.canceled && !fileModel.filesBusy && fileModel.fileStatus.isEmpty)
         finish(.success(true));precondition(fileModel.fileStatus.isEmpty,"Old transfer updated disconnected model")

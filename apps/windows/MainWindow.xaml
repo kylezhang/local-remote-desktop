@@ -3,7 +3,10 @@
  <Grid>
  <Grid x:Name="HomeShell"><Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
  <Grid Margin="28,16,28,0"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+ <StackPanel Orientation="Horizontal">
  <Button x:Name="HomeBack" Content="{local:Translate Key='‹ 返回'}" Click="HomeBackClick" HorizontalAlignment="Left" Visibility="Collapsed" Padding="10,6"/>
+ <Button x:Name="ReturnSession" Content="{local:Translate Key='返回会话'}" Click="ReturnSessionClick" Visibility="Collapsed" Margin="8,0,0,0" Padding="10,6"/>
+ </StackPanel>
  <RadioButton Grid.Column="1" x:Name="NavSettings" GroupName="navigation" Tag="settings" Checked="NavigateClick" Style="{StaticResource SettingsShortcut}" AutomationProperties.Name="{local:Translate Key='设置'}">
  <StackPanel Orientation="Horizontal"><Image x:Name="SettingsGlyph" Source="{StaticResource SettingsVector}" Width="16" Height="16" Margin="0,0,6,0"/><TextBlock Text="{local:Translate Key='设置'}" VerticalAlignment="Center"/></StackPanel>
  </RadioButton>
@@ -25,6 +28,7 @@
  </RadioButton>
  </Grid></Border>
  <Button x:Name="ActiveSharingShortcut" Content="{local:Translate Key='正在接受连接 · 查看或停止'}" Tag="share" Click="NavigateClick" HorizontalAlignment="Left" Margin="0,22,0,0" Visibility="Collapsed"/>
+ <TextBlock x:Name="SessionRoleHint" Text="{local:Translate Key='请先断开当前连接，再切换用途。'}" Visibility="Collapsed" Foreground="#617088" FontSize="12" TextWrapping="Wrap" Margin="0,16,0,0"/>
  </StackPanel></ScrollViewer>
  <Grid x:Name="ConnectPage" Margin="32,18,22,24" Visibility="Collapsed"><Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
  <StackPanel Margin="0,0,0,24"><TextBlock Text="{local:Translate Key='发起连接'}" FontSize="26" FontWeight="Normal" Foreground="#202D46"/><TextBlock Text="{local:Translate Key='选择你要连接并操作的设备。'}" Foreground="#617088" FontSize="12" Margin="0,8,0,0"/></StackPanel>
@@ -106,10 +110,11 @@
  </StackPanel></Border>
  </StackPanel></ScrollViewer></Grid>
  </Grid></Grid>
- <DockPanel x:Name="SessionPage" Visibility="Collapsed">
-  <DockPanel x:Name="Toolbar" DockPanel.Dock="Top" Margin="10,4,10,4" MinHeight="34">
-   <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
-    <Button x:Name="FullscreenButton" Content="⛶" AutomationProperties.Name="{local:Translate Key='全屏'}" ToolTip="{local:Translate Key='F11 全屏 / 退出全屏'}" Click="FullscreenClick" Padding="8,4" Margin="8,0,6,0"/>
+ <DockPanel x:Name="SessionPage" Visibility="Collapsed" Background="White">
+  <Grid x:Name="Toolbar" DockPanel.Dock="Top" Margin="12,6" MinHeight="38"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+   <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+    <ComboBox x:Name="Quality" SelectedIndex="0" Width="82" Padding="3,3" ToolTip="{local:Translate Key='画质；连接后切换会短暂重连'}" AutomationProperties.Name="{local:Translate Key='画质'}"><ComboBoxItem Content="{local:Translate Key='流畅'}"/><ComboBoxItem Content="{local:Translate Key='标准'}"/><ComboBoxItem Content="{local:Translate Key='高清'}"/></ComboBox>
+    <Button x:Name="FullscreenButton" AutomationProperties.Name="{local:Translate Key='全屏'}" ToolTip="{local:Translate Key='F11 全屏 / 退出全屏'}" Click="FullscreenClick" Padding="7,6" Margin="6,0,2,0"><Path Data="M0,5 L0,0 L5,0 M11,0 L16,0 L16,5 M16,11 L16,16 L11,16 M5,16 L0,16 L0,11" Width="14" Height="14" Stroke="#617088" StrokeThickness="1.4" Stretch="Uniform"/></Button>
      <Menu Background="Transparent" VerticalAlignment="Center" FontSize="13">
       <MenuItem x:Name="SettingsMenu" Header="{local:Translate Key='会话选项'}" ToolTip="{local:Translate Key='仅用于当前连接'}" AutomationProperties.Name="{local:Translate Key='会话选项'}" Padding="10,5">
        <MenuItem Header="{local:Translate Key='剪贴板'}">
@@ -127,15 +132,18 @@
        <MenuItem Header="{local:Translate Key='打开接收目录'}" Click="OpenFilesClick"/>
        <MenuItem x:Name="ShowPerformance" Header="{local:Translate Key='显示性能数据'}" IsCheckable="True" StaysOpenOnClick="True"/>
        <MenuItem Header="{local:Translate Key='复制诊断'}" Click="DiagnosticsClick"/>
+       <Separator/>
+       <MenuItem Header="{local:Translate Key='设置'}" Click="SessionSettingsClick"/>
       </MenuItem>
      </Menu>
+    <Button x:Name="ConnectButton" Content="{local:Translate Key='连接'}" Click="ConnectClick" Margin="6,0,0,0" Padding="10,5"/>
    </StackPanel>
-   <WrapPanel VerticalAlignment="Center">
-    <TextBlock x:Name="ConnectionTarget" Visibility="Collapsed" VerticalAlignment="Center" Margin="0,0,12,0"/>
-    <ComboBox x:Name="Quality" SelectedIndex="0" Width="88" Padding="3,3" ToolTip="{local:Translate Key='画质；连接后切换会短暂重连'}"><ComboBoxItem Content="{local:Translate Key='流畅'}"/><ComboBoxItem Content="{local:Translate Key='标准'}"/><ComboBoxItem Content="{local:Translate Key='高清'}"/></ComboBox>
-    <Button x:Name="ConnectButton" Content="{local:Translate Key='连接'}" Click="ConnectClick" Margin="6,0,0,0" Padding="12,5" Style="{StaticResource BrandConnectButton}"/>
-   </WrapPanel>
-  </DockPanel>
+   <Grid Margin="0,0,8,0"><Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+    <Button x:Name="SessionHome" Click="HomeBackClick" ToolTip="{local:Translate Key='首页'}" AutomationProperties.Name="{local:Translate Key='首页'}" Padding="7" Margin="0,0,10,0" VerticalAlignment="Center"><Path Data="M1,8 L8,1 L15,8 M3,6 L3,15 L7,15 L7,10 L10,10 L10,15 L13,15 L13,6" Width="15" Height="15" Stroke="#617088" StrokeThickness="1.4" Stretch="Uniform"/></Button>
+    <StackPanel Grid.Column="1" VerticalAlignment="Center"><TextBlock x:Name="ConnectionTarget" Visibility="Collapsed" TextTrimming="CharacterEllipsis" FontSize="13"/>
+    <TextBlock x:Name="SessionState" Foreground="#617088" FontSize="11" TextTrimming="CharacterEllipsis"/></StackPanel>
+   </Grid>
+  </Grid>
    <DockPanel x:Name="TransferNotice" DockPanel.Dock="Top" Visibility="Collapsed" Margin="12,0,12,8">
     <StackPanel Orientation="Horizontal" DockPanel.Dock="Right">
      <Button x:Name="CancelFiles" Content="{local:Translate Key='取消传输'}" Click="CancelFilesClick" IsEnabled="False" Visibility="Collapsed" Margin="8,0" Padding="6,2"/>
@@ -143,8 +151,15 @@
     </StackPanel>
     <TextBlock x:Name="FileStatus" Text="{local:Translate Key='文件同步：等待连接'}" FontSize="12" VerticalAlignment="Center" TextWrapping="Wrap"/>
    </DockPanel>
-  <TextBlock x:Name="Status" DockPanel.Dock="Bottom" Text="{local:Translate Key='输入目标IP和配对密码，连接后点击画面开始操作。'}" Margin="12,8" TextWrapping="Wrap"/>
-  <Border x:Name="Surface" Background="Black" Focusable="True" ClipToBounds="True" InputMethod.IsInputMethodEnabled="False" KeyboardNavigation.TabNavigation="None"><Image x:Name="Desktop" Stretch="Uniform"/></Border>
+  <TextBlock x:Name="Status" DockPanel.Dock="Bottom" Text="{local:Translate Key='输入目标IP和配对密码，连接后点击画面开始操作。'}" Margin="12,6" FontSize="11" Foreground="#617088" TextWrapping="Wrap"/>
+  <Border x:Name="ViewOnlyNotice" DockPanel.Dock="Top" Visibility="Collapsed" Background="#FFF8E7" Padding="12,7"><TextBlock Text="{local:Translate Key='目标设备尚未允许控制；当前只能查看。'}" TextWrapping="Wrap" FontSize="12"/></Border>
+  <Grid Background="#111827">
+   <Border x:Name="Surface" Background="Black" Focusable="True" ClipToBounds="True" InputMethod.IsInputMethodEnabled="False" KeyboardNavigation.TabNavigation="None"><Image x:Name="Desktop" Stretch="Uniform"/></Border>
+   <Border x:Name="SessionNotice" Visibility="Collapsed" Background="#111827" Padding="24"><StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" MaxWidth="400">
+    <TextBlock x:Name="SessionNoticeTitle" Foreground="White" FontSize="20" TextAlignment="Center" TextWrapping="Wrap"/>
+    <TextBlock Text="{Binding ElementName=Status,Path=Text}" Foreground="#CBD5E1" FontSize="12" TextAlignment="Center" TextWrapping="Wrap" Margin="0,12,0,0"/>
+   </StackPanel></Border>
+  </Grid>
  </DockPanel>
  <Grid x:Name="ManualDialog" Visibility="Collapsed" Background="#66000000" KeyboardNavigation.TabNavigation="Cycle" KeyboardNavigation.ControlTabNavigation="Cycle" PreviewKeyDown="ManualKeyDown">
   <Border Background="White" BorderBrush="#E5E8F0" BorderThickness="1" CornerRadius="16,16,0,0" MaxWidth="520" MaxHeight="600" Margin="16,16,16,0" Padding="24" HorizontalAlignment="Stretch" VerticalAlignment="Bottom">

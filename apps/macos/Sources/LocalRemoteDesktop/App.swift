@@ -39,13 +39,12 @@ struct LocalRemoteDesktopApp: App {
             }
     }
 }
-final class DesktopNavigation: ObservableObject { @Published var page = "home" }
 final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     let model = HostModel()
     private lazy var controller = ControllerModel(host: model)
     private let navigation = DesktopNavigation()
     private var window: ControllerWindow?
-    func openSettings() { navigation.page = "settings"; openWindow() }
+    func openSettings() { navigation.show("settings", controller: controller); openWindow() }
     private func openWindow() {
         if let window { window.makeKeyAndOrderFront(nil); return }
         let next = ControllerWindow(contentRect: NSRect(x: 0,y: 0,width: 600,height: 658),
@@ -73,7 +72,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     func windowDidEnterFullScreen(_ notification: Notification) { restoreRemoteFocus() }
     func windowDidExitFullScreen(_ notification: Notification) { restoreRemoteFocus() }
     private func restoreRemoteFocus() {
-        guard controller.connected, controller.inputEnabled, let window, window.isKeyWindow else { return }
+        guard controller.screenVisible, controller.connected, controller.inputEnabled, let window, window.isKeyWindow else { return }
         func screen(in view: NSView) -> RemoteScreenView? {
             if let screen = view as? RemoteScreenView { return screen }
             for child in view.subviews { if let found = screen(in: child) { return found } }
@@ -87,7 +86,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool { false }
 }
 enum EntryBuild {
-    static let revision = "screen-desk-2026-10-17-tasks"
+    static let revision = "screen-desk-2026-10-18-session"
     static var source: String {
         guard let url = Bundle.main.url(forResource: "source-revision", withExtension: "txt"),
             let text = try? String(contentsOf: url, encoding: .utf8) else { return "unknown" }
@@ -166,15 +165,22 @@ struct DesktopShell: View {
     private let accent = ScreenDeskTheme.accent
     var body: some View {
         Group {
-            if controller.busy { ControllerView(model: controller, host: host, fullScreen: fullScreen) }
+            if navigation.page == "session" {
+                ControllerView(model: controller, host: host, fullScreen: fullScreen,
+                    home: { navigation.show("home", controller: controller) },
+                    settings: { navigation.show("settings", controller: controller) })
+            }
             else {
                 VStack(spacing: 0) {
                     HStack {
                         if navigation.page != "home" {
-                            Button { navigation.page = "home" } label: { Label(UiText.text("返回"),systemImage: "chevron.left") }
+                            Button { navigation.show("home", controller: controller) } label: { Label(UiText.text("返回"),systemImage: "chevron.left") }
+                        }
+                        if controller.busy {
+                            Button(UiText.text("返回会话")) { navigation.show("session", controller: controller) }
                         }
                         Spacer()
-                        Button { navigation.page = "settings" } label: { Label(UiText.text("设置"),systemImage: "gearshape") }
+                        Button { navigation.show("settings", controller: controller) } label: { Label(UiText.text("设置"),systemImage: "gearshape") }
                             .font(.system(size: 12,weight: .medium))
                     }.controlSize(.regular).padding(.horizontal,28).padding(.top,16)
                     Group {
@@ -196,6 +202,9 @@ struct DesktopShell: View {
                                         Button(UiText.text("正在接受连接 · 查看或停止")) { navigation.page = "share" }
                                             .padding(.top,22)
                                     }
+                                    if controller.busy {
+                                        Text(UiText.text("请先断开当前连接，再切换用途。")).font(.caption).foregroundStyle(.secondary).padding(.top,16)
+                                    }
                                 }.padding(.horizontal,32).padding(.top,18).padding(.bottom,45)
                                     .frame(maxWidth: .infinity,minHeight: viewport.size.height,alignment: .center)
                             }}
@@ -215,16 +224,19 @@ struct DesktopShell: View {
         .frame(minWidth: min(520,max(1,(NSScreen.main?.visibleFrame.width ?? 1440)-48)),minHeight: min(450,max(1,(NSScreen.main?.visibleFrame.height ?? 900)-80)))
         .sheet(isPresented: $controller.manualOpen) { ManualConnectionView(model: controller, host: host) }
         .onChange(of: host.active) { active in if active && navigation.page == "home" { navigation.page = "share" } }
-        .onChange(of: controller.busy) { busy in if busy { navigation.page = "connect" } }
+        .onChange(of: controller.busy) { _ in navigation.sessionChanged(controller) }
+        .onChange(of: controller.manualOpen) { open in if !open && controller.busy { navigation.show("session", controller: controller) } }
+        .onChange(of: host.allowClipboard) { _ in controller.refreshSessionClipboard() }
+        .onChange(of: host.allowFiles) { _ in controller.refreshSessionClipboard() }
     }
     private func entry(_ title: String, outgoing: Bool, page: String) -> some View {
-        Button { navigation.page = page } label: {
+        Button { navigation.show(page, controller: controller) } label: {
             VStack(spacing: 7) {
                 Image(systemName: outgoing ? "arrow.up.right" : "arrow.down.left")
                     .font(.system(size: 18,weight: .regular)).foregroundStyle(contrast == .increased ? Color.primary : accent).accessibilityHidden(true)
                 Text(UiText.text(title)).font(.system(size: 17,weight: .medium)).multilineTextAlignment(.center)
             }.foregroundStyle(contrast == .increased ? Color.primary : ScreenDeskTheme.ink).padding(.horizontal,10).padding(.vertical,15)
-        }.buttonStyle(EntryTileStyle()).accessibilityLabel(UiText.text(title))
+        }.buttonStyle(EntryTileStyle()).accessibilityLabel(UiText.text(title)).disabled(controller.busy)
     }
 }
 struct DevicePicture: View {

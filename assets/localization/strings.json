@@ -366,5 +366,12 @@
   "正在共享当前桌面 · 键盘和鼠标尚未允许，只能查看": "Sharing the current desktop; keyboard and mouse access is not allowed; view only",
   "共享已启动（只能查看）· 系统尚未允许键盘和鼠标控制": "Accepting connections (view only); the system has not allowed keyboard and mouse control",
   "未允许，连接后仅可查看屏幕。": "Control is not allowed. Connections can only view the screen.",
-  "开始接受连接（仅查看）": "Start accepting connections (view only)"
+  "开始接受连接（仅查看）": "Start accepting connections (view only)",
+  "返回会话": "Return to session",
+  "请先断开当前连接，再切换用途。": "Disconnect the current session before switching roles.",
+  "首页": "Home",
+  "正在重连…": "Reconnecting…",
+  "只能查看": "View only",
+  "目标设备尚未允许控制；当前只能查看。": "The target has not allowed control. You can view its screen.",
+  "等待画面…": "Waiting for the picture…"
 }

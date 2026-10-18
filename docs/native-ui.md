@@ -11,6 +11,26 @@ Planning is complete; this pass changed no native source, package or installed
 app. The entries below describe their dated revisions, not the current release
 or proof that the new design has shipped.
 
+### Third native batch: session sources — 2026-10-18
+
+Home and Settings navigation is independent of the active connection. A Return to
+session action reuses its existing controller/decoder; competing desktop roles
+remain unavailable until disconnect. Leaving the canvas releases held input and
+prevents hidden-canvas key/mouse forwarding. A disconnect while viewing Settings
+does not force the owner back to Connect.
+
+The session has a compact native Home/device/state/options/fullscreen/Disconnect
+bar, a truthful waiting/reconnecting surface and visible view-only feedback.
+Windows keeps its direct quality picker; Mac places quality in its native options
+menu. Transfer notices remain temporary with existing cancel/open/dismiss actions.
+Mac adds per-session text/file choices bounded by the global settings; revocation
+immediately refreshes consent and cancels obsolete file work.
+
+Revision is `screen-desk-2026-10-18-session`, Mac internal build 33; the public
+version is unchanged. Local verification and exact-source cloud gates are recorded
+in [session evidence](../tests/results/screen-desk-session-2026-10-18.md).
+No installed app is replaced or activated.
+
 ### Second native batch: task pages
 
 Device lists now use generic-art galleries, pairing is an on-demand task panel/

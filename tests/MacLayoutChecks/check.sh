@@ -28,6 +28,11 @@ cat >> "$stage/ControllerView.swift" <<'SWIFT'
 
 extension ControllerModel {
     func setLayoutFixtureNotice(_ value: String) { pairingNotice = value }
+    func setLayoutFixtureSession(connected: Bool, input: Bool) {
+        busy = true; self.connected = connected; inputEnabled = input
+        targetName = "A long authenticated desktop name for session layout"
+        status = connected ? (input ? "已连接，点击画面开始操作。" : "已连接，只能查看。") : "连接中断，正在重连…"
+    }
 }
 SWIFT
 sources=()

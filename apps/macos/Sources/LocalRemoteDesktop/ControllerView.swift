@@ -28,6 +28,12 @@ final class ControllerModel: ObservableObject {
     @Published var defaultShortcuts = true { didSet { preferences.set(defaultShortcuts, forKey: "controllerDefaultShortcuts") } }
     @Published var defaultAutoReconnect = true { didSet { preferences.set(defaultAutoReconnect, forKey: "controllerDefaultReconnect") } }
     @Published var shortcuts = true
+    @Published var sessionText = true { didSet { refreshSessionClipboard() } }
+    @Published var sessionFiles = true { didSet { refreshSessionClipboard() } }
+    private(set) var screenVisible = true
+    var effectiveText: Bool { host.allowClipboard && sessionText }
+    var effectiveFiles: Bool { host.allowFiles && sessionFiles }
+    var sessionState: String { connected ? (inputEnabled ? "已连接" : "只能查看") : status.contains("重连") ? "正在重连…" : "正在连接…" }
     @Published var autoReconnect = true {
         didSet { if !autoReconnect && retry != nil && !qualityRestart { disconnect() } }
     }
@@ -57,12 +63,12 @@ final class ControllerModel: ObservableObject {
     private var peerFiles = [String: Any](), heldControl = Set<Int>(), pasteSuppressed = false
     private let fileBoard: ControllerFileClipboard, fileTransport: ControllerFileTransport
     private lazy var files = ControllerFiles(board: fileBoard, transport: fileTransport,
-        allowed: { [weak self] in self?.host.allowFiles ?? false },
+        allowed: { [weak self] in self?.effectiveFiles ?? false },
         send: { [weak self] message in self?.session?.send(message) },
         status: { [weak self] text, busy in self?.fileStatus = text.hasPrefix("文件同步：") ? "" : text; self?.filesBusy = busy })
     private let textSync: TextClipboardSync
     private lazy var clipboard = ControllerTextClipboard(sync: textSync,
-        allowed: { [weak self] in self?.host.allowClipboard ?? false },
+        allowed: { [weak self] in self?.effectiveText ?? false },
         send: { [weak self] message in self?.session?.send(message) })
     private let frameLock = NSLock()
     private var latest: CGImage?, frameToken: UUID?
@@ -156,6 +162,7 @@ final class ControllerModel: ObservableObject {
         sessionAddress = address; sessionPassword = password; sessionRemember = rememberPassword
         targetName = selectedDevice?.name ?? address; targetSystem = selectedDevice?.systemLabel ?? ""
         quality = nextQuality; shortcuts = defaultShortcuts; autoReconnect = defaultAutoReconnect
+        sessionText = true; sessionFiles = true
         wantsConnection = true; hasConnected = false; browser.stop(); searching = false; begin()
     }
     private func authenticated() {
@@ -311,8 +318,13 @@ final class ControllerModel: ObservableObject {
     func cancelFiles() { files.cancel(); fileStatus = "文件传输已取消；重新复制可重试"; filesBusy = false }
     func dismissFiles() { if !filesBusy { fileStatus = "" } }
     func openReceivedFiles() { MacControllerFiles.openReceivedDirectory() }
+    func refreshSessionClipboard() { clipboard.poll(); files.poll() }
+    func setScreenVisible(_ visible: Bool) {
+        if !visible && screenVisible { release() }
+        screenVisible = visible
+    }
     func send(_ object: [String: Any]) {
-        if connected && inputEnabled {
+        if connected && inputEnabled && screenVisible {
             if object["op"] as? String == "key_event", let vk = object["vk"] as? Int, let down = object["down"] as? Bool {
                 if [162,163,17].contains(vk) { if down { heldControl.insert(vk) } else { heldControl.remove(vk) } }
                 if vk == 86 {
@@ -336,25 +348,51 @@ struct ControllerView: View {
     @ObservedObject var model: ControllerModel
     @ObservedObject var host: HostModel
     var fullScreen: () -> Void
+    var home: () -> Void = {}
+    var settings: () -> Void = {}
     var body: some View {
         VStack(spacing: 0) {
             HStack(spacing: 8) {
-                Text(model.targetName.isEmpty ? model.address : model.targetName).font(.caption).lineLimit(1)
-                if !model.targetSystem.isEmpty { Text(model.targetSystem).font(.caption).foregroundStyle(.secondary) }
-                Picker(UiText.text("画质"), selection: $model.quality) {
-                    Text(UiText.text("流畅")).tag(0); Text(UiText.text("标准")).tag(1); Text(UiText.text("高清")).tag(2)
-                }.labelsHidden().frame(width: 100)
+                Button(action: home) { Image(systemName: "house").frame(width: 18,height: 18) }
+                    .help(UiText.text("首页")).accessibilityLabel(UiText.text("首页"))
+                VStack(alignment: .leading,spacing: 2) {
+                    Text(model.targetName.isEmpty ? model.address : model.targetName).font(.system(size: 13,weight: .medium)).lineLimit(1)
+                    Text(UiText.text(model.sessionState))
+                        .font(.system(size: 11)).foregroundStyle(.secondary).lineLimit(1)
+                }.frame(maxWidth: .infinity,alignment: .leading)
                 Spacer(minLength: 4)
-                Button(UiText.text(model.busy ? "断开" : "连接")) { if model.busy { model.disconnect() } else { model.connect() } }
-                    .disabled(!model.busy && (host.active || host.starting))
-                Button(UiText.text("全屏"), action: fullScreen)
+                Button(action: fullScreen) { Image(systemName: "arrow.up.left.and.arrow.down.right") }
+                    .help(UiText.text("全屏")).accessibilityLabel(UiText.text("全屏"))
                 Menu(UiText.text("会话选项")) {
+                    Picker(UiText.text("画质"), selection: $model.quality) {
+                        Text(UiText.text("流畅")).tag(0); Text(UiText.text("标准")).tag(1); Text(UiText.text("高清")).tag(2)
+                    }
+                    Divider()
+                    Toggle(UiText.text("同步文字"), isOn: $model.sessionText).disabled(!host.allowClipboard)
+                    Toggle(UiText.text("同步文件"), isOn: $model.sessionFiles).disabled(!host.allowFiles)
+                    Divider()
                     Toggle(UiText.text("Mac 快捷键"), isOn: $model.shortcuts)
                     Toggle(UiText.text("自动重连"), isOn: $model.autoReconnect)
+                    Divider()
+                    Button(UiText.text("设置"), action: settings)
                 }.fixedSize()
-            }.textFieldStyle(.roundedBorder).padding(.horizontal, 12).frame(height: 42)
+                Button(UiText.text("断开")) { model.disconnect() }
+            }.controlSize(.regular).padding(.horizontal, 12).frame(height: 50)
             Divider()
-            RemoteScreen(model: model, fullScreen: fullScreen).frame(maxWidth: .infinity, maxHeight: .infinity)
+            if model.connected && !model.inputEnabled {
+                Text(UiText.text("目标设备尚未允许控制；当前只能查看。")).font(.caption)
+                    .frame(maxWidth: .infinity,alignment: .leading).padding(10).background(Color.yellow.opacity(0.10))
+            }
+            ZStack {
+                RemoteScreen(model: model, fullScreen: fullScreen)
+                if model.image == nil {
+                    VStack(spacing: 12) {
+                        Text(UiText.text(model.status)).font(.system(size: 18,weight: .medium))
+                            .multilineTextAlignment(.center)
+                    }.padding(28).frame(maxWidth: .infinity,maxHeight: .infinity)
+                        .foregroundStyle(.white).background(Color(red: 17.0/255,green: 24.0/255,blue: 39.0/255))
+                }
+            }.frame(maxWidth: .infinity,maxHeight: .infinity)
             Divider()
             if !model.fileStatus.isEmpty {
                 HStack(spacing: 8) {
@@ -367,7 +405,9 @@ struct ControllerView: View {
             }
             Text(UiText.text(host.active || host.starting ? "请先停止这台 Mac 的共享，再连接其他设备。" : model.status))
                 .font(.caption).frame(maxWidth: .infinity, alignment: .leading).padding(8)
-        }.frame(minWidth: 600, minHeight: 440)
+        }.frame(minWidth: 500, minHeight: 400)
+        .onAppear { model.setScreenVisible(true) }
+        .onDisappear { model.setScreenVisible(false) }
         .onChange(of: model.quality) { _ in model.restart() }
         .onChange(of: model.shortcuts) { _ in model.release() }
     }
@@ -392,7 +432,7 @@ final class RemoteScreenView: NSView {
     }
     required init?(coder: NSCoder) { fatalError("Programmatic view") }
     override var isFlipped: Bool { true }
-    override var acceptsFirstResponder: Bool { true }
+    override var acceptsFirstResponder: Bool { model.screenVisible }
     override func acceptsFirstMouse(for event: NSEvent?) -> Bool { true }
     func update() {
         layer?.contents = model.image
@@ -434,6 +474,7 @@ final class RemoteScreenView: NSView {
         if value != 0 { model.send(["op":"scroll","x":p.0,"y":p.1,"delta":value]) }
     }
     override func keyDown(with event: NSEvent) {
+        guard model.screenVisible else { return }
         if event.keyCode == 53 && event.modifierFlags.contains([.control,.option]) { window?.makeFirstResponder(nil); return }
         if event.keyCode == 103 { if !event.isARepeat { model.release(); fullScreen() }; return }
         for edge in modifiers.synchronize(flags: event.modifierFlags.rawValue, shortcuts: model.shortcuts) { model.send(edge) }

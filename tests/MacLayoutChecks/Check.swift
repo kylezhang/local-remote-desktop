@@ -126,6 +126,16 @@ struct LayoutTransport: ControllerFileTransport {
             try render(PasswordEditorView(model: host), name: language + "-password",
                 size: NSSize(width: 468, height: 380), output: output)
             precondition(host.secret.isEmpty && host.keychainCheck == "尚未读取", "Rendering read a host credential")
+            controller.setLayoutFixtureSession(connected: false, input: false)
+            let session = DesktopNavigation(); session.page = "session"
+            try render(DesktopShell(host: host, controller: controller, navigation: session, fullScreen: {}),
+                name: language + "-session-reconnecting", size: size, output: output)
+            controller.setLayoutFixtureSession(connected: true, input: false)
+            try render(DesktopShell(host: host, controller: controller, navigation: session, fullScreen: {}),
+                name: language + "-session-view-only", size: NSSize(width: 520,height: 450), output: output)
+            session.show("settings", controller: controller)
+            try render(DesktopShell(host: host, controller: controller, navigation: session, fullScreen: {}),
+                name: language + "-session-settings", size: size, output: output)
         }
         print("PASS native unshown EN/ZH entry/empty/gallery/accept/grouped settings/target/password renders; no role or credential access")
     }

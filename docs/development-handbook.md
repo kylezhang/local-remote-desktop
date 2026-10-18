@@ -209,3 +209,19 @@ Separate card shadows from text, and use vector UI icons instead of font symbols
 whose shape or emoji presentation varies by platform. Do not claim visual native
 acceptance from measured layout alone; never open foreground test windows to
 work around unavailable unshown rendering.
+
+### Page selection and session ownership
+
+Home/Settings navigation must not create, stop or reauthenticate a connection.
+Keep the controller and decoder outside the page/view lifetime; expose one
+Return to session route. Leaving the canvas releases held input and prevents
+hidden views from forwarding keys or pointer events. Reconnect callbacks may
+update the retained picture but must not take focus from a task page.
+Disconnect preserves the current non-session page and removes its return route.
+Competing roles remain unavailable with a clear explanation.
+
+Temporary text/file choices can only reduce global consent. Revocation cancels
+obsolete work and clears busy/progress immediately rather than waiting for the
+peer. Preserve the consent generation so late replies cannot turn syncing back on.
+Verify these boundaries with repeated navigation over recording/encrypted fixtures;
+native layout checks and real desktop acceptance remain separate.

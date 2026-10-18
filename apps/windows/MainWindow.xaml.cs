@@ -23,6 +23,9 @@ public partial class MainWindow : Window
     int width,height; long frames,bytes; double encodeMs;
     readonly Stopwatch stats=Stopwatch.StartNew(), mouseClock=Stopwatch.StartNew();
     bool full, connected;
+    string currentPage="home";
+    bool retrying;
+    bool framePresented;
     string rawStatus="", statusSuffix="";
     string rawClipboardStatus="文本同步：等待连接", rawFileStatus="文件同步：等待连接";
     volatile bool inputAllowed = true;
@@ -139,7 +142,7 @@ public partial class MainWindow : Window
         Surface.PreviewKeyDown+=(_,e)=>Key(e,true); Surface.PreviewKeyUp+=(_,e)=>Key(e,false);
         Surface.LostKeyboardFocus+=(_,_)=>ReleaseRemoteInput(); Deactivated+=(_,_)=>ReleaseRemoteInput();
         Surface.LostMouseCapture+=(_,_)=> { if(Mouse.LeftButton==MouseButtonState.Pressed || Mouse.RightButton==MouseButtonState.Pressed || Mouse.MiddleButton==MouseButtonState.Pressed) ReleaseRemoteInput(); };
-        PreviewKeyDown+=(_,e)=> { if(session!=null && ManualDialog.Visibility!=Visibility.Visible && e.Key==System.Windows.Input.Key.F11) { if(!e.IsRepeat) ToggleFull(); e.Handled=true; } };
+        PreviewKeyDown+=(_,e)=> { if(session!=null && currentPage=="session" && ManualDialog.Visibility!=Visibility.Visible && e.Key==System.Windows.Input.Key.F11) { if(!e.IsRepeat) ToggleFull(); e.Handled=true; } };
         Closing+=(_,e)=> {
             if(sharingWindow!=null) { e.Cancel=true; if(!closingSharingOwner) {closingSharingOwner=true; _=CloseSharingAndOwner();} return; }
             discoveryScan?.Cancel(); UiText.Current.LanguageChanged-=ApplyLanguage;
@@ -155,15 +158,26 @@ public partial class MainWindow : Window
         await System.Windows.Threading.Dispatcher.Yield(System.Windows.Threading.DispatcherPriority.Background); Close();
     }
     void NavigateClick(object sender,RoutedEventArgs e) {
-        if(ConnectPage==null || SharingPage==null || SettingsPage==null || session!=null || sender is not FrameworkElement {Tag:string page}) return;
+        if(ConnectPage==null || SharingPage==null || SettingsPage==null || sender is not FrameworkElement {Tag:string page}) return;
+        if(session!=null && (page is "connect" or "share")) return;
         ShowPage(page);
     }
     void HomeBackClick(object sender,RoutedEventArgs e) {
-        if(session!=null) return;
         NavConnect.IsChecked=NavShare.IsChecked=NavSettings.IsChecked=false;
         ShowPage("home");
     }
     void ShowPage(string page) {
+        bool leavingSession=currentPage=="session" && page!="session";
+        currentPage=page;
+        if(leavingSession) {
+            ReleaseRemoteInput();
+            if(full) ToggleFull();
+        }
+        HomeShell.Visibility=page=="session"?Visibility.Collapsed:Visibility.Visible;
+        SessionPage.Visibility=page=="session"?Visibility.Visible:Visibility.Collapsed;
+        ReturnSession.Visibility=session!=null?Visibility.Visible:Visibility.Collapsed;
+        SessionRoleHint.Visibility=session!=null?Visibility.Visible:Visibility.Collapsed;
+        NavConnect.IsEnabled=NavShare.IsEnabled=session==null;
         EntryPage.Visibility=page=="home"?Visibility.Visible:Visibility.Collapsed;
         HomeBack.Visibility=page=="home"?Visibility.Collapsed:Visibility.Visible;
         ActiveSharingShortcut.Visibility=sharingWindow?.Sharing==true?Visibility.Visible:Visibility.Collapsed;
@@ -230,16 +244,26 @@ public partial class MainWindow : Window
         ManualSecret.Focus();
     }
     void SetSessionLayout(bool active) {
-        HomeShell.Visibility=active?Visibility.Collapsed:Visibility.Visible;
-        SessionPage.Visibility=active?Visibility.Visible:Visibility.Collapsed;
-        if(!active) { NavConnect.IsChecked=true; ShowPage("connect"); }
+        if(active) ShowPage("session");
+        else if(currentPage=="session") { NavConnect.IsChecked=true; ShowPage("connect"); }
+        else ShowPage(currentPage);
+        UpdateSessionPresentation();
+    }
+    void ReturnSessionClick(object sender,RoutedEventArgs e) { if(session!=null) { ShowPage("session"); RestoreRemoteFocus(); } }
+    void SessionSettingsClick(object sender,RoutedEventArgs e) { NavSettings.IsChecked=true; ShowPage("settings"); }
+    void UpdateSessionPresentation() {
+        if(SessionNotice==null) return;
+        SessionState.Text=UiText.Text(retrying?"正在重连…":connected?framePresented?inputAllowed?"已连接":"只能查看":"等待画面…":"正在连接…");
+        SessionNotice.Visibility=session!=null && !framePresented?Visibility.Visible:Visibility.Collapsed;
+        SessionNoticeTitle.Text=SessionState.Text;
+        ViewOnlyNotice.Visibility=connected && !inputAllowed?Visibility.Visible:Visibility.Collapsed;
     }
     void DiscoverClick(object sender,RoutedEventArgs e) {
         if(session!=null) return;
         RebuildDeviceMenu(); DiscoverButton.ContextMenu.PlacementTarget=DiscoverButton; DiscoverButton.ContextMenu.IsOpen=true;
         if(discoveryScan==null && (discoveryFinished==0 || Environment.TickCount64-discoveryFinished>10000)) RefreshDevices();
     }
-    void SetStatus(string value) { if(manualConnecting && ManualDialog.Visibility==Visibility.Visible) ManualError.Text=UiText.Text(value); rawStatus=value; statusSuffix=""; Status.Text=HomeStatus.Text=UiText.Text(value); }
+    void SetStatus(string value) { if(manualConnecting && ManualDialog.Visibility==Visibility.Visible) ManualError.Text=UiText.Text(value); rawStatus=value; statusSuffix=""; Status.Text=HomeStatus.Text=UiText.Text(value); UpdateSessionPresentation(); }
     void AppendStatus(string value) { statusSuffix+=value; Status.Text=HomeStatus.Text=UiText.Text(rawStatus)+UiText.Text(statusSuffix); }
     void SetClipboardStatus(string value) { rawClipboardStatus=value; ClipboardStatus.Text=UiText.Text(value); }
     void SetFileStatus(string value) { rawFileStatus=value; FileStatus.Text=UiText.Text(value); }
@@ -249,6 +273,7 @@ public partial class MainWindow : Window
         ConnectButton.Content=UiText.Text(session==null?"连接":"断开");
         LanguageEnglish.IsChecked=UiText.Current.Language=="en"; LanguageChinese.IsChecked=!LanguageEnglish.IsChecked;
         RebuildDeviceMenu(); UpdateManualPeer();
+        UpdateSessionPresentation();
     }
     void LanguageClick(object sender,RoutedEventArgs e) {
         if(sender is not FrameworkElement {Tag:string code}) return;
@@ -379,10 +404,11 @@ public partial class MainWindow : Window
     void RestoreRemoteFocus() {
         // Reconnect must not take keyboard focus while the user works elsewhere
         // or is still choosing an option. Explicit clicks remain the fallback.
-        if(connected && bitmap!=null && IsActive && !SettingsMenu.IsSubmenuOpen && !Quality.IsDropDownOpen) Surface.Focus();
+        if(currentPage=="session" && connected && bitmap!=null && IsActive && !SettingsMenu.IsSubmenuOpen && !Quality.IsDropDownOpen) Surface.Focus();
     }
     void Input(object message) {
         if(!connected || inputs==null) return;
+        if(currentPage!="session" && System.Text.Json.JsonSerializer.SerializeToElement(message).GetProperty("op").GetString()!="release_all") return;
         if(bitmap==null && System.Text.Json.JsonSerializer.SerializeToElement(message).GetProperty("op").GetString()!="release_all") return;
         if(inputs.TryWrite(message)) Interlocked.Increment(ref inputsQueued);
         else { SetStatus("输入队列拥堵，已断开以避免按键卡住"); session?.Cancel(); }
@@ -469,7 +495,7 @@ public partial class MainWindow : Window
         BeginConnectionOptions(); requestedQuality=quality; qualityChangePending=false;
         discoveryScan?.Cancel();
         targetPlatform="macos"; NavShare.IsEnabled=false; sharingWindow?.SetControlActive(true);
-        session=new(); SetSessionLayout(true); render.Start(); ConnectButton.Content=UiText.Text("断开"); DiscoverButton.IsEnabled=Address.IsEnabled=Secret.IsEnabled=ForgetButton.IsEnabled=false;
+        retrying=false; framePresented=false; session=new(); SetSessionLayout(true); render.Start(); ConnectButton.Content=UiText.Text("断开"); DiscoverButton.IsEnabled=Address.IsEnabled=Secret.IsEnabled=ForgetButton.IsEnabled=false;
         ConnectionFields.Visibility=Visibility.Collapsed; ConnectionTarget.Text=ip; ConnectionTarget.Visibility=Visibility.Visible;
         runner=Run(ip,secret,session.Token);
         try { await runner; } finally { render.Stop(); ResetClipboard(); ResetFiles(); connected=false; if(full) ToggleFull(); session.Dispose(); session=null; SetSessionLayout(false); NavShare.IsEnabled=true; sharingWindow?.SetControlActive(false); ConnectButton.Content=UiText.Text("连接"); DiscoverButton.IsEnabled=Address.IsEnabled=Secret.IsEnabled=Quality.IsEnabled=ForgetButton.IsEnabled=true; ConnectionFields.Visibility=Visibility.Visible; ConnectionTarget.Visibility=Visibility.Collapsed; Desktop.Source=null; bitmap=null; width=height=0; }
@@ -527,7 +553,7 @@ public partial class MainWindow : Window
                             _=decoder.Completion.ContinueWith(_=> { try { attempt.Cancel(); } catch(ObjectDisposedException) {} },TaskScheduler.Default);
                             await Dispatcher.InvokeAsync(()=> {
                                 width=videoWidth; height=videoHeight;
-                                bitmap=new WriteableBitmap(width,height,96,96,PixelFormats.Bgra32,null); Desktop.Source=bitmap; RestoreRemoteFocus();
+                                framePresented=false; bitmap=new WriteableBitmap(width,height,96,96,PixelFormats.Bgra32,null); Desktop.Source=bitmap; retrying=false; UpdateSessionPresentation(); RestoreRemoteFocus();
                                 stats.Restart(); Interlocked.Exchange(ref frames,0); Interlocked.Exchange(ref bytes,0);
                             });
                         } else if(root.GetProperty("op").GetString()=="metrics") Interlocked.Exchange(ref encodeMs,root.GetProperty("encodeMs").GetDouble());
@@ -555,16 +581,24 @@ public partial class MainWindow : Window
                 if(heartbeat!=null) await heartbeat; if(controls!=null) await controls;
                 activeAttempt=null;
                 if(Surface.IsMouseCaptured) Surface.ReleaseMouseCapture();
-                Desktop.Source=null; bitmap=null; width=height=0;
+                Desktop.Source=null; bitmap=null; framePresented=false; width=height=0;
+                UpdateSessionPresentation();
             }
             if(ct.IsCancellationRequested || retryBlocked || (!qualityChangePending && (!paired || Reconnect.IsChecked!=true))) break;
-            AppendStatus("；3 秒后重连");
+            retrying=true; UpdateSessionPresentation(); AppendStatus("；3 秒后重连");
             try { await Task.Delay(3000,ct); } catch(OperationCanceledException) { break; }
         } while(!ct.IsCancellationRequested);
     }
     void Render() {
+        UpdateSessionPresentation();
         var pixels=Interlocked.Exchange(ref latest,null);
-        if(pixels!=null && bitmap!=null && pixels.Length==width*height*4) bitmap.WritePixels(new Int32Rect(0,0,width,height),pixels,width*4,0);
+        if(pixels!=null && bitmap!=null && pixels.Length==width*height*4) {
+            bitmap.WritePixels(new Int32Rect(0,0,width,height),pixels,width*4,0);
+            if(!framePresented) {
+                framePresented=true;
+                SetStatus(passwordSaveFailed?"已连接，但无法记住密码。":inputAllowed?"已连接，点击画面开始操作。":"已连接，只能查看。");
+            }
+        }
         if(connected && bitmap!=null && stats.ElapsedMilliseconds>=1000) {
             string inputStatus=!inputAllowed?(targetPlatform=="windows"?"目标设备未允许输入：只能查看":"Mac 辅助功能未授权：只能查看"):Surface.IsKeyboardFocusWithin?"键盘已启用；Ctrl+Alt+Esc 释放":"点击画面启用键盘";
             inputStatus=UiText.Text(inputStatus);

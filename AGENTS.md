@@ -17,8 +17,8 @@ new platform. Keep its English/Chinese agreements aligned with implementation.
 - The latest accepted design direction is the screen-desk composition in
   `design/detail-review/desk.html` (2026-10-16), with further surface refinement
   under review. The owner authorized the first native Home batch on 2026-10-17;
-  task pages were authorized next. Session pages retain their existing baseline
-  until their batch. Keep task navigation independent of permission/credential
+  task pages followed; the session batch was authorized on 2026-10-18.
+  Keep task navigation independent of permission/credential
   requests, and read stored secrets only for deliberate connection actions.
   Keep the role-first hierarchy; future
   platform mockups are not support claims. Read the screen-desk notes before UI work.

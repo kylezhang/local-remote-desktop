@@ -40,6 +40,7 @@ final class ControllerFiles {
     private func refresh() {
         guard active, requested != allowed() else { return }
         requested = allowed(); enabled = false; cancel(); remoteReady = true
+        status(requested ? "文件同步：等待确认" : "文件同步：关闭", false)
         revision = board.revision; requestID += 1
         send(["op":"file_sync", "enabled":requested, "requestId":requestID])
     }
