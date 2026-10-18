@@ -1,6 +1,7 @@
 """Headless AtomGit release-sync checks against local mock APIs; no real network."""
 import contextlib
 import hashlib
+import http.client
 import http.server
 import importlib.util
 import io
@@ -453,6 +454,83 @@ class Checks(unittest.TestCase):
             self.assertEqual(syncmod.main(self.main_argv()), 0)
         self.assertIn('skipping', out.getvalue())
         self.assertEqual(self.ag_state.calls, [])
+
+
+class UploadBodyChecks(unittest.TestCase):
+    def setUp(self):
+        self.temp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.temp.cleanup)
+        self.path = Path(self.temp.name) / 'large.zip'
+        self.payload = b'bounded upload fixture\x00\xff' * 32768
+        self.path.write_bytes(self.payload)
+        self.attempts = []
+
+    def sender(self, request, *, timeout):
+        # Exercise the real stdlib HTTP serialization without opening a socket.
+        # A simulated slow link cannot complete one huge sendall within its I/O
+        # budget, but accepts bounded blocks. This reproduces the old byte body.
+        attempt = {'body': request.data, 'writes': [], 'start': request.data.tell() if hasattr(request.data, 'tell') else None}
+        self.attempts.append(attempt)
+        owner = self
+
+        class Socket:
+            def sendall(self, data):
+                if len(data) > 64 * 1024:
+                    raise TimeoutError('simulated slow-link write budget')
+                if getattr(owner, 'fail_first', False) and len(owner.attempts) == 1 and len(attempt['writes']) == 3:
+                    raise TimeoutError('simulated partial upload interruption')
+                attempt['writes'].append(bytes(data))
+
+        connection = http.client.HTTPConnection('storage.invalid')
+        connection.sock = Socket()
+        connection.request(request.get_method(), '/asset', body=request.data, headers=dict(request.header_items()))
+        response = io.BytesIO(b'OK')
+        response.status = 200
+        return response
+
+    def test_large_body_uses_bounded_writes_and_fixed_length(self):
+        with mock.patch.object(syncmod.urllib.request, 'urlopen', side_effect=self.sender):
+            with self.assertRaises(ConnectionError):
+                syncmod.http('http://storage.invalid/asset', method='PUT', data=self.payload, attempts=1)
+            status, _ = syncmod.http('http://storage.invalid/asset', method='PUT', file_path=self.path,
+                                     headers={'x-obs-acl': 'private'})
+        self.assertEqual(status, 200)
+        attempt = self.attempts[-1]
+        headers, body = b''.join(attempt['writes']).split(b'\r\n\r\n', 1)
+        self.assertEqual(body, self.payload)
+        self.assertIn(f'Content-Length: {len(self.payload)}'.encode().lower(), headers.lower())
+        self.assertIn(b'x-obs-acl: private', headers.lower())
+        self.assertNotIn(b'transfer-encoding', headers.lower())
+        self.assertTrue(attempt['body'].closed)
+        self.assertLessEqual(max(map(len, attempt['writes'])), 64 * 1024)
+
+    def test_partial_retry_reopens_from_zero_and_closes_both_files(self):
+        self.fail_first = True
+        with mock.patch.object(syncmod.urllib.request, 'urlopen', side_effect=self.sender):
+            status, _ = syncmod.http('http://storage.invalid/asset', method='PUT', file_path=self.path, attempts=2)
+        self.assertEqual(status, 200)
+        self.assertEqual([a['start'] for a in self.attempts], [0, 0])
+        self.assertIsNot(self.attempts[0]['body'], self.attempts[1]['body'])
+        self.assertTrue(all(a['body'].closed for a in self.attempts))
+        self.assertEqual(b''.join(self.attempts[-1]['writes']).split(b'\r\n\r\n', 1)[1], self.payload)
+
+    def test_empty_file_has_zero_length_without_chunked_encoding(self):
+        self.path.write_bytes(b'')
+        with mock.patch.object(syncmod.urllib.request, 'urlopen', side_effect=self.sender):
+            syncmod.http('http://storage.invalid/asset', method='PUT', file_path=self.path)
+        headers, body = b''.join(self.attempts[0]['writes']).split(b'\r\n\r\n', 1)
+        self.assertIn(b'content-length: 0', headers.lower())
+        self.assertNotIn(b'transfer-encoding', headers.lower())
+        self.assertEqual(body, b'')
+
+    def test_invalid_length_or_two_body_sources_rejected_before_send(self):
+        with mock.patch.object(syncmod.urllib.request, 'urlopen') as send:
+            with self.assertRaises(ValueError):
+                syncmod.http('http://storage.invalid/asset', method='PUT', file_path=self.path,
+                             headers={'Content-Length': '3'})
+            with self.assertRaises(ValueError):
+                syncmod.http('http://storage.invalid/asset', method='PUT', file_path=self.path, data=b'other')
+            send.assert_not_called()
 
 
 if __name__ == '__main__':

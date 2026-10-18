@@ -1,5 +1,6 @@
 """Mirror verified GitHub release bytes to AtomGit; only add missing attachments."""
 import argparse
+import contextlib
 import hashlib
 import json
 import os
@@ -21,19 +22,34 @@ def sha256(data):
     return hashlib.sha256(data).hexdigest()
 
 
-def http(url, token=None, *, method='GET', data=None, headers=None, accept=None, attempts=3, timeout=300):
+def http(url, token=None, *, method='GET', data=None, file_path=None, headers=None, accept=None, attempts=3, timeout=300):
+    if file_path is not None and data is not None:
+        raise ValueError('Choose a byte body or a file body, not both')
     last = None
     for attempt in range(attempts):
-        request = urllib.request.Request(url, data=data, method=method)
-        if token:
-            request.add_header('Authorization', f'Bearer {token}')
-        if accept:
-            request.add_header('Accept', accept)
-        for key, value in (headers or {}).items():
-            request.add_header(key, value)
         try:
-            with urllib.request.urlopen(request, timeout=timeout) as response:
-                return response.status, response.read()
+            with contextlib.ExitStack() as resources:
+                # http.client reads a file in bounded blocks instead of one
+                # sendall() for the entire ZIP. Reopen for every retry: a failed
+                # partial send must never resume from its old file position.
+                body = resources.enter_context(Path(file_path).open('rb')) if file_path is not None else data
+                request = urllib.request.Request(url, data=body, method=method)
+                if token:
+                    request.add_header('Authorization', f'Bearer {token}')
+                if accept:
+                    request.add_header('Accept', accept)
+                for key, value in (headers or {}).items():
+                    request.add_header(key, value)
+                if file_path is not None:
+                    length = os.fstat(body.fileno()).st_size
+                    provided = request.get_header('Content-length')
+                    if provided is not None and str(provided) != str(length):
+                        raise ValueError('Upload Content-Length differs from the staged file')
+                    # Presigned storage expects a fixed length, not HTTP
+                    # chunked transfer encoding. Keep its signed headers intact.
+                    request.add_header('Content-Length', str(length))
+                with urllib.request.urlopen(request, timeout=timeout) as response:
+                    return response.status, response.read()
         except urllib.error.HTTPError as error:
             if error.code < 500 and error.code != 429:
                 return error.code, error.read()
@@ -179,7 +195,7 @@ def sync(tag, commit, prerelease, *, github_base, github_repo, github_token,
                                    f'{release_path(tag)}/upload_url', atomgit_token,
                                    query={'file_name': name})
         plan = json.loads(body)
-        status, _ = http(plan['url'], method='PUT', data=(staged / name).read_bytes(),
+        status, _ = http(plan['url'], method='PUT', file_path=staged / name,
                          headers=plan.get('headers') or {})
         if status >= 300:
             raise RuntimeError(f'AtomGit upload of {name} returned HTTP {status}')
