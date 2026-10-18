@@ -47,6 +47,18 @@ Final Windows build and full unshown regression passed; the 520-wide English/
 Chinese synthetic-stream and view-only images were visually reviewed. Exact-source
 native CI and Mac session render review remain pending.
 
+Follow-up portable verification on the same application source `e198e0a` passed:
+the complete Swift file fixture chain covers controller scheduling, paced 8 MiB
+send/receive, Unicode/empty/chunked files, SHA-256, revoked/invalid offers and
+partial-worker/staging cleanup. AppKit/Darwin/socket and hashing boundaries are
+explicit Linux fixture substitutes; this is not native Mac clipboard acceptance.
+The five CloudReleaseChecks passed under Python 3.12 with an isolated writable
+temporary directory, rejecting corrupted assets, wrong version/source/platform,
+unsafe/duplicate inventories and an unrequested stable release.
+The physical acceptance checklist now includes session navigation/focus (U2),
+truthful waiting/view-only states (U3) and temporary consent boundaries (C2).
+Those physical cases remain Not run.
+
 ## Boundaries
 
 No installed client was replaced/shown, no SSH used, and no physical desktop
@@ -62,3 +74,8 @@ Windows 完整后台回归与 Swift 语法/模拟导航通过。扩展文件选�
 残留，修正后 Swift 最终回归通过。Windows 最终编译、完整后台回归通过，520 宽中英文
 合成会话和仅查看图片已复核；最终源码原生 CI 与 Mac 会话图片待完成。
 未更新在用应用，真实双机和系统授权待集中验收。
+
+补充：同一应用源码 e198e0a 的完整 Swift 文件夹具链通过，包含传输调度、8 MiB 节流、
+Unicode/空文件/分块、哈希、撤销与临时文件清理；Apple 服务和哈希边界使用 Linux 测试替身，
+不代表 Mac 原生剪贴板实测。Python 3.12 下的五项包来源/完整性拒绝检查通过。
+已将导航与焦点 U2、真实状态 U3、会话同步范围 C2 写入双语实测清单，均仍为未执行。

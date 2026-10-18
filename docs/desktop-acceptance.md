@@ -2,7 +2,7 @@
 
 [简体中文](zh-CN/desktop-acceptance.md) · [Ordered plan](v0.3.0-plan.md)
 
-Updated **2026-10-14**. This is a remaining physical-test procedure, not achieved
+Updated **2026-10-18**. This is a remaining physical-test procedure, not achieved
 results. Interactive tests are **paused**; prepare fixtures/evidence without
 operating either working computer.
 
@@ -50,7 +50,10 @@ establish all supported-system behavior.
 |---|---|
 | D1 | Real peer name/OS; first/remembered pairing, editable wrong-password draft, opt-in remember. Discovery/refresh never authorize or connect automatically. |
 | U1 | Approved task-first entry, approximately 600 × 680 default clamped to work area; one Add device, clear empty/nearby/recent states, vertical Accept content and bottom Start/Stop. Both languages, focus, minimum width and routine fit; retain user resizing. |
+| U2 | During control, Home → Settings → Return to session retains the same connection and picture without another password prompt. Keys/buttons release when leaving the canvas; typing in Settings stays local. A reconnect in the background does not steal focus or change pages. Disconnect while in Settings removes Return to session and keeps Settings visible. Competing roles remain unavailable. |
+| U3 | Waiting/reconnecting states show actual connection status until a real frame is presented. View-only feedback matches the target's independent input approval; it never implies permission has been granted. Session actions remain reachable at supported minimum size and fullscreen has a clear local exit. |
 | C1 | Fresh Unicode text pastes both ways; no echo or replacement of a newer local copy. |
+| C2 | Temporary session text/file choices cannot override a disabled global setting. Turning sync off during a transfer immediately cancels work and clears busy progress; old replies do not restore syncing. Re-enable establishes a fresh copy baseline without reconnecting the desktop or changing future connection defaults. |
 | F1 | Fresh Unicode-named, empty and multiple files paste both ways after ready status; exact bytes/SHA-256. Folders/virtual files/raw image formats are outside current support. |
 | F2 | Cancel/disable cleans partial batches and stale callbacks; desktop control continues; re-enable needs fresh copy. |
 | R1 | All connected qualities work, rapid changes settle on latest. Transient reconnect succeeds; Disconnect cancels retry; changed credentials/invalid authentication stop retry with editable draft. |
