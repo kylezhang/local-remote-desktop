@@ -110,7 +110,10 @@ static partial class Program {
                 Assert(!Visible("ManualDialog") && Find<TextBox>("Address").ActualWidth==0,"Permanent connection form remains visible");
                 Assert(Descendants<ScrollViewer>(Find<ListBox>("DeviceList")).All(scroll=>scroll.ScrollableHeight<=0.5),"Routine device list needs scrolling at startup");
                 var targetButton=Descendants<Button>(Find<ListBox>("DeviceList")).First(button=>button.DataContext is LanDevice);
-                Assert(targetButton.ActualHeight>=179 && targetButton.ActualHeight<240,"A short device card stretches to fill the viewport");
+                // UseLayoutRounding can round 179 DIPs down to 178 2/3 at 150%.
+                // Allow one physical pixel, retaining the upper anti-stretch bound.
+                double cardPixel=1/VisualTreeHelper.GetDpi(targetButton).DpiScaleY;
+                Assert(targetButton.ActualHeight+cardPixel>=179 && targetButton.ActualHeight<240,$"Short device card is outside its content-sized range: {targetButton.ActualWidth}x{targetButton.ActualHeight}, desired {targetButton.DesiredSize}, DPI {VisualTreeHelper.GetDpi(targetButton).DpiScaleX}x{VisualTreeHelper.GetDpi(targetButton).DpiScaleY}");
                 targetButton.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
                 Assert(Visible("ManualDialog") && !Find<Grid>("HomeShell").IsEnabled,"Manual dialog did not isolate navigation");
                 Assert(Find<TextBlock>("ManualDeviceName").Text=="Fixture Mac" && Find<TextBlock>("ManualDeviceSystem").Text=="macOS","Known target metadata missing from manual dialog");
@@ -210,7 +213,7 @@ static partial class Program {
                 Snapshot("sharing-"+lang,1100);
                 Snapshot("sharing-default-"+lang,584,96,640);
                 var sharingScroll=(ScrollViewer)sharing.FindName("SharingScroll");
-                Assert(sharingScroll.ScrollableHeight<=0.5,"Routine Accept connections page does not fit the default window");
+                Assert(sharingScroll.ScrollableHeight<=0.5,$"Routine Accept connections page does not fit the default window: {sharingScroll.ScrollableHeight}, extent {sharingScroll.ExtentHeight}, viewport {sharingScroll.ViewportHeight}, DPI {VisualTreeHelper.GetDpi(sharingScroll).DpiScaleY}, lang {lang}");
                 var deviceSurface=(Border)sharing.FindName("SharingDeviceSurface");
                 var passwordSurface=(Border)sharing.FindName("SharingPasswordSurface");
                 Assert(deviceSurface.ActualWidth>=390 && passwordSurface.ActualWidth>=340,"Sharing does not fit the compact content width");

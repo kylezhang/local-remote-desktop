@@ -4,7 +4,7 @@
  <Border DockPanel.Dock="Bottom" BorderBrush="#E5E8F0" BorderThickness="0" Padding="0,16,0,0" Margin="32,0,32,24" MaxWidth="640" HorizontalAlignment="Stretch">
   <Button x:Name="SharingStart" Style="{StaticResource BrandConnectButton}" Content="{local:Translate Key='开始接受连接'}" HorizontalAlignment="Stretch" MinHeight="45" Padding="12,10" Click="StartClick"/>
  </Border>
- <ScrollViewer x:Name="SharingScroll" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled"><StackPanel x:Name="SharingLayout" Margin="32,18,32,24" MaxWidth="640" HorizontalAlignment="Stretch">
+ <ScrollViewer x:Name="SharingScroll" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled"><StackPanel x:Name="SharingLayout" Margin="32,16,32,16" MaxWidth="640" HorizontalAlignment="Stretch">
   <TextBlock Text="{local:Translate Key='接受连接'}" FontSize="26" FontWeight="Normal" Margin="0,0,0,8"/>
   <TextBlock Text="{local:Translate Key='让另一台设备连接并操作你的当前屏幕。'}" TextWrapping="Wrap" FontSize="12" Foreground="#617088" Margin="0,0,0,12"/>
   <StackPanel Margin="0,8,0,0">
