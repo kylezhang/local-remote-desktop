@@ -26,7 +26,7 @@ ordinary launch. Final-package execution caught and verified that correction.
 
 ## Local checks
 
-Final application/package source: **e04d499928c7523f0348e9db8134643b8b3090b2**.
+Local application/package source: **e04d499928c7523f0348e9db8134643b8b3090b2**.
 This remains a development package displaying **0.3.0-alpha.5**, not the immutable
 published alpha.5 (source fb1e8d1), and not a published alpha.6.
 
@@ -64,9 +64,34 @@ independent loopback peers; sandbox-denied loopback attempts were rerun with
 the needed local networking permission. Actual multicast registration remained
 opt-in and was not run. FFmpeg tests used generated video and software encoding.
 
-These are local Windows/portable checks. The new CI entries must pass on the
-mirrored final source before selecting a cloud-built candidate. The Mac app code,
+The Mac app code,
 bundle identity and credentials are unchanged. Mac native build, actual installed
 startup/permissions/updates, physical two-device input/clipboard and sustained
 hardware performance remain separate gates. Interactive acceptance stays paused
 while the owner has no Mac available. No tag or release asset is replaced here.
+
+## Exact-source cloud candidate
+
+[Desktop CI run 39761373979](https://github.com/kylezhang/local-remote-desktop/actions/runs/39761373979)
+completed successfully for **e31fe13ec95460d5b5639a637cd754b9ff2e126a**:
+
+- Source/package checks, native Windows and native Apple Silicon jobs passed.
+- Windows passed the eight existing suites plus WindowsPackageChecks and
+  PackageStartupCheck. The downloaded startup JSON identifies the exact source.
+- The existing-alpha publication/sync job passed; no new version/tag was requested.
+- Windows artifact **12418411554** and Mac artifact **12417873420** were downloaded.
+  CI identity, checksums, Windows flat ZIP/all 476 inventoried files, both source
+  archives, Mac stable bundle/preview inventory and GPL were independently checked.
+- The candidates retain their exact CI bytes under shorter local filenames.
+  Their app version remains alpha.5; source e31fe13 distinguishes them from the
+  published alpha.5. They were not installed or opened for interactive acceptance.
+
+| Cloud package | SHA-256 |
+|---|---|
+| Windows ZIP | `06c6d6941f5a0fc9d61a94e2ea496d5c4c3f9982b4f0ac42d907f0440aa91f14` |
+| Mac ZIP | `cd18bfb273801c027cf78893431a8e3af7ae629025e8d203cd4eea1534810b4c` |
+| Mac DMG | `b08e4f603e75b4b9370a849f90e4667e61ecfc5588e3a1da580923e97e41c9a7` |
+
+This clears the new native CI/package gate, not the physical desktop, Mac
+TCC/Keychain/installed-update or sustained performance gates above. Alpha.6 remains
+planned; published alpha.5 assets remain immutable.

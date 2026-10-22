@@ -9,6 +9,8 @@ DPI and encrypted recording clipboard/file peers. Routine accepting-page overflo
 was corrected without relaxing its no-scroll gate. CI now checks the extracted
 package. See [the source, results and limits](../tests/results/windows-package-2026-10-22.md).
 No working app, personal clipboard/input or Mac permissions were operated.
+The [exact-source cloud run](https://github.com/kylezhang/local-remote-desktop/actions/runs/39761373979)
+also passed both native jobs; downloaded Windows/Mac candidates were verified.
 Mac/two-device acceptance remains paused; alpha.6 is not published.
 
 ## Input access and accepting-start correction — 2026-10-14
