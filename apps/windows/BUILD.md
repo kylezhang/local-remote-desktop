@@ -17,6 +17,26 @@ dotnet publish apps/windows/LocalRemoteDesktop.csproj -c Release -r win-x64 --se
 
 Runtime packs must be available during restore. See [Microsoft deployment documentation](https://learn.microsoft.com/en-us/dotnet/core/deploying/). Keep the complete output directory together and run `LocalRemoteDesktop.exe`. Published v0.1.0 archives still contain `RemoteMacLAN.exe`; existing release assets are unchanged. A normal build, unlike the release ZIP, needs .NET Desktop Runtime installed.
 
+New source packages place the app directly at the ZIP root. Use **Extract All**
+to a short, new folder, then run `LocalRemoteDesktop.exe`; do not run it inside
+the ZIP or copy only the EXE. A very deep path can interrupt Windows extraction
+and leave the EXE without its runtime. If startup fails, run the included
+`CHECK-INSTALLATION.cmd`: it checks the packaged file inventory and gives missing,
+damaged or overlong-path details, without starting the app or changing system
+settings. Its child PowerShell process allows the bundled local checker for that
+invocation only; it does not change the machine execution policy. The inventory
+detects incomplete extraction; compare the original ZIP with the release's
+`SHA256SUMS.txt` to check the independent archive digest. Neither is a code signature.
+
+For the complete ZIP, license notices, corresponding source and file inventory,
+run `./scripts/package-windows.ps1` from a clean committed checkout. CI extracts
+that final ZIP into an isolated folder, checks every inventoried file and runs
+the extracted EXE with `--check-startup <report.json>`. This opt-in diagnostic
+loads the actual apphost, runtime and unshown home resources, then exits; it does
+not connect, share, read stored credentials/clipboards or show a window. Normal
+launch continues to open the app. The background client suites then reference the
+assembly from the extracted ZIP, rather than the pre-archive publish directory.
+
 FFmpeg is not bundled. Use the [official download entry point](https://ffmpeg.org/download.html), install its complete required files and expose ffmpeg.exe on PATH or beside this executable. Respect the chosen FFmpeg build's license. Media Foundation/hardware decode and D3D11 rendering are not implemented.
 
 First start defaults the address to the Windows machine's LAN IPv4 to make editing the subnet easier; this does not discover the Mac. Saved address/key take precedence. Connect saves valid-format credentials using current-user DPAPI under `%LOCALAPPDATA%/LocalRemote`; wrong keys still fail authentication. Forget Connection clears the selected entry.

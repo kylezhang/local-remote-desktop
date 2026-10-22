@@ -53,6 +53,10 @@ Copy-Item -LiteralPath (Join-Path $projectRoot 'NOTICE.md') -Destination $packag
 Copy-Item -LiteralPath (Join-Path $projectRoot 'LICENSE') -Destination $package
 Copy-Item -LiteralPath (Join-Path $projectRoot 'apps/windows/BUILD.md') -Destination $package
 Copy-Item -LiteralPath (Join-Path $projectRoot 'apps/windows/BUILD.zh-CN.md') -Destination $package
+# Windows PowerShell 5.1 (used by the bundled checker) needs a UTF-8 BOM for
+# bilingual diagnostics, even when the build uses PowerShell 7.
+[IO.File]::WriteAllText((Join-Path $package 'Verify-Package.ps1'), [IO.File]::ReadAllText((Join-Path $projectRoot 'scripts/check-windows-package.ps1')), [Text.UTF8Encoding]::new($true))
+Copy-Item -LiteralPath (Join-Path $projectRoot 'scripts/check-installation.cmd') -Destination (Join-Path $package 'CHECK-INSTALLATION.cmd')
 $sourceArchive = Join-Path $package 'source.zip'
 & git -C $projectRoot archive --format=zip "--prefix=LocalRemoteDesktop-source-$commit/" "--output=$sourceArchive" $commit
 if ($LASTEXITCODE -ne 0) { throw 'Corresponding source archive failed.' }
@@ -71,7 +75,11 @@ Third-party components retain their own licenses; see NOTICE.md and licenses/.
 @"
 Local Remote Desktop $version — Windows x64
 
-Run LocalRemoteDesktop.exe. Keep this folder together; .NET Desktop Runtime is included.
+Extract the complete ZIP to a short folder, then run LocalRemoteDesktop.exe.
+The app is directly inside the ZIP; no additional version-named inner folder is needed.
+Keep all files together; .NET Desktop Runtime is included.
+If extraction/startup fails, move the complete package to a shorter path and run
+CHECK-INSTALLATION.cmd. It only checks files, makes no system changes and does not start the app.
 FFmpeg is NOT included: install a complete H.264-capable build and expose ffmpeg.exe on PATH,
 or place it and all its required DLLs beside the app. https://ffmpeg.org/download.html
 Mac must be logged in, running the Host and authorized for screen capture/Accessibility.
@@ -86,7 +94,9 @@ Text/regular-file clipboard sync defaults on for paired sessions; explicit off i
 Wait for enabled status, then copy again. Files use TCP 47981, with progress/cancel.
 Folders and image clipboard formats are not supported. See the repository user guide.
 
-运行 LocalRemoteDesktop.exe，保持完整目录；无需另装 .NET。
+请将 ZIP 完整解压到较短目录，再运行 LocalRemoteDesktop.exe；无需另装 .NET。
+程序直接位于 ZIP 第一层，保持全部文件在一起。解压或启动失败时，改用较短路径，
+双击 CHECK-INSTALLATION.cmd 检查完整性；检查不修改系统设置，也不启动应用。
 FFmpeg 需单独完整安装并配置 PATH；现有正常安装可继续用。
 连接页选择附近设备或填写目标 IP 和配对密码，点击画面后输入。
 共享此设备页开启/停止 Windows 共享；切换页面继续共享。两个桌面角色均已接入配对文字/文件同步，Mac 原生及真实两机验收待完成。
@@ -107,7 +117,18 @@ $finalCommit = & git -C $projectRoot rev-parse HEAD
 if ($LASTEXITCODE -ne 0 -or $finalCommit -ne $commit) { throw 'Source commit changed during packaging.' }
 $finalStatus = & git -C $projectRoot status --porcelain --untracked-files=normal
 if ($LASTEXITCODE -ne 0 -or $finalStatus) { throw 'Source changed during packaging; refusing to create the release archive.' }
-Compress-Archive -LiteralPath $package -DestinationPath $archive -CompressionLevel Optimal
+$inventory = @(Get-ChildItem -LiteralPath $package -Recurse -File | Sort-Object FullName | ForEach-Object {
+    @{
+        path = $_.FullName.Substring($package.Length + 1).Replace('\', '/')
+        bytes = $_.Length
+        sha256 = (Get-FileHash -LiteralPath $_.FullName -Algorithm SHA256).Hash.ToLowerInvariant()
+    }
+})
+@{schema = 1; version = $version; commit = $commit; files = $inventory} |
+    ConvertTo-Json -Depth 4 | Set-Content -LiteralPath (Join-Path $package 'package-files.json') -Encoding utf8
+& (Join-Path $projectRoot 'scripts/check-windows-package.ps1') -Directory $package -ExpectedVersion $version -ExpectedCommit $commit
+Add-Type -AssemblyName System.IO.Compression.FileSystem
+[IO.Compression.ZipFile]::CreateFromDirectory($package, $archive, [IO.Compression.CompressionLevel]::Optimal, $false)
 $hash = (Get-FileHash -LiteralPath $archive -Algorithm SHA256).Hash.ToLowerInvariant()
 "$hash  $(Split-Path -Leaf $archive)" | Set-Content -LiteralPath (Join-Path $releaseRoot 'SHA256SUMS.txt') -Encoding ascii
 Write-Output "Packaged $archive"

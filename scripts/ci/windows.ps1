@@ -15,13 +15,17 @@ function Run-Check([string]$name,[string[]]$arguments) {
     $passed.Add($name)
 }
 dotnet --info | Set-Content -LiteralPath (Join-Path $reports 'dotnet.txt')
+& ./tests/WindowsPackageChecks/check.ps1 -WorkDirectory (Join-Path $env:RUNNER_TEMP ('lrd-fixture-' + [Guid]::NewGuid().ToString('N').Substring(0,8))) 2>&1 | Tee-Object -FilePath (Join-Path $reports 'WindowsPackageChecks.txt')
+$passed.Add('WindowsPackageChecks')
 foreach($name in @('ProtocolChecks','FileChecks','ClipboardChecks','LocalizationChecks','DeviceNameChecks','DiscoveryChecks','WindowsHostChecks')) {
     Run-Check $name @('run','--project',"tests/$name/$name.csproj",'-c','Release')
 }
 & ./scripts/package-windows.ps1 -OutputDirectory $output
 [xml]$project=Get-Content -LiteralPath apps/windows/LocalRemoteDesktop.csproj
 $version=[string]$project.Project.PropertyGroup.Version
-$package=Join-Path $output "LocalRemoteDesktop-v$version-windows-x64"
+$package=Join-Path $env:RUNNER_TEMP ('lrd zip check ' + [Guid]::NewGuid().ToString('N').Substring(0,8))
+& ./scripts/ci/check-windows-archive.ps1 -Archive (Join-Path $output "LocalRemoteDesktop-v$version-windows-x64.zip") -Version $version -Commit ((& git rev-parse HEAD).Trim()) -ExtractDirectory $package -ReportsDirectory $reports 2>&1 | Tee-Object -FilePath (Join-Path $reports 'PackageStartupCheck.txt')
+$passed.Add('PackageStartupCheck')
 $env:LOCALREMOTE_SHELL_CHECK='1'
 Run-Check 'ClientChecks' @('run','--project','tests/ClientChecks/ClientChecks.csproj','-c','Release',"-p:ClientAssemblyPath=$package/LocalRemoteDesktop.dll")
 @{
