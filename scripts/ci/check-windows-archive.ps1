@@ -36,6 +36,8 @@ if (Test-Path -LiteralPath $report) { throw 'Refusing a stale startup report.' }
 $start = [Diagnostics.ProcessStartInfo]::new((Join-Path $destination 'LocalRemoteDesktop.exe'))
 $start.UseShellExecute = $false
 $start.CreateNoWindow = $true
+$start.RedirectStandardError = $true
+$start.RedirectStandardOutput = $true
 $start.WorkingDirectory = [IO.Path]::GetFullPath($ReportsDirectory)
 $start.ArgumentList.Add('--check-startup')
 $start.ArgumentList.Add($report)
@@ -44,8 +46,12 @@ $start.Environment.Remove('DOTNET_ROOT') | Out-Null
 $start.Environment.Remove('DOTNET_ROOT_X64') | Out-Null
 $start.Environment['DOTNET_MULTILEVEL_LOOKUP'] = '0'
 $process = [Diagnostics.Process]::Start($start)
+$stderr = $process.StandardError.ReadToEndAsync()
+$stdout = $process.StandardOutput.ReadToEndAsync()
 try {
     if (-not $process.WaitForExit(30000)) { $process.Kill($true); throw 'Packaged startup check timed out.' }
+    [IO.File]::WriteAllText((Join-Path $ReportsDirectory 'package-startup-stderr.txt'), $stderr.GetAwaiter().GetResult())
+    [IO.File]::WriteAllText((Join-Path $ReportsDirectory 'package-startup-stdout.txt'), $stdout.GetAwaiter().GetResult())
     if ($process.ExitCode -ne 0 -or -not (Test-Path -LiteralPath $report -PathType Leaf)) { throw "Packaged apphost failed: $($process.ExitCode)." }
 } finally { $process.Dispose() }
 $result = Get-Content -LiteralPath $report -Raw -Encoding UTF8 | ConvertFrom-Json
