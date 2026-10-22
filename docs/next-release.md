@@ -4,7 +4,17 @@
 
 Remaining priorities and alpha/beta/stable gates are maintained in the [ordered delivery plan](v0.3.0-plan.md).
 
-## Current download — 2026-10-14
+## Current checkpoint — 2026-10-22
+
+The latest published preview is **v0.3.0-alpha.5**, source **fb1e8d1**. Its six
+attachments were checked for GitHub/AtomGit parity on 2026-10-18; see the
+[delivery evidence](../tests/results/release-status-2026-10-18.md).
+The newer screen-desk interface and Windows package/startup correction are
+development candidates for alpha.6. Installed two-device acceptance is paused
+while the owner has no Mac available. Use the [current plan](v0.3.0-plan.md)
+for active gates; the dated sections below are historical, not current downloads.
+
+## Historical download checkpoint — 2026-10-14
 
 **v0.3.0-alpha.3** is published on [AtomGit](https://atomgit.com/zkxw2008/local-remote-desktop/releases/tag/v0.3.0-alpha.3)
 and [GitHub](https://github.com/kylezhang/local-remote-desktop/releases/tag/v0.3.0-alpha.3),

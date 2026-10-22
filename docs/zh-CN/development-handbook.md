@@ -70,6 +70,9 @@
 
 ## 安装、身份和权限
 
+- Windows ZIP 将程序直接放在第一层，避免重复解压套层；附完整文件清单和只读检查入口，
+  验证最终 ZIP 解压后的字节与真实程序入口，而非只测构建目录。Windows 路径过长可能
+  解压中断，留下 EXE 却缺少 DLL；使用较短隔离部署目录，不要求用户修改系统策略。
 - 产品名 Local Remote Desktop，仓库 local-remote-desktop，Windows 启动文件/程序集
   LocalRemoteDesktop；旧输出路径仅兼容已有启动位置，不代表重复产品或旧源码目录。
 - 保留 com.remotemaclan.host、已有钥匙串/服务标识和凭据，除非经过专门迁移验收。

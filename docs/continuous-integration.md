@@ -14,8 +14,8 @@ against their artifact/package hashes and corresponding source commit.
 ## When builds run
 
 `Desktop CI` runs when `main` or a `v*` tag reaches GitHub, on pull requests to
-`main`, and through **Actions → Desktop CI → Run workflow**. Branch updates cancel
-older in-flight builds; tag builds are not canceled by later commits. It requests
+`main`, and through **Actions → Desktop CI → Run workflow**. Pull-request updates
+can supersede older runs; main/tag runs finish so publication is not interrupted. It requests
 read-only repository access, uses pinned action revisions, and requires no extra
 credentials for development builds. Actions must be enabled on the mirror.
 
@@ -29,7 +29,11 @@ shared across checkout paths. Source/installer/package fixtures run on Ubuntu.
 1. Open [Actions](https://github.com/kylezhang/local-remote-desktop/actions/workflows/ci.yml).
 2. Select a successful run and confirm its source commit.
 3. Download `windows-x64-<commit>` or `macos-arm64-preview-<commit>` under **Artifacts**.
-4. Extract the artifact wrapper, then extract the application ZIP inside it.
+4. Extract the artifact wrapper, then extract the application ZIP inside it to a
+   short, new folder. New Windows ZIPs put the app directly at the ZIP root; avoid
+   adding another version-named directory. Run `LocalRemoteDesktop.exe` with all
+   extracted files alongside it. If extraction is incomplete, the bundled
+   `CHECK-INSTALLATION.cmd` reports missing/damaged files or overlong paths.
    `SHA256SUMS.txt` and `ci.json` identify the package and checks; `SOURCE.txt` and
    `source.zip` inside the application package supply corresponding GPL source.
 
@@ -55,7 +59,12 @@ resets TCC or reads the user's pairing keys.
 
 - Windows native compilation; independent protocol/authentication, isolated DPAPI,
   clipboard/files, host lifecycle, synthetic pointer geometry and unshown WPF flows.
-  The exact packaged client assembly is checked, not a separately rebuilt client.
+  The final Windows ZIP is extracted into an isolated directory and checked
+  against its complete file inventory. Its actual self-contained EXE runs an
+  explicit unshown startup check, loading the runtime and home resources without
+  credentials, clipboard, discovery or sharing. The client suite then uses the
+  extracted assembly. Missing runtime/files, failed startup and stale reports fail
+  the job; the pre-archive publish directory is not the tested deployment.
 - Generated H.264 software encode → encrypted loopback → decoder at all qualities.
   Hosted runners do not establish Media Foundation hardware performance.
 - Native Swift fixture checks, full Apple SDK compilation, English/Chinese unshown

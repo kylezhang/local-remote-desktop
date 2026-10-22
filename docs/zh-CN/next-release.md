@@ -4,7 +4,15 @@
 
 剩余优先级及 alpha/beta/正式版门槛统一维护于[有序交付计划](v0.3.0-plan.md)。
 
-## 当前下载 — 2026-10-14
+## 当前检查点 — 2026-10-22
+
+最新已发布预览是 **v0.3.0-alpha.5**，对应源码 **fb1e8d1**，两站六个附件于 2026-10-18
+完成一致性核验，见[交付证据](../../tests/results/release-status-2026-10-18.md)。
+新的屏幕连接台界面与 Windows 解压/启动修正属于 alpha.6 开发候选；用户目前无 Mac，
+真实双机验收继续暂停。现行门槛以[交付计划](v0.3.0-plan.md)为准，以下带日期段落为历史记录，
+不表示当前下载版本。
+
+## 历史下载检查点 — 2026-10-14
 
 **v0.3.0-alpha.3** 已发布到 [AtomGit](https://atomgit.com/zkxw2008/local-remote-desktop/releases/tag/v0.3.0-alpha.3)
 和 [GitHub](https://github.com/kylezhang/local-remote-desktop/releases/tag/v0.3.0-alpha.3)，

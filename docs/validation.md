@@ -1,5 +1,16 @@
 # Validation
 
+## Windows extracted-package startup — 2026-10-22
+
+New ZIPs remove redundant directory nesting and carry a complete file inventory.
+The final extracted EXE passed unshown apphost/runtime/home-resource startup;
+all eight Windows background suites passed, including bilingual layout at 150%
+DPI and encrypted recording clipboard/file peers. Routine accepting-page overflow
+was corrected without relaxing its no-scroll gate. CI now checks the extracted
+package. See [the source, results and limits](../tests/results/windows-package-2026-10-22.md).
+No working app, personal clipboard/input or Mac permissions were operated.
+Mac/two-device acceptance remains paused; alpha.6 is not published.
+
 ## Input access and accepting-start correction — 2026-10-14
 
 Alpha.4 physical input/startup failures were reported. Main now separates Mac

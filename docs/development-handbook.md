@@ -103,6 +103,11 @@ records determine what is implemented; this handbook is not a support claim.
 
 ## Installation, identity and permissions
 
+- Windows ZIPs keep the app at the archive root to avoid redundant extraction
+  nesting. Include a complete file inventory and a read-only installation check;
+  verify the final extracted ZIP and actual apphost, not only the build directory.
+  Long Windows paths can leave an EXE without required DLLs after partial extraction.
+  Use short isolated deployment paths instead of changing the user's system policy.
 - Public product: **Local Remote Desktop**. Repository: `local-remote-desktop`.
   Windows launcher/assembly: `LocalRemoteDesktop`. Old output directories may remain
   compatibility deployment targets, not duplicate products or source directories.

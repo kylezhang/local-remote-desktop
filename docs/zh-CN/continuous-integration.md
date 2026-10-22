@@ -13,7 +13,7 @@ AtomGit 保持源码主仓库，现有流程将提交同步到
 
 GitHub 收到 `main` 更新、`v*` 标签或面向 `main` 的 PR 时运行 `Desktop CI`；
 也可进入 **Actions → Desktop CI → Run workflow** 手动运行。
-新的分支提交取消旧的未完成构建，标签构建不被后续提交取消。
+PR 更新可取消旧的未完成构建；主分支和标签运行会完成，避免中断发行同步。
 流程只需仓库读取权限，Action 固定到源码提交，开发构建无需额外凭据；镜像需启用 Actions。
 
 Windows 使用 `windows-2022`、.NET SDK 8.0.425 和校验值固定的 FFmpeg 7.1.1 测试依赖；
@@ -22,7 +22,9 @@ Mac 使用 Apple Silicon `macos-15` 及 Apple SDK，记录 Swift/Xcode 版本。
 
 1. 打开[构建记录](https://github.com/kylezhang/local-remote-desktop/actions/workflows/ci.yml)，选择成功的运行并核对提交。
 2. 在 **Artifacts** 下载 `windows-x64-<提交>` 或 `macos-arm64-preview-<提交>`。
-3. 解压外层产物，再解压其中的应用 ZIP。
+3. 解压外层产物，再将其中的应用 ZIP 完整解压到新的较短目录。新版 Windows ZIP 的程序
+   直接位于第一层，避免再次套入版本目录；保持全部文件在一起，运行 `LocalRemoteDesktop.exe`。
+   如解压不完整，可用包内 `CHECK-INSTALLATION.cmd` 检查缺失、损坏或路径过长。
 4. 外层 `SHA256SUMS.txt`、`ci.json` 标明校验值和检查范围；应用包内的 `SOURCE.txt`、
    `source.zip` 提供对应 GPL 源码。
 
@@ -41,7 +43,10 @@ Mac 提供完整 `.app`、图标、语言及插画资源，是**临时签名、�
 ## 检查范围
 
 - Windows 原生编译、协议/认证、隔离 DPAPI、文字/文件、生命周期、模拟鼠标坐标及不显示窗口的 WPF 流程。
-  客户端检查直接使用最终包中的程序集。
+  最终 ZIP 会解压到隔离目录，逐文件核对清单；随后实际启动解压后的独立 EXE，
+  以显式后台诊断加载运行库和不显示的首页资源，不读取凭据或剪贴板，不发现或共享设备。
+  客户端回归使用解压后的程序集，缺少运行库、启动失败或报告过期都会阻止任务通过，
+  而非只检查压缩前的目录。
 - 各画质的生成画面、软件 H.264 编码、加密回环传输和解码；不宣称云端验证了硬件编码性能。
 - 原生 Swift 样例、完整 Apple SDK 编译、中英文不显示窗口的布局检查、资源封装和解压后预览签名验证。
 - 版本、源码/许可、翻译覆盖及模拟安装/正式打包控制流程。
